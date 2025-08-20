@@ -24,8 +24,7 @@ dependencies {
 
     // This dependency is used internally, and not exposed to consumers on their own compile classpath.
     implementation("com.google.guava:guava:33.4.8-jre")
-	implementation("tech.hiddenproject:aide-reflection:1.3")
-    implementation("org.jetbrains:annotations:26.0.2")
+    compileOnly("org.jetbrains:annotations:26.0.2")
 
     // Lombok
     compileOnly("org.projectlombok:lombok:1.18.38")
@@ -37,11 +36,11 @@ dependencies {
 
 // Apply a specific Java toolchain to ease working on different environments.
 java {
+    modularity.inferModulePath = true
     toolchain {
         languageVersion = JavaLanguageVersion.of(24)
     }
 }
-
 tasks.named<Test>("test") {
     // Use JUnit Platform for unit tests.
     useJUnitPlatform()

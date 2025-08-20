@@ -5,9 +5,9 @@ import net.netbeing.cheap.impl.basic.ImmutableAspectDefImpl;
 import net.netbeing.cheap.model.PropertyDef;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Unmodifiable;
-import tech.hiddenproject.aide.reflection.LambdaWrapper;
-import tech.hiddenproject.aide.reflection.LambdaWrapperHolder;
-import tech.hiddenproject.aide.reflection.WrapperHolder;
+import net.netbeing.cheap.util.reflect.LambdaWrapper;
+import net.netbeing.cheap.util.reflect.LambdaWrapperHolder;
+import net.netbeing.cheap.util.reflect.WrapperHolder;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.RecordComponent;
@@ -35,7 +35,7 @@ public class RecordAspectDef extends ImmutableAspectDefImpl
         for (RecordPropertyDef prop : propDefs) {
             RecordComponent comp = prop.field();
             Method method = comp.getAccessor();
-            WrapperHolder<LambdaWrapper> getterHolder = lambdaWrapperHolder.wrap(method);
+            WrapperHolder<LambdaWrapper> getterHolder = lambdaWrapperHolder.createWrapper(method);
             builder.put(comp.getName(), getterHolder.getWrapper());
         }
         return builder.build();

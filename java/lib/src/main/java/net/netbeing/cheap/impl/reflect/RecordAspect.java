@@ -3,7 +3,7 @@ package net.netbeing.cheap.impl.reflect;
 import net.netbeing.cheap.impl.basic.EntityLazyIdImpl;
 import net.netbeing.cheap.model.*;
 import org.jetbrains.annotations.NotNull;
-import tech.hiddenproject.aide.reflection.LambdaWrapper;
+import net.netbeing.cheap.util.reflect.LambdaWrapper;
 
 public class RecordAspect<R extends Record> implements Aspect
 {

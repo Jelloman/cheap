@@ -1,13 +1,12 @@
 package net.netbeing.cheap.impl.reflect;
 
 import com.google.common.collect.ImmutableMap;
-import lombok.Getter;
 import net.netbeing.cheap.impl.basic.ImmutableAspectDefImpl;
 import net.netbeing.cheap.model.PropertyDef;
 import org.jetbrains.annotations.NotNull;
-import tech.hiddenproject.aide.reflection.LambdaWrapper;
-import tech.hiddenproject.aide.reflection.LambdaWrapperHolder;
-import tech.hiddenproject.aide.reflection.WrapperHolder;
+import net.netbeing.cheap.util.reflect.LambdaWrapper;
+import net.netbeing.cheap.util.reflect.LambdaWrapperHolder;
+import net.netbeing.cheap.util.reflect.WrapperHolder;
 
 import java.beans.BeanInfo;
 import java.beans.IntrospectionException;
@@ -18,7 +17,6 @@ import java.util.Map;
 
 public class PojoAspectDef extends ImmutableAspectDefImpl
 {
-    @Getter
     private final Class<?> pojoClass;
     private final Map<String, LambdaWrapper> getters;
     private final Map<String, LambdaWrapper> setters;
@@ -34,16 +32,21 @@ public class PojoAspectDef extends ImmutableAspectDefImpl
         ImmutableMap.Builder<String, LambdaWrapper> setterBuilder = ImmutableMap.builderWithExpectedSize(propDefs.size());
         for (PojoPropertyDef prop : propDefs) {
             if (prop.getter() != null) {
-                WrapperHolder<LambdaWrapper> getterHolder = lambdaWrapperHolder.wrap(prop.getter());
+                WrapperHolder<LambdaWrapper> getterHolder = lambdaWrapperHolder.createWrapper(prop.getter());
                 getterBuilder.put(prop.name(), getterHolder.getWrapper());
             }
             if (prop.setter() != null) {
-                WrapperHolder<LambdaWrapper> setterHolder = lambdaWrapperHolder.wrap(prop.setter());
+                WrapperHolder<LambdaWrapper> setterHolder = lambdaWrapperHolder.createWrapper(prop.setter());
                 setterBuilder.put(prop.name(), setterHolder.getWrapper());
             }
         }
         this.getters =  getterBuilder.build();
         this.setters =  setterBuilder.build();
+    }
+
+    public Class<?> getPojoClass()
+    {
+        return pojoClass;
     }
 
     protected LambdaWrapper getter(@NotNull String propName)
