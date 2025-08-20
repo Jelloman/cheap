@@ -1,0 +1,119 @@
+Cheap Design Notes
+==================
+
+Cheap is a data caching system and metadata model. Its design is focused on flexible and performant modeling and
+usage of a wide variety of data sources and sinks.
+Cheap is NOT a database. All Cheap data is held in catalogs, and all Cheap Catalogs are caches.
+
+    Tier        RDBMS equivalent  Filesystem equivalent
+    ----        ----------------  ---------------------
+C - Catalog     Database          Volume
+H - Hierarchy   Table or Index    Directory structure, File manifest
+E - Entity      Primary Key       File, file element
+A - Aspect      Row               File or element attributes or content
+P - Property    Column            Single attribute or content atom
+
+Cheap does not dictate patterns of network communication or other external resource access.
+Cheap offers utility functions and callback mechanisms to allow applications to use it in conjunction with databases,
+filesystems, etc. but it does not mandate their usage.
+Cheap is not concerned with access control, but tries to be flexible enough to accommodate fine-grained access control.
+
+
+
+Random notes
+------------
+
+
+
+--- CATALOGS ---
+* All Cheap catalogs are caches.
+* Each catalog is either a "root", representing an external data source, or a "mirror", which is a cached view of another catalog.
+* Catalogs can be "fixed" (read-only), "thin" (write-through) or "thick" (buffered writes).
+* Catalog writes flow through to the upstream catalog or data source.
+* Root catalogs are always either fixed or thin.
+* All non-fixed catalogs can report the status of writes to upstream.
+* Writes to mirror catalogs are not considered "persistent" and have no guarantees.
+
+--- HIERARCHIES ---
+* Hierarchies come in 5 types:
+    ENTITY_LIST("EL") - an ordered list containing entity IDs, possibly duplicates
+    ENTITY_SET("ES") - a non-ordered set containing entity IDs
+    ENTITY_DIR("ED") - a map (KV pairs) mapping strings to entity IDs
+    ENTITY_TREE("ET") - a map (KV pairs) mapping strings to entity IDs OR other entity tree nodes
+    ASPECT_SET("AM") - an ordered map (KV pairs) mapping local or global entity IDs to aspects of a single type
+
+* Hierarchies in a catalog are assigned "numbers", which are consecutive integer IDs (0-based) within the catalog.
+* Hierarchies can be local or global, and they are numbered separately. Local hierarchies cannot be referenced externally.
+* The ID of global hierarchies is not a UUID, it's a URI composed of the catalog and hierarchy number within that catalog.
+* Some number of hierarchies (at least 2) in each catalog have fixed numbers.
+* Hierarchy 0 is always an entity set of all the other global hierarchies in the catalog.
+* Hierarchy 1 is always an entity set of all the entities in the catalog. Iterating hierarchy 1 may be expensive.
+
+--- ENTITIES
+* Entities are nothing but IDs. All other information about entities is found in hierarchies and aspects.
+* Entity IDs can be local or global. Global Entity IDs are either UUIDs or URIs.
+* Aspects may be immutable (and should be in most cases).
+* Individual Property *objects* are always immutable. Property values can only be written into writable Aspects.
+
+--- ASPECTS
+* An Aspect is a data record that is attached to a single Entity.
+* Each Aspect is defined by a single AspectDef which defines the fields in the record.
+* An AspectDef may be single (zero or one per Entity) or multiple (zero+ per Entity).
+* Aspects are stored in a Catalog, organized by AspectDef, much like RDBMS tables.
+* AspectDefs have a full name which must be globally unique, and should follow a naming convention like Java classes.
+* Currently the design is for AspectDefs to NOT have a UUID, but that may need to be revisited.
+    - Aspect versioning needs to be considered more thoroughly.
+* Each Catalog has an Aspectage, which is a directory of ALL AspectDefs in the catalog.
+
+
+
+
+TODO 6/10/25
+XX * Fork and expand RecordAspect into a writable PojoAspect
+XX * Continue to expand Hierarchy & Catalog interfaces
+TODO 6/13
+X * Refactor method maps into aspect *defs*
+
+TODO 6/14
+X * Convert project to maven
+X * Implement all 5 types of hierarchy generically
+
+TODO 6/25
+X * LocalEntity class which contains multiple AspectDef/Aspect pairs
+X * Simplify Entity -localId, replace localRef with LocalEntity class
+
+TODO 7/1
+X * FileUtil
+X    - File record
+X    - Directory record
+X    - Create records for one directory
+X    - Walker record-creation wrapping nio.Files walker.
+    -
+* Pansh project
+    - Command line
+    - 26 commands that give NYI response
+    - Implement Copy
+
+TODO 8/15
+* DBUtil
+
+
+
+TODO GLOBAL
+* Implement root catalog for DB
+* Implement root catalog for filesystem
+* cheap.net package
+    * Proxy catalog for remote catalog
+    * Catalog client and server implementations
+    * Multiple protocols
+        * JSON-over-HTTP
+        * Protocol buffers
+
+
+
+
+
+
+
+
+
