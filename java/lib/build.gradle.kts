@@ -8,6 +8,7 @@
 plugins {
     // Apply the java-library plugin for API and implementation separation.
     `java-library`
+    id("io.freefair.lombok") version "8.14.2"
 }
 
 repositories {
@@ -16,22 +17,22 @@ repositories {
 }
 
 dependencies {
-    testImplementation("org.junit.jupiter:junit-jupiter:5.13.4")
-    testRuntimeOnly("org.junit.platform:junit-platform-launcher:1.13.4")
+    testImplementation(libs.junit.jupiter)
+    testRuntimeOnly(libs.junit.platform.launcher)
+    testRuntimeOnly(libs.junit.jupiter)
 
     // This dependency is exported to consumers, that is to say found on their compile classpath.
     api(libs.commons.math3)
 
     // This dependency is used internally, and not exposed to consumers on their own compile classpath.
-    implementation("com.google.guava:guava:33.4.8-jre")
-    compileOnly("org.jetbrains:annotations:26.0.2")
+    implementation(libs.guava)
+    compileOnly(libs.jetbrains.annotations)
 
     // Lombok
-    compileOnly("org.projectlombok:lombok:1.18.38")
-    annotationProcessor("org.projectlombok:lombok:1.18.38")
-
-    testCompileOnly("org.projectlombok:lombok:1.18.38")
-    testAnnotationProcessor("org.projectlombok:lombok:1.18.38")
+    //compileOnly("org.projectlombok:lombok:1.18.38")
+    //annotationProcessor("org.projectlombok:lombok:1.18.38")
+    //testCompileOnly("org.projectlombok:lombok:1.18.38")
+    //testAnnotationProcessor("org.projectlombok:lombok:1.18.38")
 }
 
 // Apply a specific Java toolchain to ease working on different environments.
