@@ -6,7 +6,6 @@ import net.netbeing.cheap.model.PropertyDef;
 import org.jetbrains.annotations.NotNull;
 import net.netbeing.cheap.util.reflect.LambdaWrapper;
 import net.netbeing.cheap.util.reflect.LambdaWrapperHolder;
-import net.netbeing.cheap.util.reflect.WrapperHolder;
 
 import java.beans.BeanInfo;
 import java.beans.IntrospectionException;
@@ -26,18 +25,17 @@ public class PojoAspectDef extends ImmutableAspectDefImpl
         super(pojoClass.getCanonicalName(), propDefsFrom(pojoClass));
         this.pojoClass = pojoClass;
 
-        LambdaWrapperHolder lambdaWrapperHolder = LambdaWrapperHolder.DEFAULT;
         Collection<PojoPropertyDef> propDefs = pojoPropertyDefs();
         ImmutableMap.Builder<String, LambdaWrapper> getterBuilder = ImmutableMap.builderWithExpectedSize(propDefs.size());
         ImmutableMap.Builder<String, LambdaWrapper> setterBuilder = ImmutableMap.builderWithExpectedSize(propDefs.size());
         for (PojoPropertyDef prop : propDefs) {
             if (prop.getter() != null) {
-                WrapperHolder<LambdaWrapper> getterHolder = lambdaWrapperHolder.createWrapper(prop.getter());
-                getterBuilder.put(prop.name(), getterHolder.getWrapper());
+                LambdaWrapper getterHolder = LambdaWrapperHolder.createWrapper(prop.getter());
+                getterBuilder.put(prop.name(), getterHolder);
             }
             if (prop.setter() != null) {
-                WrapperHolder<LambdaWrapper> setterHolder = lambdaWrapperHolder.createWrapper(prop.setter());
-                setterBuilder.put(prop.name(), setterHolder.getWrapper());
+                LambdaWrapper setterHolder = LambdaWrapperHolder.createWrapper(prop.setter());
+                setterBuilder.put(prop.name(), setterHolder);
             }
         }
         this.getters =  getterBuilder.build();

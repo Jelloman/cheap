@@ -5,7 +5,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Objects;
 
-public class MethodSignature implements AbstractSignature
+public class MethodSignature
 {
     private final Class<?> rType;
 
@@ -59,19 +59,12 @@ public class MethodSignature implements AbstractSignature
             '}';
     }
 
-    @Override
     public Class<?> getReturnType() {
         return rType;
     }
 
-    @Override
     public int getParameterCount() {
         return pCount;
-    }
-
-    @Override
-    public Class<?>[] getParameterTypes() {
-        return new Class[0];
     }
 
 }

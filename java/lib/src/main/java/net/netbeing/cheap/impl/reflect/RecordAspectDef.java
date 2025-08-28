@@ -7,7 +7,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Unmodifiable;
 import net.netbeing.cheap.util.reflect.LambdaWrapper;
 import net.netbeing.cheap.util.reflect.LambdaWrapperHolder;
-import net.netbeing.cheap.util.reflect.WrapperHolder;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.RecordComponent;
@@ -29,14 +28,13 @@ public class RecordAspectDef extends ImmutableAspectDefImpl
 
     protected @NotNull @Unmodifiable ImmutableMap<String, LambdaWrapper> buildMethodMap()
     {
-        LambdaWrapperHolder lambdaWrapperHolder = LambdaWrapperHolder.DEFAULT;
         Collection<RecordPropertyDef> propDefs = recordPropertyDefs();
         ImmutableMap.Builder<String, LambdaWrapper> builder = ImmutableMap.builderWithExpectedSize(propDefs.size());
         for (RecordPropertyDef prop : propDefs) {
             RecordComponent comp = prop.field();
             Method method = comp.getAccessor();
-            WrapperHolder<LambdaWrapper> getterHolder = lambdaWrapperHolder.createWrapper(method);
-            builder.put(comp.getName(), getterHolder.getWrapper());
+            LambdaWrapper getterHolder = LambdaWrapperHolder.createWrapper(method);
+            builder.put(comp.getName(), getterHolder);
         }
         return builder.build();
     }

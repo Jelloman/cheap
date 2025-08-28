@@ -6,14 +6,6 @@ public class ReflectionException extends RuntimeException {
         super(message);
     }
 
-    public ReflectionException(String message, Throwable cause) {
-        super(message, cause);
-    }
-
-    public ReflectionException(Throwable cause) {
-        super(cause);
-    }
-
     public static ReflectionException format(String msg, Object... args) {
         return new ReflectionException(String.format(msg, args));
     }

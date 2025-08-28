@@ -9,34 +9,37 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
-public enum LambdaWrapperHolder {
+public final class LambdaWrapperHolder {
 
-    DEFAULT;
+    private static final MethodHandles.Lookup lookup = MethodHandles.lookup();
+    private static final Map<MethodSignature, LambdaMetadata> invokers = new HashMap<>();
 
-    private final MethodHandles.Lookup lookup = MethodHandles.lookup();
-    private final Map<AbstractSignature, LambdaMetadata> invokers = new HashMap<>();
-
-    LambdaWrapperHolder() {
-        Arrays.stream(LambdaWrapper.class.getDeclaredMethods()).forEach(this::addInvoker);
+    static {
+        Arrays.stream(LambdaWrapper.class.getDeclaredMethods()).forEach(method -> {
+            MethodSignature methodSignature = MethodSignature.fromWrapper(method);
+            LambdaMetadata metadata = new LambdaMetadata(method);
+            invokers.put(methodSignature, metadata);
+        });
     }
 
-    private void addInvoker(Method method) {
-        MethodSignature methodSignature = MethodSignature.fromWrapper(method);
-        LambdaMetadata metadata = new LambdaMetadata(method);
-        invokers.put(methodSignature, metadata);
+    public static <T> T sneaky(SneakySupplier<T> supplier) {
+        try {
+            return supplier.get();
+        } catch (Throwable throwable) {
+            throw new RuntimeException(throwable);
+        }
     }
-
 
     @SuppressWarnings("unchecked")
-    public <F> WrapperHolder<F> createWrapper(Method method) {
-        return new WrapperHolder<>(
-            ThrowableOptional.sneaky(
-                () -> (F) createCallSite(method).getTarget().invoke()),
-            LambdaWrapper.class
-        );
+    public static <F> F createWrapper(Method method) {
+        try {
+            return sneaky(() -> (F) createCallSite(method).getTarget().invoke());
+        } catch (Throwable throwable) {
+            throw new RuntimeException(throwable);
+        }
     }
 
-    private CallSite createCallSite(Method method)
+    private static CallSite createCallSite(Method method)
         throws Exception
     {
         MethodHandle methodHandle = lookup.unreflect(method);
@@ -48,8 +51,8 @@ public enum LambdaWrapperHolder {
         );
     }
 
-    private LambdaMetadata getMetadata(Method method) {
-        AbstractSignature signature = MethodSignature.from(method);
+    private static LambdaMetadata getMetadata(Method method) {
+        MethodSignature signature = MethodSignature.from(method);
 
         if (!invokers.containsKey(signature)) {
             throw ReflectionException.format("No wrappers found for method %s", method);

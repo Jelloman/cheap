@@ -78,7 +78,7 @@ public record PojoPropertyDef(
         boolean nullable = CheapReflectionUtil.nullabilityOfGetterSetter(getter, setter);
         boolean multivalued = CheapReflectionUtil.isMultivaluedGetter(getter);
 
-        return new PojoPropertyDef(name, type, getter, null, true, false, nullable, multivalued);
+        return new PojoPropertyDef(name, type, getter, setter, true, false, nullable, multivalued);
     }
 
     public static PojoPropertyDef fromPropertyDescriptor(PropertyDescriptor prop)
