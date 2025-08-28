@@ -5,6 +5,7 @@ import lombok.Data;
 import net.netbeing.cheap.impl.basic.BasicEntityImpl;
 import net.netbeing.cheap.impl.basic.CatalogDefImpl;
 import net.netbeing.cheap.impl.basic.CatalogImpl;
+import net.netbeing.cheap.impl.basic.PropertyImpl;
 import net.netbeing.cheap.model.Catalog;
 import net.netbeing.cheap.model.CatalogType;
 import net.netbeing.cheap.model.Entity;
@@ -88,6 +89,19 @@ public class PojoAspectTest
     @Test
     void put()
     {
+        pojo = new TestClass("bar", 3, 4, 'c', 'd', UUID.randomUUID(), URI.create("http://example.com/foo/"), LocalDateTime.now().minusDays(1));
+        pojoAspect = new PojoAspect<>(testCatalog, testEntity, def, pojo);
+
+        Property prop = pojoAspect.get("string");
+        assertEquals("bar", prop.read());
+
+        //pojo.setString();
+        Property newProp = new PropertyImpl(prop.def(), "baz");
+        pojoAspect.put(newProp);
+
+        Property prop2 = pojoAspect.get("string");
+        assertEquals("baz", prop2.read());
+
     }
 
     @Test
