@@ -78,23 +78,23 @@ public record PojoPropertyDef(
         boolean nullable = CheapReflectionUtil.nullabilityOfGetterSetter(getter, setter);
         boolean multivalued = CheapReflectionUtil.isMultivaluedGetter(getter);
 
-        return new PojoPropertyDef(name, type, getter, setter, true, false, nullable, multivalued);
+        return new PojoPropertyDef(name, type, getter, setter, true, true, nullable, multivalued);
     }
 
-    public static PojoPropertyDef fromPropertyDescriptor(PropertyDescriptor prop)
+    public static PojoPropertyDef fromPropertyDescriptor(PropertyDescriptor prop, boolean immutable)
     {
         Method getter = prop.getReadMethod();
         Method setter = prop.getWriteMethod();
-        if (getter == null) {
-            return fromSetterOnly(setter);
-        } else if (setter == null) {
+        if (immutable || setter == null) {
             return fromGetterOnly(getter);
+        } else if (getter == null) {
+            return fromSetterOnly(setter);
         } else {
             return fromGetterSetter(getter, setter);
         }
     }
 
-        @Override
+    @Override
     public boolean isRemovable()
     {
         return false;

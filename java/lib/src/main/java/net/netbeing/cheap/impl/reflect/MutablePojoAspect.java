@@ -1,17 +1,17 @@
 package net.netbeing.cheap.impl.reflect;
 
 import net.netbeing.cheap.model.*;
-import org.jetbrains.annotations.NotNull;
 import net.netbeing.cheap.util.reflect.LambdaWrapper;
+import org.jetbrains.annotations.NotNull;
 
-public class PojoAspect<P> implements Aspect
+public class MutablePojoAspect<P> implements Aspect
 {
     private final Catalog catalog;
     private final Entity entity;
-    private final PojoAspectDef def;
+    private final MutablePojoAspectDef def;
     private final P object;
 
-    public PojoAspect(@NotNull Catalog catalog, @NotNull Entity entity, @NotNull PojoAspectDef def, @NotNull P object)
+    public MutablePojoAspect(@NotNull Catalog catalog, @NotNull Entity entity, @NotNull MutablePojoAspectDef def, @NotNull P object)
     {
         this.catalog = catalog;
         this.entity = entity;
