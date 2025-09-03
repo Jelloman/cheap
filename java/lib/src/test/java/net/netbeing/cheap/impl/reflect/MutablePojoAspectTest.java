@@ -85,14 +85,16 @@ public class MutablePojoAspectTest
         mutablePojoAspect = new MutablePojoAspect<>(testCatalog, testEntity, def, pojo);
 
         Property prop = mutablePojoAspect.get("string");
-
         assertEquals("foo", prop.read());
+
+        //Property prop2 = mutablePojoAspect.get("integerPrimitive");
+        //assertEquals(1, prop2.read());
     }
 
     @Test
     void put()
     {
-        //pojo = new TestClass("foo", 1, 2, 'a', 'b', UUID.randomUUID(), URI.create("http://example.com/"), LocalDateTime.now());
+        //pojo = new TestClass("bar", 3, 4, 'c', 'd', UUID.randomUUID(), URI.create("http://example.com/"), LocalDateTime.now().minusDays(1));
         pojo = new TestClass("bar", 4, 'd', UUID.randomUUID(), URI.create("http://example.com/"), LocalDateTime.now().minusDays(1));
         mutablePojoAspect = new MutablePojoAspect<>(testCatalog, testEntity, def, pojo);
 

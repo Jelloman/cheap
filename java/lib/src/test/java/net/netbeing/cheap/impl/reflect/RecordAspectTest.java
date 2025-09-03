@@ -79,8 +79,10 @@ public class RecordAspectTest
         recordAspect = new RecordAspect<>(testCatalog, testEntity, def, record);
 
         Property prop = recordAspect.get("string");
-
         assertEquals("foo", prop.read());
+
+        Property prop2 = recordAspect.get("integerPrimitive");
+        assertEquals(1, prop2.read());
     }
 
     @Test
