@@ -26,78 +26,100 @@ public class ImmutablePojoAspectTest
     @Data @AllArgsConstructor
     public static class TestClass
     {
-        private String string;
         private int integerPrimitive;
-        private Integer integer;
         private char charPrimitive;
+        private boolean booleanPrimitive;
+        private byte bytePrimitive;
+        private short shortPrimitive;
+        private long longPrimitive;
+        private float floatPrimitive;
+        private double doublePrimitive;
+        private String string;
+        private Integer integer;
         private Character character;
         private UUID uuid;
         private URI uri;
         private LocalDateTime localDateTime;
     }
 
+    private static TestClass pojo1;
+    private static TestClass pojo2;
+
     final Entity testEntity = new BasicEntityImpl();
     final Catalog testCatalog = new CatalogImpl(new CatalogDefImpl(CatalogType.ROOT));
 
     ImmutablePojoAspectDef def;
-    TestClass pojo;
     ImmutablePojoAspect<TestClass> immutablePojoAspect;
 
     @BeforeEach
     void setUp()
     {
         def = new ImmutablePojoAspectDef(TestClass.class);
+        pojo1 = new TestClass(1, 'a', true, (byte) 10, (short) 100, 1000L, 10.5f, 100.25, "foo", 2, 'b', UUID.randomUUID(), URI.create("http://example.com/"), LocalDateTime.now());
+        pojo2 = new TestClass(3, 'c', false, (byte) 30, (short) 300, 3000L, 30.5f, 300.75, "bar", 4, 'd', UUID.randomUUID(), URI.create("http://example.com/bar"), LocalDateTime.now().minusDays(1));
     }
 
     @AfterEach
     void tearDown()
     {
         def = null;
-        pojo = null;
+        pojo1 = null;
+        pojo2 = null;
         immutablePojoAspect = null;
     }
 
     @Test
     void construct()
     {
-        //pojo = new TestClass("foo", 1, 2, 'a', 'b', UUID.randomUUID(), URI.create("http://example.com/"), LocalDateTime.now());
-        pojo = new TestClass("foo", 1, 2, 'a', 'b', UUID.randomUUID(), URI.create("http://example.com/"), LocalDateTime.now());
-        immutablePojoAspect = new ImmutablePojoAspect<>(testCatalog, testEntity, def, pojo);
+        immutablePojoAspect = new ImmutablePojoAspect<>(testCatalog, testEntity, def, pojo1);
     }
 
     @Test
     void read()
     {
-        //pojo = new TestClass("foo", 1, 2, 'a', 'b', UUID.randomUUID(), URI.create("http://example.com/"), LocalDateTime.now());
-        pojo = new TestClass("foo", 1, 2, 'a', 'b', UUID.randomUUID(), URI.create("http://example.com/"), LocalDateTime.now());
-        immutablePojoAspect = new ImmutablePojoAspect<>(testCatalog, testEntity, def, pojo);
+        immutablePojoAspect = new ImmutablePojoAspect<>(testCatalog, testEntity, def, pojo1);
 
         String value = immutablePojoAspect.readAs("string", String.class);
 
         assertEquals("foo", value);
-        assertEquals(pojo.getString(), value);
+        assertEquals(pojo1.getString(), value);
     }
 
     @Test
     void get()
     {
-        //pojo = new TestClass("foo", 1, 2, 'a', 'b', UUID.randomUUID(), URI.create("http://example.com/"), LocalDateTime.now());
-        pojo = new TestClass("foo", 1, 2, 'a', 'b', UUID.randomUUID(), URI.create("http://example.com/"), LocalDateTime.now());
-        immutablePojoAspect = new ImmutablePojoAspect<>(testCatalog, testEntity, def, pojo);
+        immutablePojoAspect = new ImmutablePojoAspect<>(testCatalog, testEntity, def, pojo1);
 
         Property prop = immutablePojoAspect.get("string");
         assertEquals("foo", prop.read());
 
-        Property prop2 = immutablePojoAspect.get("integerPrimitive");
-        assertEquals(1, prop2.read());
+        // Test primitive types that should work
+        Property intProp = immutablePojoAspect.get("integerPrimitive");
+        assertEquals(1, intProp.read());
+        
+        Property charProp = immutablePojoAspect.get("charPrimitive");
+        assertEquals('a', charProp.read());
+        
+        Property byteProp = immutablePojoAspect.get("bytePrimitive");
+        assertEquals((byte) 10, byteProp.read());
+        
+        Property shortProp = immutablePojoAspect.get("shortPrimitive");
+        assertEquals((short) 100, shortProp.read());
+        
+        Property longProp = immutablePojoAspect.get("longPrimitive");
+        assertEquals(1000L, longProp.read());
+        
+        Property floatProp = immutablePojoAspect.get("floatPrimitive");
+        assertEquals(10.5f, floatProp.read());
+        
+        Property doubleProp = immutablePojoAspect.get("doublePrimitive");
+        assertEquals(100.25, doubleProp.read());
     }
 
     @Test
     void put()
     {
-        //pojo = new TestClass("foo", 1, 2, 'a', 'b', UUID.randomUUID(), URI.create("http://example.com/"), LocalDateTime.now());
-        pojo = new TestClass("bar", 3, 4, 'c', 'd', UUID.randomUUID(), URI.create("http://example.com/"), LocalDateTime.now().minusDays(1));
-        immutablePojoAspect = new ImmutablePojoAspect<>(testCatalog, testEntity, def, pojo);
+        immutablePojoAspect = new ImmutablePojoAspect<>(testCatalog, testEntity, def, pojo2);
 
         Property prop = immutablePojoAspect.get("string");
         assertEquals("bar", prop.read());

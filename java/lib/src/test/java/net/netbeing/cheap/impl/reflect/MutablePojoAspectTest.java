@@ -89,8 +89,12 @@ public class MutablePojoAspectTest
         Property prop = mutablePojoAspect.get("string");
         assertEquals("foo", prop.read());
 
-        //Property prop2 = mutablePojoAspect.get("integerPrimitive");
-        //assertEquals(1, prop2.read());
+        // Test primitive types that should work
+        Property intProp = mutablePojoAspect.get("integerPrimitive");
+        assertEquals(1, intProp.read());
+        
+        Property charProp = mutablePojoAspect.get("charPrimitive");
+        assertEquals('a', charProp.read());
     }
 
     @Test

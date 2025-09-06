@@ -20,69 +20,94 @@ import static org.junit.jupiter.api.Assertions.*;
 public class RecordAspectTest
 {
     public record TestRecord(
-        String string,
         int integerPrimitive,
-        Integer integer,
         char charPrimitive,
+        boolean booleanPrimitive,
+        byte bytePrimitive,
+        short shortPrimitive,
+        long longPrimitive,
+        float floatPrimitive,
+        double doublePrimitive,
+        String string,
+        Integer integer,
         Character character,
         UUID uuid,
         URI uri,
         LocalDateTime localDateTime
     ) {}
 
+    private static TestRecord record1;
+    private static TestRecord record2;
+
     final Entity testEntity = new BasicEntityImpl();
     final Catalog testCatalog = new CatalogImpl(new CatalogDefImpl(CatalogType.ROOT));
 
-    final TestRecord testRecord2 = new TestRecord("bar", -1, -2, 'A', 'B', UUID.randomUUID(), URI.create("http://www.example.com/"), LocalDateTime.now().plusMinutes(1));
-
     RecordAspectDef def;
-    TestRecord record;
     RecordAspect<TestRecord> recordAspect;
 
     @BeforeEach
     void setUp()
     {
         def = new RecordAspectDef(TestRecord.class);
+        record1 = new TestRecord(1, 'a', true, (byte) 10, (short) 100, 1000L, 10.5f, 100.25, "foo", 2, 'b', UUID.randomUUID(), URI.create("http://example.com/"), LocalDateTime.now());
+        record2 = new TestRecord(3, 'c', false, (byte) 30, (short) 300, 3000L, 30.5f, 300.75, "bar", 4, 'd', UUID.randomUUID(), URI.create("http://example.com/bar"), LocalDateTime.now().minusDays(1));
     }
 
     @AfterEach
     void tearDown()
     {
         def = null;
-        record = null;
+        record1 = null;
+        record2 = null;
         recordAspect = null;
     }
 
     @Test
     void construct()
     {
-        record = new TestRecord("foo", 1, 2, 'a', 'b', UUID.randomUUID(), URI.create("http://example.com/"), LocalDateTime.now());
-        recordAspect = new RecordAspect<>(testCatalog, testEntity, def, record);
+        recordAspect = new RecordAspect<>(testCatalog, testEntity, def, record1);
     }
 
     @Test
     void read()
     {
-        record = new TestRecord("foo", 1, 2, 'a', 'b', UUID.randomUUID(), URI.create("http://example.com/"), LocalDateTime.now());
-        recordAspect = new RecordAspect<>(testCatalog, testEntity, def, record);
+        recordAspect = new RecordAspect<>(testCatalog, testEntity, def, record1);
 
         String value = recordAspect.readAs("string", String.class);
 
         assertEquals("foo", value);
-        assertEquals(record.string, value);
+        assertEquals(record1.string, value);
     }
 
     @Test
     void get()
     {
-        record = new TestRecord("foo", 1, 2, 'a', 'b', UUID.randomUUID(), URI.create("http://example.com/"), LocalDateTime.now());
-        recordAspect = new RecordAspect<>(testCatalog, testEntity, def, record);
+        recordAspect = new RecordAspect<>(testCatalog, testEntity, def, record1);
 
         Property prop = recordAspect.get("string");
         assertEquals("foo", prop.read());
 
-        Property prop2 = recordAspect.get("integerPrimitive");
-        assertEquals(1, prop2.read());
+        // Test primitive types that should work
+        Property intProp = recordAspect.get("integerPrimitive");
+        assertEquals(1, intProp.read());
+        
+        Property charProp = recordAspect.get("charPrimitive");
+        assertEquals('a', charProp.read());
+        
+        Property byteProp = recordAspect.get("bytePrimitive");
+        assertEquals((byte) 10, byteProp.read());
+        
+        Property shortProp = recordAspect.get("shortPrimitive");
+        assertEquals((short) 100, shortProp.read());
+        
+        Property longProp = recordAspect.get("longPrimitive");
+        assertEquals(1000L, longProp.read());
+        
+        Property floatProp = recordAspect.get("floatPrimitive");
+        assertEquals(10.5f, floatProp.read());
+        
+        Property doubleProp = recordAspect.get("doublePrimitive");
+        assertEquals(100.25, doubleProp.read());
     }
 
     @Test
