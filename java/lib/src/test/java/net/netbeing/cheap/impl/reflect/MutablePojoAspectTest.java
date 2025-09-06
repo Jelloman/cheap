@@ -27,6 +27,7 @@ public class MutablePojoAspectTest
     {
         //private int integerPrimitive;
         //private char charPrimitive;
+        //private boolean booleanPrimitive;
         private String string;
         private Integer integer;
         private Character character;
@@ -35,8 +36,8 @@ public class MutablePojoAspectTest
         private LocalDateTime localDateTime;
     }
 
-    private static TestClass pojo1 = new TestClass("foo", 2, 'b', UUID.randomUUID(), URI.create("http://example.com/"), LocalDateTime.now());
-    private static TestClass pojo2 = new TestClass("foo", 4, 'd', UUID.randomUUID(), URI.create("http://example.com/foo"), LocalDateTime.now().minusDays(1));
+    private static TestClass pojo1;
+    private static TestClass pojo2;
 
     final Entity testEntity = new BasicEntityImpl();
     final Catalog testCatalog = new CatalogImpl(new CatalogDefImpl(CatalogType.ROOT));
@@ -48,6 +49,8 @@ public class MutablePojoAspectTest
     void setUp()
     {
         def = new MutablePojoAspectDef(TestClass.class);
+        //pojo1 = new TestClass(1, 'a', true, "foo", 2, 'b', UUID.randomUUID(), URI.create("http://example.com/"), LocalDateTime.now());
+        //pojo2 = new TestClass(3, 'c', false, "foo", 4, 'd', UUID.randomUUID(), URI.create("http://example.com/foo"), LocalDateTime.now().minusDays(1));
         pojo1 = new TestClass("foo", 2, 'b', UUID.randomUUID(), URI.create("http://example.com/"), LocalDateTime.now());
         pojo2 = new TestClass("bar", 4, 'd', UUID.randomUUID(), URI.create("http://example.com/foo"), LocalDateTime.now().minusDays(1));
     }
