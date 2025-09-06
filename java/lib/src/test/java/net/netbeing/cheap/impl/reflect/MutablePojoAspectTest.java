@@ -25,64 +25,63 @@ public class MutablePojoAspectTest
     @Data @AllArgsConstructor
     public static class TestClass
     {
-        private String string;
         //private int integerPrimitive;
-        private Integer integer;
         //private char charPrimitive;
+        private String string;
+        private Integer integer;
         private Character character;
         private UUID uuid;
         private URI uri;
         private LocalDateTime localDateTime;
     }
 
+    private static TestClass pojo1 = new TestClass("foo", 2, 'b', UUID.randomUUID(), URI.create("http://example.com/"), LocalDateTime.now());
+    private static TestClass pojo2 = new TestClass("foo", 4, 'd', UUID.randomUUID(), URI.create("http://example.com/foo"), LocalDateTime.now().minusDays(1));
+
     final Entity testEntity = new BasicEntityImpl();
     final Catalog testCatalog = new CatalogImpl(new CatalogDefImpl(CatalogType.ROOT));
 
     MutablePojoAspectDef def;
-    TestClass pojo;
     MutablePojoAspect<TestClass> mutablePojoAspect;
 
     @BeforeEach
     void setUp()
     {
         def = new MutablePojoAspectDef(TestClass.class);
+        pojo1 = new TestClass("foo", 2, 'b', UUID.randomUUID(), URI.create("http://example.com/"), LocalDateTime.now());
+        pojo2 = new TestClass("bar", 4, 'd', UUID.randomUUID(), URI.create("http://example.com/foo"), LocalDateTime.now().minusDays(1));
     }
 
     @AfterEach
     void tearDown()
     {
         def = null;
-        pojo = null;
+        pojo1 = null;
+        pojo2 = null;
         mutablePojoAspect = null;
     }
 
     @Test
     void construct()
     {
-        //pojo = new TestClass("foo", 1, 2, 'a', 'b', UUID.randomUUID(), URI.create("http://example.com/"), LocalDateTime.now());
-        pojo = new TestClass("foo", 2, 'b', UUID.randomUUID(), URI.create("http://example.com/"), LocalDateTime.now());
-        mutablePojoAspect = new MutablePojoAspect<>(testCatalog, testEntity, def, pojo);
+        mutablePojoAspect = new MutablePojoAspect<>(testCatalog, testEntity, def, pojo1);
     }
 
     @Test
     void read()
     {
-        //pojo = new TestClass("foo", 1, 2, 'a', 'b', UUID.randomUUID(), URI.create("http://example.com/"), LocalDateTime.now());
-        pojo = new TestClass("foo", 2, 'b', UUID.randomUUID(), URI.create("http://example.com/"), LocalDateTime.now());
-        mutablePojoAspect = new MutablePojoAspect<>(testCatalog, testEntity, def, pojo);
+        mutablePojoAspect = new MutablePojoAspect<>(testCatalog, testEntity, def, pojo1);
 
         String value = mutablePojoAspect.readAs("string", String.class);
 
         assertEquals("foo", value);
-        assertEquals(pojo.getString(), value);
+        assertEquals(pojo1.getString(), value);
     }
 
     @Test
     void get()
     {
-        //pojo = new TestClass("foo", 1, 2, 'a', 'b', UUID.randomUUID(), URI.create("http://example.com/"), LocalDateTime.now());
-        pojo = new TestClass("foo", 2, 'b', UUID.randomUUID(), URI.create("http://example.com/"), LocalDateTime.now());
-        mutablePojoAspect = new MutablePojoAspect<>(testCatalog, testEntity, def, pojo);
+        mutablePojoAspect = new MutablePojoAspect<>(testCatalog, testEntity, def, pojo1);
 
         Property prop = mutablePojoAspect.get("string");
         assertEquals("foo", prop.read());
@@ -94,9 +93,7 @@ public class MutablePojoAspectTest
     @Test
     void put()
     {
-        //pojo = new TestClass("bar", 3, 4, 'c', 'd', UUID.randomUUID(), URI.create("http://example.com/"), LocalDateTime.now().minusDays(1));
-        pojo = new TestClass("bar", 4, 'd', UUID.randomUUID(), URI.create("http://example.com/"), LocalDateTime.now().minusDays(1));
-        mutablePojoAspect = new MutablePojoAspect<>(testCatalog, testEntity, def, pojo);
+        mutablePojoAspect = new MutablePojoAspect<>(testCatalog, testEntity, def, pojo2);
 
         Property prop = mutablePojoAspect.get("string");
         assertEquals("bar", prop.read());
