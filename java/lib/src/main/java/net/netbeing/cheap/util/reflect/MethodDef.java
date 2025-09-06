@@ -3,24 +3,18 @@ package net.netbeing.cheap.util.reflect;
 import java.lang.invoke.MethodType;
 import java.lang.reflect.Method;
 
-public class LambdaMetadata {
-
+public class MethodDef
+{
     private final String methodName;
-    private final MethodType declaringInterfaceType;
     private final MethodType methodType;
 
-    public LambdaMetadata(Method method) {
+    public MethodDef(Method method) {
         this.methodName = method.getName();
-        this.declaringInterfaceType = MethodType.methodType(LambdaWrapper.class);
         this.methodType = MethodType.methodType(method.getReturnType(), method.getParameterTypes());
     }
 
     public String getMethodName() {
         return methodName;
-    }
-
-    public MethodType getDeclaringInterfaceType() {
-        return declaringInterfaceType;
     }
 
     public MethodType getMethodType() {
@@ -29,8 +23,6 @@ public class LambdaMetadata {
 
     @Override
     public String toString() {
-        return "LambdaMetadata{" + "methodName='" + methodName + '\'' + ", factory="
-            + declaringInterfaceType +
-            ", methodType=" + methodType + '}';
+        return "LambdaMetadata{" + "methodName=" + methodName + ", methodType=" + methodType + '}';
     }
 }

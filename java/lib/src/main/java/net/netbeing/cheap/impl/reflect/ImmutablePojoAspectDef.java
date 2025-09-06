@@ -4,8 +4,8 @@ import com.google.common.collect.ImmutableMap;
 import net.netbeing.cheap.impl.basic.ImmutableAspectDefImpl;
 import net.netbeing.cheap.model.PropertyDef;
 import org.jetbrains.annotations.NotNull;
-import net.netbeing.cheap.util.reflect.LambdaWrapper;
-import net.netbeing.cheap.util.reflect.LambdaWrapperHolder;
+import net.netbeing.cheap.util.reflect.GenericGetterSetter;
+import net.netbeing.cheap.util.reflect.ReflectionWrapper;
 
 import java.beans.BeanInfo;
 import java.beans.IntrospectionException;
@@ -17,18 +17,19 @@ import java.util.Map;
 public class ImmutablePojoAspectDef extends ImmutableAspectDefImpl
 {
     private final Class<?> pojoClass;
-    private final Map<String, LambdaWrapper> getters;
+    private final Map<String, GenericGetterSetter> getters;
 
     public ImmutablePojoAspectDef(@NotNull Class<?> pojoClass)
     {
         super(pojoClass.getCanonicalName(), propDefsFrom(pojoClass));
         this.pojoClass = pojoClass;
 
-        Collection<PojoPropertyDef> propDefs = pojoPropertyDefs();
-        ImmutableMap.Builder<String, LambdaWrapper> getterBuilder = ImmutableMap.builderWithExpectedSize(propDefs.size());
-        for (PojoPropertyDef prop : propDefs) {
-            if (prop.getter() != null) {
-                LambdaWrapper getterHolder = LambdaWrapperHolder.createWrapper(prop.getter());
+        Collection<? extends PropertyDef> propDefs = propertyDefs();
+        ImmutableMap.Builder<String, GenericGetterSetter> getterBuilder = ImmutableMap.builderWithExpectedSize(propDefs.size());
+        for (PropertyDef prop : propDefs) {
+            PojoPropertyDef pojoDef = (PojoPropertyDef) prop;
+            if (pojoDef.getter() != null) {
+                GenericGetterSetter getterHolder = ReflectionWrapper.createWrapper(pojoDef.getter());
                 getterBuilder.put(prop.name(), getterHolder);
             }
         }
@@ -40,7 +41,7 @@ public class ImmutablePojoAspectDef extends ImmutableAspectDefImpl
         return pojoClass;
     }
 
-    protected LambdaWrapper getter(@NotNull String propName)
+    protected GenericGetterSetter getter(@NotNull String propName)
     {
         return getters.get(propName);
     }
@@ -63,12 +64,5 @@ public class ImmutablePojoAspectDef extends ImmutableAspectDefImpl
         }
         return propDefs.build();
     }
-
-    public Collection<PojoPropertyDef> pojoPropertyDefs()
-    {
-        //noinspection unchecked
-        return (Collection<PojoPropertyDef>) propertyDefs();
-    }
-
 
 }

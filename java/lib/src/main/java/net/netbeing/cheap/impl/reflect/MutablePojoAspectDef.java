@@ -3,8 +3,8 @@ package net.netbeing.cheap.impl.reflect;
 import com.google.common.collect.ImmutableMap;
 import net.netbeing.cheap.impl.basic.MutableAspectDefImpl;
 import net.netbeing.cheap.model.PropertyDef;
-import net.netbeing.cheap.util.reflect.LambdaWrapper;
-import net.netbeing.cheap.util.reflect.LambdaWrapperHolder;
+import net.netbeing.cheap.util.reflect.GenericGetterSetter;
+import net.netbeing.cheap.util.reflect.ReflectionWrapper;
 import org.jetbrains.annotations.NotNull;
 
 import java.beans.BeanInfo;
@@ -17,24 +17,25 @@ import java.util.Map;
 public class MutablePojoAspectDef extends MutableAspectDefImpl
 {
     private final Class<?> pojoClass;
-    private final Map<String, LambdaWrapper> getters;
-    private final Map<String, LambdaWrapper> setters;
+    private final Map<String, GenericGetterSetter> getters;
+    private final Map<String, GenericGetterSetter> setters;
 
     public MutablePojoAspectDef(@NotNull Class<?> pojoClass)
     {
         super(pojoClass.getCanonicalName(), propDefsFrom(pojoClass));
         this.pojoClass = pojoClass;
 
-        Collection<PojoPropertyDef> propDefs = pojoPropertyDefs();
-        ImmutableMap.Builder<String, LambdaWrapper> getterBuilder = ImmutableMap.builderWithExpectedSize(propDefs.size());
-        ImmutableMap.Builder<String, LambdaWrapper> setterBuilder = ImmutableMap.builderWithExpectedSize(propDefs.size());
-        for (PojoPropertyDef prop : propDefs) {
-            if (prop.getter() != null) {
-                LambdaWrapper getterHolder = LambdaWrapperHolder.createWrapper(prop.getter());
+        Collection<? extends PropertyDef> propDefs = propertyDefs();
+        ImmutableMap.Builder<String, GenericGetterSetter> getterBuilder = ImmutableMap.builderWithExpectedSize(propDefs.size());
+        ImmutableMap.Builder<String, GenericGetterSetter> setterBuilder = ImmutableMap.builderWithExpectedSize(propDefs.size());
+        for (PropertyDef prop : propDefs) {
+            PojoPropertyDef pojoDef = (PojoPropertyDef) prop;
+            if (pojoDef.getter() != null) {
+                GenericGetterSetter getterHolder = ReflectionWrapper.createWrapper(pojoDef.getter());
                 getterBuilder.put(prop.name(), getterHolder);
             }
-            if (prop.setter() != null) {
-                LambdaWrapper setterHolder = LambdaWrapperHolder.createWrapper(prop.setter());
+            if (pojoDef.setter() != null) {
+                GenericGetterSetter setterHolder = ReflectionWrapper.createWrapper(pojoDef.setter());
                 setterBuilder.put(prop.name(), setterHolder);
             }
         }
@@ -47,12 +48,12 @@ public class MutablePojoAspectDef extends MutableAspectDefImpl
         return pojoClass;
     }
 
-    protected LambdaWrapper getter(@NotNull String propName)
+    protected GenericGetterSetter getter(@NotNull String propName)
     {
         return getters.get(propName);
     }
 
-    protected LambdaWrapper setter(@NotNull String propName)
+    protected GenericGetterSetter setter(@NotNull String propName)
     {
         return setters.get(propName);
     }
@@ -75,12 +76,5 @@ public class MutablePojoAspectDef extends MutableAspectDefImpl
         }
         return propDefs.build();
     }
-
-    public Collection<PojoPropertyDef> pojoPropertyDefs()
-    {
-        //noinspection unchecked
-        return (Collection<PojoPropertyDef>) propertyDefs();
-    }
-
 
 }

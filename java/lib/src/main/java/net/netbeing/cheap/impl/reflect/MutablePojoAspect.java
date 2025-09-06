@@ -1,7 +1,7 @@
 package net.netbeing.cheap.impl.reflect;
 
 import net.netbeing.cheap.model.*;
-import net.netbeing.cheap.util.reflect.LambdaWrapper;
+import net.netbeing.cheap.util.reflect.GenericGetterSetter;
 import org.jetbrains.annotations.NotNull;
 
 public class MutablePojoAspect<P> implements Aspect
@@ -46,7 +46,7 @@ public class MutablePojoAspect<P> implements Aspect
     @Override
     public Object unsafeReadObj(@NotNull String propName)
     {
-        LambdaWrapper getter = def.getter(propName);
+        GenericGetterSetter getter = def.getter(propName);
         if (getter == null) {
             throw new IllegalArgumentException("Class " + def.name() + " does not contain field '" + propName + ".");
         }
@@ -56,7 +56,7 @@ public class MutablePojoAspect<P> implements Aspect
     @Override
     public void unsafeWrite(@NotNull String propName, Object value)
     {
-        LambdaWrapper setter = def.setter(propName);
+        GenericGetterSetter setter = def.setter(propName);
         if (setter == null) {
             throw new IllegalArgumentException("Class " + def.name() + " does not contain field '" + propName + ".");
         }

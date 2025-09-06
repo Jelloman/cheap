@@ -46,3 +46,8 @@ tasks.named<Test>("test") {
     // Use JUnit Platform for unit tests.
     useJUnitPlatform()
 }
+gradle.projectsEvaluated {
+    tasks.withType<JavaCompile> {
+        options.compilerArgs.add("-Xlint:unchecked")
+    }
+}

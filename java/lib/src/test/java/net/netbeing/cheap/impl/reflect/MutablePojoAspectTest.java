@@ -25,9 +25,9 @@ public class MutablePojoAspectTest
     @Data @AllArgsConstructor
     public static class TestClass
     {
-        //private int integerPrimitive;
-        //private char charPrimitive;
-        //private boolean booleanPrimitive;
+        private int integerPrimitive;
+        private char charPrimitive;
+        private boolean booleanPrimitive;
         private String string;
         private Integer integer;
         private Character character;
@@ -49,10 +49,10 @@ public class MutablePojoAspectTest
     void setUp()
     {
         def = new MutablePojoAspectDef(TestClass.class);
-        //pojo1 = new TestClass(1, 'a', true, "foo", 2, 'b', UUID.randomUUID(), URI.create("http://example.com/"), LocalDateTime.now());
-        //pojo2 = new TestClass(3, 'c', false, "foo", 4, 'd', UUID.randomUUID(), URI.create("http://example.com/foo"), LocalDateTime.now().minusDays(1));
-        pojo1 = new TestClass("foo", 2, 'b', UUID.randomUUID(), URI.create("http://example.com/"), LocalDateTime.now());
-        pojo2 = new TestClass("bar", 4, 'd', UUID.randomUUID(), URI.create("http://example.com/foo"), LocalDateTime.now().minusDays(1));
+        pojo1 = new TestClass(1, 'a', true, "foo", 2, 'b', UUID.randomUUID(), URI.create("http://example.com/"), LocalDateTime.now());
+        pojo2 = new TestClass(3, 'c', false, "bar", 4, 'd', UUID.randomUUID(), URI.create("http://example.com/foo"), LocalDateTime.now().minusDays(1));
+        //pojo1 = new TestClass("foo", 2, 'b', UUID.randomUUID(), URI.create("http://example.com/"), LocalDateTime.now());
+        //pojo2 = new TestClass("bar", 4, 'd', UUID.randomUUID(), URI.create("http://example.com/foo"), LocalDateTime.now().minusDays(1));
     }
 
     @AfterEach

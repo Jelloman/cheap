@@ -19,9 +19,9 @@
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
-      <module name="cheap.lib" options="-Xlint:-processing" />
-      <module name="cheap.lib.main" options="-Xlint:-processing" />
-      <module name="cheap.lib.test" options="-Xlint:-processing" />
+      <module name="cheap.lib" options="-Xlint:-processing -Xlint:unchecked" />
+      <module name="cheap.lib.main" options="-Xlint:-processing -Xlint:unchecked" />
+      <module name="cheap.lib.test" options="-Xlint:-processing -Xlint:unchecked" />
     </option>
   </component>
 </project>
