@@ -3,8 +3,9 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/cheap.iml" filepath="$PROJECT_DIR$/.idea/cheap.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/cheap-core/java.cheap.cheap-core.main.iml" filepath="$PROJECT_DIR$/.idea/modules/cheap-core/java.cheap.cheap-core.main.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/cheap-core/java.cheap.cheap-core.test.iml" filepath="$PROJECT_DIR$/.idea/modules/cheap-core/java.cheap.cheap-core.test.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/cheap-core/cheap.cheap-core.main.iml" filepath="$PROJECT_DIR$/.idea/modules/cheap-core/cheap.cheap-core.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/cheap-core/cheap.cheap-core.test.iml" filepath="$PROJECT_DIR$/.idea/modules/cheap-core/cheap.cheap-core.test.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/cheap-db/cheap.cheap-db.main.iml" filepath="$PROJECT_DIR$/.idea/modules/cheap-db/cheap.cheap-db.main.iml" />
     </modules>
   </component>
 </project>
