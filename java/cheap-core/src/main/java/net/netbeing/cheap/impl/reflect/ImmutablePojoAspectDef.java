@@ -25,7 +25,7 @@ public class ImmutablePojoAspectDef extends ImmutableAspectDefImpl
         this.pojoClass = pojoClass;
 
         Collection<? extends PropertyDef> propDefs = propertyDefs();
-        ImmutableMap.Builder<String, GenericGetterSetter> getterBuilder = ImmutableMap.builderWithExpectedSize(propDefs.size());
+        ImmutableMap.Builder<@NotNull String, @NotNull GenericGetterSetter> getterBuilder = ImmutableMap.builderWithExpectedSize(propDefs.size());
         for (PropertyDef prop : propDefs) {
             PojoPropertyDef pojoDef = (PojoPropertyDef) prop;
             if (pojoDef.getter() != null) {
@@ -46,7 +46,7 @@ public class ImmutablePojoAspectDef extends ImmutableAspectDefImpl
         return getters.get(propName);
     }
 
-    public static ImmutableMap<String, PropertyDef> propDefsFrom(@NotNull Class<?> pojoClass)
+    public static ImmutableMap<@NotNull String, @NotNull PropertyDef> propDefsFrom(@NotNull Class<?> pojoClass)
     {
         BeanInfo beanInfo;
         try {
@@ -56,7 +56,7 @@ public class ImmutablePojoAspectDef extends ImmutableAspectDefImpl
         }
 
         PropertyDescriptor[] props = beanInfo.getPropertyDescriptors();
-        ImmutableMap.Builder<String, PropertyDef> propDefs = ImmutableMap.builderWithExpectedSize(props.length);
+        ImmutableMap.Builder<@NotNull String, @NotNull PropertyDef> propDefs = ImmutableMap.builderWithExpectedSize(props.length);
         for (PropertyDescriptor prop : props)
         {
             PropertyDef def = PojoPropertyDef.fromPropertyDescriptor(prop, true);

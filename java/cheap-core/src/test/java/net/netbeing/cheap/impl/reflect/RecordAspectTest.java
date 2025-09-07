@@ -110,18 +110,4 @@ public class RecordAspectTest
         assertEquals(100.25, doubleProp.read());
     }
 
-    @Test
-    void put()
-    {
-    }
-
-    @Test
-    void unsafeWrite()
-    {
-    }
-
-    @Test
-    void unsafeRemove()
-    {
-    }
 }

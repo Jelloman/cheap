@@ -26,10 +26,10 @@ public class RecordAspectDef extends ImmutableAspectDefImpl
         this.methods = buildMethodMap();
     }
 
-    protected @NotNull @Unmodifiable ImmutableMap<String, GenericGetterSetter> buildMethodMap()
+    protected @NotNull @Unmodifiable ImmutableMap<@NotNull String, @NotNull GenericGetterSetter> buildMethodMap()
     {
         Collection<? extends PropertyDef> propDefs = propertyDefs();
-        ImmutableMap.Builder<String, GenericGetterSetter> builder = ImmutableMap.builderWithExpectedSize(propDefs.size());
+        ImmutableMap.Builder<@NotNull String, @NotNull GenericGetterSetter> builder = ImmutableMap.builderWithExpectedSize(propDefs.size());
         for (PropertyDef propDef : propDefs) {
             RecordPropertyDef recDef = (RecordPropertyDef) propDef;
             RecordComponent comp = recDef.field();
@@ -50,10 +50,10 @@ public class RecordAspectDef extends ImmutableAspectDefImpl
         return recordClass;
     }
 
-    public static ImmutableMap<String, PropertyDef> propDefsFrom(@NotNull Class<? extends Record> klass)
+    public static ImmutableMap<@NotNull String, @NotNull PropertyDef> propDefsFrom(@NotNull Class<? extends Record> klass)
     {
         RecordComponent[] fields = klass.getRecordComponents();
-        ImmutableMap.Builder<String, PropertyDef> propDefs = ImmutableMap.builderWithExpectedSize(fields.length);
+        ImmutableMap.Builder<@NotNull String, @NotNull PropertyDef> propDefs = ImmutableMap.builderWithExpectedSize(fields.length);
 
         for (var field : fields) {
             PropertyDef def = new RecordPropertyDef(field);

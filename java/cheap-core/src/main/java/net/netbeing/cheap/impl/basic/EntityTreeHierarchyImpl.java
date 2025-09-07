@@ -24,7 +24,7 @@ public class EntityTreeHierarchyImpl implements EntityTreeHierarchy
         }
     }
 
-    public class LeafNodeImpl extends AbstractMap<String, Node> implements Node
+    public static class LeafNodeImpl extends AbstractMap<String, Node> implements Node
     {
         private final Entity value;
 

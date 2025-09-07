@@ -110,13 +110,4 @@ public class MutablePojoAspectTest
 
     }
 
-    @Test
-    void unsafeWrite()
-    {
-    }
-
-    @Test
-    void unsafeRemove()
-    {
-    }
 }

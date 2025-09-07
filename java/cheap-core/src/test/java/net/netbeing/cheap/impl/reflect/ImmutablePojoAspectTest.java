@@ -130,13 +130,4 @@ public class ImmutablePojoAspectTest
         Throwable exception = assertThrows(UnsupportedOperationException.class, () -> immutablePojoAspect.put(newProp));
     }
 
-    @Test
-    void unsafeWrite()
-    {
-    }
-
-    @Test
-    void unsafeRemove()
-    {
-    }
 }
