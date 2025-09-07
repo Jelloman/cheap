@@ -9,6 +9,7 @@ plugins {
     // Apply the java-library plugin for API and implementation separation.
     `java-library`
     id("io.freefair.lombok") version "8.14.2"
+
 }
 
 repositories {
@@ -48,6 +49,7 @@ tasks.named<Test>("test") {
 }
 gradle.projectsEvaluated {
     tasks.withType<JavaCompile> {
-        options.compilerArgs.add("-Xlint:unchecked")
+        options.compilerArgs.addAll(listOf("-Xlint:unchecked"))
+        //options.compilerArgs.addAll(listOf("-Xlint:unchecked", "--sun-misc-unsafe-memory-access=allow"))
     }
 }

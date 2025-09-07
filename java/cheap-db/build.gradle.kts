@@ -1,5 +1,6 @@
 plugins {
     id("java")
+    id("io.freefair.lombok") version "8.14.2"
 }
 
 group = "net.netbeing"
@@ -15,6 +16,19 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter")
 }
 
-tasks.test {
+// Apply a specific Java toolchain to ease working on different environments.
+java {
+    modularity.inferModulePath = true
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(24)
+    }
+}
+tasks.named<Test>("test") {
     useJUnitPlatform()
+}
+gradle.projectsEvaluated {
+    tasks.withType<JavaCompile> {
+        options.compilerArgs.addAll(listOf("-Xlint:unchecked"))
+        //options.compilerArgs.addAll(listOf("-Xlint:unchecked", "--sun-misc-unsafe-memory-access=allow"))
+    }
 }
