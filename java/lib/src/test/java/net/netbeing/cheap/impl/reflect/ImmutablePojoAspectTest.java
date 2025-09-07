@@ -93,10 +93,12 @@ public class ImmutablePojoAspectTest
         Property prop = immutablePojoAspect.get("string");
         assertEquals("foo", prop.read());
 
-        // Test primitive types that should work
+        Property booleanProp = immutablePojoAspect.get("booleanPrimitive");
+        assertEquals(true, booleanProp.read());
+
         Property intProp = immutablePojoAspect.get("integerPrimitive");
         assertEquals(1, intProp.read());
-        
+
         Property charProp = immutablePojoAspect.get("charPrimitive");
         assertEquals('a', charProp.read());
         

@@ -51,8 +51,6 @@ public class MutablePojoAspectTest
         def = new MutablePojoAspectDef(TestClass.class);
         pojo1 = new TestClass(1, 'a', true, "foo", 2, 'b', UUID.randomUUID(), URI.create("http://example.com/"), LocalDateTime.now());
         pojo2 = new TestClass(3, 'c', false, "bar", 4, 'd', UUID.randomUUID(), URI.create("http://example.com/foo"), LocalDateTime.now().minusDays(1));
-        //pojo1 = new TestClass("foo", 2, 'b', UUID.randomUUID(), URI.create("http://example.com/"), LocalDateTime.now());
-        //pojo2 = new TestClass("bar", 4, 'd', UUID.randomUUID(), URI.create("http://example.com/foo"), LocalDateTime.now().minusDays(1));
     }
 
     @AfterEach
@@ -89,7 +87,6 @@ public class MutablePojoAspectTest
         Property prop = mutablePojoAspect.get("string");
         assertEquals("foo", prop.read());
 
-        // Test primitive types that should work
         Property intProp = mutablePojoAspect.get("integerPrimitive");
         assertEquals(1, intProp.read());
         
@@ -105,7 +102,6 @@ public class MutablePojoAspectTest
         Property prop = mutablePojoAspect.get("string");
         assertEquals("bar", prop.read());
 
-        //pojo.setString();
         Property newProp = new PropertyImpl(prop.def(), "baz");
         mutablePojoAspect.put(newProp);
 

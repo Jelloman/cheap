@@ -33,11 +33,15 @@ public record PojoPropertyDef(
     public static PojoPropertyDef fromGetterOnly(Method getter)
     {
         String name = getter.getName();
-        // Remove leading get and lower-case next character. Without leading "get" we leave case alone.
+        // Remove leading get/is and lower-case next character. Without leading "get" we leave case alone.
         if (name.startsWith("get")) {
             char[] c = name.toCharArray();
             c[3] = Character.toLowerCase(c[3]);
             name = new String(c, 3, c.length - 3);
+        } else if (name.startsWith("is")) {
+            char[] c = name.toCharArray();
+            c[2] = Character.toLowerCase(c[2]);
+            name = new String(c, 2, c.length - 2);
         }
         PropertyType type = CheapReflectionUtil.typeOfGetter(getter);
         boolean nullable = CheapReflectionUtil.nullabilityOfGetter(getter);
