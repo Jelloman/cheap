@@ -56,7 +56,7 @@ public class ImmutablePojoAspect<P> implements Aspect
     @Override
     public void unsafeWrite(@NotNull String propName, Object value)
     {
-        throw new UnsupportedOperationException("Property '" + propName + "' cannot be set in Record class with immutable AspectDef '" + def.name() + "'.");
+        throw new UnsupportedOperationException("Property '" + propName + "' cannot be set in Java class with immutable AspectDef '" + def.name() + "'.");
     }
 
     @Override

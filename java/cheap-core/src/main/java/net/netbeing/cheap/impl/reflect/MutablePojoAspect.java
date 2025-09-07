@@ -48,7 +48,7 @@ public class MutablePojoAspect<P> implements Aspect
     {
         GenericGetterSetter getter = def.getter(propName);
         if (getter == null) {
-            throw new IllegalArgumentException("Class " + def.name() + " does not contain field '" + propName + ".");
+            throw new IllegalArgumentException("Class " + def.name() + " does not contain field '" + propName + "'.");
         }
         return getter.get(object);
     }
@@ -58,7 +58,7 @@ public class MutablePojoAspect<P> implements Aspect
     {
         GenericGetterSetter setter = def.setter(propName);
         if (setter == null) {
-            throw new IllegalArgumentException("Class " + def.name() + " does not contain field '" + propName + ".");
+            throw new IllegalArgumentException("Class " + def.name() + " does not contain field '" + propName + "'.");
         }
         setter.set(object, value);
     }
