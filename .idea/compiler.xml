@@ -8,20 +8,26 @@
         <processorPath useClasspath="false">
           <entry name="$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.projectlombok/lombok/1.18.38/57f8f5e02e92a30fd21b80cbd426a4172b5f8e29/lombok-1.18.38.jar" />
         </processorPath>
-        <module name="cheap.lib.main" />
-        <module name="cheap.lib.test" />
+        <module name="java.cheap.cheap-core.test" />
+        <module name="java.cheap.cheap-core.main" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
-      <module name="java.cheap.main" target="24" />
-      <module name="java.cheap.test" target="24" />
+      <module name="java.cheap.cheap-core.main~1" target="24" />
+      <module name="java.cheap.cheap-core.test~1" target="24" />
+      <module name="java.cheap.cheap-db" target="24" />
+      <module name="java.cheap.cheap-db.main" target="24" />
+      <module name="java.cheap.cheap-db.test" target="24" />
     </bytecodeTargetLevel>
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
-      <module name="cheap.lib" options="-Xlint:-processing -Xlint:unchecked" />
-      <module name="cheap.lib.main" options="-Xlint:-processing -Xlint:unchecked" />
-      <module name="cheap.lib.test" options="-Xlint:-processing -Xlint:unchecked" />
+      <module name="java.cheap.cheap-core" options="-Xlint:-processing -Xlint:unchecked" />
+      <module name="java.cheap.cheap-core.main" options="-Xlint:-processing -Xlint:unchecked" />
+      <module name="java.cheap.cheap-core.test" options="-Xlint:-processing -Xlint:unchecked" />
+      <module name="java.cheap.cheap-db" options="-Xlint:-processing -Xlint:unchecked" />
+      <module name="java.cheap.cheap-db.main" options="-Xlint:-processing -Xlint:unchecked" />
+      <module name="java.cheap.cheap-db.test" options="-Xlint:-processing -Xlint:unchecked" />
     </option>
   </component>
 </project>

@@ -11,4 +11,5 @@ plugins {
 }
 
 rootProject.name = "cheap"
-include("lib")
+include("cheap-core")
+include("cheap-db")

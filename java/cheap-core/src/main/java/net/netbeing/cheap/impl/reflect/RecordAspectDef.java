@@ -28,10 +28,11 @@ public class RecordAspectDef extends ImmutableAspectDefImpl
 
     protected @NotNull @Unmodifiable ImmutableMap<String, GenericGetterSetter> buildMethodMap()
     {
-        Collection<RecordPropertyDef> propDefs = recordPropertyDefs();
+        Collection<? extends PropertyDef> propDefs = propertyDefs();
         ImmutableMap.Builder<String, GenericGetterSetter> builder = ImmutableMap.builderWithExpectedSize(propDefs.size());
-        for (RecordPropertyDef prop : propDefs) {
-            RecordComponent comp = prop.field();
+        for (PropertyDef propDef : propDefs) {
+            RecordPropertyDef recDef = (RecordPropertyDef) propDef;
+            RecordComponent comp = recDef.field();
             Method method = comp.getAccessor();
             GenericGetterSetter getterHolder = ReflectionWrapper.createWrapper(method);
             builder.put(comp.getName(), getterHolder);
@@ -61,12 +62,5 @@ public class RecordAspectDef extends ImmutableAspectDefImpl
 
         return propDefs.build();
     }
-
-    public Collection<RecordPropertyDef> recordPropertyDefs()
-    {
-        //noinspection unchecked
-        return (Collection<RecordPropertyDef>) propertyDefs();
-    }
-
 
 }

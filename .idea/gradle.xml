@@ -9,7 +9,8 @@
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$/java" />
-            <option value="$PROJECT_DIR$/java/lib" />
+            <option value="$PROJECT_DIR$/java/cheap-core" />
+            <option value="$PROJECT_DIR$/java/cheap-db" />
           </set>
         </option>
       </GradleProjectSettings>
