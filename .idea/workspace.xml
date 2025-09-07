@@ -4,11 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="484e290b-619a-4c5f-90fa-62a99742e203" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/java/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/java/.gitignore" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/java/cheap-core/src/test/java/net/netbeing/cheap/impl/basic/CatalogImplTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/java/cheap-core/src/test/java/net/netbeing/cheap/impl/basic/CatalogImplTest.java" afterDir="false" />
-    </list>
+    <list default="true" id="484e290b-619a-4c5f-90fa-62a99742e203" name="Changes" comment="update before removal" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -140,6 +136,37 @@
       <option name="presentableId" value="Default" />
       <updated>1757272097265</updated>
     </task>
+    <task id="LOCAL-00001" summary="update gitignore">
+      <option name="closed" value="true" />
+      <created>1757276939089</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1757276939089</updated>
+    </task>
+    <task id="LOCAL-00002" summary="add hierarchies test">
+      <option name="closed" value="true" />
+      <created>1757276965613</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1757276965613</updated>
+    </task>
+    <task id="LOCAL-00003" summary="update before removal">
+      <option name="closed" value="true" />
+      <created>1757277143280</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1757277143280</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
     <servers />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="update gitignore" />
+    <MESSAGE value="add hierarchies test" />
+    <MESSAGE value="update before removal" />
+    <option name="LAST_COMMIT_MESSAGE" value="update before removal" />
   </component>
 </project>
