@@ -6,6 +6,8 @@
   <component name="ChangeListManager">
     <list default="true" id="484e290b-619a-4c5f-90fa-62a99742e203" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/java/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/java/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/java/cheap-core/src/test/java/net/netbeing/cheap/impl/basic/CatalogImplTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/java/cheap-core/src/test/java/net/netbeing/cheap/impl/basic/CatalogImplTest.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -32,6 +34,17 @@
               <path>
                 <item name="" type="6a2764b6:ExternalProjectsStructure$RootNode" />
                 <item name="cheap" type="f1a62948:ProjectNode" />
+              </path>
+              <path>
+                <item name="" type="6a2764b6:ExternalProjectsStructure$RootNode" />
+                <item name="cheap" type="f1a62948:ProjectNode" />
+                <item name="Tasks" type="e4a08cd1:TasksNode" />
+              </path>
+              <path>
+                <item name="" type="6a2764b6:ExternalProjectsStructure$RootNode" />
+                <item name="cheap" type="f1a62948:ProjectNode" />
+                <item name="Tasks" type="e4a08cd1:TasksNode" />
+                <item name="build" type="c8890929:TasksNode$1" />
               </path>
             </expand>
             <select />
@@ -67,7 +80,7 @@
     &quot;settings.editor.selected.configurable&quot;: &quot;preferences.sourceCode.Java&quot;
   }
 }</component>
-  <component name="RunManager" selected="Gradle.java:cheap-core [build]">
+  <component name="RunManager" selected="Gradle.java [build]">
     <configuration name="java [build]" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
       <ExternalSystemSettings>
         <option name="executionName" />
@@ -114,8 +127,8 @@
     </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="Gradle.java:cheap-core [build]" />
         <item itemvalue="Gradle.java [build]" />
+        <item itemvalue="Gradle.java:cheap-core [build]" />
       </list>
     </recent_temporary>
   </component>
