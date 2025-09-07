@@ -1,6 +1,6 @@
 ### ----------- IDEA GENERATED SECTION ------------
 ### IntelliJ IDEA ###
-out/
+**/out/
 !**/src/main/**/out/
 !**/src/test/**/out/
 
@@ -24,10 +24,10 @@ bin/
 /.nb-gradle/
 
 ### VS Code ###
-.vscode/
+**/.vscode/
 
 ### Mac OS ###
-.DS_Store
+**/.DS_Store
 ### ----------- END IDEA GENERATED SECTION ------------
 
 ### ----------- gitignore.io GENERATED SECTION ------------
@@ -151,8 +151,8 @@ fabric.properties
 # End of https://www.toptal.com/developers/gitignore/api/intellij
 
 
-target/
-.aider-desk/
-.gradle/
-build/
+**/target/
+**/.aider-desk/
+**/.gradle/
+**/build/
 
