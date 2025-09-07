@@ -15,25 +15,42 @@ The system follows the CHEAP acronym structure:
 
 ## Build System
 
-This is a Gradle-based Java project using Java 24 with modules.
+This is a multi-module Gradle-based Java project using Java 24 with modules.
+
+### Project Structure
+
+```
+java/
+├── cheap-core/          # Core library module
+├── cheap-db/            # Database module (depends on cheap-core)
+├── settings.gradle.kts  # Multi-module build configuration
+└── gradle/
+    └── libs.versions.toml # Version catalog for dependencies
+```
 
 ### Common Commands
 
 ```bash
-# Build the project
+# Build all modules
 cd java && ./gradlew build
 
-# Run tests
+# Run tests for all modules
 cd java && ./gradlew test
 
-# Clean build
+# Clean build all modules
 cd java && ./gradlew clean build
+
+# Build specific module
+cd java && ./gradlew :cheap-core:build
+cd java && ./gradlew :cheap-db:build
 ```
 
 ## Architecture
 
 ### Module Structure
-- **Module Name**: `cheap`
+- **Root Project**: `cheap`
+- **Core Module**: `cheap-core` - Main library containing CHEAP model implementation
+- **Database Module**: `cheap-db` - Database-related functionality (depends on cheap-core)
 - **Main Package**: `net.netbeing.cheap`
 - **Exported Packages**:
   - `net.netbeing.cheap.model` - Core interfaces and data model
