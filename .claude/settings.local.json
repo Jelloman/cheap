@@ -3,7 +3,8 @@
     "allow": [
       "Bash(./gradlew test:*)",
       "Bash(./gradlew:*)",
-      "Bash(javap:*)"
+      "Bash(javap:*)",
+      "Bash(tree:*)"
     ],
     "deny": [],
     "ask": []

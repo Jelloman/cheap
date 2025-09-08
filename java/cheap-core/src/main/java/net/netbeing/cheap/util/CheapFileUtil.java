@@ -21,7 +21,7 @@ import java.util.stream.Stream;
 @UtilityClass
 public class CheapFileUtil
 {
-    public final String FILE_REC_ASPECT_NAME = FileRec.class.getName();
+    public final String FILE_REC_ASPECT_NAME = FileRec.class.getCanonicalName();
 
     public record FileRec(
         String name,
