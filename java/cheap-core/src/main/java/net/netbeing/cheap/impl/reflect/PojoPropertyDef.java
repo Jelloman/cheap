@@ -13,6 +13,7 @@ public record PojoPropertyDef(
         PropertyType type,
         Method getter,
         Method setter,
+        boolean isJavaPrimitive,
         boolean isReadable,
         boolean isWritable,
         boolean isNullable,
@@ -46,8 +47,9 @@ public record PojoPropertyDef(
         PropertyType type = CheapReflectionUtil.typeOfGetter(getter);
         boolean nullable = CheapReflectionUtil.nullabilityOfGetter(getter);
         boolean multivalued = CheapReflectionUtil.isMultivaluedGetter(getter);
+        boolean isPrimitive = getter.getReturnType().isPrimitive();
 
-        return new PojoPropertyDef(name, type, getter, null, true, false, nullable, multivalued);
+        return new PojoPropertyDef(name, type, getter, null, isPrimitive, true, false, nullable, multivalued);
     }
 
     public static PojoPropertyDef fromSetterOnly(Method setter)
@@ -65,8 +67,9 @@ public record PojoPropertyDef(
         PropertyType type = CheapReflectionUtil.typeOfSetter(setter);
         boolean nullable = CheapReflectionUtil.nullabilityOfSetter(setter);
         boolean multivalued = CheapReflectionUtil.isMultivaluedSetter(setter);
+        boolean isPrimitive = setter.getParameterTypes()[0].isPrimitive();
 
-        return new PojoPropertyDef(name, type, null, setter, false, true, nullable, multivalued);
+        return new PojoPropertyDef(name, type, null, setter, isPrimitive, false, true, nullable, multivalued);
     }
 
     public static PojoPropertyDef fromGetterSetter(Method getter, Method setter)
@@ -85,8 +88,9 @@ public record PojoPropertyDef(
         PropertyType type = CheapReflectionUtil.typeOfGetter(getter);
         boolean nullable = CheapReflectionUtil.nullabilityOfGetterSetter(getter, setter);
         boolean multivalued = CheapReflectionUtil.isMultivaluedGetter(getter);
+        boolean isPrimitive = getter.getReturnType().isPrimitive();
 
-        return new PojoPropertyDef(name, type, getter, setter, true, true, nullable, multivalued);
+        return new PojoPropertyDef(name, type, getter, setter, isPrimitive, true, true, nullable, multivalued);
     }
 
     public static PojoPropertyDef fromPropertyDescriptor(PropertyDescriptor prop, boolean immutable)

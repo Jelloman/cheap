@@ -56,7 +56,7 @@ public class RecordAspect<R extends Record> implements Aspect
     {
         GenericGetterSetter getter = def.getter(propName);
         if (getter == null) {
-            throw new IllegalArgumentException("Class " + def.name() + " does not contain field '" + propName + ".");
+            throw new IllegalArgumentException("Class " + def.name() + " does not contain field '" + propName + "'.");
         }
         return getter.get(record);
     }
