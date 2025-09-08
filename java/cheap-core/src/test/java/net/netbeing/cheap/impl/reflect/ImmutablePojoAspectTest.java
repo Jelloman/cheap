@@ -18,8 +18,7 @@ import java.net.URI;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class ImmutablePojoAspectTest
 {
@@ -128,6 +127,171 @@ public class ImmutablePojoAspectTest
 
         Property newProp = new PropertyImpl(prop.def(), "baz");
         Throwable exception = assertThrows(UnsupportedOperationException.class, () -> immutablePojoAspect.put(newProp));
+    }
+
+    @Test
+    void object()
+    {
+        immutablePojoAspect = new ImmutablePojoAspect<>(testCatalog, testEntity, def, pojo1);
+        
+        assertSame(pojo1, immutablePojoAspect.object());
+    }
+
+    @Test
+    void catalog()
+    {
+        immutablePojoAspect = new ImmutablePojoAspect<>(testCatalog, testEntity, def, pojo1);
+        
+        assertSame(testCatalog, immutablePojoAspect.catalog());
+    }
+
+    @Test
+    void entity()
+    {
+        immutablePojoAspect = new ImmutablePojoAspect<>(testCatalog, testEntity, def, pojo1);
+        
+        assertSame(testEntity, immutablePojoAspect.entity());
+    }
+
+    @Test
+    void def()
+    {
+        immutablePojoAspect = new ImmutablePojoAspect<>(testCatalog, testEntity, def, pojo1);
+        
+        assertSame(def, immutablePojoAspect.def());
+    }
+
+    @Test
+    void contains()
+    {
+        immutablePojoAspect = new ImmutablePojoAspect<>(testCatalog, testEntity, def, pojo1);
+        
+        assertTrue(immutablePojoAspect.contains("string"));
+        assertTrue(immutablePojoAspect.contains("integerPrimitive"));
+        assertTrue(immutablePojoAspect.contains("uuid"));
+        
+        // For non-existent fields, contains() will throw an exception because unsafeReadObj() throws
+        assertThrows(IllegalArgumentException.class, 
+            () -> immutablePojoAspect.contains("nonExistentField"));
+    }
+
+    @Test
+    void unsafeReadObj()
+    {
+        immutablePojoAspect = new ImmutablePojoAspect<>(testCatalog, testEntity, def, pojo1);
+        
+        assertEquals("foo", immutablePojoAspect.unsafeReadObj("string"));
+        assertEquals(1, immutablePojoAspect.unsafeReadObj("integerPrimitive"));
+        assertEquals('a', immutablePojoAspect.unsafeReadObj("charPrimitive"));
+        assertEquals(true, immutablePojoAspect.unsafeReadObj("booleanPrimitive"));
+        assertEquals((byte) 10, immutablePojoAspect.unsafeReadObj("bytePrimitive"));
+        assertEquals((short) 100, immutablePojoAspect.unsafeReadObj("shortPrimitive"));
+        assertEquals(1000L, immutablePojoAspect.unsafeReadObj("longPrimitive"));
+        assertEquals(10.5f, immutablePojoAspect.unsafeReadObj("floatPrimitive"));
+        assertEquals(100.25, immutablePojoAspect.unsafeReadObj("doublePrimitive"));
+        assertEquals(2, immutablePojoAspect.unsafeReadObj("integer"));
+        assertEquals('b', immutablePojoAspect.unsafeReadObj("character"));
+        assertNotNull(immutablePojoAspect.unsafeReadObj("uuid"));
+        assertNotNull(immutablePojoAspect.unsafeReadObj("uri"));
+        assertNotNull(immutablePojoAspect.unsafeReadObj("localDateTime"));
+    }
+
+    @Test
+    void unsafeReadObj_NonExistentProperty_ThrowsException()
+    {
+        immutablePojoAspect = new ImmutablePojoAspect<>(testCatalog, testEntity, def, pojo1);
+        
+        IllegalArgumentException exception = assertThrows(
+            IllegalArgumentException.class,
+            () -> immutablePojoAspect.unsafeReadObj("nonExistentField")
+        );
+        
+        assertTrue(exception.getMessage().contains("does not contain field 'nonExistentField'"));
+    }
+
+    @Test
+    void unsafeWrite_ThrowsUnsupportedOperation()
+    {
+        immutablePojoAspect = new ImmutablePojoAspect<>(testCatalog, testEntity, def, pojo1);
+        
+        UnsupportedOperationException exception = assertThrows(
+            UnsupportedOperationException.class,
+            () -> immutablePojoAspect.unsafeWrite("string", "newValue")
+        );
+        
+        assertTrue(exception.getMessage().contains("cannot be set in Java class"));
+    }
+
+    @Test
+    void unsafeAdd_ThrowsUnsupportedOperation()
+    {
+        immutablePojoAspect = new ImmutablePojoAspect<>(testCatalog, testEntity, def, pojo1);
+        Property prop = immutablePojoAspect.get("string");
+        
+        UnsupportedOperationException exception = assertThrows(
+            UnsupportedOperationException.class,
+            () -> immutablePojoAspect.unsafeAdd(prop)
+        );
+        
+        assertTrue(exception.getMessage().contains("cannot be added to Java class"));
+    }
+
+    @Test
+    void unsafeRemove_ThrowsUnsupportedOperation()
+    {
+        immutablePojoAspect = new ImmutablePojoAspect<>(testCatalog, testEntity, def, pojo1);
+        
+        UnsupportedOperationException exception = assertThrows(
+            UnsupportedOperationException.class,
+            () -> immutablePojoAspect.unsafeRemove("string")
+        );
+        
+        assertTrue(exception.getMessage().contains("cannot be removed from Java class"));
+    }
+
+    @Test
+    void unsafeRead_GenericMethod()
+    {
+        immutablePojoAspect = new ImmutablePojoAspect<>(testCatalog, testEntity, def, pojo1);
+        
+        String stringValue = immutablePojoAspect.unsafeRead("string");
+        assertEquals("foo", stringValue);
+        
+        Integer intValue = immutablePojoAspect.unsafeRead("integerPrimitive");
+        assertEquals(1, intValue);
+        
+        Boolean boolValue = immutablePojoAspect.unsafeRead("booleanPrimitive");
+        assertTrue(boolValue);
+    }
+
+    @Test
+    void readObj_WithNullValue()
+    {
+        TestClass pojoWithNull = new TestClass(1, 'a', true, (byte) 10, (short) 100, 1000L, 10.5f, 100.25, null, null, null, null, null, null);
+        immutablePojoAspect = new ImmutablePojoAspect<>(testCatalog, testEntity, def, pojoWithNull);
+        
+        assertNull(immutablePojoAspect.unsafeReadObj("string"));
+        assertNull(immutablePojoAspect.unsafeReadObj("integer"));
+        assertNull(immutablePojoAspect.unsafeReadObj("character"));
+        assertNull(immutablePojoAspect.unsafeReadObj("uuid"));
+        assertNull(immutablePojoAspect.unsafeReadObj("uri"));
+        assertNull(immutablePojoAspect.unsafeReadObj("localDateTime"));
+        
+        // Test that contains() returns false for null values
+        assertFalse(immutablePojoAspect.contains("string"));
+        assertFalse(immutablePojoAspect.contains("integer"));
+    }
+
+    @Test
+    void uncheckedRead_GenericMethod()
+    {
+        immutablePojoAspect = new ImmutablePojoAspect<>(testCatalog, testEntity, def, pojo1);
+        
+        String stringValue = immutablePojoAspect.uncheckedRead("string");
+        assertEquals("foo", stringValue);
+        
+        Character charValue = immutablePojoAspect.uncheckedRead("character");
+        assertEquals('b', charValue);
     }
 
 }
