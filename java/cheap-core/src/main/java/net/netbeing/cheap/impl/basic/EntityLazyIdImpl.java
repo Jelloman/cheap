@@ -12,6 +12,11 @@ public class EntityLazyIdImpl implements Entity
     private volatile UUID globalId;
     private final LocalEntity local;
 
+    public EntityLazyIdImpl()
+    {
+        this.local = new LocalEntityImpl(this);
+    }
+
     public EntityLazyIdImpl(LocalEntity local)
     {
         this.local = local;

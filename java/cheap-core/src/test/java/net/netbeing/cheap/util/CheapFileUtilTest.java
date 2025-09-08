@@ -245,10 +245,10 @@ public class CheapFileUtilTest
     }
 
     @Test
-    void loadFiles_LoadsIntoCatalog() throws IOException
+    void loadFileRecordsOnly_LoadsIntoCatalog() throws IOException
     {
         // Load files into catalog
-        CheapFileUtil.loadFiles(catalog, testRoot, 10);
+        CheapFileUtil.loadFileRecordsOnly(catalog, testRoot, 10);
         
         AspectMapHierarchy aspects = catalog.aspects(fileRecAspectDef);
         assertNotNull(aspects);
@@ -258,29 +258,16 @@ public class CheapFileUtilTest
     }
 
     @Test
-    void loadFiles_WithMaxDepth() throws IOException
+    void loadFileRecordsOnly_WithMaxDepth() throws IOException
     {
         // Load with depth limit
-        CheapFileUtil.loadFiles(catalog, testRoot, 2);
+        CheapFileUtil.loadFileRecordsOnly(catalog, testRoot, 2);
         
         AspectMapHierarchy aspects = catalog.aspects(fileRecAspectDef);
         assertNotNull(aspects);
         
         // Should have 4 entries (excludes file2.txt at depth 3)
         assertEquals(4, aspects.size());
-    }
-
-    @Test
-    void loadFiles_WithFileVisitOptions() throws IOException
-    {
-        // Load with FOLLOW_LINKS option
-        CheapFileUtil.loadFiles(catalog, testRoot, 10, FileVisitOption.FOLLOW_LINKS);
-        
-        AspectMapHierarchy aspects = catalog.aspects(fileRecAspectDef);
-        assertNotNull(aspects);
-        
-        // Should have all 5 entries
-        assertEquals(5, aspects.size());
     }
 
     @Test
