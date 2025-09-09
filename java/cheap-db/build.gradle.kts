@@ -12,8 +12,10 @@ repositories {
 
 dependencies {
     implementation(project(":cheap-core"))
+    implementation(libs.sqlite.jdbc)
     testImplementation(platform("org.junit:junit-bom:5.10.0"))
     testImplementation("org.junit.jupiter:junit-jupiter")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
 // Apply a specific Java toolchain to ease working on different environments.
@@ -25,6 +27,9 @@ java {
 }
 tasks.named<Test>("test") {
     useJUnitPlatform()
+    jvmArgs(
+        "--enable-native-access=ALL-UNNAMED"
+    )
 }
 gradle.projectsEvaluated {
     tasks.withType<JavaCompile> {

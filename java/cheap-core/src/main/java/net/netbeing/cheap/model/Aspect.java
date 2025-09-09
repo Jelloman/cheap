@@ -188,9 +188,6 @@ public interface Aspect
         if (propDef == null) {
             throw new IllegalArgumentException("Aspect '" + def.name() + "' does not contain prop named '" + propName + "'.");
         }
-        //if (!type.isAssignableFrom(propDef.type().getJavaClass())) {
-        //    throw new ClassCastException("Property '" + propName + "' with type '" + propDef.type().name() + "' cannot be cast to type " + type.getTypeName() + ".");
-        //}
         Object objVal = unsafeReadObj(propName);
         return type.cast(objVal);
     }

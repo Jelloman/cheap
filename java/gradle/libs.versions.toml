@@ -5,6 +5,7 @@ guava = "33.4.8-jre"
 junit-jupiter = "5.13.4"
 jetbrains-annotations = "26.0.2"
 junit-platform-launcher = "1.13.4"
+sqlite-jdbc = "3.47.1.0"
 
 
 [libraries]
@@ -13,3 +14,4 @@ guava = { module = "com.google.guava:guava", version.ref = "guava" }
 junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit-jupiter" }
 junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher", version.ref = "junit-platform-launcher" }
 jetbrains-annotations = { module = "org.jetbrains:annotations", version.ref = "jetbrains-annotations"  }
+sqlite-jdbc = { module = "org.xerial:sqlite-jdbc", version.ref = "sqlite-jdbc" }
