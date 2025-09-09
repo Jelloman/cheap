@@ -3,29 +3,52 @@ package net.netbeing.cheap.model;
 import org.jetbrains.annotations.NotNull;
 
 /**
- * Individual, immutable Property object.
+ * Represents an individual, immutable property within an aspect, serving as the "P"
+ * in the CHEAP acronym (Catalog, Hierarchy, Entity, Aspect, Property). A Property
+ * combines a value with its definition and provides type-safe access to the data.
+ * 
+ * <p>Properties are analogous to columns in database terminology or individual
+ * attributes in object-oriented programming. Each property has a definition that
+ * specifies its type, constraints, and access permissions.</p>
+ * 
+ * <p>Properties are immutable once created - their values cannot be changed through
+ * this interface. To modify property values, new Property instances must be created
+ * and applied to their containing Aspect.</p>
  */
 public interface Property
 {
     /**
-     * Def property def.
+     * Returns the property definition that describes this property's type,
+     * constraints, and access permissions.
+     * 
+     * <p>The property definition serves as the schema for this property instance,
+     * defining the expected type and validation rules for its value.</p>
      *
-     * @return the property def
+     * @return the property definition for this property, never null
      */
     PropertyDef def();
 
     /**
-     * Unsafe read object.
+     * Reads the property value without performing any validation or security checks.
+     * This method provides direct access to the raw value for maximum performance.
+     * 
+     * <p>Use with caution - this method bypasses readability constraints and
+     * may return unexpected types or values.</p>
      *
-     * @return the object
+     * @return the raw property value, may be null
      */
     Object unsafeRead();
 
     /**
-     * Unsafe read as t.
+     * Reads the property value with type casting but without validation.
+     * This method bypasses security checks but provides convenient type casting.
+     * 
+     * <p>Use with caution - this method may result in ClassCastException if
+     * the actual value type is incompatible with the requested type.</p>
      *
-     * @param <T> the type parameter
-     * @return the t
+     * @param <T> the expected type of the property value
+     * @return the property value cast to type T, may be null
+     * @throws ClassCastException if the value cannot be cast to the requested type
      */
     @SuppressWarnings("unchecked")
     default <T> T unsafeReadAs()
@@ -35,9 +58,14 @@ public interface Property
     }
 
     /**
-     * Read object.
+     * Reads the property value with full validation against the property definition.
+     * This is the safest read method, performing readability checks before returning the value.
+     * 
+     * <p>This method verifies that the property is readable according to its
+     * definition before returning the value.</p>
      *
-     * @return the object
+     * @return the property value as an Object, may be null
+     * @throws UnsupportedOperationException if the property is not readable
      */
     default Object read()
     {
@@ -50,11 +78,18 @@ public interface Property
     }
 
     /**
-     * Read as t.
+     * Reads the property value with full validation and safe type casting.
+     * This is the recommended method for reading typed property values safely.
+     * 
+     * <p>This method performs readability validation and uses Java's type casting
+     * mechanisms to ensure type safety. It provides the best balance of safety
+     * and usability for typed property access.</p>
      *
-     * @param <T>  the type parameter
-     * @param type the type
-     * @return the t
+     * @param <T>  the expected type of the property value
+     * @param type the Class representing the expected type, must not be null
+     * @return the property value cast to the specified type, may be null
+     * @throws UnsupportedOperationException if the property is not readable
+     * @throws ClassCastException if the value cannot be cast to the specified type
      */
     default <T> T readAs(@NotNull Class<T> type)
     {

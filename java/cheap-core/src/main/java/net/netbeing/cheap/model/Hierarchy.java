@@ -1,14 +1,28 @@
 package net.netbeing.cheap.model;
 
 /**
- * The interface Hierarchy.
+ * Base interface for all hierarchy types in the CHEAP data model. A Hierarchy
+ * represents the "H" in the CHEAP acronym (Catalog, Hierarchy, Entity, Aspect, Property)
+ * and provides organized access to entities within a catalog.
+ * 
+ * <p>Hierarchies define the structure and organization of entities, serving roles
+ * analogous to tables or indexes in database terminology, or directory structures
+ * in file systems. Each hierarchy has a specific type that determines its
+ * organizational behavior and access patterns.</p>
+ * 
+ * <p>All hierarchies are associated with a catalog and have a definition that
+ * specifies their type, name, and organizational characteristics.</p>
  */
 public interface Hierarchy
 {
     /**
-     * Def hierarchy def.
+     * Returns the definition that describes this hierarchy's characteristics,
+     * including its type, name, and organizational parameters.
+     * 
+     * <p>The hierarchy definition provides metadata about how this hierarchy
+     * organizes entities and what operations are supported.</p>
      *
-     * @return the hierarchy def
+     * @return the hierarchy definition for this hierarchy, never null
      */
     HierarchyDef def();
 

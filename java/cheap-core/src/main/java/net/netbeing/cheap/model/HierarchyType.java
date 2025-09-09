@@ -1,38 +1,56 @@
 package net.netbeing.cheap.model;
 
 /**
- * The enum Hierarchy type.
+ * Defines the different types of hierarchies supported in the CHEAP data model.
+ * Each hierarchy type serves a specific organizational purpose and has unique
+ * characteristics for storing and accessing entities.
+ * 
+ * <p>The hierarchy types follow the CHEAP model's flexible approach to data organization,
+ * allowing entities to be structured in various ways depending on the use case.</p>
  */
 public enum HierarchyType
 {
     /**
-     * Hierarchy dir hierarchy type.
+     * An ordered directory (map) of named hierarchies within the same catalog.
+     * This is used to organize and provide access to other hierarchies by name.
      */
-    HIERARCHY_DIR("HL"), // Ordered directory (map) of named hierarchies in the same catalog
+    HIERARCHY_DIR("HL"),
+    
     /**
-     * Aspect def dir hierarchy type.
+     * A directory of aspect definitions, queryable by UUID or full name.
+     * This hierarchy type manages the metadata about available aspect types.
      */
-    ASPECT_DEF_DIR("AD"), // Directory of aspect defs, queryable by UUID or full name
+    ASPECT_DEF_DIR("AD"),
+    
     /**
-     * Entity list hierarchy type.
+     * An ordered list containing only entity IDs. This hierarchy type maintains
+     * sequence and allows duplicate references to the same entity.
      */
-    ENTITY_LIST("EL"), // List containing only entity IDs
+    ENTITY_LIST("EL"),
+    
     /**
-     * Entity set hierarchy type.
+     * An unordered set containing only unique entity IDs. This hierarchy type
+     * ensures no duplicate entity references and provides efficient membership testing.
      */
-    ENTITY_SET("ES"), // Set containing only entity IDs
+    ENTITY_SET("ES"),
+    
     /**
-     * Entity dir hierarchy type.
+     * A string-to-entity ID mapping, providing named access to entities.
+     * This hierarchy type enables dictionary-like lookups of entities by string keys.
      */
-    ENTITY_DIR("ED"), // String lookup of entity IDs
+    ENTITY_DIR("ED"),
+    
     /**
-     * Entity tree hierarchy type.
+     * A tree structure with named nodes where leaves contain entity IDs.
+     * This hierarchy type supports hierarchical organization with path-based navigation.
      */
-    ENTITY_TREE("ET"), // Tree with named nodes; leaves are entity IDs
+    ENTITY_TREE("ET"),
+    
     /**
-     * Aspect map hierarchy type.
+     * A possibly-ordered map of entity IDs to aspects of a single type.
+     * This hierarchy type provides efficient access to all entities having a specific aspect.
      */
-    ASPECT_MAP("AM"); // Possibly-ordered map of entity IDs to Aspects of a single type
+    ASPECT_MAP("AM");
 
     private final String typeCode;
 
@@ -42,9 +60,10 @@ public enum HierarchyType
     }
 
     /**
-     * Type code string.
+     * Returns the short string code that identifies this hierarchy type.
+     * These codes are used for serialization and compact representation.
      *
-     * @return the string
+     * @return the two-character type code for this hierarchy type, never null
      */
     public String typeCode()
     {

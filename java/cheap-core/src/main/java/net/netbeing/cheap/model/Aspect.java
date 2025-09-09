@@ -4,66 +4,103 @@ import net.netbeing.cheap.impl.basic.PropertyImpl;
 import org.jetbrains.annotations.NotNull;
 
 /**
- * The interface Aspect.
+ * Represents an aspect attached to an entity, serving as the "A" in the CHEAP acronym
+ * (Catalog, Hierarchy, Entity, Aspect, Property). An Aspect is a collection of related
+ * properties that describe a particular facet or characteristic of an entity.
+ * 
+ * <p>Aspects are analogous to rows in database terminology or file attributes in a
+ * file system context. Each aspect has a definition that specifies its structure
+ * and the properties it can contain.</p>
+ * 
+ * <p>This interface provides both safe (type-checked) and unsafe (unchecked) methods
+ * for reading and writing property values. Safe methods perform validation against
+ * the aspect definition, while unsafe methods bypass validation for performance
+ * or when working with dynamic schemas.</p>
+ * 
+ * <p>Property access is controlled by the aspect definition's security model,
+ * including readability, writability, and nullability constraints.</p>
  */
 public interface Aspect
 {
     /**
-     * Entity entity.
+     * Returns the entity that owns this aspect. The aspect provides additional
+     * data about this entity within the catalog context.
      *
-     * @return the entity
+     * @return the entity that owns this aspect, never null
      */
     Entity entity();
 
     /**
-     * Def aspect def.
+     * Returns the aspect definition that describes this aspect's structure,
+     * including the properties it contains and their types.
+     * 
+     * <p>The aspect definition serves as the schema for this aspect instance,
+     * defining what properties are available and their access permissions.</p>
      *
-     * @return the aspect def
+     * @return the aspect definition for this aspect, never null
      */
     AspectDef def();
 
     /**
-     * Catalog catalog.
+     * Returns the catalog that contains this aspect. The catalog provides the
+     * context for aspect storage and cross-aspect operations.
      *
-     * @return the catalog
+     * @return the catalog containing this aspect, never null
      */
     Catalog catalog();
 
     /**
-     * Unsafe read obj object.
+     * Reads a property value without performing validation against the aspect definition.
+     * This method bypasses all security checks and type validation for maximum performance.
+     * 
+     * <p>Use with caution - this method can return unexpected types or throw runtime
+     * exceptions if the property doesn't exist or has an incompatible type.</p>
      *
-     * @param propName the prop name
-     * @return the object
+     * @param propName the name of the property to read, must not be null
+     * @return the property value as an Object, may be null
      */
     Object unsafeReadObj(@NotNull String propName);
 
     /**
-     * Unsafe write.
+     * Writes a property value without performing validation against the aspect definition.
+     * This method bypasses all security checks, type validation, and nullability constraints.
+     * 
+     * <p>Use with caution - this method can corrupt data if used with incompatible
+     * types or violate business rules defined by the aspect definition.</p>
      *
-     * @param propName the prop name
-     * @param value    the value
+     * @param propName the name of the property to write, must not be null
+     * @param value    the value to write, may be null
      */
     void unsafeWrite(@NotNull String propName, Object value);
 
     /**
-     * Unsafe add.
+     * Adds a new property to this aspect without validation. This method bypasses
+     * security checks and assumes the aspect definition allows property addition.
+     * 
+     * <p>Use with caution - this method can violate aspect definition constraints
+     * and should only be used when performance is critical and safety is ensured elsewhere.</p>
      *
-     * @param prop the prop
+     * @param prop the property to add, must not be null
      */
     void unsafeAdd(@NotNull Property prop);
 
     /**
-     * Unsafe remove.
+     * Removes a property from this aspect without validation. This method bypasses
+     * security checks and assumes the aspect definition allows property removal.
+     * 
+     * <p>Use with caution - this method can violate aspect definition constraints
+     * and should only be used when performance is critical and safety is ensured elsewhere.</p>
      *
-     * @param propName the prop name
+     * @param propName the name of the property to remove, must not be null
      */
     void unsafeRemove(@NotNull String propName);
 
     /**
-     * Contains boolean.
+     * Checks whether this aspect contains a property with the specified name.
+     * A property is considered present if its value is not null.
      *
-     * @param propName the prop name
-     * @return the boolean
+     * @param propName the name of the property to check for, must not be null
+     * @return true if the property exists and is not null, false otherwise
      */
     default boolean contains(@NotNull String propName)
     {
@@ -71,11 +108,16 @@ public interface Aspect
     }
 
     /**
-     * Unchecked read t.
+     * Reads a property value with type casting but without validation against
+     * the aspect definition. This provides a balance between performance and usability.
+     * 
+     * <p>This method performs validation checks but casts the result to the requested
+     * type without verifying type compatibility, which may result in ClassCastException.</p>
      *
-     * @param <T>      the type parameter
-     * @param propName the prop name
-     * @return the t
+     * @param <T>      the expected type of the property value
+     * @param propName the name of the property to read, must not be null
+     * @return the property value cast to type T, may be null
+     * @throws ClassCastException if the value cannot be cast to the requested type
      */
     @SuppressWarnings("unchecked")
     default <T> T uncheckedRead(@NotNull String propName)
@@ -85,11 +127,16 @@ public interface Aspect
     }
 
     /**
-     * Unsafe read t.
+     * Reads a property value with type casting and no validation against the
+     * aspect definition. This is the fastest read method but provides no safety guarantees.
+     * 
+     * <p>This method bypasses all validation and simply casts the raw value,
+     * which may result in ClassCastException or other runtime errors.</p>
      *
-     * @param <T>      the type parameter
-     * @param propName the prop name
-     * @return the t
+     * @param <T>      the expected type of the property value
+     * @param propName the name of the property to read, must not be null
+     * @return the property value cast to type T, may be null
+     * @throws ClassCastException if the value cannot be cast to the requested type
      */
     @SuppressWarnings("unchecked")
     default <T> T unsafeRead(@NotNull String propName)
@@ -99,10 +146,16 @@ public interface Aspect
     }
 
     /**
-     * Read obj object.
+     * Reads a property value with full validation against the aspect definition.
+     * This is the safest read method, performing all security and existence checks.
+     * 
+     * <p>This method verifies that the aspect is readable, the property exists,
+     * and the property is readable before returning the value.</p>
      *
-     * @param propName the prop name
-     * @return the object
+     * @param propName the name of the property to read, must not be null
+     * @return the property value as an Object, may be null
+     * @throws UnsupportedOperationException if the aspect or property is not readable
+     * @throws IllegalArgumentException if the property doesn't exist in this aspect
      */
     default Object readObj(@NotNull String propName)
     {

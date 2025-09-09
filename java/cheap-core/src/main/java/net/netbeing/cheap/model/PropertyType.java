@@ -6,63 +6,106 @@ import java.io.Reader;
 import java.io.Writer;
 
 /**
- * The enum Property type.
+ * Defines the supported data types for properties in the CHEAP model.
+ * Each property type specifies storage characteristics, validation rules,
+ * and the corresponding Java class used for value representation.
+ * 
+ * <p>Property types range from basic primitives to complex streaming types,
+ * providing comprehensive data storage capabilities while maintaining
+ * type safety and efficient serialization.</p>
  */
 public enum PropertyType
 {
     /**
-     * Integer property type.
+     * 64-bit signed integer values. Uses Java Long class for representation
+     * to ensure full range support and consistency across platforms.
      */
-    Integer("INT", Long.class), // 64-bit signed
+    Integer("INT", Long.class),
+    
     /**
-     * Float property type.
+     * 64-bit floating-point values (double precision). Provides standard
+     * IEEE 754 double-precision floating-point arithmetic.
      */
-    Float("FLT", Double.class), // 64 bits, commonly called "double precision"
+    Float("FLT", Double.class),
+    
     /**
-     * Boolean property type.
+     * Boolean values supporting true, false, or null states. The null state
+     * allows for three-valued logic in data storage and queries.
      */
-    Boolean("BLN", Boolean.class), // true, false or null
+    Boolean("BLN", Boolean.class),
+    
     /**
-     * String property type.
+     * String values with length limited to 8192 characters, processed atomically.
+     * Suitable for short text fields, identifiers, and labels where size
+     * limits ensure efficient storage and retrieval.
      */
-    String("STR", String.class), // Length limited to 8192, processed atomically
+    String("STR", String.class),
+    
     /**
-     * Text property type.
+     * Text values with unlimited length, processed atomically. Suitable for
+     * large text content, documents, and descriptions where size flexibility
+     * is more important than storage efficiency.
      */
-    Text("TXT", String.class), // Unlimited length, processed atomically
+    Text("TXT", String.class),
+    
     /**
-     * Big integer property type.
+     * Arbitrary precision integer values with unlimited size. Stored as
+     * strings to avoid platform-specific size limitations and ensure
+     * exact precision for mathematical operations.
      */
-    BigInteger("BIG", String.class), // Unlimited Size
+    BigInteger("BIG", String.class),
+    
     /**
-     * Date time property type.
+     * Date and time values stored as ISO-8601 formatted strings. This ensures
+     * timezone information is preserved and provides human-readable storage
+     * with standardized parsing support.
      */
-    DateTime("DAT", String.class), // ISO-8601 Date-Time string
+    DateTime("DAT", String.class),
+    
     /**
-     * Uri property type.
+     * Uniform Resource Identifier values following RFC 3986 specification.
+     * Stored as strings with application-level conversion to/from URI/URL objects
+     * to maintain flexibility in handling various URI schemes.
      */
-    URI("URI", String.class), // RFC 3986.  Converting to/from a URI/URL object is left to the application.
+    URI("URI", String.class),
+    
     /**
-     * Uuid property type.
+     * Universally Unique Identifier values following RFC 4122 specification.
+     * Stored as strings with application-level conversion to/from UUID objects
+     * to ensure consistent representation across different systems.
      */
-    UUID("UID", String.class), // RFC 4122. Converting to/from a UUID object is left to the application.
+    UUID("UID", String.class),
+    
     /**
-     * Clob property type.
+     * Character Large Object (CLOB) for streaming text data. Represented by
+     * Reader for input operations and Writer for output operations, enabling
+     * efficient processing of large text content without memory constraints.
      */
-    CLOB("CLB", ReaderWriter.class), // CLOBs are represented by a Reader or Writer, depending on the operation
+    CLOB("CLB", ReaderWriter.class),
+    
     /**
-     * Blob property type.
+     * Binary Large Object (BLOB) for streaming binary data. Represented by
+     * InputStream for input operations and OutputStream for output operations,
+     * enabling efficient processing of large binary content without memory constraints.
      */
-    BLOB("BLB", InputOutput.class), // CLOBs are represented by an InputStream or OutputStream, depending on the operation
+    BLOB("BLB", InputOutput.class)
     ;
 
     /**
-     * The type Reader writer.
+     * Container for CLOB stream operations, providing both input (Reader) and
+     * output (Writer) stream access for character-based large object data.
+     * 
+     * @param reader stream for reading character data from the CLOB
+     * @param writer stream for writing character data to the CLOB
      */
     public record ReaderWriter(Reader reader, Writer writer) {}
 
     /**
-     * The type Input output.
+     * Container for BLOB stream operations, providing both input (InputStream) and
+     * output (OutputStream) stream access for binary large object data.
+     * 
+     * @param input stream for reading binary data from the BLOB
+     * @param output stream for writing binary data to the BLOB
      */
     public record InputOutput(InputStream input, OutputStream output) {}
 
@@ -76,9 +119,10 @@ public enum PropertyType
     }
 
     /**
-     * Type code string.
+     * Returns the short string code that identifies this property type.
+     * These codes are used for serialization, storage, and compact representation.
      *
-     * @return the string
+     * @return the three-character type code for this property type, never null
      */
     public String typeCode()
     {
@@ -86,9 +130,10 @@ public enum PropertyType
     }
 
     /**
-     * Gets java class.
+     * Returns the Java class used to represent values of this property type.
+     * This class is used for type checking and serialization operations.
      *
-     * @return the java class
+     * @return the Java class that represents this property type's values, never null
      */
     public Class<?> getJavaClass()
     {
