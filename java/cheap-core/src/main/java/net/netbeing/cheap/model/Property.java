@@ -7,10 +7,26 @@ import org.jetbrains.annotations.NotNull;
  */
 public interface Property
 {
+    /**
+     * Def property def.
+     *
+     * @return the property def
+     */
     PropertyDef def();
 
+    /**
+     * Unsafe read object.
+     *
+     * @return the object
+     */
     Object unsafeRead();
 
+    /**
+     * Unsafe read as t.
+     *
+     * @param <T> the type parameter
+     * @return the t
+     */
     @SuppressWarnings("unchecked")
     default <T> T unsafeReadAs()
     {
@@ -18,6 +34,11 @@ public interface Property
         return (T) read();
     }
 
+    /**
+     * Read object.
+     *
+     * @return the object
+     */
     default Object read()
     {
         PropertyDef def = def();
@@ -28,6 +49,13 @@ public interface Property
         return unsafeRead();
     }
 
+    /**
+     * Read as t.
+     *
+     * @param <T>  the type parameter
+     * @param type the type
+     * @return the t
+     */
     default <T> T readAs(@NotNull Class<T> type)
     {
         PropertyDef def = def();

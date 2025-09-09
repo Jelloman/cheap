@@ -3,27 +3,80 @@ package net.netbeing.cheap.model;
 import net.netbeing.cheap.impl.basic.PropertyImpl;
 import org.jetbrains.annotations.NotNull;
 
+/**
+ * The interface Aspect.
+ */
 public interface Aspect
 {
+    /**
+     * Entity entity.
+     *
+     * @return the entity
+     */
     Entity entity();
 
+    /**
+     * Def aspect def.
+     *
+     * @return the aspect def
+     */
     AspectDef def();
 
+    /**
+     * Catalog catalog.
+     *
+     * @return the catalog
+     */
     Catalog catalog();
 
+    /**
+     * Unsafe read obj object.
+     *
+     * @param propName the prop name
+     * @return the object
+     */
     Object unsafeReadObj(@NotNull String propName);
 
+    /**
+     * Unsafe write.
+     *
+     * @param propName the prop name
+     * @param value    the value
+     */
     void unsafeWrite(@NotNull String propName, Object value);
 
+    /**
+     * Unsafe add.
+     *
+     * @param prop the prop
+     */
     void unsafeAdd(@NotNull Property prop);
 
+    /**
+     * Unsafe remove.
+     *
+     * @param propName the prop name
+     */
     void unsafeRemove(@NotNull String propName);
 
+    /**
+     * Contains boolean.
+     *
+     * @param propName the prop name
+     * @return the boolean
+     */
     default boolean contains(@NotNull String propName)
     {
         return unsafeReadObj(propName) != null;
     }
 
+    /**
+     * Unchecked read t.
+     *
+     * @param <T>      the type parameter
+     * @param propName the prop name
+     * @return the t
+     */
     @SuppressWarnings("unchecked")
     default <T> T uncheckedRead(@NotNull String propName)
     {
@@ -31,6 +84,13 @@ public interface Aspect
         return (T) readObj(propName);
     }
 
+    /**
+     * Unsafe read t.
+     *
+     * @param <T>      the type parameter
+     * @param propName the prop name
+     * @return the t
+     */
     @SuppressWarnings("unchecked")
     default <T> T unsafeRead(@NotNull String propName)
     {
@@ -38,6 +98,12 @@ public interface Aspect
         return (T) unsafeReadObj(propName);
     }
 
+    /**
+     * Read obj object.
+     *
+     * @param propName the prop name
+     * @return the object
+     */
     default Object readObj(@NotNull String propName)
     {
         AspectDef def = def();
@@ -54,6 +120,14 @@ public interface Aspect
         return unsafeReadObj(propName);
     }
 
+    /**
+     * Read as t.
+     *
+     * @param <T>      the type parameter
+     * @param propName the prop name
+     * @param type     the type
+     * @return the t
+     */
     default <T> T readAs(@NotNull String propName, @NotNull Class<T> type)
     {
         AspectDef def = def();
@@ -68,6 +142,12 @@ public interface Aspect
         return type.cast(objVal);
     }
 
+    /**
+     * Get property.
+     *
+     * @param propName the prop name
+     * @return the property
+     */
     default Property get(@NotNull String propName)
     {
         AspectDef def = def();
@@ -85,6 +165,11 @@ public interface Aspect
         return new PropertyImpl(propDef, unsafeReadObj(propName));
     }
 
+    /**
+     * Put.
+     *
+     * @param prop the prop
+     */
     default void put(@NotNull Property prop)
     {
         AspectDef def = def();
@@ -107,6 +192,11 @@ public interface Aspect
         }
     }
 
+    /**
+     * Remove.
+     *
+     * @param prop the prop
+     */
     default void remove(@NotNull Property prop)
     {
         AspectDef def = def();
@@ -131,6 +221,12 @@ public interface Aspect
         unsafeRemove(propName);
     }
 
+    /**
+     * Write.
+     *
+     * @param propName the prop name
+     * @param value    the value
+     */
     default void write(@NotNull String propName, Object value)
     {
         AspectDef def = def();
@@ -152,6 +248,11 @@ public interface Aspect
         unsafeWrite(propName, value);
     }
 
+    /**
+     * Put all.
+     *
+     * @param properties the properties
+     */
     default void putAll(@NotNull Iterable<Property> properties)
     {
         for (Property prop : properties) {
@@ -159,6 +260,11 @@ public interface Aspect
         }
     }
 
+    /**
+     * Unsafe write all.
+     *
+     * @param properties the properties
+     */
     default void unsafeWriteAll(@NotNull Iterable<Property> properties)
     {
         for (Property prop : properties) {
