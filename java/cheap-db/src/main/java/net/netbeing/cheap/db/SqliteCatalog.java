@@ -1,11 +1,7 @@
 package net.netbeing.cheap.db;
 
-import net.netbeing.cheap.impl.basic.CatalogImpl;
-import net.netbeing.cheap.impl.basic.MutableAspectDefImpl;
-import net.netbeing.cheap.impl.basic.PropertyDefImpl;
-import net.netbeing.cheap.model.AspectDef;
-import net.netbeing.cheap.model.AspectMapHierarchy;
-import net.netbeing.cheap.model.PropertyType;
+import net.netbeing.cheap.impl.basic.*;
+import net.netbeing.cheap.model.*;
 
 import java.sql.*;
 import java.util.*;
@@ -15,6 +11,7 @@ import static java.util.Map.entry;
 public class SqliteCatalog extends CatalogImpl
 {
     protected final List<String> tables = new LinkedList<>();
+    protected final Map<String, AspectDef> tableAspects = new HashMap<>();
     protected String databasePath;
     
     public SqliteCatalog() {
@@ -78,6 +75,15 @@ public class SqliteCatalog extends CatalogImpl
         return catalog;
     }
 
+    public AspectDef getTableDef(String tableName)
+    {
+        AspectDef def = tableAspects.get(tableName);
+        if (def != null) {
+            return def;
+        }
+        return loadTableDef(tableName);
+    }
+
     public AspectDef loadTableDef(String tableName)
     {
         if (databasePath == null) {
@@ -106,6 +112,8 @@ public class SqliteCatalog extends CatalogImpl
         } catch (SQLException e) {
             throw new RuntimeException("Failed to load table definition for table: " + tableName, e);
         }
+
+        tableAspects.put(tableName, aspectDef);
         
         return aspectDef;
     }
@@ -125,9 +133,94 @@ public class SqliteCatalog extends CatalogImpl
         return propertyType != null ? propertyType : PropertyType.Text;
     }
 
-    public AspectMapHierarchy loadTable(String tableName)
+    public AspectMapHierarchy loadTable(String tableName, int maxRows)
     {
-        return null;
+        if (databasePath == null) {
+            throw new IllegalStateException("Database path not set. Use loadDb() to initialize the catalog.");
+        }
+        
+        AspectDef aspectDef = getTableDef(tableName);
+        HierarchyDef hierarchyDef = new HierarchyDefImpl("sqlite:table:" + tableName, HierarchyType.ASPECT_MAP);
+        AspectMapHierarchyImpl hierarchy = new AspectMapHierarchyImpl(hierarchyDef, aspectDef);
+
+        String url = "jdbc:sqlite:" + databasePath;
+        String query = "SELECT * FROM " + tableName;
+        if (maxRows >= 0) {
+            query += " LIMIT " + maxRows;
+        }
+        
+        try (Connection connection = DriverManager.getConnection(url);
+             Statement statement = connection.createStatement();
+             ResultSet resultSet = statement.executeQuery(query)) {
+            
+            ResultSetMetaData metaData = resultSet.getMetaData();
+            int columnCount = metaData.getColumnCount();
+            
+            while (resultSet.next()) {
+                Entity entity = new BasicEntityImpl();
+                AspectPropertyMapImpl aspect = new AspectPropertyMapImpl(this, entity, aspectDef);
+                
+                // Create properties for each column
+                for (int i = 1; i <= columnCount; i++) {
+                    String columnName = metaData.getColumnLabel(i);
+                    Object value = resultSet.getObject(i);
+                    
+                    PropertyDef propDef = aspectDef.propertyDef(columnName);
+                    if (propDef != null) {
+                        PropertyImpl property = new PropertyImpl(propDef, convertValue(value, propDef.type()));
+                        aspect.unsafeAdd(property);
+                    }
+                }
+                
+                hierarchy.put(entity, aspect);
+            }
+            
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to load table data for table: " + tableName, e);
+        }
+
+        this.hierarchies().add(hierarchy);
+
+        return hierarchy;
+    }
+    
+    private Object convertValue(Object value, PropertyType expectedType)
+    {
+        if (value == null) {
+            return null;
+        }
+        
+        // Convert based on expected PropertyType
+        switch (expectedType) {
+            case Integer:
+                if (value instanceof Number) {
+                    return ((Number) value).longValue();
+                }
+                break;
+            case Float:
+                if (value instanceof Number) {
+                    return ((Number) value).doubleValue();
+                }
+                break;
+            case Boolean:
+                if (value instanceof Number) {
+                    return ((Number) value).intValue() != 0;
+                }
+                break;
+            case String:
+            case Text:
+            case BigInteger:
+            case DateTime:
+            case URI:
+            case UUID:
+                return value.toString();
+            case BLOB:
+            case CLOB:
+                // For now, return raw value - could be enhanced with streaming support
+                return value;
+        }
+        
+        return value;
     }
 
     public List<String> getTables()

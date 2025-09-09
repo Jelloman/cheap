@@ -1,8 +1,6 @@
 package net.netbeing.cheap.db;
 
-import net.netbeing.cheap.model.AspectDef;
-import net.netbeing.cheap.model.PropertyDef;
-import net.netbeing.cheap.model.PropertyType;
+import net.netbeing.cheap.model.*;
 import org.junit.jupiter.api.Test;
 import java.nio.file.Paths;
 import java.util.List;
@@ -97,5 +95,114 @@ class SqliteCatalogTest {
         
         assertTrue(exception.getMessage().contains("Database path not set"),
             "Exception message should indicate database path not set");
+    }
+    
+    @Test
+    void testLoadTable() {
+        String testDbPath = Paths.get("src", "test", "resources", "test-dbeaver.sqlite").toString();
+        SqliteCatalog catalog = SqliteCatalog.loadDb(testDbPath);
+        
+        AspectMapHierarchy table = catalog.loadTable("test_data", -1);
+        
+        assertNotNull(table, "Table hierarchy should not be null");
+        assertEquals("sqlite:table:test_data", table.def().name(), "Hierarchy name should match expected pattern");
+        assertEquals(HierarchyType.ASPECT_MAP, table.def().type(), "Should be ASPECT_MAP hierarchy type");
+        assertEquals("test_data", table.aspectDef().name(), "AspectDef name should match table name");
+        
+        // Check that we loaded all rows (should be 2)
+        assertEquals(2, table.size(), "Should have 2 rows loaded");
+        
+        // Verify data in the loaded aspects
+        boolean foundRow1 = false, foundRow2 = false;
+        
+        for (Aspect aspect : table.values()) {
+            Property idProp = aspect.get("id");
+            assertNotNull(idProp, "id property should exist");
+            
+            Long idValue = (Long) idProp.unsafeRead();
+            if (idValue == 1L) {
+                foundRow1 = true;
+                
+                Property numericProp = aspect.get("numeric_col");
+                assertEquals(1.0, ((Double) numericProp.unsafeRead()), "numeric_col should be 1.0");
+                
+                Property realProp = aspect.get("real_col");
+                assertEquals(1.5, ((Double) realProp.unsafeRead()), "real_col should be 1.5");
+                
+                Property textProp = aspect.get("text_col");
+                assertEquals("one", textProp.unsafeRead(), "text_col should be 'one'");
+                
+                Property blobProp = aspect.get("blob_col");
+                assertNotNull(blobProp.unsafeRead(), "blob_col should not be null");
+                
+            } else if (idValue == 2L) {
+                foundRow2 = true;
+                
+                Property numericProp = aspect.get("numeric_col");
+                assertEquals(2.0, ((Double) numericProp.unsafeRead()), "numeric_col should be 2.0");
+                
+                Property realProp = aspect.get("real_col");
+                assertEquals(2.5, ((Double) realProp.unsafeRead()), "real_col should be 2.5");
+                
+                Property textProp = aspect.get("text_col");
+                assertEquals("two", textProp.unsafeRead(), "text_col should be 'two'");
+            }
+        }
+        
+        assertTrue(foundRow1, "Should have found row with id=1");
+        assertTrue(foundRow2, "Should have found row with id=2");
+    }
+    
+    @Test
+    void testLoadTableWithMaxRows() {
+        String testDbPath = Paths.get("src", "test", "resources", "test-dbeaver.sqlite").toString();
+        SqliteCatalog catalog = SqliteCatalog.loadDb(testDbPath);
+        
+        AspectMapHierarchy table = catalog.loadTable("test_data", 1);
+        
+        assertNotNull(table, "Table hierarchy should not be null");
+        assertEquals(1, table.size(), "Should have only 1 row loaded due to maxRows limit");
+        
+        // Verify the loaded row
+        Aspect aspect = table.values().iterator().next();
+        Property idProp = aspect.get("id");
+        assertNotNull(idProp, "id property should exist");
+        assertEquals(1L, (Long) idProp.unsafeRead(), "Should have loaded the first row (id=1)");
+    }
+    
+    @Test
+    void testLoadTableNonExistentTable() {
+        String testDbPath = Paths.get("src", "test", "resources", "test-dbeaver.sqlite").toString();
+        SqliteCatalog catalog = SqliteCatalog.loadDb(testDbPath);
+        
+        RuntimeException exception = assertThrows(RuntimeException.class,
+            () -> catalog.loadTable("non_existent_table", -1),
+            "Should throw RuntimeException for non-existent table");
+        
+        assertTrue(exception.getMessage().contains("Failed to load table data"),
+            "Exception message should indicate failure to load table data");
+    }
+    
+    @Test
+    void testLoadTableWithoutLoadDb() {
+        SqliteCatalog catalog = new SqliteCatalog();
+        
+        IllegalStateException exception = assertThrows(IllegalStateException.class,
+            () -> catalog.loadTable("test_data", -1),
+            "Should throw IllegalStateException when database path not set");
+        
+        assertTrue(exception.getMessage().contains("Database path not set"),
+            "Exception message should indicate database path not set");
+    }
+    
+    @Test
+    void testLoadTableZeroMaxRows() {
+        String testDbPath = Paths.get("src", "test", "resources", "test-dbeaver.sqlite").toString();
+        SqliteCatalog catalog = SqliteCatalog.loadDb(testDbPath);
+        
+        AspectMapHierarchy table = catalog.loadTable("test_data", 0);
+        
+        assertNotNull(table, "Table hierarchy should not be null");
+        assertEquals(0, table.size(), "Should have no rows loaded when maxRows is 0");
     }
 }

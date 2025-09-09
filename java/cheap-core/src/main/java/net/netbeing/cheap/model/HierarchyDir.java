@@ -7,4 +7,7 @@ import java.util.Map;
  */
 public interface HierarchyDir extends Hierarchy, Map<String, Hierarchy>
 {
+    default Hierarchy add(Hierarchy hierarchy) {
+        return put(hierarchy.def().name(), hierarchy);
+    }
 }
