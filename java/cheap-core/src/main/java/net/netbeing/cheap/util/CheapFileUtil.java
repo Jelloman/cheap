@@ -5,6 +5,7 @@ import net.netbeing.cheap.impl.basic.EntityLazyIdImpl;
 import net.netbeing.cheap.impl.basic.EntityTreeHierarchyImpl;
 import net.netbeing.cheap.impl.basic.EntityTreeHierarchyImpl.NodeImpl;
 import net.netbeing.cheap.impl.basic.EntityTreeHierarchyImpl.LeafNodeImpl;
+import net.netbeing.cheap.impl.basic.WeakAspectMap;
 import net.netbeing.cheap.impl.reflect.RecordAspect;
 import net.netbeing.cheap.impl.reflect.RecordAspectDef;
 import net.netbeing.cheap.model.*;
@@ -97,15 +98,16 @@ public class CheapFileUtil
                 // Create the FileRec aspect and add it to the aspectage
                 RecordAspect<FileRec> aspect = new RecordAspect<>(catalog, nodeEntity, aspectDef, newFile);
                 aspects.add(aspect);
+                
+                // Add the aspect to the entity's local aspect map so it can be retrieved later
+                ((WeakAspectMap) nodeEntity.local().aspects()).add(aspect);
 
                 // Create the hierarchy and root entity the first time through
                 if (walkState.hierarchy == null) {
-                    // Create the proper type of tree node; note that this means empty directories are NOT leaves
-                    Node node = newFile.isDirectory ? new NodeImpl(nodeEntity) : new LeafNodeImpl(nodeEntity);
-
                     walkState.hierarchy = new EntityTreeHierarchyImpl(hierarchyDef, nodeEntity);
-                    walkState.root = node;
-                    walkState.currentNode = node;
+                    catalog.hierarchies().put(hierarchyDef.name(), walkState.hierarchy);
+                    walkState.root = walkState.hierarchy.root();
+                    walkState.currentNode = walkState.root;
                     walkState.currentFile = newFile;
                     return;
                 }

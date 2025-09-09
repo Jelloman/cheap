@@ -4,10 +4,9 @@ import net.netbeing.cheap.impl.basic.AspectMapHierarchyImpl;
 import net.netbeing.cheap.impl.basic.CatalogImpl;
 import net.netbeing.cheap.impl.basic.HierarchyDefImpl;
 import net.netbeing.cheap.impl.reflect.RecordAspectDef;
-import net.netbeing.cheap.model.AspectDefDirHierarchy;
-import net.netbeing.cheap.model.AspectMapHierarchy;
-import net.netbeing.cheap.model.Catalog;
-import net.netbeing.cheap.model.HierarchyType;
+import net.netbeing.cheap.impl.reflect.RecordAspect;
+import net.netbeing.cheap.model.*;
+import net.netbeing.cheap.model.EntityTreeHierarchy.Node;
 import net.netbeing.cheap.util.CheapFileUtil.FileRec;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -308,5 +307,250 @@ public class CheapFileUtilTest
         
         assertEquals(rec1, rec2);
         assertEquals(rec1.hashCode(), rec2.hashCode());
+    }
+
+    @Test
+    void loadFileHierarchy_CreatesTreeStructure() throws IOException
+    {
+        HierarchyDefImpl treeHierarchyDef = new HierarchyDefImpl("fileTree", HierarchyType.ENTITY_TREE);
+        
+        CheapFileUtil.loadFileHierarchy(catalog, treeHierarchyDef, testRoot, 10);
+        
+        // Verify hierarchy was added to catalog
+        EntityTreeHierarchy hierarchy = (EntityTreeHierarchy) catalog.hierarchy("fileTree");
+        assertNotNull(hierarchy);
+        assertEquals(treeHierarchyDef, hierarchy.def());
+        
+        // Verify root node
+        Node root = hierarchy.root();
+        assertNotNull(root);
+        assertFalse(root.isLeaf()); // Root should be directory (non-leaf)
+        assertNull(root.getParent()); // Root has no parent
+        
+        // Verify root has FileRec aspect
+        Entity rootEntity = root.value();
+        Aspect rootAspect = rootEntity.local().aspect(fileRecAspectDef);
+        assertNotNull(rootAspect);
+        @SuppressWarnings("unchecked")
+        FileRec rootFileRec = ((RecordAspect<FileRec>) rootAspect).record();
+        assertEquals("hierarchyTestDir", rootFileRec.name());
+        assertTrue(rootFileRec.isDirectory());
+        
+        // Verify aspects were loaded
+        AspectMapHierarchy aspects = catalog.aspects(fileRecAspectDef);
+        assertEquals(5, aspects.size()); // Should have 5 file records total
+    }
+
+    @Test
+    void loadFileHierarchy_BuildsCorrectTreeStructure() throws IOException
+    {
+        HierarchyDefImpl treeHierarchyDef = new HierarchyDefImpl("fileTree", HierarchyType.ENTITY_TREE);
+        
+        CheapFileUtil.loadFileHierarchy(catalog, treeHierarchyDef, testRoot, 10);
+        
+        EntityTreeHierarchy hierarchy = (EntityTreeHierarchy) catalog.hierarchy("fileTree");
+        Node root = hierarchy.root();
+        
+        // Navigate tree structure: root -> subdir
+        assertTrue(root.containsKey("subdir"));
+        Node subdirNode = root.get("subdir");
+        assertNotNull(subdirNode);
+        assertFalse(subdirNode.isLeaf()); // subdir is a directory
+        assertEquals(root, subdirNode.getParent());
+        
+        // Verify subdir has FileRec aspect
+        Entity subdirEntity = subdirNode.value();
+        Aspect subdirAspect = subdirEntity.local().aspect(fileRecAspectDef);
+        @SuppressWarnings("unchecked")
+        FileRec subdirFileRec = ((RecordAspect<FileRec>) subdirAspect).record();
+        assertEquals("subdir", subdirFileRec.name());
+        assertTrue(subdirFileRec.isDirectory());
+        
+        // Navigate tree structure: subdir -> file1.txt
+        assertTrue(subdirNode.containsKey("file1.txt"));
+        Node file1Node = subdirNode.get("file1.txt");
+        assertNotNull(file1Node);
+        assertTrue(file1Node.isLeaf()); // file1.txt is a file (leaf)
+        assertEquals(subdirNode, file1Node.getParent());
+        
+        // Verify file1 has FileRec aspect
+        Entity file1Entity = file1Node.value();
+        Aspect file1Aspect = file1Entity.local().aspect(fileRecAspectDef);
+        @SuppressWarnings("unchecked")
+        FileRec file1FileRec = ((RecordAspect<FileRec>) file1Aspect).record();
+        assertEquals("file1.txt", file1FileRec.name());
+        assertFalse(file1FileRec.isDirectory());
+        
+        // Navigate tree structure: subdir -> subdir2
+        assertTrue(subdirNode.containsKey("subdir2"));
+        Node subdir2Node = subdirNode.get("subdir2");
+        assertNotNull(subdir2Node);
+        assertFalse(subdir2Node.isLeaf()); // subdir2 is a directory
+        assertEquals(subdirNode, subdir2Node.getParent());
+        
+        // Navigate tree structure: subdir2 -> file2.txt
+        assertTrue(subdir2Node.containsKey("file2.txt"));
+        Node file2Node = subdir2Node.get("file2.txt");
+        assertNotNull(file2Node);
+        assertTrue(file2Node.isLeaf()); // file2.txt is a file (leaf)
+        assertEquals(subdir2Node, file2Node.getParent());
+        
+        // Verify file2 has FileRec aspect
+        Entity file2Entity = file2Node.value();
+        Aspect file2Aspect = file2Entity.local().aspect(fileRecAspectDef);
+        @SuppressWarnings("unchecked")
+        FileRec file2FileRec = ((RecordAspect<FileRec>) file2Aspect).record();
+        assertEquals("file2.txt", file2FileRec.name());
+        assertFalse(file2FileRec.isDirectory());
+    }
+
+    @Test
+    void loadFileHierarchy_WithMaxDepthLimitation() throws IOException
+    {
+        HierarchyDefImpl treeHierarchyDef = new HierarchyDefImpl("fileTree", HierarchyType.ENTITY_TREE);
+        
+        // Load with depth 2 (should exclude file2.txt at depth 3)
+        CheapFileUtil.loadFileHierarchy(catalog, treeHierarchyDef, testRoot, 2);
+        
+        EntityTreeHierarchy hierarchy = (EntityTreeHierarchy) catalog.hierarchy("fileTree");
+        Node root = hierarchy.root();
+        
+        // Should have root and subdir
+        Node subdirNode = root.get("subdir");
+        assertNotNull(subdirNode);
+        
+        // Should have file1.txt and subdir2
+        assertTrue(subdirNode.containsKey("file1.txt"));
+        assertTrue(subdirNode.containsKey("subdir2"));
+        
+        // But subdir2 should be empty (no file2.txt due to depth limit)
+        Node subdir2Node = subdirNode.get("subdir2");
+        assertNotNull(subdir2Node);
+        assertTrue(subdir2Node.isEmpty()); // No children due to depth limit
+        
+        // Verify aspects count
+        AspectMapHierarchy aspects = catalog.aspects(fileRecAspectDef);
+        assertEquals(4, aspects.size()); // Should have 4 file records (excludes file2.txt)
+    }
+
+    @Test
+    void loadFileHierarchy_WithFileVisitOptions() throws IOException
+    {
+        HierarchyDefImpl treeHierarchyDef = new HierarchyDefImpl("fileTree", HierarchyType.ENTITY_TREE);
+        
+        CheapFileUtil.loadFileHierarchy(catalog, treeHierarchyDef, testRoot, 10, FileVisitOption.FOLLOW_LINKS);
+        
+        EntityTreeHierarchy hierarchy = (EntityTreeHierarchy) catalog.hierarchy("fileTree");
+        assertNotNull(hierarchy);
+        
+        // Should still build complete tree structure
+        Node root = hierarchy.root();
+        assertNotNull(root);
+        assertTrue(root.containsKey("subdir"));
+        
+        Node subdirNode = root.get("subdir");
+        assertTrue(subdirNode.containsKey("file1.txt"));
+        assertTrue(subdirNode.containsKey("subdir2"));
+        
+        Node subdir2Node = subdirNode.get("subdir2");
+        assertTrue(subdir2Node.containsKey("file2.txt"));
+        
+        // Verify all aspects were loaded
+        AspectMapHierarchy aspects = catalog.aspects(fileRecAspectDef);
+        assertEquals(5, aspects.size());
+    }
+
+    @Test
+    void loadFileHierarchy_EmptyDirectory() throws IOException
+    {
+        HierarchyDefImpl treeHierarchyDef = new HierarchyDefImpl("fileTree", HierarchyType.ENTITY_TREE);
+        Path emptyDir = Paths.get("src/test/resources/hierarchyTestDir/subdir/subdir2"); // This only contains file2.txt
+        
+        // Load with depth 1 to get only the directory itself
+        CheapFileUtil.loadFileHierarchy(catalog, treeHierarchyDef, emptyDir, 1);
+        
+        EntityTreeHierarchy hierarchy = (EntityTreeHierarchy) catalog.hierarchy("fileTree");
+        Node root = hierarchy.root();
+        
+        // Root should be the subdir2 directory
+        Entity rootEntity = root.value();
+        Aspect rootAspect = rootEntity.local().aspect(fileRecAspectDef);
+        @SuppressWarnings("unchecked")
+        FileRec rootFileRec = ((RecordAspect<FileRec>) rootAspect).record();
+        assertEquals("subdir2", rootFileRec.name());
+        assertTrue(rootFileRec.isDirectory());
+        
+        // With depth 1, should also include file2.txt
+        assertTrue(root.containsKey("file2.txt"));
+        Node fileNode = root.get("file2.txt");
+        assertTrue(fileNode.isLeaf());
+    }
+
+    @Test
+    void loadFileHierarchy_SingleFile() throws IOException
+    {
+        HierarchyDefImpl treeHierarchyDef = new HierarchyDefImpl("fileTree", HierarchyType.ENTITY_TREE);
+        Path singleFile = Paths.get("src/test/resources/hierarchyTestDir/subdir/file1.txt");
+        
+        CheapFileUtil.loadFileHierarchy(catalog, treeHierarchyDef, singleFile, 1);
+        
+        EntityTreeHierarchy hierarchy = (EntityTreeHierarchy) catalog.hierarchy("fileTree");
+        Node root = hierarchy.root();
+        
+        // Root should be the single file
+        assertFalse(root.isLeaf()); // Root is always a NodeImpl (non-leaf) in EntityTreeHierarchy
+        Entity rootEntity = root.value();
+        Aspect rootAspect = rootEntity.local().aspect(fileRecAspectDef);
+        @SuppressWarnings("unchecked")
+        FileRec rootFileRec = ((RecordAspect<FileRec>) rootAspect).record();
+        assertEquals("file1.txt", rootFileRec.name());
+        assertFalse(rootFileRec.isDirectory());
+        
+        // Should have no children
+        assertTrue(root.isEmpty());
+        
+        // Should have only one aspect
+        AspectMapHierarchy aspects = catalog.aspects(fileRecAspectDef);
+        assertEquals(1, aspects.size());
+    }
+
+    @Test
+    void loadFileHierarchy_HierarchyAddedToCatalog() throws IOException
+    {
+        HierarchyDefImpl treeHierarchyDef = new HierarchyDefImpl("myFileTree", HierarchyType.ENTITY_TREE);
+        
+        // Verify hierarchy doesn't exist before
+        assertNull(catalog.hierarchy("myFileTree"));
+        
+        CheapFileUtil.loadFileHierarchy(catalog, treeHierarchyDef, testRoot, 10);
+        
+        // Verify hierarchy was added to catalog
+        Hierarchy hierarchy = catalog.hierarchy("myFileTree");
+        assertNotNull(hierarchy);
+        assertInstanceOf(EntityTreeHierarchy.class, hierarchy);
+        assertEquals(treeHierarchyDef, hierarchy.def());
+    }
+
+    @Test
+    void loadFileHierarchy_MultipleCallsWithSameHierarchyName() throws IOException
+    {
+        HierarchyDefImpl treeHierarchyDef1 = new HierarchyDefImpl("fileTree", HierarchyType.ENTITY_TREE);
+        HierarchyDefImpl treeHierarchyDef2 = new HierarchyDefImpl("fileTree", HierarchyType.ENTITY_TREE);
+        
+        // First call
+        CheapFileUtil.loadFileHierarchy(catalog, treeHierarchyDef1, testRoot, 2);
+        EntityTreeHierarchy hierarchy1 = (EntityTreeHierarchy) catalog.hierarchy("fileTree");
+        
+        // Second call with same name should replace the first
+        CheapFileUtil.loadFileHierarchy(catalog, treeHierarchyDef2, testRoot, 1);
+        EntityTreeHierarchy hierarchy2 = (EntityTreeHierarchy) catalog.hierarchy("fileTree");
+        
+        assertNotEquals(hierarchy1, hierarchy2); // Should be different instances
+        assertEquals("fileTree", hierarchy2.def().name());
+        
+        // The second hierarchy should have fewer nodes due to depth limit
+        AspectMapHierarchy aspects = catalog.aspects(fileRecAspectDef);
+        // Note: aspects accumulate because we're adding to the same AspectMapHierarchy
+        assertTrue(aspects.size() >= 2); // At least root + subdir from second call
     }
 }
