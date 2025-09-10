@@ -17,7 +17,7 @@ import java.util.UUID;
  * @see Entity
  * @see LocalEntity
  */
-public class EntityBasicImpl implements Entity
+public abstract class EntityBasicImpl implements Entity
 {
     /** The globally unique identifier for this entity. */
     private final UUID globalId;

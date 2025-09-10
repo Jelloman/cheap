@@ -2,6 +2,7 @@ package net.netbeing.cheap.impl.basic;
 
 import net.netbeing.cheap.model.AspectDef;
 import net.netbeing.cheap.model.AspectDefDirHierarchy;
+import net.netbeing.cheap.model.Hierarchy;
 import net.netbeing.cheap.model.HierarchyDef;
 
 import java.util.LinkedHashMap;
@@ -20,7 +21,13 @@ import java.util.LinkedHashMap;
 public class AspectDefDirHierarchyImpl implements AspectDefDirHierarchy
 {
     /** Internal map storing aspect definition names to aspect definitions. */
-    private final LinkedHashMap<String, AspectDef> defs = new LinkedHashMap<>();
+    private final LinkedHashMap<String, AspectDef> aspectDefs = new LinkedHashMap<>();
+    private final HierarchyDef def;
+
+    public AspectDefDirHierarchyImpl(HierarchyDef def)
+    {
+        this.def = def;
+    }
 
     /**
      * Adds an aspect definition to this hierarchy directory.
@@ -32,7 +39,7 @@ public class AspectDefDirHierarchyImpl implements AspectDefDirHierarchy
     @Override
     public AspectDef add(AspectDef def)
     {
-        return defs.put(def.name(), def);
+        return aspectDefs.put(def.name(), def);
     }
 
     /**
@@ -44,18 +51,17 @@ public class AspectDefDirHierarchyImpl implements AspectDefDirHierarchy
     @Override
     public AspectDef get(String name)
     {
-        return defs.get(name);
+        return aspectDefs.get(name);
     }
 
     /**
      * Returns the hierarchy definition for this hierarchy.
-     * This implementation currently returns {@code null}.
-     * 
-     * @return {@code null} as this implementation does not maintain a hierarchy definition
+     *
+     * @return the hierarchy definition for this hierarchy.
      */
     @Override
     public HierarchyDef def()
     {
-        return null;
+        return def;
     }
 }

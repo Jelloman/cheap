@@ -78,7 +78,7 @@ public class CatalogImpl extends EntityFullImpl implements Catalog
         }
 
         this.hierarchies = new HierarchyDirImpl(CatalogDefaultHierarchies.CATALOG_ROOT);
-        this.aspectage = new AspectDefDirHierarchyImpl();
+        this.aspectage = new AspectDefDirHierarchyImpl(CatalogDefaultHierarchies.ASPECTAGE);
         hierarchies.put(CatalogDefaultHierarchies.CATALOG_ROOT_NAME, hierarchies);
         hierarchies.put(CatalogDefaultHierarchies.ASPECTAGE_NAME, aspectage);
     }

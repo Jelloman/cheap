@@ -23,7 +23,7 @@ class AspectPropertyMapImplTest
     void setUp()
     {
         catalog = new CatalogImpl();
-        entity = new EntityBasicImpl(UUID.randomUUID());
+        entity = new EntityFullImpl();
         aspectDef = new MutableAspectDefImpl("testAspect");
         propDef1 = new PropertyDefImpl("prop1", PropertyType.String);
         propDef2 = new PropertyDefImpl("prop2", PropertyType.Integer);
