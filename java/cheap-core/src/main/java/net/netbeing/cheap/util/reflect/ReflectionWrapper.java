@@ -12,7 +12,7 @@ public final class ReflectionWrapper
     private static final Map<GetterSetterSignature, MethodDef> genericMethods = new HashMap<>();
     private static final MethodType wrapper = MethodType.methodType(GenericGetterSetter.class);
 
-    public interface Getter<T> {
+    public interface ThrowingGetter<T> {
         T get() throws Throwable;
     }
 
@@ -24,7 +24,7 @@ public final class ReflectionWrapper
         });
     }
 
-    public static <T> T getNoCheckedExceptions(Getter<T> getter)
+    public static <T> T getNoCheckedExceptions(ThrowingGetter<T> getter)
     {
         try {
             return getter.get();

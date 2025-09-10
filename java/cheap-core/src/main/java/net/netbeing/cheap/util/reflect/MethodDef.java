@@ -20,9 +20,4 @@ public class MethodDef
     public MethodType getMethodType() {
         return methodType;
     }
-
-    @Override
-    public String toString() {
-        return "LambdaMetadata{" + "methodName=" + methodName + ", methodType=" + methodType + '}';
-    }
 }
