@@ -5,29 +5,64 @@ import net.netbeing.cheap.model.PropertyDef;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
+/**
+ * Basic immutable implementation of a Property in the CHEAP system.
+ * This implementation stores a property definition and its associated value.
+ * <p>
+ * Properties are immutable once created - to change a property value,
+ * a new PropertyImpl instance must be created.
+ * 
+ * @see Property
+ * @see PropertyDef
+ */
 public final class PropertyImpl implements Property
 {
+    /** The property definition describing this property's type and constraints. */
     private final PropertyDef def;
+    
+    /** The value stored in this property. */
     private final Object val;
 
+    /**
+     * Creates a new PropertyImpl with the specified definition and null value.
+     * Package-private constructor for internal use.
+     * 
+     * @param def the property definition for this property
+     */
     PropertyImpl(@NotNull PropertyDef def)
     {
         this.def = def;
         this.val = null;
     }
 
+    /**
+     * Creates a new PropertyImpl with the specified definition and value.
+     * 
+     * @param def the property definition for this property
+     * @param val the value to store in this property
+     */
     public PropertyImpl(@NotNull PropertyDef def, Object val)
     {
         this.def = def;
         this.val = val;
     }
 
+    /**
+     * Returns the property definition for this property.
+     * 
+     * @return the property definition describing this property's type and constraints
+     */
     @Override
     public final PropertyDef def()
     {
         return def;
     }
 
+    /**
+     * Returns the raw value stored in this property without type checking.
+     * 
+     * @return the property value, which may be null
+     */
     @Contract(pure = true)
     @Override
     public Object unsafeRead()

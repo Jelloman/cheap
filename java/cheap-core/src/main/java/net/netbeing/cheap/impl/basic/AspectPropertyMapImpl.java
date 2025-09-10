@@ -6,34 +6,84 @@ import org.jetbrains.annotations.NotNull;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+/**
+ * Implementation of an Aspect that stores properties as Property objects in a LinkedHashMap.
+ * This implementation provides type-safe property access and validation while maintaining
+ * insertion order.
+ * <p>
+ * Unlike {@link AspectObjectMapImpl}, this implementation stores actual Property objects
+ * rather than raw values, providing better type safety and validation capabilities.
+ * 
+ * @see AspectBaseImpl
+ * @see Aspect
+ * @see Property
+ * @see AspectObjectMapImpl
+ */
 public class AspectPropertyMapImpl extends AspectBaseImpl
 {
+    /** Internal map storing property names to Property objects. */
     protected Map<String, Property> props;
 
+    /**
+     * Creates a new AspectPropertyMapImpl with default capacity.
+     * 
+     * @param catalog the catalog this aspect belongs to
+     * @param entity the entity this aspect is attached to
+     * @param def the aspect definition describing this aspect's structure
+     */
     public AspectPropertyMapImpl(@NotNull Catalog catalog, @NotNull Entity entity, AspectDef def)
     {
         super(catalog, entity, def);
         this.props = new LinkedHashMap<>();
     }
 
+    /**
+     * Creates a new AspectPropertyMapImpl with specified initial capacity.
+     * 
+     * @param catalog the catalog this aspect belongs to
+     * @param entity the entity this aspect is attached to
+     * @param def the aspect definition describing this aspect's structure
+     * @param initialCapacity the initial capacity of the internal map
+     */
     public AspectPropertyMapImpl(@NotNull Catalog catalog, @NotNull Entity entity, AspectDef def, int initialCapacity)
     {
         super(catalog, entity, def);
         this.props = new LinkedHashMap<>(initialCapacity);
     }
 
+    /**
+     * Creates a new AspectPropertyMapImpl with specified initial capacity and load factor.
+     * 
+     * @param catalog the catalog this aspect belongs to
+     * @param entity the entity this aspect is attached to
+     * @param def the aspect definition describing this aspect's structure
+     * @param initialCapacity the initial capacity of the internal map
+     * @param loadFactor the load factor of the internal map
+     */
     public AspectPropertyMapImpl(@NotNull Catalog catalog, @NotNull Entity entity, AspectDef def, int initialCapacity, float loadFactor)
     {
         super(catalog, entity, def);
         this.props = new LinkedHashMap<>(initialCapacity, loadFactor);
     }
 
+    /**
+     * Checks if this aspect contains a property with the given name.
+     * 
+     * @param propName the name of the property to check for
+     * @return {@code true} if the property exists, {@code false} otherwise
+     */
     @Override
     public boolean contains(@NotNull String propName)
     {
         return props.containsKey(propName);
     }
 
+    /**
+     * Reads a property value without type safety checks.
+     * 
+     * @param propName the name of the property to read
+     * @return the property value, or {@code null} if the property doesn't exist
+     */
     @Override
     public Object unsafeReadObj(@NotNull String propName)
     {
@@ -41,6 +91,14 @@ public class AspectPropertyMapImpl extends AspectBaseImpl
         return (prop == null) ? null : prop.unsafeRead();
     }
 
+    /**
+     * Retrieves a property by name with full validation and access control.
+     * 
+     * @param propName the name of the property to retrieve
+     * @return the Property object
+     * @throws UnsupportedOperationException if the aspect or property is not readable
+     * @throws IllegalArgumentException if the property doesn't exist in this aspect
+     */
     @Override
     public Property get(@NotNull String propName)
     {
@@ -60,6 +118,14 @@ public class AspectPropertyMapImpl extends AspectBaseImpl
         return prop;
     }
 
+    /**
+     * Stores a property in this aspect with full validation and access control.
+     * 
+     * @param prop the property to store
+     * @throws UnsupportedOperationException if the aspect or property is not writable
+     * @throws IllegalArgumentException if the property cannot be added to this aspect
+     * @throws ClassCastException if the property definition doesn't match an existing property
+     */
     @Override
     public void put(@NotNull Property prop)
     {
@@ -87,12 +153,24 @@ public class AspectPropertyMapImpl extends AspectBaseImpl
         props.put(propName, prop);
     }
 
+    /**
+     * Adds a property to this aspect without validation.
+     * 
+     * @param prop the property to add
+     */
     @Override
     public void unsafeAdd(@NotNull Property prop)
     {
         props.put(prop.def().name(), prop);
     }
 
+    /**
+     * Writes a property value without type safety checks.
+     * 
+     * @param propName the name of the property to write
+     * @param value the value to write
+     * @throws IllegalArgumentException if the property name is not defined in this aspect
+     */
     @Override
     public void unsafeWrite(@NotNull String propName, Object value)
     {
@@ -104,6 +182,11 @@ public class AspectPropertyMapImpl extends AspectBaseImpl
         props.put(propName, newProp);
     }
 
+    /**
+     * Removes a property from this aspect without validation.
+     * 
+     * @param propName the name of the property to remove
+     */
     @Override
     public void unsafeRemove(@NotNull String propName)
     {

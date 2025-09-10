@@ -6,6 +6,27 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
 
+/**
+ * Record-based implementation of PropertyDef that defines the structure and
+ * constraints of a property in the CHEAP system.
+ * <p>
+ * This implementation uses Java records to provide an immutable property
+ * definition with automatic equals, hashCode, and toString implementations.
+ * Property definitions specify type information, access permissions, and
+ * value constraints.
+ * 
+ * @param name the name of the property
+ * @param type the data type of the property
+ * @param isReadable whether the property can be read
+ * @param isWritable whether the property can be written
+ * @param isNullable whether the property accepts null values
+ * @param isRemovable whether the property can be removed
+ * @param isMultivalued whether the property can hold multiple values
+ * 
+ * @see PropertyDef
+ * @see PropertyType
+ * @see PropertyImpl
+ */
 public record PropertyDefImpl(
         String name,
         PropertyType type,
@@ -16,6 +37,12 @@ public record PropertyDefImpl(
         boolean isMultivalued
 ) implements PropertyDef
 {
+    /**
+     * Compact constructor that validates the property definition parameters.
+     * 
+     * @throws IllegalArgumentException if the name is empty
+     * @throws NullPointerException if the type is null
+     */
     public PropertyDefImpl
     {
         Objects.requireNonNull(type);
@@ -24,11 +51,26 @@ public record PropertyDefImpl(
         }
     }
 
+    /**
+     * Creates a PropertyDefImpl with default settings (readable, writable, nullable, removable, single-valued).
+     * 
+     * @param name the name of the property
+     * @param type the data type of the property
+     */
     public PropertyDefImpl(String name, PropertyType type)
     {
         this(name, type, true, true, true, true, false);
     }
 
+    /**
+     * Creates a read-only PropertyDefImpl with specified nullable and removable settings.
+     * 
+     * @param name the name of the property
+     * @param type the data type of the property
+     * @param isNullable whether the property accepts null values
+     * @param isRemovable whether the property can be removed
+     * @return a new read-only PropertyDefImpl instance
+     */
     public static @NotNull PropertyDefImpl readOnly(String name, PropertyType type, boolean isNullable, boolean isRemovable)
     {
         return new PropertyDefImpl(name, type, true, false, isNullable, isRemovable, false);
