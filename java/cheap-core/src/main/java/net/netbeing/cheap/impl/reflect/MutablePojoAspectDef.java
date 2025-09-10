@@ -14,12 +14,100 @@ import java.beans.PropertyDescriptor;
 import java.util.Collection;
 import java.util.Map;
 
+/**
+ * An {@link net.netbeing.cheap.model.AspectDef} implementation for mutable Plain Old Java Objects (POJOs)
+ * that provides full read-write access to properties through JavaBean-style getter and setter methods.
+ * 
+ * <p>This class uses Java's standard introspection mechanism ({@link Introspector}) to discover JavaBean
+ * properties in a POJO class and creates corresponding {@link PojoPropertyDef} instances. Unlike
+ * {@link ImmutablePojoAspectDef}, this class preserves both getter and setter methods, allowing
+ * full mutation capabilities for properties that have both accessor types.</p>
+ * 
+ * <p>Key features:</p>
+ * <ul>
+ *   <li>Automatic property discovery using Java Bean introspection</li>
+ *   <li>Full read-write property definitions respecting both getters and setters</li>
+ *   <li>Cached getter and setter method wrappers for efficient property access</li>
+ *   <li>Support for read-only, write-only, and read-write properties</li>
+ *   <li>Integration with CHEAP's reflection utilities for type mapping</li>
+ * </ul>
+ * 
+ * <p>Property access patterns:</p>
+ * <ul>
+ *   <li>Properties with only getters → read-only</li>
+ *   <li>Properties with only setters → write-only</li>
+ *   <li>Properties with both getters and setters → read-write</li>
+ *   <li>All discovered properties are included regardless of accessibility</li>
+ * </ul>
+ * 
+ * <p>JavaBean property discovery:</p>
+ * <ul>
+ *   <li>Uses {@link Introspector#getBeanInfo} to find properties</li>
+ *   <li>Excludes {@code Object} class properties (like {@code getClass()})</li>
+ *   <li>Includes properties with getter methods, setter methods, or both</li>
+ *   <li>Preserves mutability information for each property</li>
+ * </ul>
+ * 
+ * <p>Example usage:</p>
+ * <pre>{@code
+ * public class Person {
+ *     private String name;
+ *     private int age;
+ *     private List<String> emails;
+ *     
+ *     public String getName() { return name; }
+ *     public void setName(String name) { this.name = name; }
+ *     public int getAge() { return age; }
+ *     // No setter for age - read-only property
+ *     public void setEmails(List<String> emails) { this.emails = emails; }
+ *     // No getter for emails - write-only property
+ * }
+ * 
+ * MutablePojoAspectDef aspectDef = new MutablePojoAspectDef(Person.class);
+ * // Creates property definitions for:
+ * // - "name": read-write (has both getter and setter)
+ * // - "age": read-only (has getter only)
+ * // - "emails": write-only (has setter only)
+ * }</pre>
+ * 
+ * <p>This class extends {@link MutableAspectDefImpl} and works in conjunction with
+ * {@link MutablePojoAspect} to provide full read-write access to POJO instances through
+ * the CHEAP property model.</p>
+ * 
+ * @see MutablePojoAspect
+ * @see PojoPropertyDef
+ * @see ImmutablePojoAspectDef
+ * @see CheapReflectionUtil
+ * @see MutableAspectDefImpl
+ */
 public class MutablePojoAspectDef extends MutableAspectDefImpl
 {
+    /** The POJO class that this aspect definition represents. */
     private final Class<?> pojoClass;
+    
+    /** Cached map of property names to their reflection-based getter method wrappers. */
     private final Map<String, GenericGetterSetter> getters;
+    
+    /** Cached map of property names to their reflection-based setter method wrappers. */
     private final Map<String, GenericGetterSetter> setters;
 
+    /**
+     * Constructs a new MutablePojoAspectDef for the specified POJO class.
+     * 
+     * <p>This constructor performs the following steps:</p>
+     * <ol>
+     *   <li>Uses {@link #propDefsFrom} to discover and create mutable property definitions</li>
+     *   <li>Initializes the parent with the class canonical name and property definitions</li>
+     *   <li>Creates and caches reflection wrappers for all available getter and setter methods</li>
+     * </ol>
+     * 
+     * <p>Separate maps are maintained for getters and setters, allowing properties to be
+     * read-only (getter only), write-only (setter only), or read-write (both).</p>
+     * 
+     * @param pojoClass the POJO class to create a mutable aspect definition for
+     * @throws NullPointerException if pojoClass is null
+     * @throws IllegalArgumentException if the class cannot be introspected or has no valid properties
+     */
     public MutablePojoAspectDef(@NotNull Class<?> pojoClass)
     {
         super(pojoClass.getCanonicalName(), propDefsFrom(pojoClass));
@@ -43,21 +131,64 @@ public class MutablePojoAspectDef extends MutableAspectDefImpl
         this.setters =  setterBuilder.build();
     }
 
+    /**
+     * Returns the POJO class that this aspect definition represents.
+     * 
+     * @return the POJO class used to generate this aspect definition
+     */
     public Class<?> getPojoClass()
     {
         return pojoClass;
     }
 
+    /**
+     * Retrieves the reflection wrapper for the getter method of the specified property.
+     * 
+     * @param propName the name of the property to get the getter for
+     * @return the {@link GenericGetterSetter} wrapper for the property's getter method,
+     *         or {@code null} if no such property exists or the property has no getter
+     * @throws NullPointerException if propName is null
+     */
     protected GenericGetterSetter getter(@NotNull String propName)
     {
         return getters.get(propName);
     }
 
+    /**
+     * Retrieves the reflection wrapper for the setter method of the specified property.
+     * 
+     * @param propName the name of the property to get the setter for
+     * @return the {@link GenericGetterSetter} wrapper for the property's setter method,
+     *         or {@code null} if no such property exists or the property has no setter
+     * @throws NullPointerException if propName is null
+     */
     protected GenericGetterSetter setter(@NotNull String propName)
     {
         return setters.get(propName);
     }
 
+    /**
+     * Creates mutable property definitions for all JavaBean properties of a POJO class.
+     * 
+     * <p>This static factory method uses Java's standard Bean introspection to discover
+     * properties and create corresponding {@link PojoPropertyDef} instances. Unlike
+     * {@link ImmutablePojoAspectDef#propDefsFrom}, this method creates mutable property
+     * definitions that preserve both getter and setter methods when available.</p>
+     * 
+     * <p>Introspection process:</p>
+     * <ol>
+     *   <li>Uses {@link Introspector#getBeanInfo} excluding {@code Object} class methods</li>
+     *   <li>Converts each {@link PropertyDescriptor} to a {@link PojoPropertyDef}</li>
+     *   <li>Forces immutable=false to preserve setter methods</li>
+     *   <li>Returns an immutable map of property names to definitions</li>
+     * </ol>
+     * 
+     * @param pojoClass the POJO class to analyze for JavaBean properties
+     * @return an immutable map from property names to their corresponding mutable property definitions
+     * @throws NullPointerException if pojoClass is null
+     * @throws IllegalArgumentException if the class cannot be introspected or wraps {@link IntrospectionException}
+     * @see PojoPropertyDef#fromPropertyDescriptor(PropertyDescriptor, boolean)
+     */
     public static ImmutableMap<@NotNull String, @NotNull PropertyDef> propDefsFrom(@NotNull Class<?> pojoClass)
     {
         BeanInfo beanInfo;
