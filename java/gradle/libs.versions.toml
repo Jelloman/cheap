@@ -6,7 +6,9 @@ junit-jupiter = "5.13.4"
 jetbrains-annotations = "26.0.2"
 junit-platform-launcher = "1.13.4"
 sqlite-jdbc = "3.50.3.0"
+postgresql = "42.7.4"
 tempus-fugit = "1.1"
+embedded-postgres = "17.6.0"
 
 
 [libraries]
@@ -16,4 +18,6 @@ junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "jun
 junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher", version.ref = "junit-platform-launcher" }
 jetbrains-annotations = { module = "org.jetbrains:annotations", version.ref = "jetbrains-annotations"  }
 sqlite-jdbc = { module = "org.xerial:sqlite-jdbc", version.ref = "sqlite-jdbc" }
+postgresql = { module = "org.postgresql:postgresql", version.ref = "postgresql" }
 tempus-fugit = { module = "com.google.code.tempus-fugit:tempus-fugit", version.ref = "tempus-fugit" }
+embedded-postgres = { module = "io.zonky.test.postgres:embedded-postgres-binaries-bom", version.ref = "embedded-postgres" }

@@ -13,9 +13,11 @@ repositories {
 dependencies {
     implementation(project(":cheap-core"))
     implementation(libs.sqlite.jdbc)
+    implementation(libs.postgresql)
     testImplementation(platform("org.junit:junit-bom:5.10.0"))
     testImplementation("org.junit.jupiter:junit-jupiter")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+    testImplementation(enforcedPlatform(libs.embedded.postgres))
 }
 
 // Apply a specific Java toolchain to ease working on different environments.

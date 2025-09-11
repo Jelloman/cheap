@@ -1,7 +1,29 @@
 <component name="ProjectDictionaryState">
   <dictionary name="project">
     <words>
+      <w>bigserial</w>
+      <w>bpchar</w>
+      <w>daterange</w>
+      <w>lseg</w>
+      <w>macaddr</w>
+      <w>numrange</w>
+      <w>postgre</w>
+      <w>regclass</w>
+      <w>regconfig</w>
+      <w>regdictionary</w>
+      <w>regoper</w>
+      <w>regoperator</w>
+      <w>regproc</w>
+      <w>regprocedure</w>
+      <w>regtype</w>
+      <w>smallserial</w>
+      <w>timestamptz</w>
+      <w>tsquery</w>
+      <w>tsrange</w>
+      <w>tstzrange</w>
+      <w>tsvector</w>
       <w>unreflect</w>
+      <w>varbit</w>
     </words>
   </dictionary>
 </component>
