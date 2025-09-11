@@ -5,20 +5,21 @@ import net.netbeing.cheap.model.HierarchyDef;
 import net.netbeing.cheap.model.HierarchyDir;
 
 import java.util.LinkedHashMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Basic implementation of a HierarchyDir that stores hierarchies in a LinkedHashMap.
  * This implementation provides a directory-like structure for managing hierarchies
  * by string names while maintaining insertion order.
  * <p>
- * This class extends LinkedHashMap to provide efficient hierarchy lookup and
- * iteration while implementing the HierarchyDir interface.
+ * This class extends ConcurrentHashMap to provide efficient hierarchy lookup and
+ * thread-safety while implementing the HierarchyDir interface.
  * 
  * @see HierarchyDir
  * @see Hierarchy
  * @see HierarchyDef
  */
-public class HierarchyDirImpl extends LinkedHashMap<String, Hierarchy> implements HierarchyDir
+public class HierarchyDirImpl extends ConcurrentHashMap<String, Hierarchy> implements HierarchyDir
 {
     /** The hierarchy definition for this directory hierarchy. */
     private final HierarchyDef def;

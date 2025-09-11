@@ -5,6 +5,7 @@ import net.netbeing.cheap.model.HierarchyDef;
 import net.netbeing.cheap.model.EntityDirectoryHierarchy;
 
 import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Basic implementation of an EntityDirectoryHierarchy using a HashMap.
@@ -18,7 +19,7 @@ import java.util.HashMap;
  * @see Entity
  * @see HierarchyDef
  */
-public class EntityDirectoryHierarchyImpl extends HashMap<String, Entity> implements EntityDirectoryHierarchy
+public class EntityDirectoryHierarchyImpl extends ConcurrentHashMap<String, Entity> implements EntityDirectoryHierarchy
 {
     /** The hierarchy definition describing this entity directory. */
     private final HierarchyDef def;

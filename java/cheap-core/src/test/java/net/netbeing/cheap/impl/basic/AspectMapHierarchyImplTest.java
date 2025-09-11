@@ -1,0 +1,116 @@
+package net.netbeing.cheap.impl.basic;
+
+import net.netbeing.cheap.model.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import java.util.Collection;
+import java.util.Set;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+class AspectMapHierarchyImplTest
+{
+    private HierarchyDef hierarchyDef;
+    private AspectDef aspectDef;
+    private AspectMapHierarchyImpl hierarchy;
+    private Entity entity1;
+    private Entity entity2;
+    private Aspect aspect1;
+    private Aspect aspect2;
+    private Catalog catalog;
+
+    @BeforeEach
+    void setUp()
+    {
+        catalog = new CatalogImpl();
+        hierarchyDef = new HierarchyDefImpl("testHierarchy", HierarchyType.ASPECT_MAP);
+        aspectDef = new MutableAspectDefImpl("testAspect");
+        hierarchy = new AspectMapHierarchyImpl(hierarchyDef, aspectDef);
+        
+        entity1 = new EntityFullImpl();
+        entity2 = new EntityFullImpl();
+        aspect1 = new AspectObjectMapImpl(catalog, entity1, aspectDef);
+        aspect2 = new AspectObjectMapImpl(catalog, entity2, aspectDef);
+    }
+
+    @Test
+    void constructor_ValidParameters_CreatesHierarchy()
+    {
+        AspectMapHierarchyImpl hierarchy = new AspectMapHierarchyImpl(hierarchyDef, aspectDef);
+        
+        assertSame(hierarchyDef, hierarchy.def());
+        assertSame(aspectDef, hierarchy.aspectDef());
+        assertTrue(hierarchy.isEmpty());
+    }
+
+    @Test
+    void put_NewEntityAspectPair_AddsMapping()
+    {
+        Aspect result = hierarchy.put(entity1, aspect1);
+        
+        assertNull(result);
+        assertEquals(1, hierarchy.size());
+        assertSame(aspect1, hierarchy.get(entity1));
+        assertTrue(hierarchy.containsKey(entity1));
+        assertTrue(hierarchy.containsValue(aspect1));
+    }
+
+    @Test
+    void get_ExistingEntity_ReturnsAspect()
+    {
+        hierarchy.put(entity1, aspect1);
+
+        assertSame(aspect1, hierarchy.get(entity1));
+    }
+
+    @Test
+    void put_ExistingEntity_ReplacesAspect()
+    {
+        hierarchy.put(entity1, aspect1);
+        assertEquals(1, hierarchy.size());
+
+        Aspect result = hierarchy.put(entity1, aspect2);
+        
+        assertSame(aspect1, result);
+        assertEquals(1, hierarchy.size());
+        assertSame(aspect2, hierarchy.get(entity1));
+        assertFalse(hierarchy.containsValue(aspect1));
+        assertTrue(hierarchy.containsValue(aspect2));
+    }
+
+    @Test
+    void put_MultipleEntities_AddsAllMappings()
+    {
+        hierarchy.put(entity1, aspect1);
+        hierarchy.put(entity2, aspect2);
+        
+        assertEquals(2, hierarchy.size());
+        assertSame(aspect1, hierarchy.get(entity1));
+        assertSame(aspect2, hierarchy.get(entity2));
+    }
+
+    @Test
+    void remove_ExistingEntity_RemovesMapping()
+    {
+        hierarchy.put(entity1, aspect1);
+        
+        Aspect result = hierarchy.remove(entity1);
+        
+        assertSame(aspect1, result);
+        assertEquals(0, hierarchy.size());
+    }
+
+    @Test
+    void values_PopulatedHierarchy_ReturnsAllAspects()
+    {
+        hierarchy.put(entity1, aspect1);
+        hierarchy.put(entity2, aspect2);
+        
+        Collection<Aspect> values = hierarchy.values();
+        
+        assertEquals(2, values.size());
+        assertTrue(values.contains(aspect1));
+        assertTrue(values.contains(aspect2));
+    }
+}

@@ -21,6 +21,7 @@ public class MutableAspectDefImpl extends AspectDefBase
 {
     /**
      * Creates a new MutableAspectDefImpl with the specified name and empty property definitions.
+     * This default version is NOT threadsafe.
      * 
      * @param name the name of this aspect definition
      */
@@ -31,9 +32,11 @@ public class MutableAspectDefImpl extends AspectDefBase
 
     /**
      * Creates a new MutableAspectDefImpl with the specified name and property definitions.
+     * The propertyDefs map is used directly, not copied. To make a threadsafe version of
+     * this class, pass in a threadsafe Map.
      * 
      * @param name the name of this aspect definition
-     * @param propertyDefs the initial map of property names to property definitions
+     * @param propertyDefs the map of property names to property definitions
      */
     public MutableAspectDefImpl(@NotNull String name, @NotNull Map<String, PropertyDef> propertyDefs)
     {

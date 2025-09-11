@@ -5,6 +5,7 @@ import net.netbeing.cheap.model.Entity;
 import net.netbeing.cheap.model.LocalEntity;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Objects;
 import java.util.UUID;
 
 /**
@@ -42,8 +43,11 @@ public class EntityLazyIdImpl implements Entity
      * 
      * @param local the local entity to use for this entity
      */
-    public EntityLazyIdImpl(LocalEntity local)
+    public EntityLazyIdImpl(@NotNull LocalEntity local)
     {
+        if (local.entity() != null) {
+            throw new IllegalArgumentException("Cannot construct a new Entity with a LocalEntity that already has an Entity.");
+        }
         this.local = local;
     }
 
@@ -53,7 +57,7 @@ public class EntityLazyIdImpl implements Entity
      * 
      * @param aspect the initial aspect to store in the local entity
      */
-    public EntityLazyIdImpl(Aspect aspect)
+    public EntityLazyIdImpl(@NotNull Aspect aspect)
     {
         this.local = new LocalEntityImpl(this, aspect);
     }

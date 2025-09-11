@@ -1,0 +1,372 @@
+package net.netbeing.cheap.impl.basic;
+
+import net.netbeing.cheap.model.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicReference;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+class EntityFullImplTest
+{
+    private AspectDef aspectDef1;
+    private AspectDef aspectDef2;
+    private Aspect aspect1;
+    private Aspect aspect2;
+    private Catalog catalog;
+
+    @BeforeEach
+    void setUp()
+    {
+        catalog = new CatalogImpl();
+        aspectDef1 = new MutableAspectDefImpl("aspect1");
+        aspectDef2 = new MutableAspectDefImpl("aspect2");
+    }
+
+    @Test
+    void constructor_NoParameters_GeneratesRandomGlobalId()
+    {
+        EntityFullImpl entity = new EntityFullImpl();
+        
+        assertNotNull(entity.globalId());
+        assertSame(entity, entity.local());
+        assertSame(entity, entity.entity());
+        assertNull(entity.aspects); // Lazy initialization
+    }
+
+    @Test
+    void constructor_WithGlobalId_UsesProvidedGlobalId()
+    {
+        UUID testId = UUID.randomUUID();
+        EntityFullImpl entity = new EntityFullImpl(testId);
+        
+        assertSame(testId, entity.globalId());
+        assertSame(entity, entity.local());
+        assertSame(entity, entity.entity());
+        assertNull(entity.aspects); // Lazy initialization
+    }
+
+    @Test
+    void constructor_WithGlobalIdAndAspect_SetsUpAspectMap()
+    {
+        UUID testId = UUID.randomUUID();
+        aspect1 = new AspectObjectMapImpl(catalog, null, aspectDef1);
+        EntityFullImpl entity = new EntityFullImpl(testId, aspect1);
+        
+        assertSame(testId, entity.globalId());
+        assertNotNull(entity.aspects);
+        assertEquals(aspect1, entity.aspects.get(aspectDef1));
+        assertSame(entity, entity.local());
+        assertSame(entity, entity.entity());
+    }
+
+    @Test
+    void constructor_WithNullGlobalId_AcceptsNull()
+    {
+        EntityFullImpl entity = new EntityFullImpl(null);
+        
+        assertNull(entity.globalId());
+        assertSame(entity, entity.local());
+        assertSame(entity, entity.entity());
+    }
+
+    @Test
+    void constructor_WithNullAspect_ThrowsException()
+    {
+        UUID testId = UUID.randomUUID();
+        
+        assertThrows(NullPointerException.class, () -> new EntityFullImpl(testId, null));
+    }
+
+    @Test
+    void globalId_AfterConstruction_ReturnsCorrectId()
+    {
+        UUID testId = UUID.randomUUID();
+        EntityFullImpl entity = new EntityFullImpl(testId);
+        
+        assertEquals(testId, entity.globalId());
+    }
+
+    @Test
+    void globalId_MultipleCallsSameInstance_ReturnsSameId()
+    {
+        EntityFullImpl entity = new EntityFullImpl();
+        UUID firstCall = entity.globalId();
+        UUID secondCall = entity.globalId();
+        
+        assertSame(firstCall, secondCall);
+    }
+
+    @Test
+    void local_Always_ReturnsSelf()
+    {
+        EntityFullImpl entity = new EntityFullImpl();
+        
+        assertSame(entity, entity.local());
+    }
+
+    @Test
+    void entity_Always_ReturnsSelf()
+    {
+        EntityFullImpl entity = new EntityFullImpl();
+        
+        assertSame(entity, entity.entity());
+    }
+
+    @Test
+    void aspects_FirstCall_InitializesMap()
+    {
+        EntityFullImpl entity = new EntityFullImpl();
+        
+        Map<AspectDef, Aspect> aspects = entity.aspects();
+        
+        assertNotNull(aspects);
+        assertNotNull(entity.aspects);
+        assertTrue(aspects.isEmpty());
+        assertInstanceOf(WeakAspectMap.class, aspects);
+    }
+
+    @Test
+    void aspects_MultipleCallsSameInstance_ReturnsSameMap()
+    {
+        EntityFullImpl entity = new EntityFullImpl();
+        
+        Map<AspectDef, Aspect> first = entity.aspects();
+        Map<AspectDef, Aspect> second = entity.aspects();
+        
+        assertSame(first, second);
+    }
+
+    @Test
+    void aspects_ThreadSafety_InitializesOnlyOnce() throws InterruptedException
+    {
+        EntityFullImpl entity = new EntityFullImpl();
+        int threadCount = 10;
+        CountDownLatch startLatch = new CountDownLatch(1);
+        CountDownLatch doneLatch = new CountDownLatch(threadCount);
+        @SuppressWarnings("unchecked")
+        AtomicReference<Map<AspectDef, Aspect>>[] results = new AtomicReference[threadCount];
+        
+        for (int i = 0; i < threadCount; i++) {
+            final int index = i;
+            results[index] = new AtomicReference<>();
+            new Thread(() -> {
+                try {
+                    startLatch.await();
+                    results[index].set(entity.aspects());
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                } finally {
+                    doneLatch.countDown();
+                }
+            }).start();
+        }
+        
+        startLatch.countDown();
+        doneLatch.await();
+        
+        // All threads should get the same map instance
+        Map<AspectDef, Aspect> expectedMap = results[0].get();
+        for (int i = 1; i < threadCount; i++) {
+            assertSame(expectedMap, results[i].get());
+        }
+    }
+
+    @Test
+    void aspect_WithNullDef_ReturnsNull()
+    {
+        EntityFullImpl entity = new EntityFullImpl();
+        
+        Aspect result = entity.aspect(null);
+        
+        assertNull(result);
+    }
+
+    @Test
+    void aspect_WithNonExistentDef_ReturnsNull()
+    {
+        EntityFullImpl entity = new EntityFullImpl();
+        
+        Aspect result = entity.aspect(aspectDef1);
+        
+        assertNull(result);
+    }
+
+    @Test
+    void aspect_WithExistingDef_ReturnsAspect()
+    {
+        EntityFullImpl entity = new EntityFullImpl();
+        aspect1 = new AspectObjectMapImpl(catalog, entity, aspectDef1);
+        entity.aspects().put(aspectDef1, aspect1);
+        
+        Aspect result = entity.aspect(aspectDef1);
+        
+        assertSame(aspect1, result);
+    }
+
+    @Test
+    void aspect_BeforeAspectsInitialized_InitializesAndReturnsNull()
+    {
+        EntityFullImpl entity = new EntityFullImpl();
+        assertNull(entity.aspects); // Not yet initialized
+        
+        Aspect result = entity.aspect(aspectDef1);
+        
+        assertNull(result);
+        assertNotNull(entity.aspects); // Should be initialized now
+    }
+
+    @Test
+    void aspect_AfterAspectsInitialized_UsesExistingMap()
+    {
+        EntityFullImpl entity = new EntityFullImpl();
+        Map<AspectDef, Aspect> aspectsMap = entity.aspects();
+        aspect1 = new AspectObjectMapImpl(catalog, entity, aspectDef1);
+        aspectsMap.put(aspectDef1, aspect1);
+        
+        Aspect result = entity.aspect(aspectDef1);
+        
+        assertSame(aspect1, result);
+        assertSame(aspectsMap, entity.aspects); // Should use same map
+    }
+
+    @Test
+    void aspects_AddAndRetrieve_WorksCorrectly()
+    {
+        EntityFullImpl entity = new EntityFullImpl();
+        Map<AspectDef, Aspect> aspectsMap = entity.aspects();
+        
+        aspect1 = new AspectObjectMapImpl(catalog, entity, aspectDef1);
+        aspect2 = new AspectObjectMapImpl(catalog, entity, aspectDef2);
+        aspectsMap.put(aspectDef1, aspect1);
+        aspectsMap.put(aspectDef2, aspect2);
+        
+        assertEquals(2, aspectsMap.size());
+        assertSame(aspect1, aspectsMap.get(aspectDef1));
+        assertSame(aspect2, aspectsMap.get(aspectDef2));
+        assertSame(aspect1, entity.aspect(aspectDef1));
+        assertSame(aspect2, entity.aspect(aspectDef2));
+    }
+
+    @Test
+    void constructor_WithInitialAspect_SetsUpMapCorrectly()
+    {
+        UUID testId = UUID.randomUUID();
+        aspect1 = new AspectObjectMapImpl(catalog, null, aspectDef1);
+        EntityFullImpl entity = new EntityFullImpl(testId, aspect1);
+        
+        assertNotNull(entity.aspects);
+        assertEquals(1, entity.aspects.size());
+        assertSame(aspect1, entity.aspects.get(aspectDef1));
+        assertSame(aspect1, entity.aspect(aspectDef1));
+    }
+
+    @Test
+    void inheritance_ExtendsEntityBasicImpl_InheritsCorrectly()
+    {
+        EntityFullImpl entity = new EntityFullImpl();
+        
+        // Should have Entity interface methods
+        assertNotNull(entity.globalId());
+        assertNotNull(entity.local());
+        
+        // Should have LocalEntity interface methods
+        assertSame(entity, entity.entity());
+        assertNotNull(entity.aspects());
+    }
+
+    @Test
+    void globalId_DifferentInstances_HaveDifferentIds()
+    {
+        EntityFullImpl entity1 = new EntityFullImpl();
+        EntityFullImpl entity2 = new EntityFullImpl();
+        
+        assertNotEquals(entity1.globalId(), entity2.globalId());
+    }
+
+    @Test
+    void constructor_SpecificUUID_PreservesAllBits()
+    {
+        // Test with a known UUID to ensure all bits are preserved
+        UUID testId = UUID.fromString("123e4567-e89b-12d3-a456-426614174000");
+        EntityFullImpl entity = new EntityFullImpl(testId);
+        
+        assertEquals(testId, entity.globalId());
+        assertEquals("123e4567-e89b-12d3-a456-426614174000", entity.globalId().toString());
+    }
+
+    @Test
+    void aspect_ConcurrentAccess_ThreadSafe() throws InterruptedException
+    {
+        EntityFullImpl entity = new EntityFullImpl();
+        aspect1 = new AspectObjectMapImpl(catalog, entity, aspectDef1);
+        entity.aspects().put(aspectDef1, aspect1);
+        
+        int threadCount = 5;
+        CountDownLatch startLatch = new CountDownLatch(1);
+        CountDownLatch doneLatch = new CountDownLatch(threadCount);
+        @SuppressWarnings("unchecked")
+        AtomicReference<Aspect>[] results = new AtomicReference[threadCount];
+        
+        for (int i = 0; i < threadCount; i++) {
+            final int index = i;
+            results[index] = new AtomicReference<>();
+            new Thread(() -> {
+                try {
+                    startLatch.await();
+                    results[index].set(entity.aspect(aspectDef1));
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                } finally {
+                    doneLatch.countDown();
+                }
+            }).start();
+        }
+        
+        startLatch.countDown();
+        doneLatch.await();
+        
+        // All threads should get the same aspect
+        for (int i = 0; i < threadCount; i++) {
+            assertSame(aspect1, results[i].get());
+        }
+    }
+
+    @Test
+    void aspects_LazyInitialization_CreatesWeakAspectMap()
+    {
+        EntityFullImpl entity = new EntityFullImpl();
+        
+        Map<AspectDef, Aspect> aspectsMap = entity.aspects();
+        
+        assertInstanceOf(WeakAspectMap.class, aspectsMap);
+    }
+
+    @Test
+    void aspects_PreInitialized_ReturnsWeakAspectMap()
+    {
+        aspect1 = new AspectObjectMapImpl(catalog, null, aspectDef1);
+        EntityFullImpl entity = new EntityFullImpl(UUID.randomUUID(), aspect1);
+        
+        Map<AspectDef, Aspect> aspectsMap = entity.aspects();
+        
+        assertInstanceOf(WeakAspectMap.class, aspectsMap);
+    }
+
+    @Test
+    void toString_ValidEntity_ContainsGlobalId()
+    {
+        UUID testId = UUID.randomUUID();
+        EntityFullImpl entity = new EntityFullImpl(testId);
+        
+        String toString = entity.toString();
+        
+        // toString should contain class name or meaningful representation
+        assertNotNull(toString);
+        assertFalse(toString.trim().isEmpty());
+    }
+}

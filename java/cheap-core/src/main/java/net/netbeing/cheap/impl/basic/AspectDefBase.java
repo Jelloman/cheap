@@ -7,6 +7,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Abstract base class for AspectDef implementations providing common functionality.
@@ -21,7 +22,7 @@ import java.util.Map;
  * @see MutableAspectDefImpl
  * @see PropertyDef
  */
-class AspectDefBase implements AspectDef
+public abstract class AspectDefBase implements AspectDef
 {
     /** The name of this aspect definition. */
     final String name;
@@ -34,7 +35,7 @@ class AspectDefBase implements AspectDef
      * 
      * @param name the name of this aspect definition
      */
-    AspectDefBase(@NotNull String name)
+    protected AspectDefBase(@NotNull String name)
     {
         this(name, new LinkedHashMap<>());
     }
@@ -45,8 +46,11 @@ class AspectDefBase implements AspectDef
      * @param name the name of this aspect definition
      * @param propertyDefs the map of property names to property definitions
      */
-    AspectDefBase(@NotNull String name, @NotNull Map<String, PropertyDef> propertyDefs)
+    protected AspectDefBase(@NotNull String name, @NotNull Map<String, PropertyDef> propertyDefs)
     {
+        Objects.requireNonNull(name, "AspectDefs must have a non-null name.");
+        Objects.requireNonNull(propertyDefs, "Provided property defs cannot be null.");
+
         this.name = name;
         this.propertyDefs = propertyDefs;
     }

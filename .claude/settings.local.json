@@ -5,7 +5,9 @@
       "Bash(./gradlew:*)",
       "Bash(javap:*)",
       "Bash(tree:*)",
-      "Bash(sqlite3:*)"
+      "Bash(sqlite3:*)",
+      "Bash(grep:*)",
+      "Bash(find:*)"
     ],
     "deny": [],
     "ask": []

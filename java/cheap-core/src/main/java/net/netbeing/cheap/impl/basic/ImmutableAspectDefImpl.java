@@ -23,7 +23,7 @@ public class ImmutableAspectDefImpl extends AspectDefBase
 {
     /**
      * Creates a new ImmutableAspectDefImpl with the specified name and property definitions.
-     * The property definitions map is copied into an immutable map to prevent modification.
+     * The property definitions map is copied into an ImmutableMap to prevent modification.
      * 
      * @param name the name of this aspect definition
      * @param propertyDefs the map of property names to property definitions
@@ -31,6 +31,9 @@ public class ImmutableAspectDefImpl extends AspectDefBase
     public ImmutableAspectDefImpl(@NotNull String name, @NotNull Map<String, ? extends PropertyDef> propertyDefs)
     {
         super(name, ImmutableMap.copyOf(propertyDefs));
+        if (propertyDefs.isEmpty()) {
+            throw new IllegalArgumentException("An AspectDef must contain at least one property.");
+        }
     }
 
     /**
