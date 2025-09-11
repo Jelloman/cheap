@@ -1,7 +1,9 @@
 package net.netbeing.cheap.db;
 
 import net.netbeing.cheap.model.*;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.sqlite.SQLiteDataSource;
 import java.nio.file.Paths;
 import java.util.List;
 
@@ -9,12 +11,22 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class SqliteCatalogTest {
     
+    private SQLiteDataSource dataSource;
+    private SqliteCatalog catalog;
+    
+    @BeforeEach
+    void setUp() {
+        String testDbPath = Paths.get("src", "test", "resources", "test-dbeaver.sqlite").toString();
+        String url = "jdbc:sqlite:" + testDbPath;
+        
+        dataSource = new SQLiteDataSource();
+        dataSource.setUrl(url);
+        
+        catalog = new SqliteCatalog(dataSource);
+    }
+    
     @Test
     void testLoadDb() {
-        String testDbPath = Paths.get("src", "test", "resources", "test-dbeaver.sqlite").toString();
-        
-        SqliteCatalog catalog = SqliteCatalog.loadDb(testDbPath);
-        
         assertNotNull(catalog, "Catalog should not be null");
         
         List<String> tables = catalog.getTables();
@@ -24,21 +36,35 @@ class SqliteCatalogTest {
     }
     
     @Test
+    void testLoadDbStaticMethod() {
+        SqliteCatalog staticCatalog = SqliteCatalog.loadDb(dataSource);
+        
+        assertNotNull(staticCatalog, "Catalog should not be null");
+        
+        List<String> tables = staticCatalog.getTables();
+        assertNotNull(tables, "Tables list should not be null");
+        assertEquals(1, tables.size(), "Should have exactly one table");
+        assertEquals("test_data", tables.getFirst(), "Table should be named 'test_data'");
+    }
+    
+    @Test
     void testLoadDbInvalidPath() {
         String invalidPath = "/invalid/path/that/cannot/exist/file.db";
-        
+        String url = "jdbc:sqlite:" + invalidPath;
+
+        dataSource = new SQLiteDataSource();
+        dataSource.setUrl(url);
+
         RuntimeException exception = assertThrows(RuntimeException.class, 
-            () -> SqliteCatalog.loadDb(invalidPath),
+            () -> SqliteCatalog.loadDb(dataSource),
             "Should throw RuntimeException for invalid path");
         
-        assertTrue(exception.getMessage().contains("Failed to load database from path"),
+        assertTrue(exception.getMessage().contains("Failed to load tables from database"),
             "Exception message should indicate failure to load database");
     }
     
     @Test
     void testLoadTableDef() {
-        String testDbPath = Paths.get("src", "test", "resources", "test-dbeaver.sqlite").toString();
-        SqliteCatalog catalog = SqliteCatalog.loadDb(testDbPath);
         
         AspectDef tableDef = catalog.loadTableDef("test_data");
         
@@ -75,8 +101,6 @@ class SqliteCatalogTest {
     
     @Test
     void testLoadTableDefNonExistentTable() {
-        String testDbPath = Paths.get("src", "test", "resources", "test-dbeaver.sqlite").toString();
-        SqliteCatalog catalog = SqliteCatalog.loadDb(testDbPath);
         
         AspectDef tableDef = catalog.loadTableDef("non_existent_table");
         
@@ -86,21 +110,19 @@ class SqliteCatalogTest {
     }
     
     @Test
-    void testLoadTableDefWithoutLoadDb() {
-        SqliteCatalog catalog = new SqliteCatalog();
+    void testLoadTableDefWithoutDataSource() {
+        SqliteCatalog emptyCatalog = new SqliteCatalog();
         
         IllegalStateException exception = assertThrows(IllegalStateException.class,
-            () -> catalog.loadTableDef("test_data"),
-            "Should throw IllegalStateException when database path not set");
+            () -> emptyCatalog.loadTableDef("test_data"),
+            "Should throw IllegalStateException when DataSource not set");
         
-        assertTrue(exception.getMessage().contains("Database path not set"),
-            "Exception message should indicate database path not set");
+        assertTrue(exception.getMessage().contains("DataSource not set"),
+            "Exception message should indicate DataSource not set");
     }
     
     @Test
     void testLoadTable() {
-        String testDbPath = Paths.get("src", "test", "resources", "test-dbeaver.sqlite").toString();
-        SqliteCatalog catalog = SqliteCatalog.loadDb(testDbPath);
         
         AspectMapHierarchy table = catalog.loadTable("test_data", -1);
         
@@ -155,8 +177,6 @@ class SqliteCatalogTest {
     
     @Test
     void testLoadTableWithMaxRows() {
-        String testDbPath = Paths.get("src", "test", "resources", "test-dbeaver.sqlite").toString();
-        SqliteCatalog catalog = SqliteCatalog.loadDb(testDbPath);
         
         AspectMapHierarchy table = catalog.loadTable("test_data", 1);
         
@@ -172,8 +192,6 @@ class SqliteCatalogTest {
     
     @Test
     void testLoadTableNonExistentTable() {
-        String testDbPath = Paths.get("src", "test", "resources", "test-dbeaver.sqlite").toString();
-        SqliteCatalog catalog = SqliteCatalog.loadDb(testDbPath);
         
         RuntimeException exception = assertThrows(RuntimeException.class,
             () -> catalog.loadTable("non_existent_table", -1),
@@ -184,21 +202,19 @@ class SqliteCatalogTest {
     }
     
     @Test
-    void testLoadTableWithoutLoadDb() {
-        SqliteCatalog catalog = new SqliteCatalog();
+    void testLoadTableWithoutDataSource() {
+        SqliteCatalog emptyCatalog = new SqliteCatalog();
         
         IllegalStateException exception = assertThrows(IllegalStateException.class,
-            () -> catalog.loadTable("test_data", -1),
-            "Should throw IllegalStateException when database path not set");
+            () -> emptyCatalog.loadTable("test_data", -1),
+            "Should throw IllegalStateException when DataSource not set");
         
-        assertTrue(exception.getMessage().contains("Database path not set"),
-            "Exception message should indicate database path not set");
+        assertTrue(exception.getMessage().contains("DataSource not set"),
+            "Exception message should indicate DataSource not set");
     }
     
     @Test
     void testLoadTableZeroMaxRows() {
-        String testDbPath = Paths.get("src", "test", "resources", "test-dbeaver.sqlite").toString();
-        SqliteCatalog catalog = SqliteCatalog.loadDb(testDbPath);
         
         AspectMapHierarchy table = catalog.loadTable("test_data", 0);
         

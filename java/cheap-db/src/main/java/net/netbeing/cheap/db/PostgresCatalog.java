@@ -5,6 +5,7 @@ import net.netbeing.cheap.model.*;
 
 import java.sql.*;
 import java.util.*;
+import javax.sql.DataSource;
 
 import static java.util.Map.entry;
 
@@ -12,12 +13,15 @@ public class PostgresCatalog extends CatalogImpl
 {
     protected final List<String> tables = new LinkedList<>();
     protected final Map<String, AspectDef> tableAspects = new HashMap<>();
-    protected String jdbcUrl;
-    protected String username;
-    protected String password;
+    protected DataSource dataSource;
     
     public PostgresCatalog() {
         // Default constructor for testing
+    }
+    
+    public PostgresCatalog(DataSource dataSource) {
+        this.dataSource = dataSource;
+        loadTables();
     }
     
     private static final Map<String, PropertyType> POSTGRES_TO_PROPERTY_TYPE = Map.ofEntries(
@@ -131,50 +135,62 @@ public class PostgresCatalog extends CatalogImpl
 
     public static PostgresCatalog connect(String host, int port, String database, String username, String password)
     {
-        PostgresCatalog catalog = new PostgresCatalog();
-        catalog.jdbcUrl = String.format("jdbc:postgresql://%s:%d/%s", host, port, database);
-        catalog.username = username;
-        catalog.password = password;
-        
-        try (Connection connection = DriverManager.getConnection(catalog.jdbcUrl, username, password);
-             PreparedStatement statement = connection.prepareStatement(
-                 "SELECT table_name FROM information_schema.tables " +
-                 "WHERE table_schema = 'public' AND table_type = 'BASE TABLE'");
-             ResultSet resultSet = statement.executeQuery()) {
-            
-            while (resultSet.next()) {
-                catalog.tables.add(resultSet.getString("table_name"));
-            }
-            
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to connect to PostgreSQL database: " + catalog.jdbcUrl, e);
-        }
-        
-        return catalog;
+        String jdbcUrl = String.format("jdbc:postgresql://%s:%d/%s", host, port, database);
+        DataSource dataSource = createDataSource(jdbcUrl, username, password);
+        return new PostgresCatalog(dataSource);
     }
     
     public static PostgresCatalog connect(String jdbcUrl, String username, String password)
     {
-        PostgresCatalog catalog = new PostgresCatalog();
-        catalog.jdbcUrl = jdbcUrl;
-        catalog.username = username;
-        catalog.password = password;
+        DataSource dataSource = createDataSource(jdbcUrl, username, password);
+        return new PostgresCatalog(dataSource);
+    }
+    
+    private static DataSource createDataSource(String jdbcUrl, String username, String password) {
+        return new DataSource() {
+            @Override
+            public Connection getConnection() throws SQLException {
+                return DriverManager.getConnection(jdbcUrl, username, password);
+            }
+            
+            @Override
+            public Connection getConnection(String user, String pass) throws SQLException {
+                return DriverManager.getConnection(jdbcUrl, user, pass);
+            }
+            
+            // Other DataSource methods with default implementations
+            @Override public java.io.PrintWriter getLogWriter() throws SQLException { return null; }
+            @Override public void setLogWriter(java.io.PrintWriter out) throws SQLException {}
+            @Override public void setLoginTimeout(int seconds) throws SQLException {}
+            @Override public int getLoginTimeout() throws SQLException { return 0; }
+            @Override public java.util.logging.Logger getParentLogger() throws java.sql.SQLFeatureNotSupportedException {
+                throw new java.sql.SQLFeatureNotSupportedException();
+            }
+            @Override public <T> T unwrap(Class<T> iface) throws SQLException {
+                throw new SQLException("Cannot unwrap to " + iface.getName());
+            }
+            @Override public boolean isWrapperFor(Class<?> iface) throws SQLException { return false; }
+        };
+    }
+    
+    private void loadTables() {
+        if (dataSource == null) {
+            return;
+        }
         
-        try (Connection connection = DriverManager.getConnection(jdbcUrl, username, password);
+        try (Connection connection = dataSource.getConnection();
              PreparedStatement statement = connection.prepareStatement(
                  "SELECT table_name FROM information_schema.tables " +
                  "WHERE table_schema = 'public' AND table_type = 'BASE TABLE'");
              ResultSet resultSet = statement.executeQuery()) {
             
             while (resultSet.next()) {
-                catalog.tables.add(resultSet.getString("table_name"));
+                tables.add(resultSet.getString("table_name"));
             }
             
         } catch (SQLException e) {
-            throw new RuntimeException("Failed to connect to PostgreSQL database: " + jdbcUrl, e);
+            throw new RuntimeException("Failed to load tables from PostgreSQL database", e);
         }
-        
-        return catalog;
     }
 
     public AspectDef getTableDef(String tableName)
@@ -188,13 +204,13 @@ public class PostgresCatalog extends CatalogImpl
 
     public AspectDef loadTableDef(String tableName)
     {
-        if (jdbcUrl == null) {
-            throw new IllegalStateException("Database connection not configured. Use connect() to initialize the catalog.");
+        if (dataSource == null) {
+            throw new IllegalStateException("DataSource not set. Use constructor with DataSource to initialize the catalog.");
         }
         
         MutableAspectDefImpl aspectDef = new MutableAspectDefImpl(tableName);
         
-        try (Connection connection = DriverManager.getConnection(jdbcUrl, username, password)) {
+        try (Connection connection = dataSource.getConnection()) {
             DatabaseMetaData metaData = connection.getMetaData();
             
             try (ResultSet columns = metaData.getColumns(null, "public", tableName, null)) {
@@ -241,8 +257,8 @@ public class PostgresCatalog extends CatalogImpl
 
     public AspectMapHierarchy loadTable(String tableName, int maxRows)
     {
-        if (jdbcUrl == null) {
-            throw new IllegalStateException("Database connection not configured. Use connect() to initialize the catalog.");
+        if (dataSource == null) {
+            throw new IllegalStateException("DataSource not set. Use constructor with DataSource to initialize the catalog.");
         }
         
         AspectDef aspectDef = getTableDef(tableName);
@@ -254,7 +270,7 @@ public class PostgresCatalog extends CatalogImpl
             query += " LIMIT " + maxRows;
         }
         
-        try (Connection connection = DriverManager.getConnection(jdbcUrl, username, password);
+        try (Connection connection = dataSource.getConnection();
              Statement statement = connection.createStatement();
              ResultSet resultSet = statement.executeQuery(query)) {
             
@@ -344,13 +360,8 @@ public class PostgresCatalog extends CatalogImpl
         return new LinkedList<>(tables);
     }
     
-    public String getJdbcUrl()
+    public DataSource getDataSource()
     {
-        return jdbcUrl;
-    }
-    
-    public String getUsername()
-    {
-        return username;
+        return dataSource;
     }
 }

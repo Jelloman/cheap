@@ -5,6 +5,7 @@ import net.netbeing.cheap.model.*;
 
 import java.sql.*;
 import java.util.*;
+import javax.sql.DataSource;
 
 import static java.util.Map.entry;
 
@@ -12,10 +13,15 @@ public class SqliteCatalog extends CatalogImpl
 {
     protected final List<String> tables = new LinkedList<>();
     protected final Map<String, AspectDef> tableAspects = new HashMap<>();
-    protected String databasePath;
+    protected DataSource dataSource;
     
     public SqliteCatalog() {
         // Default constructor for testing
+    }
+    
+    public SqliteCatalog(DataSource dataSource) {
+        this.dataSource = dataSource;
+        loadTables();
     }
     
     private static final Map<String, PropertyType> SQLITE_TO_PROPERTY_TYPE = Map.ofEntries(
@@ -54,25 +60,27 @@ public class SqliteCatalog extends CatalogImpl
         entry("BOOLEAN", PropertyType.Boolean)
     );
 
-    public static SqliteCatalog loadDb(String pathToDb)
+    public static SqliteCatalog loadDb(DataSource dataSource)
     {
-        SqliteCatalog catalog = new SqliteCatalog();
-        catalog.databasePath = pathToDb;
-        String url = "jdbc:sqlite:" + pathToDb;
+        return new SqliteCatalog(dataSource);
+    }
+    
+    private void loadTables() {
+        if (dataSource == null) {
+            return;
+        }
         
-        try (Connection connection = DriverManager.getConnection(url);
+        try (Connection connection = dataSource.getConnection();
              Statement statement = connection.createStatement();
              ResultSet resultSet = statement.executeQuery("SELECT name FROM sqlite_master WHERE type='table';")) {
             
             while (resultSet.next()) {
-                catalog.tables.add(resultSet.getString("name"));
+                tables.add(resultSet.getString("name"));
             }
             
         } catch (SQLException e) {
-            throw new RuntimeException("Failed to load database from path: " + pathToDb, e);
+            throw new RuntimeException("Failed to load tables from database", e);
         }
-        
-        return catalog;
     }
 
     public AspectDef getTableDef(String tableName)
@@ -86,14 +94,13 @@ public class SqliteCatalog extends CatalogImpl
 
     public AspectDef loadTableDef(String tableName)
     {
-        if (databasePath == null) {
-            throw new IllegalStateException("Database path not set. Use loadDb() to initialize the catalog.");
+        if (dataSource == null) {
+            throw new IllegalStateException("DataSource not set. Use constructor with DataSource to initialize the catalog.");
         }
         
         MutableAspectDefImpl aspectDef = new MutableAspectDefImpl(tableName);
-        String url = "jdbc:sqlite:" + databasePath;
         
-        try (Connection connection = DriverManager.getConnection(url)) {
+        try (Connection connection = dataSource.getConnection()) {
             DatabaseMetaData metaData = connection.getMetaData();
             
             try (ResultSet columns = metaData.getColumns(null, null, tableName, null)) {
@@ -135,21 +142,20 @@ public class SqliteCatalog extends CatalogImpl
 
     public AspectMapHierarchy loadTable(String tableName, int maxRows)
     {
-        if (databasePath == null) {
-            throw new IllegalStateException("Database path not set. Use loadDb() to initialize the catalog.");
+        if (dataSource == null) {
+            throw new IllegalStateException("DataSource not set. Use constructor with DataSource to initialize the catalog.");
         }
         
         AspectDef aspectDef = getTableDef(tableName);
         HierarchyDef hierarchyDef = new HierarchyDefImpl("sqlite:table:" + tableName, HierarchyType.ASPECT_MAP);
         AspectMapHierarchyImpl hierarchy = new AspectMapHierarchyImpl(hierarchyDef, aspectDef);
 
-        String url = "jdbc:sqlite:" + databasePath;
         String query = "SELECT * FROM " + tableName;
         if (maxRows >= 0) {
             query += " LIMIT " + maxRows;
         }
         
-        try (Connection connection = DriverManager.getConnection(url);
+        try (Connection connection = dataSource.getConnection();
              Statement statement = connection.createStatement();
              ResultSet resultSet = statement.executeQuery(query)) {
             
