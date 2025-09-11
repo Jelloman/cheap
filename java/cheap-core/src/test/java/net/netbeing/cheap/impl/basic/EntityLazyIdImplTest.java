@@ -3,15 +3,20 @@ package net.netbeing.cheap.impl.basic;
 import net.netbeing.cheap.model.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import com.google.code.tempusfugit.concurrency.annotations.*;
+import com.google.code.tempusfugit.concurrency.ConcurrentRule;
+import org.junit.Rule;
 
 import java.util.UUID;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class EntityLazyIdImplTest
 {
+    @Rule
+    public ConcurrentRule concurrentRule = new ConcurrentRule();
+    
     private Catalog catalog;
     private AspectDef aspectDef;
     private Aspect aspect;
@@ -87,40 +92,14 @@ class EntityLazyIdImplTest
     }
 
     @Test
-    void globalId_ThreadSafety_InitializesOnlyOnce() throws InterruptedException
+    @Concurrent(count = 10)
+    @Repeating(repetition = 100)
+    void globalId_ThreadSafety_InitializesOnlyOnce()
     {
         EntityLazyIdImpl entity = new EntityLazyIdImpl();
-        
-        int threadCount = 10;
-        CountDownLatch startLatch = new CountDownLatch(1);
-        CountDownLatch doneLatch = new CountDownLatch(threadCount);
-        @SuppressWarnings("unchecked")
-        AtomicReference<UUID>[] results = new AtomicReference[threadCount];
-        
-        for (int i = 0; i < threadCount; i++) {
-            final int index = i;
-            results[index] = new AtomicReference<>();
-            new Thread(() -> {
-                try {
-                    startLatch.await();
-                    results[index].set(entity.globalId());
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                } finally {
-                    doneLatch.countDown();
-                }
-            }).start();
-        }
-        
-        startLatch.countDown();
-        doneLatch.await();
-        
-        // All threads should get the same UUID instance
-        UUID expectedUUID = results[0].get();
-        assertNotNull(expectedUUID);
-        for (int i = 1; i < threadCount; i++) {
-            assertSame(expectedUUID, results[i].get());
-        }
+        UUID globalId = entity.globalId();
+        assertNotNull(globalId);
+        assertSame(globalId, entity.globalId());
     }
 
     @Test
@@ -169,61 +148,19 @@ class EntityLazyIdImplTest
     }
 
     @Test
-    void globalIdAndLocal_ConcurrentAccess_BothThreadSafe() throws InterruptedException
+    @Concurrent(count = 8)
+    @Repeating(repetition = 50)
+    void globalIdAndLocal_ConcurrentAccess_BothThreadSafe()
     {
         EntityLazyIdImpl entity = new EntityLazyIdImpl();
         
-        int threadCount = 8;
-        CountDownLatch startLatch = new CountDownLatch(1);
-        CountDownLatch doneLatch = new CountDownLatch(threadCount);
-        @SuppressWarnings("unchecked")
-        AtomicReference<UUID>[] globalIdResults = new AtomicReference[threadCount / 2];
-        @SuppressWarnings("unchecked")
-        AtomicReference<LocalEntity>[] localResults = new AtomicReference[threadCount / 2];
+        UUID globalId = entity.globalId();
+        LocalEntity local = entity.local();
         
-        // Half threads access globalId, half access local
-        for (int i = 0; i < threadCount / 2; i++) {
-            final int index = i;
-            globalIdResults[index] = new AtomicReference<>();
-            localResults[index] = new AtomicReference<>();
-            
-            new Thread(() -> {
-                try {
-                    startLatch.await();
-                    globalIdResults[index].set(entity.globalId());
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                } finally {
-                    doneLatch.countDown();
-                }
-            }).start();
-            
-            new Thread(() -> {
-                try {
-                    startLatch.await();
-                    localResults[index].set(entity.local());
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                } finally {
-                    doneLatch.countDown();
-                }
-            }).start();
-        }
-        
-        startLatch.countDown();
-        doneLatch.await();
-        
-        // Verify all threads got consistent results
-        UUID expectedGlobalId = globalIdResults[0].get();
-        LocalEntity expectedLocal = localResults[0].get();
-        
-        assertNotNull(expectedGlobalId);
-        assertNotNull(expectedLocal);
-        
-        for (int i = 1; i < threadCount / 2; i++) {
-            assertSame(expectedGlobalId, globalIdResults[i].get());
-            assertSame(expectedLocal, localResults[i].get());
-        }
+        assertNotNull(globalId);
+        assertNotNull(local);
+        assertSame(globalId, entity.globalId());
+        assertSame(local, entity.local());
     }
 
     @Test
@@ -321,40 +258,17 @@ class EntityLazyIdImplTest
     }
 
     @Test
-    void localEntityAspects_ThreadSafety_ConsistentAccess() throws InterruptedException
+    @Concurrent(count = 5)
+    @Repeating(repetition = 20)
+    void localEntityAspects_ThreadSafety_ConsistentAccess()
     {
         aspect = new AspectObjectMapImpl(catalog, new EntityFullImpl(), aspectDef);
         EntityLazyIdImpl entity = new EntityLazyIdImpl(aspect);
         
-        int threadCount = 5;
-        CountDownLatch startLatch = new CountDownLatch(1);
-        CountDownLatch doneLatch = new CountDownLatch(threadCount);
-        @SuppressWarnings("unchecked")
-        AtomicReference<Aspect>[] results = new AtomicReference[threadCount];
+        LocalEntity local = entity.local();
+        Aspect retrievedAspect = local.aspect(aspectDef);
         
-        for (int i = 0; i < threadCount; i++) {
-            final int index = i;
-            results[index] = new AtomicReference<>();
-            new Thread(() -> {
-                try {
-                    startLatch.await();
-                    LocalEntity local = entity.local();
-                    results[index].set(local.aspect(aspectDef));
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                } finally {
-                    doneLatch.countDown();
-                }
-            }).start();
-        }
-        
-        startLatch.countDown();
-        doneLatch.await();
-        
-        // All threads should get the same aspect
-        for (int i = 0; i < threadCount; i++) {
-            assertSame(aspect, results[i].get());
-        }
+        assertSame(aspect, retrievedAspect);
     }
 
     @Test

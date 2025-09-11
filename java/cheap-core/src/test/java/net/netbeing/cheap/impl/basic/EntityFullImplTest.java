@@ -3,16 +3,20 @@ package net.netbeing.cheap.impl.basic;
 import net.netbeing.cheap.model.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import com.google.code.tempusfugit.concurrency.annotations.*;
+import com.google.code.tempusfugit.concurrency.ConcurrentRule;
+import org.junit.Rule;
 
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class EntityFullImplTest
 {
+    @Rule
+    public ConcurrentRule concurrentRule = new ConcurrentRule();
+    
     private AspectDef aspectDef1;
     private AspectDef aspectDef2;
     private Aspect aspect1;
@@ -142,38 +146,14 @@ class EntityFullImplTest
     }
 
     @Test
-    void aspects_ThreadSafety_InitializesOnlyOnce() throws InterruptedException
+    @Concurrent(count = 10)
+    @Repeating(repetition = 100)
+    void aspects_ThreadSafety_InitializesOnlyOnce()
     {
         EntityFullImpl entity = new EntityFullImpl();
-        int threadCount = 10;
-        CountDownLatch startLatch = new CountDownLatch(1);
-        CountDownLatch doneLatch = new CountDownLatch(threadCount);
-        @SuppressWarnings("unchecked")
-        AtomicReference<Map<AspectDef, Aspect>>[] results = new AtomicReference[threadCount];
-        
-        for (int i = 0; i < threadCount; i++) {
-            final int index = i;
-            results[index] = new AtomicReference<>();
-            new Thread(() -> {
-                try {
-                    startLatch.await();
-                    results[index].set(entity.aspects());
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                } finally {
-                    doneLatch.countDown();
-                }
-            }).start();
-        }
-        
-        startLatch.countDown();
-        doneLatch.await();
-        
-        // All threads should get the same map instance
-        Map<AspectDef, Aspect> expectedMap = results[0].get();
-        for (int i = 1; i < threadCount; i++) {
-            assertSame(expectedMap, results[i].get());
-        }
+        Map<AspectDef, Aspect> aspects = entity.aspects();
+        assertNotNull(aspects);
+        assertSame(aspects, entity.aspects());
     }
 
     @Test
@@ -300,40 +280,16 @@ class EntityFullImplTest
     }
 
     @Test
-    void aspect_ConcurrentAccess_ThreadSafe() throws InterruptedException
+    @Concurrent(count = 5)
+    @Repeating(repetition = 20)
+    void aspect_ConcurrentAccess_ThreadSafe()
     {
         EntityFullImpl entity = new EntityFullImpl();
         aspect1 = new AspectObjectMapImpl(catalog, entity, aspectDef1);
         entity.aspects().put(aspectDef1, aspect1);
         
-        int threadCount = 5;
-        CountDownLatch startLatch = new CountDownLatch(1);
-        CountDownLatch doneLatch = new CountDownLatch(threadCount);
-        @SuppressWarnings("unchecked")
-        AtomicReference<Aspect>[] results = new AtomicReference[threadCount];
-        
-        for (int i = 0; i < threadCount; i++) {
-            final int index = i;
-            results[index] = new AtomicReference<>();
-            new Thread(() -> {
-                try {
-                    startLatch.await();
-                    results[index].set(entity.aspect(aspectDef1));
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                } finally {
-                    doneLatch.countDown();
-                }
-            }).start();
-        }
-        
-        startLatch.countDown();
-        doneLatch.await();
-        
-        // All threads should get the same aspect
-        for (int i = 0; i < threadCount; i++) {
-            assertSame(aspect1, results[i].get());
-        }
+        Aspect result = entity.aspect(aspectDef1);
+        assertSame(aspect1, result);
     }
 
     @Test

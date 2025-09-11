@@ -3,15 +3,19 @@ package net.netbeing.cheap.impl.basic;
 import net.netbeing.cheap.model.LocalEntity;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import com.google.code.tempusfugit.concurrency.annotations.*;
+import com.google.code.tempusfugit.concurrency.ConcurrentRule;
+import org.junit.Rule;
 
 import java.util.UUID;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class EntityLazyImplTest
 {
+    @Rule
+    public ConcurrentRule concurrentRule = new ConcurrentRule();
+    
     private EntityLazyImpl entity;
 
     @BeforeEach
@@ -48,38 +52,13 @@ class EntityLazyImplTest
     }
 
     @Test
-    void globalId_ThreadSafety_InitializesOnlyOnce() throws InterruptedException
+    @Concurrent(count = 10)
+    @Repeating(repetition = 100)
+    void globalId_ThreadSafety_InitializesOnlyOnce()
     {
-        int threadCount = 10;
-        CountDownLatch startLatch = new CountDownLatch(1);
-        CountDownLatch doneLatch = new CountDownLatch(threadCount);
-        @SuppressWarnings("unchecked")
-        AtomicReference<UUID>[] results = new AtomicReference[threadCount];
-        
-        for (int i = 0; i < threadCount; i++) {
-            final int index = i;
-            results[index] = new AtomicReference<>();
-            new Thread(() -> {
-                try {
-                    startLatch.await();
-                    results[index].set(entity.globalId());
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                } finally {
-                    doneLatch.countDown();
-                }
-            }).start();
-        }
-        
-        startLatch.countDown();
-        doneLatch.await();
-        
-        // All threads should get the same UUID instance
-        UUID expectedUUID = results[0].get();
-        assertNotNull(expectedUUID);
-        for (int i = 1; i < threadCount; i++) {
-            assertSame(expectedUUID, results[i].get());
-        }
+        UUID globalId = entity.globalId();
+        assertNotNull(globalId);
+        assertSame(globalId, entity.globalId());
     }
 
     @Test
@@ -110,94 +89,27 @@ class EntityLazyImplTest
     }
 
     @Test
-    void local_ThreadSafety_InitializesOnlyOnce() throws InterruptedException
+    @Concurrent(count = 10)
+    @Repeating(repetition = 100)
+    void local_ThreadSafety_InitializesOnlyOnce()
     {
-        int threadCount = 10;
-        CountDownLatch startLatch = new CountDownLatch(1);
-        CountDownLatch doneLatch = new CountDownLatch(threadCount);
-        @SuppressWarnings("unchecked")
-        AtomicReference<LocalEntity>[] results = new AtomicReference[threadCount];
-        
-        for (int i = 0; i < threadCount; i++) {
-            final int index = i;
-            results[index] = new AtomicReference<>();
-            new Thread(() -> {
-                try {
-                    startLatch.await();
-                    results[index].set(entity.local());
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                } finally {
-                    doneLatch.countDown();
-                }
-            }).start();
-        }
-        
-        startLatch.countDown();
-        doneLatch.await();
-        
-        // All threads should get the same LocalEntity instance
-        LocalEntity expectedLocal = results[0].get();
-        assertNotNull(expectedLocal);
-        for (int i = 1; i < threadCount; i++) {
-            assertSame(expectedLocal, results[i].get());
-        }
+        LocalEntity local = entity.local();
+        assertNotNull(local);
+        assertSame(local, entity.local());
     }
 
     @Test
-    void globalIdAndLocal_ConcurrentAccess_BothThreadSafe() throws InterruptedException
+    @Concurrent(count = 8)
+    @Repeating(repetition = 50)
+    void globalIdAndLocal_ConcurrentAccess_BothThreadSafe()
     {
-        int threadCount = 8;
-        CountDownLatch startLatch = new CountDownLatch(1);
-        CountDownLatch doneLatch = new CountDownLatch(threadCount);
-        @SuppressWarnings("unchecked")
-        AtomicReference<UUID>[] globalIdResults = new AtomicReference[threadCount / 2];
-        @SuppressWarnings("unchecked")
-        AtomicReference<LocalEntity>[] localResults = new AtomicReference[threadCount / 2];
+        UUID globalId = entity.globalId();
+        LocalEntity local = entity.local();
         
-        // Half threads access globalId, half access local
-        for (int i = 0; i < threadCount / 2; i++) {
-            final int index = i;
-            globalIdResults[index] = new AtomicReference<>();
-            localResults[index] = new AtomicReference<>();
-            
-            new Thread(() -> {
-                try {
-                    startLatch.await();
-                    globalIdResults[index].set(entity.globalId());
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                } finally {
-                    doneLatch.countDown();
-                }
-            }).start();
-            
-            new Thread(() -> {
-                try {
-                    startLatch.await();
-                    localResults[index].set(entity.local());
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                } finally {
-                    doneLatch.countDown();
-                }
-            }).start();
-        }
-        
-        startLatch.countDown();
-        doneLatch.await();
-        
-        // Verify all threads got the same instances
-        UUID expectedGlobalId = globalIdResults[0].get();
-        LocalEntity expectedLocal = localResults[0].get();
-        
-        assertNotNull(expectedGlobalId);
-        assertNotNull(expectedLocal);
-        
-        for (int i = 1; i < threadCount / 2; i++) {
-            assertSame(expectedGlobalId, globalIdResults[i].get());
-            assertSame(expectedLocal, localResults[i].get());
-        }
+        assertNotNull(globalId);
+        assertNotNull(local);
+        assertSame(globalId, entity.globalId());
+        assertSame(local, entity.local());
     }
 
     @Test

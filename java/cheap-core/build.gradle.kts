@@ -19,6 +19,7 @@ repositories {
 
 dependencies {
     testImplementation(libs.junit.jupiter)
+    testImplementation(libs.tempus.fugit)
     testRuntimeOnly(libs.junit.platform.launcher)
     testRuntimeOnly(libs.junit.jupiter)
 
