@@ -2,6 +2,7 @@ package net.netbeing.cheap.db;
 
 import net.netbeing.cheap.impl.basic.*;
 import net.netbeing.cheap.model.*;
+import org.jetbrains.annotations.NotNull;
 
 import java.sql.*;
 import java.util.*;
@@ -15,16 +16,12 @@ public class PostgresCatalog extends CatalogImpl
     protected final Map<String, AspectDef> tableAspects = new HashMap<>();
     protected DataSource dataSource;
     
-    public PostgresCatalog() {
-        // Default constructor for testing
-    }
-    
-    public PostgresCatalog(DataSource dataSource) {
+    public PostgresCatalog(@NotNull DataSource dataSource) {
         this.dataSource = dataSource;
         loadTables();
     }
     
-    private static final Map<String, PropertyType> POSTGRES_TO_PROPERTY_TYPE = Map.ofEntries(
+    private static final Map<String, PropertyType> POSTGRES_TO_PROPERTY_TYPE = Map.<String, PropertyType>ofEntries(
         // Integer types
         entry("SMALLINT", PropertyType.Integer),
         entry("INTEGER", PropertyType.Integer),
@@ -133,51 +130,7 @@ public class PostgresCatalog extends CatalogImpl
         entry("XML", PropertyType.Text)
     );
 
-    public static PostgresCatalog connect(String host, int port, String database, String username, String password)
-    {
-        String jdbcUrl = String.format("jdbc:postgresql://%s:%d/%s", host, port, database);
-        DataSource dataSource = createDataSource(jdbcUrl, username, password);
-        return new PostgresCatalog(dataSource);
-    }
-    
-    public static PostgresCatalog connect(String jdbcUrl, String username, String password)
-    {
-        DataSource dataSource = createDataSource(jdbcUrl, username, password);
-        return new PostgresCatalog(dataSource);
-    }
-    
-    private static DataSource createDataSource(String jdbcUrl, String username, String password) {
-        return new DataSource() {
-            @Override
-            public Connection getConnection() throws SQLException {
-                return DriverManager.getConnection(jdbcUrl, username, password);
-            }
-            
-            @Override
-            public Connection getConnection(String user, String pass) throws SQLException {
-                return DriverManager.getConnection(jdbcUrl, user, pass);
-            }
-            
-            // Other DataSource methods with default implementations
-            @Override public java.io.PrintWriter getLogWriter() throws SQLException { return null; }
-            @Override public void setLogWriter(java.io.PrintWriter out) throws SQLException {}
-            @Override public void setLoginTimeout(int seconds) throws SQLException {}
-            @Override public int getLoginTimeout() throws SQLException { return 0; }
-            @Override public java.util.logging.Logger getParentLogger() throws java.sql.SQLFeatureNotSupportedException {
-                throw new java.sql.SQLFeatureNotSupportedException();
-            }
-            @Override public <T> T unwrap(Class<T> iface) throws SQLException {
-                throw new SQLException("Cannot unwrap to " + iface.getName());
-            }
-            @Override public boolean isWrapperFor(Class<?> iface) throws SQLException { return false; }
-        };
-    }
-    
     private void loadTables() {
-        if (dataSource == null) {
-            return;
-        }
-        
         try (Connection connection = dataSource.getConnection();
              PreparedStatement statement = connection.prepareStatement(
                  "SELECT table_name FROM information_schema.tables " +
