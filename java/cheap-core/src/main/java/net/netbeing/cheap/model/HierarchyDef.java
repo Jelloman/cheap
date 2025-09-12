@@ -1,28 +1,37 @@
 package net.netbeing.cheap.model;
 
 /**
- * The interface Hierarchy def.
+ * Defines the metadata and characteristics of a hierarchy within the CHEAP data model.
+ * A hierarchy definition specifies the type, name, and mutability constraints of
+ * a hierarchy instance.
+ * 
+ * <p>In the CHEAP model, hierarchies provide the structural organization for entities
+ * and aspects within a catalog. The HierarchyDef serves as the schema definition
+ * that determines how a hierarchy behaves and what operations are permitted on it.</p>
  */
 public interface HierarchyDef
 {
     /**
-     * Name string.
-     *
-     * @return the string
+     * Returns the unique name identifier for this hierarchy definition.
+     * 
+     * @return the hierarchy name, never null
      */
     String name();
 
     /**
-     * Type hierarchy type.
-     *
-     * @return the hierarchy type
+     * Returns the type of hierarchy this definition describes.
+     * The type determines the structure and behavior of hierarchy instances
+     * created from this definition.
+     * 
+     * @return the hierarchy type, never null
      */
     HierarchyType type();
 
     /**
-     * Is modifiable boolean.
-     *
-     * @return the boolean
+     * Determines whether hierarchies of this type can be modified after creation.
+     * A modifiable hierarchy allows addition, removal, and modification of its contents.
+     * 
+     * @return true if the hierarchy can be modified, false otherwise; defaults to true
      */
     default boolean isModifiable()
     {
@@ -30,9 +39,11 @@ public interface HierarchyDef
     }
 
     /**
-     * Is immutable boolean.
-     *
-     * @return the boolean
+     * Determines whether hierarchies of this type are immutable after creation.
+     * An immutable hierarchy cannot be changed once created, providing thread safety
+     * and data integrity guarantees.
+     * 
+     * @return true if the hierarchy is immutable, false otherwise; defaults to false
      */
     default boolean isImmutable()
     {
