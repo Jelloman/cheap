@@ -7,6 +7,8 @@ import org.jetbrains.annotations.NotNull;
 import java.sql.*;
 import java.util.*;
 import javax.sql.DataSource;
+import java.sql.SQLDataException;
+import java.util.Date;
 
 import static java.util.Map.entry;
 
@@ -258,7 +260,7 @@ public class PostgresCatalog extends CatalogImpl
         return hierarchy;
     }
     
-    private Object convertValue(Object value, PropertyType expectedType)
+    private Object convertValue(Object value, PropertyType expectedType) throws SQLDataException
     {
         if (value == null) {
             return null;
@@ -269,29 +271,39 @@ public class PostgresCatalog extends CatalogImpl
             case Integer:
                 if (value instanceof Number) {
                     return ((Number) value).longValue();
+                } else if (value instanceof String) {
+                    return Long.valueOf((String) value);
+                } else {
+                    throw new SQLDataException("Expected Long type but found " + value.getClass());
                 }
-                break;
             case Float:
                 if (value instanceof Number) {
                     return ((Number) value).doubleValue();
+                } else if (value instanceof String) {
+                    return Double.valueOf((String) value);
+                } else {
+                    throw new SQLDataException("Expected Double type but found " + value.getClass());
                 }
-                break;
             case Boolean:
                 if (value instanceof Boolean) {
                     return value;
-                }
-                if (value instanceof Number) {
+                } else if (value instanceof Number) {
                     return ((Number) value).intValue() != 0;
+                } else if (value instanceof String) {
+                    return Boolean.valueOf((String) value);
+                } else {
+                    throw new SQLDataException("Expected Boolean type but found " + value.getClass());
                 }
-                break;
             case UUID:
-                if (value instanceof java.util.UUID) {
-                    return value.toString();
+                if (value instanceof UUID) {
+                    return value;
                 }
                 break;
             case DateTime:
-                if (value instanceof Timestamp || value instanceof java.sql.Date || value instanceof Time) {
-                    return value.toString();
+                if (value instanceof java.sql.Date) {
+                    return ((java.sql.Date)value).toLocalDate().toString();
+                }else if (value instanceof Date) {
+                    return ((Date)value).toInstant().toString();
                 }
                 break;
             case String:
