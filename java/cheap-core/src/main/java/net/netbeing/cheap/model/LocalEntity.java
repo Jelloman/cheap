@@ -3,60 +3,41 @@ package net.netbeing.cheap.model;
 import org.jetbrains.annotations.NotNull;
 
 /**
- * Provides convenience access to a cache of an entity's aspects. This is NOT a
- * definitive view of all of an Entity's aspects; it is only a cache. The Catalog
- * remains the source of truth about Aspects.
+ * LocalEntity keeps track of one or more Catalog(s) that contain its Aspects.
+ * LocalEntity references are therefore sufficient to access Aspects, without
+ * needing a Catalog reference.
  */
-public interface LocalEntity
+public interface LocalEntity extends Entity
 {
     /**
-     * Returns the global entity that this local entity represents.
+     * Return the set of Catalogs that this entity has Aspects in.
      *
-     * @return the global entity instance, never null
+     * @return an Iterable of Catalogs (which commonly will only have one element)
      */
-    @NotNull Entity entity();
-
-    /**
-     * Add an Aspect to this local entity's cache. This is NOT a persistence method;
-     * to persist an Aspect, add it to a Catalog.
-     *
-     * @return the previous aspect with this AspectDef, if any
-     */
-    Aspect cache(@NotNull Aspect aspect);
+    Iterable<Catalog> catalogs();
 
     /**
      * Retrieves a specific aspect attached to this entity by its definition.
-     * This is a convenience method equivalent to calling {@code aspects().get(def)}.
      *
-     * <p>If no aspect of the specified type is attached to this entity,
-     * this method returns null.</p>
+     * <p>If no aspect of the specified type is attached to this entity in any
+     * of its catalogs, this method returns null.</p>
+     *
+     * <p>The default implementation calls the {@link #getAspect(AspectDef, Catalog) getAspect}
+     * method with each of the catalogs returned by the {@link #catalogs() catalogs} method,
+     * in order, and returns the first match.</p>
      *
      * @param def the aspect definition to look up, must not be null
      * @return the aspect instance matching the definition, or null if not found
      */
-    Aspect getAspectIfPresent(@NotNull AspectDef def);
-
-    /**
-     * Retrieves a specific aspect attached to this entity by its definition.
-     * If the aspect is not already referenced by this LocalEntity, attempts
-     * to load the aspect from the provided Catalog.
-     *
-     * <p>If no aspect of the specified type is attached to this entity,
-     * this method returns null.</p>
-     *
-     * @param def the aspect definition to look up, must not be null
-     * @return the aspect instance matching the definition, or null if not found
-     */
-    default Aspect getAspect(@NotNull AspectDef def, @NotNull Catalog cat)
+    default Aspect getAspect(@NotNull AspectDef def)
     {
-        Aspect a = getAspectIfPresent(def);
-        if (a != null) {
-            return a;
+        for (Catalog cat : catalogs()) {
+            Aspect a = getAspect(def, cat);
+            if (a != null) {
+                return a;
+            }
         }
-        a = cat.aspects(def).get(entity());
-        if (a != null) {
-            cache(a);
-        }
-        return a;
+        return null;
     }
+
 }
