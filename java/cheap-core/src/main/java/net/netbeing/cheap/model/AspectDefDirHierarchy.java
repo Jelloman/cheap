@@ -5,12 +5,12 @@ package net.netbeing.cheap.model;
  * This hierarchy type provides a mapping from string names to AspectDef instances,
  * allowing for organized storage and retrieval of aspect definitions within a catalog.
  * 
- * <p>This corresponds to the ENTITY_DIR (ED) hierarchy type in the CHEAP model,
+ * <p>This corresponds to the ASPECT_DEF_DIR (ED) hierarchy type in the CHEAP model,
  * specifically designed for managing aspect definitions. It enables catalogs to
  * maintain a registry of available aspect types that can be used to create
  * aspect instances.</p>
  */
-public interface AspectDefDirHierarchy extends Hierarchy
+public interface AspectDefDirHierarchy extends Hierarchy, AspectDefDir
 {
     /**
      * Adds an aspect definition to this directory hierarchy.
@@ -20,12 +20,4 @@ public interface AspectDefDirHierarchy extends Hierarchy
      * @return the previous aspect definition with the same name, or null if none existed
      */
     AspectDef add(AspectDef def);
-
-    /**
-     * Retrieves an aspect definition by its name.
-     * 
-     * @param name the name of the aspect definition to retrieve
-     * @return the aspect definition with the specified name, or null if not found
-     */
-    AspectDef get(String name);
 }

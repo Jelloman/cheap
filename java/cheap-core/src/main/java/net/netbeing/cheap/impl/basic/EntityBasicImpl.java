@@ -7,7 +7,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.UUID;
 
 /**
- * Basic implementation of an Entity with minimal functionality.
+ * Basic implementation of an Entity reference with minimal functionality.
  * This implementation provides a globally unique identifier for the entity
  * but does not support local entity functionality.
  * <p>
@@ -27,7 +27,7 @@ public abstract class EntityBasicImpl implements Entity
      */
     public EntityBasicImpl()
     {
-        this(UUID.randomUUID());
+        this(null);
     }
 
     /**
@@ -37,7 +37,7 @@ public abstract class EntityBasicImpl implements Entity
      */
     public EntityBasicImpl(UUID globalId)
     {
-        this.globalId = globalId;
+        this.globalId = globalId != null ? globalId : UUID.randomUUID();
     }
 
     /**

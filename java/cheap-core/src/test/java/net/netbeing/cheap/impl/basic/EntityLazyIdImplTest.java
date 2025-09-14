@@ -8,7 +8,6 @@ import com.google.code.tempusfugit.concurrency.ConcurrentRule;
 import org.junit.Rule;
 
 import java.util.UUID;
-import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -52,7 +51,7 @@ class EntityLazyIdImplTest
         // GlobalId should be lazily initialized
         
         // Verify the aspect is available in the local entity
-        assertEquals(aspect, local.aspect(aspectDef));
+        assertEquals(aspect, local.getAspectIfPresent(aspectDef));
     }
 
     @Test
@@ -142,7 +141,7 @@ class EntityLazyIdImplTest
         EntityLazyIdImpl entity = new EntityLazyIdImpl(aspect);
         
         LocalEntity local = entity.local();
-        Aspect retrievedAspect = local.aspect(aspectDef);
+        Aspect retrievedAspect = local.getAspectIfPresent(aspectDef);
         
         assertSame(aspect, retrievedAspect);
     }
@@ -254,7 +253,7 @@ class EntityLazyIdImplTest
         assertSame(lazyEntity, local.entity());
         
         // But the aspect in the local entity should be the same instance
-        assertSame(aspect, local.aspect(aspectDef));
+        assertSame(aspect, local.getAspectIfPresent(aspectDef));
     }
 
     @Test
@@ -266,7 +265,7 @@ class EntityLazyIdImplTest
         EntityLazyIdImpl entity = new EntityLazyIdImpl(aspect);
         
         LocalEntity local = entity.local();
-        Aspect retrievedAspect = local.aspect(aspectDef);
+        Aspect retrievedAspect = local.getAspectIfPresent(aspectDef);
         
         assertSame(aspect, retrievedAspect);
     }

@@ -1,5 +1,7 @@
 package net.netbeing.cheap.model;
 
+import org.jetbrains.annotations.NotNull;
+
 /**
  * Base interface for all hierarchy types in the CHEAP data model. A Hierarchy
  * represents the "H" in the CHEAP acronym (Catalog, Hierarchy, Entity, Aspect, Property)
@@ -24,7 +26,7 @@ public interface Hierarchy
      *
      * @return the hierarchy definition for this hierarchy, never null
      */
-    HierarchyDef def();
+    @NotNull HierarchyDef def();
 
 
 }

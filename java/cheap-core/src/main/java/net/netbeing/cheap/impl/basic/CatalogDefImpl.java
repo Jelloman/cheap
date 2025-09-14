@@ -3,88 +3,81 @@ package net.netbeing.cheap.impl.basic;
 import net.netbeing.cheap.model.*;
 import org.jetbrains.annotations.NotNull;
 
+import java.net.URI;
 import java.util.*;
 
 /**
  * Basic implementation of a CatalogDef that defines the structure and properties
  * of a catalog in the CHEAP data caching system.
  * <p>
- * This implementation manages catalog type, global identifier, and hierarchy definitions.
- * It automatically includes the default catalog hierarchies (catalog root and aspectage).
+ * This implementation automatically includes the default catalog hierarchies (catalog root and aspectage).
  * 
  * @see CatalogDef
- * @see CatalogType
+ * @see CatalogSpecies
  * @see HierarchyDef
  */
 public class CatalogDefImpl implements CatalogDef
 {
-    /** The type of this catalog (ROOT or MIRROR). */
-    private final CatalogType type;
-    
-    /** The globally unique identifier for this catalog. */
-    private final UUID globalId;
-    
     /** Map of hierarchy names to their definitions. */
     private final Map<String,HierarchyDef> hierarchyDefs = new LinkedHashMap<>(4);
 
+    /** Map of hierarchy names to their definitions. */
+    private final AspectDefDirImpl aspectDefs = new AspectDefDirImpl();
+
     /**
-     * Creates a new CatalogDefImpl with MIRROR type and a random UUID.
+     * Creates a new CatalogDefImpl with no HierarchyDefs or AspectDefs.
      */
     public CatalogDefImpl()
     {
-        this(CatalogType.MIRROR, UUID.randomUUID());
+        this.hierarchyDefs.put(CatalogDefaultHierarchies.CATALOG_ROOT_NAME, CatalogDefaultHierarchies.CATALOG_ROOT);
+        this.hierarchyDefs.put(CatalogDefaultHierarchies.ASPECTAGE_NAME, CatalogDefaultHierarchies.ASPECTAGE);
     }
 
     /**
-     * Creates a new CatalogDefImpl with the specified type and a random UUID.
+     * Creates a new CatalogDefImpl as a copy of another CatalogDef.
      * 
-     * @param type the catalog type (ROOT or MIRROR)
+     * @param other a CatalogDef
      */
-    public CatalogDefImpl(CatalogType type)
+    public CatalogDefImpl(@NotNull CatalogDef other)
     {
-        this(type, UUID.randomUUID());
+        this(other.hierarchyDefs(), other.aspectDefs());
     }
 
     /**
-     * Creates a new CatalogDefImpl with the specified type and global ID.
-     * Automatically includes default catalog hierarchies.
-     * 
-     * @param type the catalog type (ROOT or MIRROR)
-     * @param globalId the globally unique identifier for this catalog
+     * Creates a new CatalogDefImpl with copies of the provided hierarchy defs and/or aspect defs.
+     * If the default hierarchies are not included, they will also be added.
+     *
+     * @param hierarchyDefs the hierarchyDefs to copy
+     * @param aspectDefs the aspectDefs to copy
      */
-    public CatalogDefImpl(CatalogType type, UUID globalId)
+    public CatalogDefImpl(Iterable<HierarchyDef> hierarchyDefs, Iterable<AspectDef> aspectDefs)
     {
-        this.type = type;
-        this.globalId = globalId;
-
-        hierarchyDefs.put(CatalogDefaultHierarchies.CATALOG_ROOT_NAME, CatalogDefaultHierarchies.CATALOG_ROOT);
-        hierarchyDefs.put(CatalogDefaultHierarchies.ASPECTAGE_NAME, CatalogDefaultHierarchies.ASPECTAGE);
+        if (hierarchyDefs != null) {
+            for (HierarchyDef hDef : hierarchyDefs) {
+                this.hierarchyDefs.put(hDef.name(), hDef);
+            }
+        }
+        if (aspectDefs != null) {
+            for (AspectDef aDef : aspectDefs) {
+                this.aspectDefs.add(aDef);
+            }
+        }
+        if (!this.hierarchyDefs.containsKey(CatalogDefaultHierarchies.CATALOG_ROOT_NAME)) {
+            this.hierarchyDefs.put(CatalogDefaultHierarchies.CATALOG_ROOT_NAME, CatalogDefaultHierarchies.CATALOG_ROOT);
+        }
+        if (!this.hierarchyDefs.containsKey(CatalogDefaultHierarchies.ASPECTAGE_NAME)) {
+            this.hierarchyDefs.put(CatalogDefaultHierarchies.ASPECTAGE_NAME, CatalogDefaultHierarchies.ASPECTAGE);
+        }
     }
 
-    /**
-     * Returns the type of this catalog.
-     * 
-     * @return the catalog type (ROOT or MIRROR)
-     */
     @Override
-    public @NotNull CatalogType type()
+    public @NotNull AspectDefDir aspectDefs()
     {
-        return type;
+        return aspectDefs;
     }
 
     /**
-     * Returns the globally unique identifier for this catalog.
-     * 
-     * @return the UUID identifying this catalog globally
-     */
-    @Override
-    public @NotNull UUID globalId()
-    {
-        return globalId;
-    }
-
-    /**
-     * Returns an unmodifiable collection of all hierarchy definitions in this catalog.
+     * Returns an unmodifiable collection of all hierarchy defs in this catalog def.
      * 
      * @return collection of hierarchy definitions
      */

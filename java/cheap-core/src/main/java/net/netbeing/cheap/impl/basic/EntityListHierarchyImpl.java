@@ -3,6 +3,7 @@ package net.netbeing.cheap.impl.basic;
 import net.netbeing.cheap.model.Entity;
 import net.netbeing.cheap.model.HierarchyDef;
 import net.netbeing.cheap.model.EntityListHierarchy;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 
@@ -39,7 +40,7 @@ public class EntityListHierarchyImpl extends ArrayList<Entity> implements Entity
      * @return the hierarchy definition describing this entity list's structure
      */
     @Override
-    public HierarchyDef def()
+    public @NotNull HierarchyDef def()
     {
         return def;
     }

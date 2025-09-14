@@ -3,6 +3,7 @@ package net.netbeing.cheap.impl.basic;
 import net.netbeing.cheap.model.Entity;
 import net.netbeing.cheap.model.HierarchyDef;
 import net.netbeing.cheap.model.EntityDirectoryHierarchy;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
 import java.util.concurrent.ConcurrentHashMap;
@@ -40,7 +41,7 @@ public class EntityDirectoryHierarchyImpl extends ConcurrentHashMap<String, Enti
      * @return the hierarchy definition describing this entity directory's structure
      */
     @Override
-    public HierarchyDef def()
+    public @NotNull HierarchyDef def()
     {
         return def;
     }

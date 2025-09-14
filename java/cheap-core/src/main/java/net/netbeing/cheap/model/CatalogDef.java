@@ -2,40 +2,42 @@ package net.netbeing.cheap.model;
 
 import org.jetbrains.annotations.NotNull;
 
+import java.net.URI;
 import java.util.Collection;
 import java.util.UUID;
 
 /**
- * The interface Catalog def.
+ * A CatalogDef defines the structure and properties of a catalog.
+ *
+ * @see CatalogSpecies
+ * @see HierarchyDef
  */
 public interface CatalogDef
 {
     /**
-     * Hierarchy defs collection.
+     * Returns a read-only collection of the aspect definitions that are typically found
+     * in a catalog with this definition. Catalogs flagged as "strict" will only contain
+     * these Aspects; otherwise they may contain additional types of Aspects.
      *
-     * @return the collection
+     * @return collection of aspect definitions
+     */
+    @NotNull AspectDefDir aspectDefs();
+
+    /**
+     * Returns  a read-only collection of hierarchy definitions that are typically found
+     * in a catalog with this definition. Catalogs flagged as "strict" will only contain
+     * these Hierarchies; otherwise they may contain additional Hierarchies.
+     *
+     * @return collection of hierarchy definitions
      */
     @NotNull Collection<HierarchyDef> hierarchyDefs();
 
     /**
-     * Hierarchy def hierarchy def.
+     * Retrieves a hierarchy definition by name.
      *
-     * @param name the name
-     * @return the hierarchy def
+     * @param name the name of the hierarchy definition to retrieve
+     * @return the hierarchy definition with the given name, or {@code null} if not found
      */
     HierarchyDef hierarchyDef(String name);
 
-    /**
-     * Global id uuid.
-     *
-     * @return the uuid
-     */
-    @NotNull UUID globalId();
-
-    /**
-     * Type catalog type.
-     *
-     * @return the catalog type
-     */
-    @NotNull CatalogType type();
 }

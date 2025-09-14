@@ -158,7 +158,7 @@ public class CheapFileUtil
      */
     public void loadFileRecordsOnly(Catalog catalog, Path dir, int maxDepth, FileVisitOption... options) throws IOException
     {
-        RecordAspectDef aspectDef = (RecordAspectDef) catalog.aspectDef(FILE_REC_ASPECT_NAME);
+        RecordAspectDef aspectDef = (RecordAspectDef) catalog.aspectDefs().get(FILE_REC_ASPECT_NAME);
         AspectMapHierarchy aspects = catalog.aspects(aspectDef);
 
         try (Stream<FileRec> stream = stream(dir, maxDepth, options)) {
@@ -193,7 +193,7 @@ public class CheapFileUtil
     public void loadFileHierarchy(@NotNull Catalog catalog, @NotNull HierarchyDef hierarchyDef,
                                   @NotNull Path dir, int maxDepth, FileVisitOption... options) throws IOException
     {
-        final RecordAspectDef aspectDef = (RecordAspectDef) catalog.aspectDef(FILE_REC_ASPECT_NAME);
+        final RecordAspectDef aspectDef = (RecordAspectDef) catalog.aspectDefs().get(FILE_REC_ASPECT_NAME);
         final AspectMapHierarchy aspects = catalog.aspects(aspectDef);
 
         var walkState = new Object() {
@@ -208,12 +208,12 @@ public class CheapFileUtil
                 // Construct a new Entity for each file
                 Entity nodeEntity = new EntityLazyIdImpl();
 
-                // Create the FileRec aspect and add it to the aspectage
+                // Create the FileRec aspect and persist it to the aspectage
                 RecordAspect<FileRec> aspect = new RecordAspect<>(catalog, nodeEntity, aspectDef, newFile);
                 aspects.add(aspect);
                 
-                // Add the aspect to the entity's local aspect map so it can be retrieved later
-                ((WeakAspectMap) nodeEntity.local().aspects()).add(aspect);
+                // Add the aspect to the entity's local cache
+                nodeEntity.local().cache(aspect);
 
                 // Create the hierarchy and root entity the first time through
                 if (walkState.hierarchy == null) {
@@ -238,7 +238,7 @@ public class CheapFileUtil
                     FileRec ancestorFile;
                     do {
                         parent = parent.getParent();
-                        Aspect ancestorFileAspect = parent.value().local().aspect(aspectDef);
+                        Aspect ancestorFileAspect = parent.value().local().getAspectIfPresent(aspectDef);
                         // We can safely assume this aspect is a RecordAspect<FileRec> since we made it here.
                         @SuppressWarnings("unchecked")
                         FileRec fileRec = ((RecordAspect<FileRec>) ancestorFileAspect).record();

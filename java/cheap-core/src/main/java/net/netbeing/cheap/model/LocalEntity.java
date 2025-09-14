@@ -1,52 +1,62 @@
 package net.netbeing.cheap.model;
 
-import java.util.Map;
+import org.jetbrains.annotations.NotNull;
 
 /**
- * Provides catalog-local access to an entity's aspects and properties. This interface
- * represents the catalog-specific view of an Entity, managing aspects that are
- * stored within a particular catalog context.
- * 
- * <p>LocalEntity handles the mapping between AspectDef definitions and the actual
- * Aspect instances attached to the entity. It serves as the bridge between the
- * global Entity identity and its catalog-local data storage.</p>
- * 
- * <p>Aspects attached to a LocalEntity can be retrieved, added, or modified through
- * this interface, providing the primary mechanism for data access in the CHEAP model.</p>
+ * Provides convenience access to a cache of an entity's aspects. This is NOT a
+ * definitive view of all of an Entity's aspects; it is only a cache. The Catalog
+ * remains the source of truth about Aspects.
  */
 public interface LocalEntity
 {
     /**
-     * Returns the global entity that this local entity represents. This provides
-     * access to the global identity and cross-catalog operations.
+     * Returns the global entity that this local entity represents.
      *
      * @return the global entity instance, never null
      */
-    Entity entity();
+    @NotNull Entity entity();
 
     /**
-     * Returns a mutable map of all aspects currently attached to this entity.
-     * The map is keyed by AspectDef and contains the corresponding Aspect instances.
-     * 
-     * <p>This map can be used to add, remove, or iterate over all aspects
-     * attached to the entity. Modifications to this map directly affect the
-     * entity's aspect storage.</p>
+     * Add an Aspect to this local entity's cache. This is NOT a persistence method;
+     * to persist an Aspect, add it to a Catalog.
      *
-     * @return a mutable map of AspectDef to Aspect mappings, never null but may be empty
+     * @return the previous aspect with this AspectDef, if any
      */
-    Map<AspectDef,Aspect> aspects();
+    Aspect cache(@NotNull Aspect aspect);
 
     /**
      * Retrieves a specific aspect attached to this entity by its definition.
      * This is a convenience method equivalent to calling {@code aspects().get(def)}.
-     * 
+     *
      * <p>If no aspect of the specified type is attached to this entity,
      * this method returns null.</p>
      *
      * @param def the aspect definition to look up, must not be null
      * @return the aspect instance matching the definition, or null if not found
      */
-    default Aspect aspect(AspectDef def) {
-        return aspects().get(def);
+    Aspect getAspectIfPresent(@NotNull AspectDef def);
+
+    /**
+     * Retrieves a specific aspect attached to this entity by its definition.
+     * If the aspect is not already referenced by this LocalEntity, attempts
+     * to load the aspect from the provided Catalog.
+     *
+     * <p>If no aspect of the specified type is attached to this entity,
+     * this method returns null.</p>
+     *
+     * @param def the aspect definition to look up, must not be null
+     * @return the aspect instance matching the definition, or null if not found
+     */
+    default Aspect getAspect(@NotNull AspectDef def, @NotNull Catalog cat)
+    {
+        Aspect a = getAspectIfPresent(def);
+        if (a != null) {
+            return a;
+        }
+        a = cat.aspects(def).get(entity());
+        if (a != null) {
+            cache(a);
+        }
+        return a;
     }
 }

@@ -26,13 +26,18 @@ Random notes
 
 
 --- CATALOGS ---
-* All Cheap catalogs are caches.
-* Each catalog is either a "root", representing an external data source, or a "mirror", which is a cached view of another catalog.
-* Catalogs can be "fixed" (read-only), "thin" (write-through) or "thick" (buffered writes).
-* Catalog writes flow through to the upstream catalog or data source.
-* Root catalogs are always either fixed or thin.
-* All non-fixed catalogs can report the status of writes to upstream.
-* Writes to mirror catalogs are not considered "persistent" and have no guarantees.
+* All Cheap catalogs are considered working copies or caches.
+* There are six species of catalog:
+    * A "source" - a read-only cache of an external data source;
+    * A "sink" - a read-write working copy of an external data source;
+    * A "mirror" - a read-only cache of another catalog;
+    * A "cache" - a (possibly buffered) write-though cache of another catalog;
+    * A "clone" - a write-back working copy of another catalog with manual writes; or
+    * A "fork" - a transient copy of another catalog, intended to diverge.
+* A fork should be a short-lived transition from a mirror, cache or clone into a sink, AKA "Save As...".
+* All catalogs can report the status of read and write operations to and from the upstream or external source.
+* Each Catalog has a Catalog Def that defines the structure and types of data it contains.
+* Mirror catalogs always have the same def as the upstream; clones and forks usually do, but can diverge.
 
 --- HIERARCHIES ---
 * Hierarchies come in 5 types:

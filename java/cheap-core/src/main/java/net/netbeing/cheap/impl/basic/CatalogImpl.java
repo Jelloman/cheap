@@ -3,6 +3,9 @@ package net.netbeing.cheap.impl.basic;
 import net.netbeing.cheap.model.*;
 import org.jetbrains.annotations.NotNull;
 
+import java.net.URI;
+import java.util.UUID;
+
 /**
  * Basic implementation of a Catalog in the CHEAP data caching system.
  * A catalog represents a complete data source or cache containing hierarchies
@@ -21,7 +24,16 @@ public class CatalogImpl extends EntityFullImpl implements Catalog
 {
     /** The catalog definition describing this catalog's properties. */
     private final CatalogDef def;
-    
+
+    /** The immutable species of this Catalog. */
+    private final CatalogSpecies species;
+
+    /** The mutable uri of this Catalog. */
+    private URI uri;
+
+    /** Whether this catalog is strict. */
+    private final boolean strict;
+
     /** The upstream catalog this catalog mirrors, or null for root catalogs. */
     private final Catalog upstream;
     
@@ -32,55 +44,63 @@ public class CatalogImpl extends EntityFullImpl implements Catalog
     private final AspectDefDirHierarchyImpl aspectage;
 
     /**
-     * Creates a new root catalog with default configuration.
+     * Creates a new non-strict SINK catalog with a wrapper CatalogDef that
+     * fully delegates to this catalog.
      */
     public CatalogImpl()
     {
-        this(new CatalogDefImpl(CatalogType.ROOT), null);
+        this(null, CatalogSpecies.SINK, null, null, false);
     }
 
     /**
-     * Creates a new catalog with the specified definition.
-     * For ROOT catalogs, upstream will be null. For MIRROR catalogs,
-     * use the constructor that accepts an upstream catalog.
-     * 
-     * @param def the catalog definition describing this catalog
+     * Creates a new non-strict catalog with the specified species and upstream,
+     * and a wrapper CatalogDef that fully delegates to this catalog.
+     *
+     * @throws IllegalArgumentException if a SOURCE/SINK catalog has an upstream; or for other species, if it lacks one
      */
-    public CatalogImpl(CatalogDef def)
+    public CatalogImpl(CatalogSpecies species, Catalog upstream)
     {
-        this(def, null);
+        this(null, species, null, upstream, false);
     }
 
     /**
      * Creates a new catalog with the specified definition and upstream catalog.
-     * 
+     *
      * @param def the catalog definition describing this catalog
      * @param upstream the upstream catalog to mirror, or null for root catalogs
-     * @throws IllegalStateException if a root catalog has an upstream or a mirror catalog lacks one
+     * @throws IllegalArgumentException if a SOURCE/SINK catalog has an upstream; or for other species, if it lacks one
      */
-    public CatalogImpl(CatalogDef def, Catalog upstream)
+    public CatalogImpl(UUID globalId, CatalogSpecies species, CatalogDef def, Catalog upstream, boolean strict)
     {
-        super(def.globalId());
-        this.def = def;
-        this.upstream = upstream;
+        super(globalId);
 
-        switch (def.type()) {
-            case ROOT -> {
+        if (strict && def == null) {
+            throw new IllegalArgumentException("A strict catalog may not be constructed without a CatalogDef.");
+        }
+
+        switch (species) {
+            case SOURCE, SINK -> {
                 if (upstream != null) {
-                    throw new IllegalStateException("Root catalogs may not have an upstream catalog.");
+                    throw new IllegalArgumentException("Source and Sink catalogs may not have an upstream catalog.");
                 }
             }
-            case MIRROR -> {
+            default -> {
                 if (upstream == null) {
-                    throw new IllegalStateException("Mirror catalogs must have an upstream catalog.");
+                    throw new IllegalArgumentException(species + " catalogs must have an upstream catalog.");
                 }
             }
         }
+
+        this.species = species;
+        this.upstream = upstream;
+        this.strict = strict;
 
         this.hierarchies = new HierarchyDirImpl(CatalogDefaultHierarchies.CATALOG_ROOT);
         this.aspectage = new AspectDefDirHierarchyImpl(CatalogDefaultHierarchies.ASPECTAGE);
         hierarchies.put(CatalogDefaultHierarchies.CATALOG_ROOT_NAME, hierarchies);
         hierarchies.put(CatalogDefaultHierarchies.ASPECTAGE_NAME, aspectage);
+
+        this.def = def != null ? def : new CatalogDefWrapper(this);
     }
 
     /**
@@ -95,14 +115,60 @@ public class CatalogImpl extends EntityFullImpl implements Catalog
     }
 
     /**
-     * Returns the upstream catalog this catalog mirrors.
+     * Returns the type of this catalog.
+     *
+     * @return the catalog type (ROOT or MIRROR)
+     */
+    @Override
+    public @NotNull CatalogSpecies species()
+    {
+        return species;
+    }
+
+    /**
+     * The URI of this catalog. Usually a URL, but need not be.
+     * Cheap is not concerned with network layers, only modeling.
+     *
+     * @return the URI of this catalog
+     */
+    @Override
+    public @NotNull URI uri()
+    {
+        return uri;
+    }
+
+    /**
+     * Set the URI of this catalog. Usually a URL, but need not be.
+     *
+     * @param uri the URI of this catalog
+     */
+    public void uri(@NotNull URI uri)
+    {
+        this.uri = uri;
+    }
+
+    /**
+     * Returns the upstream catalog of this catalo.
      * 
-     * @return the upstream catalog, or {@code null} for root catalogs
+     * @return the upstream catalog, or {@code null} for SOURCE and SINK catalogs
      */
     @Override
     public Catalog upstream()
     {
         return upstream;
+    }
+
+    /**
+     * Flags whether this catalog is strict, which means it only contains the
+     * AspectDefs and Hierarchies list in its CatalogDef. Non-strict catalogs
+     * may contain additional Hierarchies and types of Aspects.
+     *
+     * @return whether this catalog is strict
+     */
+    @Override
+    public boolean isStrict()
+    {
+        return strict;
     }
 
     /**
@@ -117,28 +183,29 @@ public class CatalogImpl extends EntityFullImpl implements Catalog
     }
 
     /**
+     * Returns the directory of all AspectDefs contained within this catalog.
+     * This is always a superset of the AspectDefDir provided by the CatalogDef.
+     *
+     * <p>This is one of the two fixed hierarchies present in every catalog.</p>
+     *
+     * @return the AspectDef directory for this catalog, never null
+     */
+    @Override
+    public @NotNull AspectDefDir aspectDefs()
+    {
+        return aspectage;
+    }
+
+    /**
      * Retrieves a hierarchy by name from this catalog.
      * 
      * @param name the name of the hierarchy to retrieve
      * @return the hierarchy with the given name, or {@code null} if not found
      */
     @Override
-    public Hierarchy hierarchy(String name)
+    public Hierarchy hierarchy(@NotNull String name)
     {
         return hierarchies.get(name);
-    }
-
-    /**
-     * Retrieves an aspect definition by name from this catalog's aspectage.
-     * 
-     * @param name the name of the aspect definition to retrieve
-     * @return the aspect definition with the given name, or {@code null} if not found
-     */
-    @Override
-    public AspectDef aspectDef(String name)
-    {
-        // TODO: aspectage
-        return aspectage.get(name);
     }
 
 }

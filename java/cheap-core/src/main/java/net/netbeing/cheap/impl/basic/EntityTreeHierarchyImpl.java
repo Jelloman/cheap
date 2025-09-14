@@ -192,7 +192,7 @@ public class EntityTreeHierarchyImpl implements EntityTreeHierarchy
      * @return the hierarchy definition describing this entity tree's structure
      */
     @Override
-    public HierarchyDef def()
+    public @NotNull HierarchyDef def()
     {
         return def;
     }

@@ -3,6 +3,7 @@ package net.netbeing.cheap.impl.basic;
 import net.netbeing.cheap.model.Hierarchy;
 import net.netbeing.cheap.model.HierarchyDef;
 import net.netbeing.cheap.model.HierarchyDir;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.LinkedHashMap;
 import java.util.concurrent.ConcurrentHashMap;
@@ -53,7 +54,7 @@ public class HierarchyDirImpl extends ConcurrentHashMap<String, Hierarchy> imple
      * @return the hierarchy definition describing this directory's structure
      */
     @Override
-    public HierarchyDef def()
+    public @NotNull HierarchyDef def()
     {
         return def;
     }

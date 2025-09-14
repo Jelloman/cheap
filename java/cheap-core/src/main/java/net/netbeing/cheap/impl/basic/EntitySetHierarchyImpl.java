@@ -3,6 +3,7 @@ package net.netbeing.cheap.impl.basic;
 import net.netbeing.cheap.model.Entity;
 import net.netbeing.cheap.model.HierarchyDef;
 import net.netbeing.cheap.model.EntitySetHierarchy;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.HashSet;
 
@@ -39,7 +40,7 @@ public class EntitySetHierarchyImpl extends HashSet<Entity> implements EntitySet
      * @return the hierarchy definition describing this entity set's structure
      */
     @Override
-    public HierarchyDef def()
+    public @NotNull HierarchyDef def()
     {
         return def;
     }

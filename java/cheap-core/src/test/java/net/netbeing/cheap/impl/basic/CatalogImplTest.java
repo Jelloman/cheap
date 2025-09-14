@@ -1,10 +1,6 @@
 package net.netbeing.cheap.impl.basic;
 
-import net.netbeing.cheap.model.AspectDefDirHierarchy;
-import net.netbeing.cheap.model.Catalog;
-import net.netbeing.cheap.model.CatalogDef;
-import net.netbeing.cheap.model.CatalogType;
-import net.netbeing.cheap.model.HierarchyDir;
+import net.netbeing.cheap.model.*;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -12,24 +8,30 @@ import static org.junit.jupiter.api.Assertions.*;
 class CatalogImplTest
 {
     @Test
-    void def_CreateCatalogNoDef_ThenRoot()
+    void def_CreateCatalogNoDef_ThenSink()
     {
         Catalog c = new CatalogImpl();
         CatalogDef def = c.def();
 
         assertNotNull(def);
-
-        assertNotNull(def.globalId());
-
-        assertEquals(CatalogType.ROOT, def.type());
+        assertNotNull(c.globalId());
+        assertNull(c.upstream());
+        assertFalse(c.isStrict());
+        assertEquals(CatalogSpecies.SINK, c.species());
     }
 
     @Test
-    void upstream_CreateMirrorCatalogWithUpstream_ThenIllegalStateException()
+    void upstream_CreateSinkCatalogWithUpstream_ThenIllegalStateException()
     {
         Catalog upstream = new CatalogImpl();
-        CatalogDef def = new CatalogDefImpl(CatalogType.ROOT);
-        Throwable exception = assertThrows(IllegalStateException.class, () -> new CatalogImpl(def, upstream));
+        assertThrows(IllegalArgumentException.class, () -> new CatalogImpl(CatalogSpecies.SINK, upstream));
+    }
+
+    @Test
+    void upstream_CreateSourceCatalogWithUpstream_ThenIllegalStateException()
+    {
+        Catalog upstream = new CatalogImpl();
+        assertThrows(IllegalArgumentException.class, () -> new CatalogImpl(CatalogSpecies.SOURCE, upstream));
     }
 
     @Test
@@ -41,19 +43,20 @@ class CatalogImplTest
         assertNotNull(catalog.hierarchies());
 
         // Verify that the hierarchies map contains the expected entries
-        assertTrue(catalog.hierarchies().containsKey("hierarchies"));
-        assertTrue(catalog.hierarchies().containsKey("aspectage"));
+        assertTrue(catalog.hierarchies().containsKey(CatalogDefaultHierarchies.CATALOG_ROOT_NAME));
+        assertTrue(catalog.hierarchies().containsKey(CatalogDefaultHierarchies.ASPECTAGE_NAME));
 
         // Check that the default hierarchies are available under expected keys
-        assertNotNull(catalog.hierarchy("hierarchies"));
-        assertNotNull(catalog.hierarchy("aspectage"));
+        assertNotNull(catalog.hierarchy(CatalogDefaultHierarchies.CATALOG_ROOT_NAME));
+        assertNotNull(catalog.hierarchy(CatalogDefaultHierarchies.ASPECTAGE_NAME));
         
         // Check that the hierarchies implement the expected interfaces
-        assertInstanceOf(HierarchyDir.class, catalog.hierarchy("hierarchies"));
-        assertInstanceOf(AspectDefDirHierarchy.class, catalog.hierarchy("aspectage"));
+        assertInstanceOf(HierarchyDir.class, catalog.hierarchy(CatalogDefaultHierarchies.CATALOG_ROOT_NAME));
+        assertInstanceOf(AspectDefDirHierarchy.class, catalog.hierarchy(CatalogDefaultHierarchies.ASPECTAGE_NAME));
         
         // Verify that the hierarchies map returns the same instances
-        assertSame(catalog.hierarchies(), catalog.hierarchy("hierarchies"));
-        assertSame(catalog.hierarchies().get("aspectage"), catalog.hierarchy("aspectage"));
+        assertSame(catalog.hierarchies(), catalog.hierarchy(CatalogDefaultHierarchies.CATALOG_ROOT_NAME));
+        assertSame(catalog.hierarchies().get(CatalogDefaultHierarchies.ASPECTAGE_NAME),
+            catalog.hierarchy(CatalogDefaultHierarchies.ASPECTAGE_NAME));
     }
 }

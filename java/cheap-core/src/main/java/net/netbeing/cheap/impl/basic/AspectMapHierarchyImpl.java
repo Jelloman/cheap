@@ -1,6 +1,7 @@
 package net.netbeing.cheap.impl.basic;
 
 import net.netbeing.cheap.model.*;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
 
@@ -51,7 +52,7 @@ public class AspectMapHierarchyImpl extends HashMap<Entity, Aspect> implements A
      * @return the hierarchy definition
      */
     @Override
-    public HierarchyDef def()
+    public @NotNull HierarchyDef def()
     {
         return def;
     }

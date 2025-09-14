@@ -55,7 +55,7 @@ class EntityFullImplTest
     }
 
     @Test
-    void constructor_WithGlobalIdAndAspect_SetsUpAspectMap()
+    void constructor_WithGlobalIdAndAspect_SetsUpGetAspectIfPresentMap()
     {
         UUID testId = UUID.randomUUID();
         aspect1 = new AspectObjectMapImpl(catalog, null, aspectDef1);
@@ -63,23 +63,23 @@ class EntityFullImplTest
         
         assertSame(testId, entity.globalId());
         assertNotNull(entity.aspects);
-        assertEquals(aspect1, entity.aspects.get(aspectDef1));
+        assertEquals(aspect1, entity.getAspectIfPresent(aspectDef1));
         assertSame(entity, entity.local());
         assertSame(entity, entity.entity());
     }
 
     @Test
-    void constructor_WithNullGlobalId_AcceptsNull()
+    void constructor_WithNullGlobalId_GeneratesId()
     {
         EntityFullImpl entity = new EntityFullImpl(null);
         
-        assertNull(entity.globalId());
+        assertNotNull(entity.globalId());
         assertSame(entity, entity.local());
         assertSame(entity, entity.entity());
     }
 
     @Test
-    void constructor_WithNullAspect_ThrowsException()
+    void constructor_WithNullGetAspectIfPresent_ThrowsException()
     {
         UUID testId = UUID.randomUUID();
         
@@ -131,7 +131,6 @@ class EntityFullImplTest
         assertNotNull(aspects);
         assertNotNull(entity.aspects);
         assertTrue(aspects.isEmpty());
-        assertInstanceOf(WeakAspectMap.class, aspects);
     }
 
     @Test
@@ -157,58 +156,58 @@ class EntityFullImplTest
     }
 
     @Test
-    void aspect_WithNullDef_ReturnsNull()
+    void getAspectIfPresent_WithNullDef_ReturnsNull()
     {
         EntityFullImpl entity = new EntityFullImpl();
         
-        Aspect result = entity.aspect(null);
+        Aspect result = entity.getAspectIfPresent(null);
         
         assertNull(result);
     }
 
     @Test
-    void aspect_WithNonExistentDef_ReturnsNull()
+    void getAspectIfPresent_WithNonExistentDef_ReturnsNull()
     {
         EntityFullImpl entity = new EntityFullImpl();
         
-        Aspect result = entity.aspect(aspectDef1);
+        Aspect result = entity.getAspectIfPresent(aspectDef1);
         
         assertNull(result);
     }
 
     @Test
-    void aspect_WithExistingDef_ReturnsAspect()
+    void aspect_WithExistingDef_ReturnsGetAspectIfPresent()
     {
         EntityFullImpl entity = new EntityFullImpl();
         aspect1 = new AspectObjectMapImpl(catalog, entity, aspectDef1);
         entity.aspects().put(aspectDef1, aspect1);
         
-        Aspect result = entity.aspect(aspectDef1);
+        Aspect result = entity.getAspectIfPresent(aspectDef1);
         
         assertSame(aspect1, result);
     }
 
     @Test
-    void aspect_BeforeAspectsInitialized_InitializesAndReturnsNull()
+    void getAspectIfPresent_BeforeAspectsInitialized_InitializesAndReturnsNull()
     {
         EntityFullImpl entity = new EntityFullImpl();
         assertNull(entity.aspects); // Not yet initialized
         
-        Aspect result = entity.aspect(aspectDef1);
+        Aspect result = entity.getAspectIfPresent(aspectDef1);
         
         assertNull(result);
         assertNotNull(entity.aspects); // Should be initialized now
     }
 
     @Test
-    void aspect_AfterAspectsInitialized_UsesExistingMap()
+    void getAspectIfPresent_AfterAspectsInitialized_UsesExistingMap()
     {
         EntityFullImpl entity = new EntityFullImpl();
         Map<AspectDef, Aspect> aspectsMap = entity.aspects();
         aspect1 = new AspectObjectMapImpl(catalog, entity, aspectDef1);
         aspectsMap.put(aspectDef1, aspect1);
         
-        Aspect result = entity.aspect(aspectDef1);
+        Aspect result = entity.getAspectIfPresent(aspectDef1);
         
         assertSame(aspect1, result);
         assertSame(aspectsMap, entity.aspects); // Should use same map
@@ -228,12 +227,12 @@ class EntityFullImplTest
         assertEquals(2, aspectsMap.size());
         assertSame(aspect1, aspectsMap.get(aspectDef1));
         assertSame(aspect2, aspectsMap.get(aspectDef2));
-        assertSame(aspect1, entity.aspect(aspectDef1));
-        assertSame(aspect2, entity.aspect(aspectDef2));
+        assertSame(aspect1, entity.getAspectIfPresent(aspectDef1));
+        assertSame(aspect2, entity.getAspectIfPresent(aspectDef2));
     }
 
     @Test
-    void constructor_WithInitialAspect_SetsUpMapCorrectly()
+    void constructor_WithInitialGetAspectIfPresent_SetsUpMapCorrectly()
     {
         UUID testId = UUID.randomUUID();
         aspect1 = new AspectObjectMapImpl(catalog, null, aspectDef1);
@@ -242,7 +241,7 @@ class EntityFullImplTest
         assertNotNull(entity.aspects);
         assertEquals(1, entity.aspects.size());
         assertSame(aspect1, entity.aspects.get(aspectDef1));
-        assertSame(aspect1, entity.aspect(aspectDef1));
+        assertSame(aspect1, entity.getAspectIfPresent(aspectDef1));
     }
 
     @Test
@@ -282,35 +281,14 @@ class EntityFullImplTest
     @Test
     @Concurrent(count = 5)
     @Repeating(repetition = 20)
-    void aspect_ConcurrentAccess_ThreadSafe()
+    void getAspectIfPresent_ConcurrentAccess_ThreadSafe()
     {
         EntityFullImpl entity = new EntityFullImpl();
         aspect1 = new AspectObjectMapImpl(catalog, entity, aspectDef1);
         entity.aspects().put(aspectDef1, aspect1);
         
-        Aspect result = entity.aspect(aspectDef1);
+        Aspect result = entity.getAspectIfPresent(aspectDef1);
         assertSame(aspect1, result);
-    }
-
-    @Test
-    void aspects_LazyInitialization_CreatesWeakAspectMap()
-    {
-        EntityFullImpl entity = new EntityFullImpl();
-        
-        Map<AspectDef, Aspect> aspectsMap = entity.aspects();
-        
-        assertInstanceOf(WeakAspectMap.class, aspectsMap);
-    }
-
-    @Test
-    void aspects_PreInitialized_ReturnsWeakAspectMap()
-    {
-        aspect1 = new AspectObjectMapImpl(catalog, null, aspectDef1);
-        EntityFullImpl entity = new EntityFullImpl(UUID.randomUUID(), aspect1);
-        
-        Map<AspectDef, Aspect> aspectsMap = entity.aspects();
-        
-        assertInstanceOf(WeakAspectMap.class, aspectsMap);
     }
 
     @Test

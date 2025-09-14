@@ -1,9 +1,12 @@
 package net.netbeing.cheap.impl.basic;
 
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import net.netbeing.cheap.model.Aspect;
 import net.netbeing.cheap.model.AspectDef;
 import net.netbeing.cheap.model.Entity;
 import net.netbeing.cheap.model.LocalEntity;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Map;
 import java.util.UUID;
@@ -24,11 +27,10 @@ import java.util.UUID;
 public class EntityFullImpl extends EntityBasicImpl implements LocalEntity
 {
     /** Lazily initialized map of aspect definitions to aspects. */
-    protected volatile WeakAspectMap aspects;
+    protected volatile Cache<@NotNull AspectDef, @NotNull Aspect> aspects;
 
     /**
      * Creates a new EntityFullImpl with a randomly generated UUID.
-     * The aspects map will be initialized on first access.
      */
     public EntityFullImpl()
     {
@@ -36,8 +38,7 @@ public class EntityFullImpl extends EntityBasicImpl implements LocalEntity
 
     /**
      * Creates a new EntityFullImpl with the specified global ID.
-     * The aspects map will be initialized on first access.
-     * 
+     *
      * @param globalId the UUID to use as the global identifier for this entity
      */
     public EntityFullImpl(UUID globalId)
@@ -54,8 +55,16 @@ public class EntityFullImpl extends EntityBasicImpl implements LocalEntity
     public EntityFullImpl(UUID globalId, Aspect initialAspect)
     {
         super(globalId);
-        this.aspects = new WeakAspectMap(3);
-        this.aspects.add(initialAspect);
+        createAspectCache();
+        this.aspects.put(initialAspect.def(), initialAspect);
+    }
+
+    private void createAspectCache()
+    {
+        this.aspects = CacheBuilder.newBuilder()
+            .initialCapacity(3)
+            .weakValues()
+            .build();
     }
 
     /**
@@ -77,26 +86,32 @@ public class EntityFullImpl extends EntityBasicImpl implements LocalEntity
      * @return this entity as an Entity
      */
     @Override
-    public Entity entity()
+    public @NotNull Entity entity()
     {
         return this;
     }
 
     /**
-     * Returns the map of aspect definitions to aspects for this entity.
-     * Uses lazy initialization with double-checked locking for thread safety.
-     * 
-     * @return the aspects map, initialized if necessary
+     * Add an Aspect to this local entity's cache. This is NOT a persistence method;
+     * to persist an Aspect, add it to a Catalog.
+     *
+     * @return the previous aspect with this AspectDef, if any
      */
-    public Map<AspectDef,Aspect> aspects() {
+    @Override
+    public Aspect cache(@NotNull Aspect aspect)
+    {
+        Aspect other = null;
         if (aspects == null) {
             synchronized(this) {
                 if (aspects == null) {
-                    aspects = new WeakAspectMap(2);
+                    createAspectCache();
                 }
             }
+        } else {
+            other = aspects.getIfPresent(aspect.def());
         }
-        return aspects;
+        aspects.put(aspect.def(), aspect);
+        return other;
     }
 
     /**
@@ -105,11 +120,12 @@ public class EntityFullImpl extends EntityBasicImpl implements LocalEntity
      * @param def the aspect definition to look up
      * @return the aspect for the given definition, or {@code null} if not found
      */
-    public Aspect aspect(AspectDef def) {
+    public Aspect getAspectIfPresent(@NotNull AspectDef def)
+    {
         if (aspects != null) {
-            return aspects.get(def);
+            return aspects.getIfPresent(def);
         }
-        return aspects().get(def);
+        return null;
     }
 
 }

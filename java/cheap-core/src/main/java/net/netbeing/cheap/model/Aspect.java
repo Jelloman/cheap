@@ -62,6 +62,16 @@ public interface Aspect
     Object unsafeReadObj(@NotNull String propName);
 
     /**
+     * Returns a flag indicating whether this aspect may be transferred between entities.
+     * Defaults to false. If it's false, Cheap will not allow changes to its owning entity.
+     *
+     * @return whether this aspect may be transferred between entities
+     */
+    default boolean isTransferable() {
+        return false;
+    }
+
+    /**
      * Writes a property value without performing validation against the aspect definition.
      * This method bypasses all security checks, type validation, and nullability constraints.
      * 

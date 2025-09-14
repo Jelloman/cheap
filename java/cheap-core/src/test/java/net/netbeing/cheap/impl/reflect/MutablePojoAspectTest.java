@@ -7,7 +7,7 @@ import net.netbeing.cheap.impl.basic.CatalogDefImpl;
 import net.netbeing.cheap.impl.basic.CatalogImpl;
 import net.netbeing.cheap.impl.basic.PropertyImpl;
 import net.netbeing.cheap.model.Catalog;
-import net.netbeing.cheap.model.CatalogType;
+import net.netbeing.cheap.model.CatalogSpecies;
 import net.netbeing.cheap.model.Entity;
 import net.netbeing.cheap.model.Property;
 import org.junit.jupiter.api.AfterEach;
@@ -40,7 +40,7 @@ public class MutablePojoAspectTest
     private static TestClass pojo2;
 
     final Entity testEntity = new BasicEntityImpl();
-    final Catalog testCatalog = new CatalogImpl(new CatalogDefImpl(CatalogType.ROOT));
+    final Catalog testCatalog = new CatalogImpl();
 
     MutablePojoAspectDef def;
     MutablePojoAspect<TestClass> mutablePojoAspect;
