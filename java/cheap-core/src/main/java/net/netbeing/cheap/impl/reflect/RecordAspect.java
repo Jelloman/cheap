@@ -5,6 +5,8 @@ import net.netbeing.cheap.model.*;
 import org.jetbrains.annotations.NotNull;
 import net.netbeing.cheap.util.reflect.GenericGetterSetter;
 
+import java.util.Objects;
+
 /**
  * An {@link Aspect} implementation that provides read-only access to Java record instances
  * through the CHEAP property model.
@@ -51,11 +53,8 @@ import net.netbeing.cheap.util.reflect.GenericGetterSetter;
  */
 public class RecordAspect<R extends Record> implements Aspect
 {
-    /** The catalog that this aspect belongs to. */
-    private final Catalog catalog;
-    
     /** The entity that this aspect is associated with. */
-    private final Entity entity;
+    private Entity entity;
     
     /** The aspect definition describing the record's structure. */
     private final RecordAspectDef def;
@@ -64,54 +63,21 @@ public class RecordAspect<R extends Record> implements Aspect
     private final R record;
 
     /**
-     * Constructs a new RecordAspect with a lazy-initialized entity.
-     * 
-     * <p>This constructor creates an aspect with a {@link EntityLazyIdImpl} that will
-     * compute its ID based on the aspect's content when first accessed. This is useful
-     * when the entity ID is derived from the aspect's properties.</p>
-     * 
-     * @param catalog the catalog that this aspect belongs to
-     * @param def the aspect definition describing the record structure
-     * @param record the Java record instance to wrap
-     * @throws NullPointerException if any parameter is null
-     */
-    public RecordAspect(@NotNull Catalog catalog, @NotNull RecordAspectDef def, @NotNull R record)
-    {
-        this.catalog = catalog;
-        this.entity = new EntityLazyIdImpl(this);
-        this.def = def;
-        this.record = record;
-    }
-
-    /**
      * Constructs a new RecordAspect with a pre-existing entity.
      * 
      * <p>This constructor is used when the entity is already known and established,
      * typically when loading existing data or when the entity ID is predetermined.</p>
-     * 
-     * @param catalog the catalog that this aspect belongs to
-     * @param entity the entity that this aspect is associated with
+     *
+     * @param entity the entity that this aspect is associated with; may be null
      * @param def the aspect definition describing the record structure
      * @param record the Java record instance to wrap
      * @throws NullPointerException if any parameter is null
      */
-    public RecordAspect(@NotNull Catalog catalog, @NotNull Entity entity, @NotNull RecordAspectDef def, @NotNull R record)
+    public RecordAspect(Entity entity, @NotNull RecordAspectDef def, @NotNull R record)
     {
-        this.catalog = catalog;
         this.entity = entity;
         this.def = def;
         this.record = record;
-    }
-
-    /**
-     * {@inheritDoc}
-     * 
-     * @return the catalog that this aspect belongs to
-     */
-    @Override
-    public Catalog catalog()
-    {
-        return catalog;
     }
 
     /**
@@ -123,6 +89,23 @@ public class RecordAspect<R extends Record> implements Aspect
     public Entity entity()
     {
         return entity;
+    }
+
+    /**
+     * Set the entity that owns this aspect. If the entity is already set
+     * and this is not flagged as transferable, an Exception will be thrown.
+     *
+     * @param entity the entity to attach this aspect to, never null
+     * @throws IllegalStateException if the aspect is non-transferable and already attached to another entity
+     */
+    @Override
+    public void setEntity(@NotNull Entity entity)
+    {
+        Objects.requireNonNull(entity, "Aspects may not be assigned a null entity.");
+        if (this.entity != null && this.entity != entity && !isTransferable()) {
+            throw new IllegalStateException("An Aspect flagged as non-transferable may not be reassigned to a different entity.");
+        }
+        this.entity = entity;
     }
 
     /**

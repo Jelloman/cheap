@@ -14,18 +14,16 @@ import java.util.Objects;
  * Hierarchy definitions specify the hierarchy type and modification permissions.
  * 
  * @param name the name of the hierarchy
- * @param type the type of hierarchy (ENTITY_LIST, ENTITY_SET, ENTITY_DIR, ENTITY_TREE, or ASPECT_SET)
+ * @param type the type of hierarchy
  * @param isModifiable whether the hierarchy contents can be modified
- * @param isImmutable whether the hierarchy definition itself is immutable
- * 
+ *
  * @see HierarchyDef
  * @see HierarchyType
  */
 public record HierarchyDefImpl(
         String name,
         HierarchyType type,
-        boolean isModifiable,
-        boolean isImmutable) implements HierarchyDef
+        boolean isModifiable) implements HierarchyDef
 {
     /**
      * Compact constructor that validates the hierarchy definition parameters.
@@ -39,13 +37,13 @@ public record HierarchyDefImpl(
     }
 
     /**
-     * Creates a HierarchyDefImpl with default settings (modifiable and immutable).
+     * Creates a modifiable HierarchyDefImpl.
      * 
      * @param name the name of the hierarchy
      * @param type the type of hierarchy
      */
     public HierarchyDefImpl(String name, HierarchyType type)
     {
-        this(name, type, true, true);
+        this(name, type, true);
     }
 }

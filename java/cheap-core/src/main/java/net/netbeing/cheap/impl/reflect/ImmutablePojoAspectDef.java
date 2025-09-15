@@ -96,7 +96,8 @@ public class ImmutablePojoAspectDef extends ImmutableAspectDefImpl
         this.pojoClass = pojoClass;
 
         Collection<? extends PropertyDef> propDefs = propertyDefs();
-        ImmutableMap.Builder<@NotNull String, @NotNull GenericGetterSetter> getterBuilder = ImmutableMap.builderWithExpectedSize(propDefs.size());
+        ImmutableMap.Builder<@NotNull String, @NotNull GenericGetterSetter> getterBuilder =
+            ImmutableMap.builderWithExpectedSize(propDefs.size());
         for (PropertyDef prop : propDefs) {
             PojoPropertyDef pojoDef = (PojoPropertyDef) prop;
             if (pojoDef.getter() != null) {
@@ -139,7 +140,7 @@ public class ImmutablePojoAspectDef extends ImmutableAspectDefImpl
      * 
      * <p>Introspection process:</p>
      * <ol>
-     *   <li>Uses {@link Introspector#getBeanInfo} excluding {@code Object} class methods</li>
+     *   <li>Uses {@link Introspector#getBeanInfo(Class,Class)} excluding {@code Object} class methods</li>
      *   <li>Converts each {@link PropertyDescriptor} to a {@link PojoPropertyDef}</li>
      *   <li>Forces immutable=true to ignore setter methods</li>
      *   <li>Returns an immutable map of property names to definitions</li>

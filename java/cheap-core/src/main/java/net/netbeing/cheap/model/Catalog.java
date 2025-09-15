@@ -1,5 +1,6 @@
 package net.netbeing.cheap.model;
 
+import net.netbeing.cheap.impl.basic.AspectMapHierarchyImpl;
 import org.jetbrains.annotations.NotNull;
 
 import java.net.URI;
@@ -108,21 +109,22 @@ public interface Catalog extends Entity
 
     /**
      * Retrieves the aspect map hierarchy for a specific aspect definition.
-     * This provides access to all aspects of the specified type.
+     * This provides access to all aspects of the specified type. If the map is
+     * not found, but the AspectDef is present in the CatalogDef, then a new,
+     * empty map will be created.
      * 
      * @param aspectDef the aspect definition to find aspects for, must not be null
      * @return the aspect map hierarchy containing all aspects of the specified type
      */
     default AspectMapHierarchy aspects(@NotNull AspectDef aspectDef)
     {
-        return (AspectMapHierarchy) hierarchy(aspectDef.name());
+        return aspects(aspectDef.name());
     }
 
     /**
      * Retrieves the aspect map hierarchy for a specific aspect definition by name.
-     *
-     * <p>This method combines aspect definition lookup by name with hierarchy
-     * retrieval to provide a single-step access to aspect collections by name.</p>
+     * If the named AspectDef is in the CatalogDef, but does not yet have an
+     * AspectMapHierarchy, one will be created.
      *
      * @param name the name of the aspect definition to find aspects for, may not be null
      * @return the aspect map hierarchy containing all aspects of the specified type,
@@ -130,9 +132,40 @@ public interface Catalog extends Entity
      */
     default AspectMapHierarchy aspects(@NotNull String name)
     {
-        AspectDef aspectDef = aspectDefs().get(name);
-        return aspectDef == null ? null : aspects(aspectDef);
+        AspectMapHierarchy aspectMap = (AspectMapHierarchy) hierarchy(name);
+        if (aspectMap == null) {
+            // If it's in our CatalogDef, create it upon demand
+            AspectDef aspectDef = def().aspectDefs().get(name);
+            if (aspectDef != null) {
+                aspectMap = new AspectMapHierarchyImpl(aspectDef);
+                hierarchies().add(aspectMap);
+            }
+        }
+        return aspectMap;
     }
 
-
+    /**
+     * Extend the catalog with a new type of Aspects to store. If the AspectDef is
+     * already included in this catalog, this is a no-op. If it's not part of the
+     * CatalogDef and this catalog is flagged as strict, an exception will be
+     * thrown. Otherwise, a new, empty AspectMapHierarchy is added to this catalog.
+     *
+     * @param aspectDef the type of aspect to add
+     * @throws UnsupportedOperationException if we are strict and the AspectDef is not in our CatalogDef
+     */
+    default void extend(@NotNull AspectDef aspectDef)
+    {
+        if (aspectDefs().contains(aspectDef.name())) {
+            // We already have it; do nothing
+            return;
+        }
+        if (isStrict()) {
+            if (!def().aspectDefs().contains(aspectDef.name())) {
+                throw new UnsupportedOperationException("A strict catalog may not be extended with a new AspectDef.");
+            }
+            // Otherwise, this is a valid aspect type and we continue
+        }
+        AspectMapHierarchy aspectMap = new AspectMapHierarchyImpl(aspectDef);
+        hierarchies().add(aspectMap);
+    }
 }

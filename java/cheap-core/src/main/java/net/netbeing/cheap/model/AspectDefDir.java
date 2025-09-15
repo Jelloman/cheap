@@ -21,4 +21,12 @@ public interface AspectDefDir extends Iterable<AspectDef>
      * @return the aspect definition with the specified name, or null if not found
      */
     AspectDef get(String name);
+
+    /**
+     * Test whether a given AspectDef is stored in this directory.
+     *
+     * @param name the name of the aspect definition to check
+     * @return true if the directory contains the named AspectDef
+     */
+    boolean contains(String name);
 }

@@ -37,16 +37,4 @@ public interface HierarchyDef
     {
         return true;
     }
-
-    /**
-     * Determines whether hierarchies of this type are immutable after creation.
-     * An immutable hierarchy cannot be changed once created, providing thread safety
-     * and data integrity guarantees.
-     * 
-     * @return true if the hierarchy is immutable, false otherwise; defaults to false
-     */
-    default boolean isImmutable()
-    {
-        return false;
-    }
 }

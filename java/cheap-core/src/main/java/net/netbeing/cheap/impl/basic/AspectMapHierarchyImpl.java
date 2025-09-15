@@ -24,8 +24,20 @@ public class AspectMapHierarchyImpl extends HashMap<Entity, Aspect> implements A
     private final AspectDef aspectDef;
 
     /**
+     * Creates a new AspectMapHierarchyImpl to contain the given AspectDef.
+     * AA new HierarchyDef will be constructed.
+     *
+     * @param aspectDef the aspect definition for aspects in this hierarchy
+     */
+    public AspectMapHierarchyImpl(AspectDef aspectDef)
+    {
+        this.aspectDef = aspectDef;
+        this.def = new HierarchyDefImpl(aspectDef.name(), HierarchyType.ASPECT_MAP);
+    }
+
+    /**
      * Creates a new AspectMapHierarchyImpl with the given definitions.
-     * 
+     *
      * @param def the hierarchy definition for this hierarchy
      * @param aspectDef the aspect definition for aspects in this hierarchy
      */

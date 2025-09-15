@@ -14,6 +14,9 @@ import java.util.UUID;
  * <p>Each Entity has a globally unique identifier (UUID) and can have an arbitrary set
  * of Aspects attached to it - but no more than one of each Aspect type, as defined by an
  * AspectDef.</p>
+ *
+ * <p>Implementors of this interface must implement equals() and hashCode() using ONLY
+ * the globalId.</p>
  * 
  * <p>Entities are referenced by their Aspects, and also by some types of Hierarchies.</p>
  */
@@ -36,7 +39,7 @@ public interface Entity
      *
      * <p>The default implementation requests the AspectMapHierarchy from the
      * given Catalog for the given AspectDef and simply returns the result of
-     * its {@link AspectMapHierarchy#get(AspectDef) get} method. If no aspect
+     * its {@link AspectMapHierarchy#get(Object) get} method. If no aspect
      * of the specified type is attached to this entity in the catalog, this
      * method returns null.</p>
      *
@@ -51,5 +54,40 @@ public interface Entity
             return aspects.get(this);
         }
         return null;
+    }
+
+    /**
+     * Attach the given aspect to this entity. This will not invoke any Catalog
+     * operations, and could result in an inconsistent state.
+     *
+     * <p>This method must invoke the {@link Aspect#setEntity(Entity) setEntity}
+     * method on the Aspect.</p>
+     *
+     * @param aspect the aspect to attach
+     */
+    default void attach(@NotNull Aspect aspect)
+    {
+        aspect.setEntity(this);
+    }
+
+    /**
+     * Attach the given aspect to this entity, then add it to the specified catalog.
+     * Note that the set of Aspect types stored in a catalog cannot be implicitly
+     * extended; to add a new type of entity to a non-strict catalog, call its
+     * {@link Catalog#extend(AspectDef) extend} method.
+     *
+     * <p>This method must invoke the {@link Aspect#setEntity(Entity) setEntity}
+     * method on the Aspect.</p>
+     *
+     * @param aspect the aspect to attach
+     */
+    default void attachAndSave(@NotNull Aspect aspect, @NotNull Catalog catalog)
+    {
+        attach(aspect);
+        AspectMapHierarchy aspectMap = catalog.aspects(aspect.def());
+        if (aspectMap == null) {
+            throw new UnsupportedOperationException("Aspects of type '" + aspect.def().name() + "' cannot be stored in the given catalog.");
+        }
+        aspectMap.add(aspect);
     }
 }

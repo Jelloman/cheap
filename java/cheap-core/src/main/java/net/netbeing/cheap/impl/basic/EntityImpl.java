@@ -7,7 +7,8 @@ import java.util.Objects;
 import java.util.UUID;
 
 /**
- * Basic implementation of an Entity reference with the minimum functionality.
+ * Basic implementation of an Entity reference with the bare minimum functionality
+ * (storing and providing a global ID).
  *
  * @see Entity
  */
@@ -44,5 +45,31 @@ public class EntityImpl implements Entity
     public @NotNull UUID globalId()
     {
         return globalId;
+    }
+
+    /**
+     * Compare to another entity. This implementation is final and only compares global IDs.
+     *
+     * @param o the object with which to compare.
+     * @return true if o is an Entity and has the same globalId
+     */
+    @Override
+    public final boolean equals(Object o)
+    {
+        if (!(o instanceof Entity entity)) {
+            return false;
+        }
+        return Objects.equals(globalId, entity.globalId());
+    }
+
+    /**
+     * Generate this object's hash code. This implementation is final and only uses global ID.
+     *
+     * @return hashCode of the globalId
+     */
+    @Override
+    public final int hashCode()
+    {
+        return Objects.hashCode(globalId);
     }
 }

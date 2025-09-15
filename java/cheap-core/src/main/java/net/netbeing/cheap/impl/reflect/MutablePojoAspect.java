@@ -4,6 +4,8 @@ import net.netbeing.cheap.model.*;
 import net.netbeing.cheap.util.reflect.GenericGetterSetter;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Objects;
+
 /**
  * An {@link Aspect} implementation that provides full read-write access to Plain Old Java Objects (POJOs)
  * through the CHEAP property model.
@@ -82,11 +84,8 @@ import org.jetbrains.annotations.NotNull;
  */
 public class MutablePojoAspect<P> implements Aspect
 {
-    /** The catalog that this aspect belongs to. */
-    private final Catalog catalog;
-    
     /** The entity that this aspect is associated with. */
-    private final Entity entity;
+    private Entity entity;
     
     /** The aspect definition describing the POJO's structure and providing method access. */
     private final MutablePojoAspectDef def;
@@ -101,31 +100,16 @@ public class MutablePojoAspect<P> implements Aspect
      * to the POJO's properties through the property definitions and cached method
      * wrappers provided by the aspect definition.</p>
      * 
-     * @param catalog the catalog that this aspect belongs to
-     * @param entity the entity that this aspect is associated with
+     * @param entity the entity that this aspect is associated with; may be null
      * @param def the mutable aspect definition describing the POJO structure
      * @param object the POJO instance to wrap
-     * @param <P> the type of the POJO instance
      * @throws NullPointerException if any parameter is null
      */
-    public MutablePojoAspect(@NotNull Catalog catalog, @NotNull Entity entity, @NotNull MutablePojoAspectDef def, @NotNull P object)
+    public MutablePojoAspect(Entity entity, @NotNull MutablePojoAspectDef def, @NotNull P object)
     {
-        this.catalog = catalog;
         this.entity = entity;
         this.def = def;
         this.object = object;
-
-    }
-
-    /**
-     * {@inheritDoc}
-     * 
-     * @return the catalog that this aspect belongs to
-     */
-    @Override
-    public Catalog catalog()
-    {
-        return catalog;
     }
 
     /**
@@ -137,6 +121,23 @@ public class MutablePojoAspect<P> implements Aspect
     public Entity entity()
     {
         return entity;
+    }
+
+    /**
+     * Set the entity that owns this aspect. If the entity is already set
+     * and this is not flagged as transferable, an Exception will be thrown.
+     *
+     * @param entity the entity to attach this aspect to, never null
+     * @throws IllegalStateException if the aspect is non-transferable and already attached to another entity
+     */
+    @Override
+    public void setEntity(@NotNull Entity entity)
+    {
+        Objects.requireNonNull(entity, "Aspects may not be assigned a null entity.");
+        if (this.entity != null && this.entity != entity && !isTransferable()) {
+            throw new IllegalStateException("An Aspect flagged as non-transferable may not be reassigned to a different entity.");
+        }
+        this.entity = entity;
     }
 
     /**

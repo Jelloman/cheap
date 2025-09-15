@@ -4,13 +4,18 @@ import net.netbeing.cheap.impl.basic.PropertyImpl;
 import org.jetbrains.annotations.NotNull;
 
 /**
- * Represents an aspect attached to an entity, serving as the "A" in the CHEAP acronym
- * (Catalog, Hierarchy, Entity, Aspect, Property). An Aspect is a collection of related
- * properties that describe a particular facet or characteristic of an entity.
+ * Represents an aspect that can be attached to an entity. An Aspect is a collection
+ * of related properties that describe a particular facet or characteristic of an entity.
  * 
  * <p>Aspects are analogous to rows in database terminology or file attributes in a
- * file system context. Each aspect has a definition that specifies its structure
+ * filesystem context. Every aspect has a definition that specifies its structure
  * and the properties it can contain.</p>
+ *
+ * <p>Aspects have three lifecycle stages: <ol>
+ *     <li>Detached (optional): not attached to any entity</li>
+ *     <li>Attached: attached to an entity, but not in any catalog</li>
+ *     <li>Saved: Attached to an entity and stored in a catalog</li>
+ * </ol></p>
  * 
  * <p>This interface provides both safe (type-checked) and unsafe (unchecked) methods
  * for reading and writing property values. Safe methods perform validation against
@@ -45,6 +50,10 @@ public interface Aspect
      * and this is not flagged as transferable by its AspectDef, an
      * Exception will be thrown.
      *
+     * <p>This method can only modify the aspect itself. It will not invoke
+     * the entity's {@link Entity#attach(Aspect) attach} method; that method
+     * invokes this one.</p>
+     *
      * @param entity the entity to attach this aspect to, never null
      */
     void setEntity(@NotNull Entity entity);
@@ -64,6 +73,9 @@ public interface Aspect
     /**
      * Returns a flag indicating whether this aspect may be transferred between entities.
      * Defaults to false. If it's false, Cheap will not allow changes to its owning entity.
+     *
+     * <p>This flag is not stored on the AspectDef because it is an implementation detail,
+     * not metadata.</p>
      *
      * @return whether this aspect may be transferred between entities
      */

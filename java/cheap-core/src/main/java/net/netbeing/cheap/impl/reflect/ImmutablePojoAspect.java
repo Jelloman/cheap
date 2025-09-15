@@ -4,6 +4,8 @@ import net.netbeing.cheap.model.*;
 import org.jetbrains.annotations.NotNull;
 import net.netbeing.cheap.util.reflect.GenericGetterSetter;
 
+import java.util.Objects;
+
 /**
  * An {@link Aspect} implementation that provides read-only access to Plain Old Java Objects (POJOs)
  * through the CHEAP property model.
@@ -11,7 +13,8 @@ import net.netbeing.cheap.util.reflect.GenericGetterSetter;
  * <p>This class wraps a POJO instance and exposes its JavaBean properties as CHEAP properties
  * using the property definitions from an {@link ImmutablePojoAspectDef}. It enforces immutability
  * by providing read-only access to properties and throwing {@link UnsupportedOperationException}
- * for any write, add, or remove operations, regardless of whether the underlying POJO has setter methods.</p>
+ * for any write, add, or remove operations, regardless of whether the underlying POJO has setter
+ * methods.</p>
  * 
  * <p>Key features:</p>
  * <ul>
@@ -45,7 +48,7 @@ import net.netbeing.cheap.util.reflect.GenericGetterSetter;
  * person.setName("John"); // Set via regular Java method
  * 
  * ImmutablePojoAspectDef aspectDef = new ImmutablePojoAspectDef(Person.class);
- * ImmutablePojoAspect<Person> aspect = new ImmutablePojoAspect<>(catalog, entity, aspectDef, person);
+ * ImmutablePojoAspect<Person> aspect = new ImmutablePojoAspect<>(entity, aspectDef, person);
  * 
  * String name = (String) aspect.unsafeReadObj("name"); // Returns "John"
  * 
@@ -69,9 +72,6 @@ import net.netbeing.cheap.util.reflect.GenericGetterSetter;
  */
 public class ImmutablePojoAspect<P> implements Aspect
 {
-    /** The catalog that this aspect belongs to. */
-    private final Catalog catalog;
-    
     /** The entity that this aspect is associated with. */
     private final Entity entity;
     
@@ -82,43 +82,27 @@ public class ImmutablePojoAspect<P> implements Aspect
     private final P object;
 
     /**
-     * Constructs a new ImmutablePojoAspect wrapping the specified POJO instance.
+     * Constructs a new ImmutablePojoAspect wrapping the specified POJO instance. The entity
+     * must be provided and may not be changed.
      * 
      * <p>This constructor creates an immutable aspect that provides read-only access
      * to the POJO's properties through the property definitions and cached method
      * wrappers provided by the aspect definition.</p>
      * 
-     * @param catalog the catalog that this aspect belongs to
      * @param entity the entity that this aspect is associated with
      * @param def the immutable aspect definition describing the POJO structure
      * @param object the POJO instance to wrap
-     * @param <P> the type of the POJO instance
      * @throws NullPointerException if any parameter is null
      */
-    public ImmutablePojoAspect(@NotNull Catalog catalog, @NotNull Entity entity, @NotNull ImmutablePojoAspectDef def, @NotNull P object)
+    public ImmutablePojoAspect(@NotNull Entity entity, @NotNull ImmutablePojoAspectDef def, @NotNull P object)
     {
-        this.catalog = catalog;
         this.entity = entity;
         this.def = def;
         this.object = object;
-
     }
 
     /**
      * {@inheritDoc}
-     * 
-     * @return the catalog that this aspect belongs to
-     */
-    @Override
-    public Catalog catalog()
-    {
-        return catalog;
-    }
-
-    /**
-     * {@inheritDoc}
-     * 
-     * @return the entity that this aspect is associated with
      */
     @Override
     public Entity entity()
@@ -127,9 +111,25 @@ public class ImmutablePojoAspect<P> implements Aspect
     }
 
     /**
+     * Set the entity that owns this aspect. Since this aspect is immutable, the
+     * provided entity is compared to the current entity, and an exception is
+     * thrown if they don't match. If they match, this is a no-op.
+     *
+     * @param entity the entity to attach this aspect to, never null
+     * @throws IllegalStateException if the entity is not equal to the current entity
+     */
+    @Override
+    public void setEntity(@NotNull Entity entity)
+    {
+        // This null check is not necessary, but could be helpful in debugging.
+        Objects.requireNonNull(entity, "Aspects may not be assigned a null entity.");
+        if (!this.entity.equals(entity)) {
+            throw new IllegalStateException("An Aspect flagged as non-transferable may not be reassigned to a different entity.");
+        }
+    }
+
+    /**
      * {@inheritDoc}
-     * 
-     * @return the immutable POJO aspect definition describing this aspect's structure
      */
     @Override
     public AspectDef def()

@@ -44,4 +44,32 @@ public class EntityLazyIdImpl implements Entity
         }
         return globalId;
     }
+
+    /**
+     * Compare to another entity. This implementation is final and only compares global IDs.
+     * This will force the generation of the global ID.
+     *
+     * @param o the object with which to compare.
+     * @return true if o is an Entity and has the same globalId
+     */
+    @Override
+    public final boolean equals(Object o)
+    {
+        if (!(o instanceof Entity entity)) {
+            return false;
+        }
+        return Objects.equals(this.globalId(), entity.globalId());
+    }
+
+    /**
+     * Generate this object's hash code. This implementation is final and only uses global ID.
+     * This will force the generation of the global ID.
+     *
+     * @return hashCode of the globalId
+     */
+    @Override
+    public int hashCode()
+    {
+        return Objects.hashCode(this.globalId());
+    }
 }

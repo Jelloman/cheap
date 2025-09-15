@@ -61,6 +61,19 @@ public class AspectDefDirImpl implements AspectDefDir
     }
 
     /**
+     * Test whether a given AspectDef is stored in this directory.
+     *
+     * @param name the name of the aspect definition to check
+     * @return true if the directory contains the named AspectDef
+     */
+    @Override
+    public boolean contains(String name)
+    {
+        return aspectDefs.containsKey(name);
+    }
+
+
+    /**
      * Provides an Iterator over the AspectDefss in this directory.
      *
      * @return an iterator of this directory's contents

@@ -7,7 +7,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.*;
 
 /**
- * Basic implementation of a LocalEntity that only has Aspects in a single Catalog.
+ * Implementation of a LocalEntity that has Aspects in multiple Catalogs.
  *
  * @see LocalEntity
  * @see EntityImpl
@@ -39,4 +39,23 @@ public class LocalEntityMultiCatalogImpl extends EntityImpl implements LocalEnti
     {
         return Iterables.unmodifiableIterable(catalogs);
     }
+
+    /**
+     * Attach the given aspect to this entity, then add it to the specified catalog.
+     * Note that the set of Aspect types stored in a catalog cannot be implicitly
+     * extended; to add a new type of entity to a non-strict catalog, call its
+     * {@link Catalog#extend(AspectDef) extend} method.
+     *
+     * <p>This method must invoke the {@link Aspect#setEntity(Entity) setEntity}
+     * method on the Aspect.</p>
+     *
+     * @param aspect the aspect to attach
+     */
+    @Override
+    public void attachAndSave(@NotNull Aspect aspect, @NotNull Catalog catalog)
+    {
+        super.attachAndSave(aspect, catalog);
+        catalogs.add(catalog);
+    }
+
 }

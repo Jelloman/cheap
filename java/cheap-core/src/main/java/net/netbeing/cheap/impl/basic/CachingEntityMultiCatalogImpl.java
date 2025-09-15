@@ -2,10 +2,11 @@ package net.netbeing.cheap.impl.basic;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import net.netbeing.cheap.model.*;
+import net.netbeing.cheap.model.Aspect;
+import net.netbeing.cheap.model.AspectDef;
+import net.netbeing.cheap.model.Catalog;
+import net.netbeing.cheap.model.Entity;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.Objects;
 
 /**
  * Implementation of LocalEntity that only has Aspects in a single Catalog, and
@@ -17,7 +18,7 @@ import java.util.Objects;
  *
  * @see LocalEntityOneCatalogImpl
  */
-public class CachingEntityOneCatalogImpl extends LocalEntityOneCatalogImpl
+public class CachingEntityMultiCatalogImpl extends LocalEntityMultiCatalogImpl
 {
     /** Lazily initialized map of aspect definitions to aspects. */
     protected volatile Cache<@NotNull AspectDef, @NotNull Aspect> aspects;
@@ -28,7 +29,7 @@ public class CachingEntityOneCatalogImpl extends LocalEntityOneCatalogImpl
      *
      * @param catalog the catalog this entity has its Aspects in
      */
-    public CachingEntityOneCatalogImpl(@NotNull Catalog catalog)
+    public CachingEntityMultiCatalogImpl(@NotNull Catalog catalog)
     {
         super(catalog);
     }
@@ -94,13 +95,7 @@ public class CachingEntityOneCatalogImpl extends LocalEntityOneCatalogImpl
     }
 
     /**
-     * Attach the given aspect to this entity. This will not invoke any Catalog
-     * operations, and could result in an inconsistent state.
-     *
-     * <p>This method must invoke the {@link Aspect#setEntity(Entity) setEntity}
-     * method on the Aspect.</p>
-     *
-     * @param aspect the aspect to attach
+     * {@inheritDoc}
      */
     @Override
     public void attach(@NotNull Aspect aspect)

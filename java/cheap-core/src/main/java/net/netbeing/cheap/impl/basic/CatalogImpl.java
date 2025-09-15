@@ -7,20 +7,17 @@ import java.net.URI;
 import java.util.UUID;
 
 /**
- * Basic implementation of a Catalog in the CHEAP data caching system.
- * A catalog represents a complete data source or cache containing hierarchies
- * of entities and their aspects.
- * <p>
- * Catalogs can be either ROOT catalogs (representing external data sources)
- * or MIRROR catalogs (cached views of other catalogs). This implementation
- * maintains a directory of hierarchies and aspect definitions.
- * 
+ * Full implementation of a Catalog in the CHEAP architecture. A catalog represents
+ * either an external data source or a mirror/clone/fork of another catalog. A catalog
+ * contains hierarchies of entities and their aspects.
+ *
  * @see Catalog
  * @see CatalogDef
- * @see EntityFullImpl
+ * @see LocalEntity
+ * @see LocalEntityOneCatalogImpl
  * @see HierarchyDir
  */
-public class CatalogImpl extends EntityFullImpl implements Catalog
+public class CatalogImpl extends LocalEntityOneCatalogImpl implements Catalog
 {
     /** The catalog definition describing this catalog's properties. */
     private final CatalogDef def;
@@ -72,7 +69,9 @@ public class CatalogImpl extends EntityFullImpl implements Catalog
      */
     public CatalogImpl(UUID globalId, CatalogSpecies species, CatalogDef def, Catalog upstream, boolean strict)
     {
-        super(globalId);
+        //noinspection DataFlowIssue
+        super(globalId, null);
+        this.catalog = this;
 
         if (strict && def == null) {
             throw new IllegalArgumentException("A strict catalog may not be constructed without a CatalogDef.");

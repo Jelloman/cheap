@@ -1,28 +1,22 @@
 package net.netbeing.cheap.impl.basic;
 
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
 import net.netbeing.cheap.model.*;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Iterator;
-import java.util.NoSuchElementException;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 
 /**
- * Basic implementation of a LocalEntity that only has Aspects in a single Catalog.
+ * Implementation of a LocalEntity that only has Aspects in a single Catalog.
  *
  * @see LocalEntity
  * @see EntityImpl
  */
 public class LocalEntityOneCatalogImpl extends EntityImpl implements LocalEntity, Iterable<Catalog>
 {
-    private final Catalog catalog;
+    protected Catalog catalog;
 
     /**
-     * Creates a new LocalEntityImpl for the specified entity.
-     * The aspects map will be initialized on first access.
+     * Creates a new LocalEntity for the specified catalog.
      *
      * @param catalog the catalog this entity has its Aspects in
      */
@@ -30,6 +24,28 @@ public class LocalEntityOneCatalogImpl extends EntityImpl implements LocalEntity
     {
         Objects.requireNonNull(catalog, "Catalog may not be null in LocalEntityOneCatalogImpl.");
         this.catalog = catalog;
+    }
+
+    /**
+     * Creates a new LocalEntity for the specified catalog.
+     *
+     * @param globalId the id of this catalog-as-entity
+     * @param catalog the catalog this entity has its Aspects in
+     */
+    public LocalEntityOneCatalogImpl(@NotNull UUID globalId, @NotNull Catalog catalog)
+    {
+        super(globalId);
+        Objects.requireNonNull(catalog, "Catalog may not be null in LocalEntityOneCatalogImpl.");
+        this.catalog = catalog;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Aspect getAspect(@NotNull AspectDef def)
+    {
+        return getAspect(def, this.catalog);
     }
 
     /**
@@ -42,15 +58,6 @@ public class LocalEntityOneCatalogImpl extends EntityImpl implements LocalEntity
     public Iterable<Catalog> catalogs()
     {
         return this;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Aspect getAspect(@NotNull AspectDef def)
-    {
-        return getAspect(def, this.catalog);
     }
 
     /**

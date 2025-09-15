@@ -26,8 +26,8 @@ public abstract class AspectBaseImpl implements Aspect
     protected final AspectDef def;
 
     /**
-     * Creates a new AspectBaseImpl with the specified entity, and aspect definition.
-     * 
+     * Creates a new AspectBaseImpl with the specified entity and aspect definition.
+     *
      * @param entity the entity this aspect is attached to, may be null
      * @param def the aspect definition describing this aspect's structure
      */
@@ -51,16 +51,16 @@ public abstract class AspectBaseImpl implements Aspect
 
     /**
      * Set the entity that owns this aspect. If the entity is already set
-     * and this is not flagged as transferable by its AspectDef, an
-     * Exception will be thrown.
+     * and this is not flagged as transferable, an Exception will be thrown.
      *
      * @param entity the entity to attach this aspect to, never null
+     * @throws IllegalStateException if the aspect is non-transferable and already attached to another entity
      */
     @Override
     public void setEntity(@NotNull Entity entity)
     {
         Objects.requireNonNull(entity, "Aspects may not be assigned a null entity.");
-        if (this.entity != null && !isTransferable()) {
+        if (this.entity != null && this.entity != entity && !isTransferable()) {
             throw new IllegalStateException("An Aspect flagged as non-transferable may not be reassigned to a different entity.");
         }
         this.entity = entity;
