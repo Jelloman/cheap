@@ -3,6 +3,7 @@ package net.netbeing.cheap.impl.reflect;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import net.netbeing.cheap.impl.basic.CatalogImpl;
+import net.netbeing.cheap.impl.basic.EntityImpl;
 import net.netbeing.cheap.impl.basic.PropertyImpl;
 import net.netbeing.cheap.model.Catalog;
 import net.netbeing.cheap.model.Entity;
@@ -41,7 +42,7 @@ public class ImmutablePojoAspectTest
     private static TestClass pojo1;
     private static TestClass pojo2;
 
-    final Entity testEntity = new BasicEntityImpl();
+    final Entity testEntity = new EntityImpl();
     final Catalog testCatalog = new CatalogImpl();
 
     ImmutablePojoAspectDef def;
@@ -67,13 +68,13 @@ public class ImmutablePojoAspectTest
     @Test
     void construct()
     {
-        immutablePojoAspect = new ImmutablePojoAspect<>(testCatalog, testEntity, def, pojo1);
+        immutablePojoAspect = new ImmutablePojoAspect<>(testEntity, def, pojo1);
     }
 
     @Test
     void read()
     {
-        immutablePojoAspect = new ImmutablePojoAspect<>(testCatalog, testEntity, def, pojo1);
+        immutablePojoAspect = new ImmutablePojoAspect<>(testEntity, def, pojo1);
 
         String value = immutablePojoAspect.readAs("string", String.class);
 
@@ -84,7 +85,7 @@ public class ImmutablePojoAspectTest
     @Test
     void get()
     {
-        immutablePojoAspect = new ImmutablePojoAspect<>(testCatalog, testEntity, def, pojo1);
+        immutablePojoAspect = new ImmutablePojoAspect<>(testEntity, def, pojo1);
 
         Property prop = immutablePojoAspect.get("string");
         assertEquals("foo", prop.read());
@@ -117,7 +118,7 @@ public class ImmutablePojoAspectTest
     @Test
     void put()
     {
-        immutablePojoAspect = new ImmutablePojoAspect<>(testCatalog, testEntity, def, pojo2);
+        immutablePojoAspect = new ImmutablePojoAspect<>(testEntity, def, pojo2);
 
         Property prop = immutablePojoAspect.get("string");
         assertEquals("bar", prop.read());
@@ -129,23 +130,15 @@ public class ImmutablePojoAspectTest
     @Test
     void object()
     {
-        immutablePojoAspect = new ImmutablePojoAspect<>(testCatalog, testEntity, def, pojo1);
+        immutablePojoAspect = new ImmutablePojoAspect<>(testEntity, def, pojo1);
         
         assertSame(pojo1, immutablePojoAspect.object());
     }
 
     @Test
-    void catalog()
-    {
-        immutablePojoAspect = new ImmutablePojoAspect<>(testCatalog, testEntity, def, pojo1);
-        
-        assertSame(testCatalog, immutablePojoAspect.catalog());
-    }
-
-    @Test
     void entity()
     {
-        immutablePojoAspect = new ImmutablePojoAspect<>(testCatalog, testEntity, def, pojo1);
+        immutablePojoAspect = new ImmutablePojoAspect<>(testEntity, def, pojo1);
         
         assertSame(testEntity, immutablePojoAspect.entity());
     }
@@ -153,7 +146,7 @@ public class ImmutablePojoAspectTest
     @Test
     void def()
     {
-        immutablePojoAspect = new ImmutablePojoAspect<>(testCatalog, testEntity, def, pojo1);
+        immutablePojoAspect = new ImmutablePojoAspect<>(testEntity, def, pojo1);
         
         assertSame(def, immutablePojoAspect.def());
     }
@@ -161,7 +154,7 @@ public class ImmutablePojoAspectTest
     @Test
     void contains()
     {
-        immutablePojoAspect = new ImmutablePojoAspect<>(testCatalog, testEntity, def, pojo1);
+        immutablePojoAspect = new ImmutablePojoAspect<>(testEntity, def, pojo1);
         
         assertTrue(immutablePojoAspect.contains("string"));
         assertTrue(immutablePojoAspect.contains("integerPrimitive"));
@@ -175,7 +168,7 @@ public class ImmutablePojoAspectTest
     @Test
     void unsafeReadObj()
     {
-        immutablePojoAspect = new ImmutablePojoAspect<>(testCatalog, testEntity, def, pojo1);
+        immutablePojoAspect = new ImmutablePojoAspect<>(testEntity, def, pojo1);
         
         assertEquals("foo", immutablePojoAspect.unsafeReadObj("string"));
         assertEquals(1, immutablePojoAspect.unsafeReadObj("integerPrimitive"));
@@ -196,7 +189,7 @@ public class ImmutablePojoAspectTest
     @Test
     void unsafeReadObj_NonExistentProperty_ThrowsException()
     {
-        immutablePojoAspect = new ImmutablePojoAspect<>(testCatalog, testEntity, def, pojo1);
+        immutablePojoAspect = new ImmutablePojoAspect<>(testEntity, def, pojo1);
         
         IllegalArgumentException exception = assertThrows(
             IllegalArgumentException.class,
@@ -209,7 +202,7 @@ public class ImmutablePojoAspectTest
     @Test
     void unsafeWrite_ThrowsUnsupportedOperation()
     {
-        immutablePojoAspect = new ImmutablePojoAspect<>(testCatalog, testEntity, def, pojo1);
+        immutablePojoAspect = new ImmutablePojoAspect<>(testEntity, def, pojo1);
         
         UnsupportedOperationException exception = assertThrows(
             UnsupportedOperationException.class,
@@ -222,7 +215,7 @@ public class ImmutablePojoAspectTest
     @Test
     void unsafeAdd_ThrowsUnsupportedOperation()
     {
-        immutablePojoAspect = new ImmutablePojoAspect<>(testCatalog, testEntity, def, pojo1);
+        immutablePojoAspect = new ImmutablePojoAspect<>(testEntity, def, pojo1);
         Property prop = immutablePojoAspect.get("string");
         
         UnsupportedOperationException exception = assertThrows(
@@ -236,7 +229,7 @@ public class ImmutablePojoAspectTest
     @Test
     void unsafeRemove_ThrowsUnsupportedOperation()
     {
-        immutablePojoAspect = new ImmutablePojoAspect<>(testCatalog, testEntity, def, pojo1);
+        immutablePojoAspect = new ImmutablePojoAspect<>(testEntity, def, pojo1);
         
         UnsupportedOperationException exception = assertThrows(
             UnsupportedOperationException.class,
@@ -249,7 +242,7 @@ public class ImmutablePojoAspectTest
     @Test
     void unsafeRead_GenericMethod()
     {
-        immutablePojoAspect = new ImmutablePojoAspect<>(testCatalog, testEntity, def, pojo1);
+        immutablePojoAspect = new ImmutablePojoAspect<>(testEntity, def, pojo1);
         
         String stringValue = immutablePojoAspect.unsafeRead("string");
         assertEquals("foo", stringValue);
@@ -265,7 +258,7 @@ public class ImmutablePojoAspectTest
     void readObj_WithNullValue()
     {
         TestClass pojoWithNull = new TestClass(1, 'a', true, (byte) 10, (short) 100, 1000L, 10.5f, 100.25, null, null, null, null, null, null);
-        immutablePojoAspect = new ImmutablePojoAspect<>(testCatalog, testEntity, def, pojoWithNull);
+        immutablePojoAspect = new ImmutablePojoAspect<>(testEntity, def, pojoWithNull);
         
         assertNull(immutablePojoAspect.unsafeReadObj("string"));
         assertNull(immutablePojoAspect.unsafeReadObj("integer"));
@@ -282,7 +275,7 @@ public class ImmutablePojoAspectTest
     @Test
     void uncheckedRead_GenericMethod()
     {
-        immutablePojoAspect = new ImmutablePojoAspect<>(testCatalog, testEntity, def, pojo1);
+        immutablePojoAspect = new ImmutablePojoAspect<>(testEntity, def, pojo1);
         
         String stringValue = immutablePojoAspect.uncheckedRead("string");
         assertEquals("foo", stringValue);

@@ -30,7 +30,7 @@ class HierarchyDirImplTest
         
         hierarchy1 = new EntitySetHierarchyImpl(hierarchy1Def);
         hierarchy2 = new EntityListHierarchyImpl(hierarchy2Def);
-        Entity rootEntity = new EntityFullImpl();
+        Entity rootEntity = new EntityImpl();
         hierarchy3 = new EntityTreeHierarchyImpl(hierarchy3Def, rootEntity);
         
         hierarchyDir = new HierarchyDirImpl(directoryDef);

@@ -23,9 +23,9 @@ class EntityDirectoryHierarchyImplTest
         hierarchyDef = new HierarchyDefImpl("testEntityDirectory", HierarchyType.ENTITY_DIR);
         entityDirectory = new EntityDirectoryHierarchyImpl(hierarchyDef);
         
-        entity1 = new EntityFullImpl();
-        entity2 = new EntityFullImpl();
-        entity3 = new EntityFullImpl();
+        entity1 = new EntityImpl();
+        entity2 = new EntityImpl();
+        entity3 = new EntityImpl();
     }
 
     @Test
@@ -231,7 +231,7 @@ class EntityDirectoryHierarchyImplTest
         };
 
         for (String specialKey : specialKeys) {
-            Entity entity = new EntityFullImpl();
+            Entity entity = new EntityImpl();
             entityDirectory.put(specialKey, entity);
         }
         
@@ -316,7 +316,7 @@ class EntityDirectoryHierarchyImplTest
         Entity[] entities = new Entity[entryCount];
         
         for (int i = 0; i < entryCount; i++) {
-            entities[i] = new EntityFullImpl();
+            entities[i] = new EntityImpl();
             entityDirectory.put("entity" + i, entities[i]);
         }
         

@@ -66,9 +66,24 @@ public record PropertyDefImpl(
     }
 
     /**
+     * Creates a PropertyDefImpl with the specified properties and no default value.
+     *
+     * @param name the name of the property
+     * @param type the data type of the property
+     * @param isNullable whether the property accepts null values
+     * @param isRemovable whether the property can be removed
+     */
+    public PropertyDefImpl(String name, PropertyType type, boolean isReadable, boolean isWritable,
+                           boolean isNullable, boolean isRemovable, boolean isMultivalued
+    )
+    {
+        this(name, type, null, false, isReadable, isWritable, isNullable, isRemovable, isMultivalued);
+    }
+
+    /**
      * Creates a read-only PropertyDefImpl with specified nullable and removable settings,
      * defaulting to (no default value, readable, writable, and single-valued)
-     * 
+     *
      * @param name the name of the property
      * @param type the data type of the property
      * @param isNullable whether the property accepts null values

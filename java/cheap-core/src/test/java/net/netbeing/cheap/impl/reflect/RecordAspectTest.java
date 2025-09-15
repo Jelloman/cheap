@@ -1,6 +1,7 @@
 package net.netbeing.cheap.impl.reflect;
 
 import net.netbeing.cheap.impl.basic.CatalogImpl;
+import net.netbeing.cheap.impl.basic.EntityImpl;
 import net.netbeing.cheap.model.Catalog;
 import net.netbeing.cheap.model.Entity;
 import net.netbeing.cheap.model.Property;
@@ -36,7 +37,7 @@ public class RecordAspectTest
     private static TestRecord record1;
     private static TestRecord record2;
 
-    final Entity testEntity = new BasicEntityImpl();
+    final Entity testEntity = new EntityImpl();
     final Catalog testCatalog = new CatalogImpl();
 
     RecordAspectDef def;
@@ -62,13 +63,13 @@ public class RecordAspectTest
     @Test
     void construct()
     {
-        recordAspect = new RecordAspect<>(testCatalog, testEntity, def, record1);
+        recordAspect = new RecordAspect<>(testEntity, def, record1);
     }
 
     @Test
     void read()
     {
-        recordAspect = new RecordAspect<>(testCatalog, testEntity, def, record1);
+        recordAspect = new RecordAspect<>(testEntity, def, record1);
 
         String value = recordAspect.readAs("string", String.class);
 
@@ -79,7 +80,7 @@ public class RecordAspectTest
     @Test
     void get()
     {
-        recordAspect = new RecordAspect<>(testCatalog, testEntity, def, record1);
+        recordAspect = new RecordAspect<>(testEntity, def, record1);
 
         Property prop = recordAspect.get("string");
         assertEquals("foo", prop.read());
@@ -110,9 +111,8 @@ public class RecordAspectTest
     @Test
     void construct_WithEntity()
     {
-        recordAspect = new RecordAspect<>(testCatalog, testEntity, def, record1);
+        recordAspect = new RecordAspect<>(testEntity, def, record1);
         
-        assertSame(testCatalog, recordAspect.catalog());
         assertSame(testEntity, recordAspect.entity());
         assertSame(def, recordAspect.def());
         assertSame(record1, recordAspect.record());
@@ -121,10 +121,9 @@ public class RecordAspectTest
     @Test
     void construct_WithoutEntity()
     {
-        recordAspect = new RecordAspect<>(testCatalog, def, record1);
+        recordAspect = new RecordAspect<>(null, def, record1);
         
-        assertSame(testCatalog, recordAspect.catalog());
-        assertNotNull(recordAspect.entity()); // Should create EntityLazyIdImpl
+        assertNull(recordAspect.entity());
         assertSame(def, recordAspect.def());
         assertSame(record1, recordAspect.record());
     }
@@ -132,23 +131,15 @@ public class RecordAspectTest
     @Test
     void record()
     {
-        recordAspect = new RecordAspect<>(testCatalog, testEntity, def, record1);
+        recordAspect = new RecordAspect<>(testEntity, def, record1);
         
         assertSame(record1, recordAspect.record());
     }
 
     @Test
-    void catalog()
-    {
-        recordAspect = new RecordAspect<>(testCatalog, testEntity, def, record1);
-        
-        assertSame(testCatalog, recordAspect.catalog());
-    }
-
-    @Test
     void entity()
     {
-        recordAspect = new RecordAspect<>(testCatalog, testEntity, def, record1);
+        recordAspect = new RecordAspect<>(testEntity, def, record1);
         
         assertSame(testEntity, recordAspect.entity());
     }
@@ -156,7 +147,7 @@ public class RecordAspectTest
     @Test
     void def()
     {
-        recordAspect = new RecordAspect<>(testCatalog, testEntity, def, record1);
+        recordAspect = new RecordAspect<>(testEntity, def, record1);
         
         assertSame(def, recordAspect.def());
     }
@@ -164,7 +155,7 @@ public class RecordAspectTest
     @Test
     void contains()
     {
-        recordAspect = new RecordAspect<>(testCatalog, testEntity, def, record1);
+        recordAspect = new RecordAspect<>(testEntity, def, record1);
         
         assertTrue(recordAspect.contains("string"));
         assertTrue(recordAspect.contains("integerPrimitive"));
@@ -178,7 +169,7 @@ public class RecordAspectTest
     @Test
     void unsafeReadObj()
     {
-        recordAspect = new RecordAspect<>(testCatalog, testEntity, def, record1);
+        recordAspect = new RecordAspect<>(testEntity, def, record1);
         
         assertEquals("foo", recordAspect.unsafeReadObj("string"));
         assertEquals(1, recordAspect.unsafeReadObj("integerPrimitive"));
@@ -199,7 +190,7 @@ public class RecordAspectTest
     @Test
     void unsafeReadObj_NonExistentProperty_ThrowsException()
     {
-        recordAspect = new RecordAspect<>(testCatalog, testEntity, def, record1);
+        recordAspect = new RecordAspect<>(testEntity, def, record1);
         
         IllegalArgumentException exception = assertThrows(
             IllegalArgumentException.class,
@@ -212,7 +203,7 @@ public class RecordAspectTest
     @Test
     void unsafeWrite_ThrowsUnsupportedOperation()
     {
-        recordAspect = new RecordAspect<>(testCatalog, testEntity, def, record1);
+        recordAspect = new RecordAspect<>(testEntity, def, record1);
         
         UnsupportedOperationException exception = assertThrows(
             UnsupportedOperationException.class,
@@ -225,7 +216,7 @@ public class RecordAspectTest
     @Test
     void unsafeAdd_ThrowsUnsupportedOperation()
     {
-        recordAspect = new RecordAspect<>(testCatalog, testEntity, def, record1);
+        recordAspect = new RecordAspect<>(testEntity, def, record1);
         Property prop = recordAspect.get("string");
         
         UnsupportedOperationException exception = assertThrows(
@@ -239,7 +230,7 @@ public class RecordAspectTest
     @Test
     void unsafeRemove_ThrowsUnsupportedOperation()
     {
-        recordAspect = new RecordAspect<>(testCatalog, testEntity, def, record1);
+        recordAspect = new RecordAspect<>(testEntity, def, record1);
         
         UnsupportedOperationException exception = assertThrows(
             UnsupportedOperationException.class,
@@ -252,7 +243,7 @@ public class RecordAspectTest
     @Test
     void get_AllPrimitiveTypes()
     {
-        recordAspect = new RecordAspect<>(testCatalog, testEntity, def, record1);
+        recordAspect = new RecordAspect<>(testEntity, def, record1);
 
         Property booleanProp = recordAspect.get("booleanPrimitive");
         assertEquals(true, booleanProp.read());
@@ -291,7 +282,7 @@ public class RecordAspectTest
     @Test
     void readAs_TypedReading()
     {
-        recordAspect = new RecordAspect<>(testCatalog, testEntity, def, record1);
+        recordAspect = new RecordAspect<>(testEntity, def, record1);
         
         String stringValue = recordAspect.readAs("string", String.class);
         assertEquals("foo", stringValue);
@@ -324,7 +315,7 @@ public class RecordAspectTest
     @Test
     void unsafeRead_GenericMethod()
     {
-        recordAspect = new RecordAspect<>(testCatalog, testEntity, def, record1);
+        recordAspect = new RecordAspect<>(testEntity, def, record1);
         
         String stringValue = recordAspect.unsafeRead("string");
         assertEquals("foo", stringValue);
@@ -340,7 +331,7 @@ public class RecordAspectTest
     void readObj_WithNullValue()
     {
         TestRecord recordWithNull = new TestRecord(1, 'a', true, (byte) 10, (short) 100, 1000L, 10.5f, 100.25, null, null, null, null, null, null);
-        recordAspect = new RecordAspect<>(testCatalog, testEntity, def, recordWithNull);
+        recordAspect = new RecordAspect<>(testEntity, def, recordWithNull);
         
         assertNull(recordAspect.unsafeReadObj("string"));
         assertNull(recordAspect.unsafeReadObj("integer"));
@@ -357,7 +348,7 @@ public class RecordAspectTest
     @Test
     void uncheckedRead_GenericMethod()
     {
-        recordAspect = new RecordAspect<>(testCatalog, testEntity, def, record1);
+        recordAspect = new RecordAspect<>(testEntity, def, record1);
         
         String stringValue = recordAspect.uncheckedRead("string");
         assertEquals("foo", stringValue);
@@ -369,7 +360,7 @@ public class RecordAspectTest
     @Test 
     void put_ThrowsUnsupportedOperation()
     {
-        recordAspect = new RecordAspect<>(testCatalog, testEntity, def, record1);
+        recordAspect = new RecordAspect<>(testEntity, def, record1);
         Property prop = recordAspect.get("string");
         
         UnsupportedOperationException exception = assertThrows(

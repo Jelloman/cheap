@@ -163,8 +163,8 @@ public class SqliteCatalog extends CatalogImpl
             int columnCount = metaData.getColumnCount();
             
             while (resultSet.next()) {
-                Entity entity = new BasicEntityImpl();
-                AspectPropertyMapImpl aspect = new AspectPropertyMapImpl(this, entity, aspectDef);
+                LocalEntity entity = new LocalEntityOneCatalogImpl(this);
+                AspectPropertyMapImpl aspect = new AspectPropertyMapImpl(entity, aspectDef);
                 
                 // Create properties for each column
                 for (int i = 1; i <= columnCount; i++) {

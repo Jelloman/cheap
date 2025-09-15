@@ -329,7 +329,7 @@ public class CheapFileUtilTest
         
         // Verify root has FileRec aspect
         Entity rootEntity = root.value();
-        Aspect rootAspect = rootEntity.local().getAspectIfPresent(fileRecAspectDef);
+        Aspect rootAspect = rootEntity.getAspect(fileRecAspectDef, catalog);
         assertNotNull(rootAspect);
         @SuppressWarnings("unchecked")
         FileRec rootFileRec = ((RecordAspect<FileRec>) rootAspect).record();
@@ -360,7 +360,7 @@ public class CheapFileUtilTest
         
         // Verify subdir has FileRec aspect
         Entity subdirEntity = subdirNode.value();
-        Aspect subdirAspect = subdirEntity.local().getAspectIfPresent(fileRecAspectDef);
+        Aspect subdirAspect = subdirEntity.getAspect(fileRecAspectDef, catalog);
         @SuppressWarnings("unchecked")
         FileRec subdirFileRec = ((RecordAspect<FileRec>) subdirAspect).record();
         assertEquals("subdir", subdirFileRec.name());
@@ -375,7 +375,7 @@ public class CheapFileUtilTest
         
         // Verify file1 has FileRec aspect
         Entity file1Entity = file1Node.value();
-        Aspect file1Aspect = file1Entity.local().getAspectIfPresent(fileRecAspectDef);
+        Aspect file1Aspect = file1Entity.getAspect(fileRecAspectDef, catalog);
         @SuppressWarnings("unchecked")
         FileRec file1FileRec = ((RecordAspect<FileRec>) file1Aspect).record();
         assertEquals("file1.txt", file1FileRec.name());
@@ -397,7 +397,7 @@ public class CheapFileUtilTest
         
         // Verify file2 has FileRec aspect
         Entity file2Entity = file2Node.value();
-        Aspect file2Aspect = file2Entity.local().getAspectIfPresent(fileRecAspectDef);
+        Aspect file2Aspect = file2Entity.getAspect(fileRecAspectDef, catalog);
         @SuppressWarnings("unchecked")
         FileRec file2FileRec = ((RecordAspect<FileRec>) file2Aspect).record();
         assertEquals("file2.txt", file2FileRec.name());
@@ -474,7 +474,7 @@ public class CheapFileUtilTest
         
         // Root should be the subdir2 directory
         Entity rootEntity = root.value();
-        Aspect rootAspect = rootEntity.local().getAspectIfPresent(fileRecAspectDef);
+        Aspect rootAspect = rootEntity.getAspect(fileRecAspectDef, catalog);
         @SuppressWarnings("unchecked")
         FileRec rootFileRec = ((RecordAspect<FileRec>) rootAspect).record();
         assertEquals("subdir2", rootFileRec.name());
@@ -500,7 +500,7 @@ public class CheapFileUtilTest
         // Root should be the single file
         assertFalse(root.isLeaf()); // Root is always a NodeImpl (non-leaf) in EntityTreeHierarchy
         Entity rootEntity = root.value();
-        Aspect rootAspect = rootEntity.local().getAspectIfPresent(fileRecAspectDef);
+        Aspect rootAspect = rootEntity.getAspect(fileRecAspectDef, catalog);
         @SuppressWarnings("unchecked")
         FileRec rootFileRec = ((RecordAspect<FileRec>) rootAspect).record();
         assertEquals("file1.txt", rootFileRec.name());

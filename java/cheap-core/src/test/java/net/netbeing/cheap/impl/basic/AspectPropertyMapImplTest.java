@@ -23,21 +23,20 @@ class AspectPropertyMapImplTest
     void setUp()
     {
         catalog = new CatalogImpl();
-        entity = new EntityFullImpl();
+        entity = new EntityImpl();
         aspectDef = new MutableAspectDefImpl("testAspect");
         propDef1 = new PropertyDefImpl("prop1", PropertyType.String);
         propDef2 = new PropertyDefImpl("prop2", PropertyType.Integer);
         property1 = new PropertyImpl(propDef1, "test-value");
         property2 = new PropertyImpl(propDef2, 42);
-        aspect = new AspectPropertyMapImpl(catalog, entity, aspectDef);
+        aspect = new AspectPropertyMapImpl(entity, aspectDef);
     }
 
     @Test
     void constructor_DefaultCapacity_CreatesEmptyAspect()
     {
-        AspectPropertyMapImpl aspect = new AspectPropertyMapImpl(catalog, entity, aspectDef);
+        AspectPropertyMapImpl aspect = new AspectPropertyMapImpl(entity, aspectDef);
         
-        assertSame(catalog, aspect.catalog());
         assertSame(entity, aspect.entity());
         assertSame(aspectDef, aspect.def());
         assertNotNull(aspect.props);
@@ -47,9 +46,8 @@ class AspectPropertyMapImplTest
     @Test
     void constructor_WithInitialCapacity_CreatesEmptyAspect()
     {
-        AspectPropertyMapImpl aspect = new AspectPropertyMapImpl(catalog, entity, aspectDef, 10);
+        AspectPropertyMapImpl aspect = new AspectPropertyMapImpl(entity, aspectDef, 10);
         
-        assertSame(catalog, aspect.catalog());
         assertSame(entity, aspect.entity());
         assertSame(aspectDef, aspect.def());
         assertNotNull(aspect.props);
@@ -59,9 +57,8 @@ class AspectPropertyMapImplTest
     @Test
     void constructor_WithCapacityAndLoadFactor_CreatesEmptyAspect()
     {
-        AspectPropertyMapImpl aspect = new AspectPropertyMapImpl(catalog, entity, aspectDef, 10, 0.8f);
+        AspectPropertyMapImpl aspect = new AspectPropertyMapImpl(entity, aspectDef, 10, 0.8f);
         
-        assertSame(catalog, aspect.catalog());
         assertSame(entity, aspect.entity());
         assertSame(aspectDef, aspect.def());
         assertNotNull(aspect.props);
@@ -105,7 +102,7 @@ class AspectPropertyMapImplTest
             @Override
             public boolean isReadable() { return false; }
         };
-        aspect = new AspectPropertyMapImpl(catalog, entity, aspectDef);
+        aspect = new AspectPropertyMapImpl(entity, aspectDef);
         aspect.unsafeAdd(property1);
         
         UnsupportedOperationException exception = assertThrows(
@@ -121,7 +118,7 @@ class AspectPropertyMapImplTest
     {
         // Create a readable aspect def
         aspectDef = new MutableAspectDefImpl("testAspect");
-        aspect = new AspectPropertyMapImpl(catalog, entity, aspectDef);
+        aspect = new AspectPropertyMapImpl(entity, aspectDef);
         
         IllegalArgumentException exception = assertThrows(
             IllegalArgumentException.class,
@@ -136,7 +133,7 @@ class AspectPropertyMapImplTest
     {
         // Create a readable aspect def
         aspectDef = new MutableAspectDefImpl("testAspect");
-        aspect = new AspectPropertyMapImpl(catalog, entity, aspectDef);
+        aspect = new AspectPropertyMapImpl(entity, aspectDef);
         PropertyDefImpl nonReadablePropDef = new PropertyDefImpl("readonly", PropertyType.String, false, true, true, true, false);
         Property nonReadableProperty = new PropertyImpl(nonReadablePropDef, "value");
         aspect.unsafeAdd(nonReadableProperty);
@@ -154,7 +151,7 @@ class AspectPropertyMapImplTest
     {
         // Create a readable aspect def
         aspectDef = new MutableAspectDefImpl("testAspect");
-        aspect = new AspectPropertyMapImpl(catalog, entity, aspectDef);
+        aspect = new AspectPropertyMapImpl(entity, aspectDef);
         PropertyDefImpl readablePropDef = new PropertyDefImpl("readable", PropertyType.String, true, true, true, true, false);
         Property readableProperty = new PropertyImpl(readablePropDef, "value");
         aspect.unsafeAdd(readableProperty);
@@ -172,7 +169,7 @@ class AspectPropertyMapImplTest
             @Override
             public boolean isWritable() { return false; }
         };
-        aspect = new AspectPropertyMapImpl(catalog, entity, aspectDef);
+        aspect = new AspectPropertyMapImpl(entity, aspectDef);
         
         UnsupportedOperationException exception = assertThrows(
             UnsupportedOperationException.class,
@@ -190,7 +187,7 @@ class AspectPropertyMapImplTest
             @Override
             public boolean canAddProperties() { return false; }
         };
-        aspect = new AspectPropertyMapImpl(catalog, entity, aspectDef);
+        aspect = new AspectPropertyMapImpl(entity, aspectDef);
         
         IllegalArgumentException exception = assertThrows(
             IllegalArgumentException.class,
@@ -205,7 +202,7 @@ class AspectPropertyMapImplTest
     {
         // Create a writable and extensible aspect def
         aspectDef = new MutableAspectDefImpl("testAspect");
-        aspect = new AspectPropertyMapImpl(catalog, entity, aspectDef);
+        aspect = new AspectPropertyMapImpl(entity, aspectDef);
         
         aspect.put(property1);
         
@@ -218,7 +215,7 @@ class AspectPropertyMapImplTest
     {
         // Create a writable aspect def
         aspectDef = new MutableAspectDefImpl("testAspect");
-        aspect = new AspectPropertyMapImpl(catalog, entity, aspectDef);
+        aspect = new AspectPropertyMapImpl(entity, aspectDef);
         PropertyDefImpl nonWritablePropDef = new PropertyDefImpl("readonly", PropertyType.String, true, false, true, true, false);
         Property existingProperty = new PropertyImpl(nonWritablePropDef, "old-value");
         aspect.props.put("readonly", existingProperty);
@@ -238,7 +235,7 @@ class AspectPropertyMapImplTest
     {
         // Create a writable aspect def
         aspectDef = new MutableAspectDefImpl("testAspect");
-        aspect = new AspectPropertyMapImpl(catalog, entity, aspectDef);
+        aspect = new AspectPropertyMapImpl(entity, aspectDef);
         PropertyDefImpl propDef1 = new PropertyDefImpl("prop", PropertyType.String, true, true, true, true, false);
         PropertyDefImpl propDef2 = new PropertyDefImpl("prop", PropertyType.Integer, true, true, true, true, false);
         
@@ -260,7 +257,7 @@ class AspectPropertyMapImplTest
     {
         // Create a writable aspect def
         aspectDef = new MutableAspectDefImpl("testAspect");
-        aspect = new AspectPropertyMapImpl(catalog, entity, aspectDef);
+        aspect = new AspectPropertyMapImpl(entity, aspectDef);
         PropertyDefImpl writablePropDef = new PropertyDefImpl("writable", PropertyType.String, true, true, true, true, false);
         
         Property existingProperty = new PropertyImpl(writablePropDef, "old-value");

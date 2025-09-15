@@ -23,21 +23,20 @@ class AspectObjectMapImplTest
     void setUp()
     {
         catalog = new CatalogImpl();
-        entity = new EntityFullImpl();
+        entity = new EntityImpl();
         aspectDef = new MutableAspectDefImpl("testAspect");
         propDef1 = new PropertyDefImpl("prop1", PropertyType.String);
         propDef2 = new PropertyDefImpl("prop2", PropertyType.Integer);
         property1 = new PropertyImpl(propDef1, "test-value");
         property2 = new PropertyImpl(propDef2, 42);
-        aspect = new AspectObjectMapImpl(catalog, entity, aspectDef);
+        aspect = new AspectObjectMapImpl(entity, aspectDef);
     }
 
     @Test
     void constructor_DefaultCapacity_CreatesEmptyAspect()
     {
-        AspectObjectMapImpl aspect = new AspectObjectMapImpl(catalog, entity, aspectDef);
+        AspectObjectMapImpl aspect = new AspectObjectMapImpl(entity, aspectDef);
         
-        assertSame(catalog, aspect.catalog());
         assertSame(entity, aspect.entity());
         assertSame(aspectDef, aspect.def());
         assertNotNull(aspect.props);
@@ -47,9 +46,8 @@ class AspectObjectMapImplTest
     @Test
     void constructor_WithInitialCapacity_CreatesEmptyAspect()
     {
-        AspectObjectMapImpl aspect = new AspectObjectMapImpl(catalog, entity, aspectDef, 10);
+        AspectObjectMapImpl aspect = new AspectObjectMapImpl(entity, aspectDef, 10);
         
-        assertSame(catalog, aspect.catalog());
         assertSame(entity, aspect.entity());
         assertSame(aspectDef, aspect.def());
         assertNotNull(aspect.props);
@@ -59,9 +57,8 @@ class AspectObjectMapImplTest
     @Test
     void constructor_WithCapacityAndLoadFactor_CreatesEmptyAspect()
     {
-        AspectObjectMapImpl aspect = new AspectObjectMapImpl(catalog, entity, aspectDef, 10, 0.8f);
+        AspectObjectMapImpl aspect = new AspectObjectMapImpl(entity, aspectDef, 10, 0.8f);
         
-        assertSame(catalog, aspect.catalog());
         assertSame(entity, aspect.entity());
         assertSame(aspectDef, aspect.def());
         assertNotNull(aspect.props);

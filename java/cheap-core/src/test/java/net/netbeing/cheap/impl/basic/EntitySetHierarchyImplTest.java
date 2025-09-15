@@ -24,9 +24,9 @@ class EntitySetHierarchyImplTest
         hierarchyDef = new HierarchyDefImpl("testEntitySet", HierarchyType.ENTITY_SET);
         entitySet = new EntitySetHierarchyImpl(hierarchyDef);
         
-        entity1 = new EntityFullImpl();
-        entity2 = new EntityFullImpl();
-        entity3 = new EntityFullImpl();
+        entity1 = new EntityImpl();
+        entity2 = new EntityImpl();
+        entity3 = new EntityImpl();
     }
 
     @Test
@@ -349,7 +349,7 @@ class EntitySetHierarchyImplTest
         Entity[] entities = new Entity[entityCount];
         
         for (int i = 0; i < entityCount; i++) {
-            entities[i] = new EntityFullImpl();
+            entities[i] = new EntityImpl();
             entitySet.add(entities[i]);
         }
         

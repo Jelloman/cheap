@@ -25,9 +25,9 @@ class EntityListHierarchyImplTest
         hierarchyDef = new HierarchyDefImpl("testEntityList", HierarchyType.ENTITY_LIST);
         entityList = new EntityListHierarchyImpl(hierarchyDef);
         
-        entity1 = new EntityFullImpl();
-        entity2 = new EntityFullImpl();
-        entity3 = new EntityFullImpl();
+        entity1 = new EntityImpl();
+        entity2 = new EntityImpl();
+        entity3 = new EntityImpl();
     }
 
     @Test
@@ -449,7 +449,7 @@ class EntityListHierarchyImplTest
         int entityCount = 1000;
         
         for (int i = 0; i < entityCount; i++) {
-            entityList.add(new EntityFullImpl());
+            entityList.add(new EntityImpl());
         }
         
         assertEquals(entityCount, entityList.size());

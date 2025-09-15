@@ -21,10 +21,10 @@ class EntityTreeHierarchyImplTest
     void setUp()
     {
         hierarchyDef = new HierarchyDefImpl("testEntityTree", HierarchyType.ENTITY_TREE);
-        rootEntity = new EntityFullImpl();
-        childEntity1 = new EntityFullImpl();
-        childEntity2 = new EntityFullImpl();
-        leafEntity = new EntityFullImpl();
+        rootEntity = new EntityImpl();
+        childEntity1 = new EntityImpl();
+        childEntity2 = new EntityImpl();
+        leafEntity = new EntityImpl();
         entityTree = new EntityTreeHierarchyImpl(hierarchyDef, rootEntity);
     }
 
@@ -276,8 +276,8 @@ class EntityTreeHierarchyImplTest
         root.put("child2", child2);
         
         // Level 2: Add grandchildren to child1
-        Entity grandChild1 = new EntityFullImpl();
-        Entity grandChild2 = new EntityFullImpl();
+        Entity grandChild1 = new EntityImpl();
+        Entity grandChild2 = new EntityImpl();
         EntityTreeHierarchyImpl.NodeImpl grandChild1Node = new EntityTreeHierarchyImpl.NodeImpl(grandChild1, child1);
         EntityTreeHierarchyImpl.LeafNodeImpl grandChild2Leaf = new EntityTreeHierarchyImpl.LeafNodeImpl(grandChild2, child1);
         child1.put("grandChild1", grandChild1Node);
@@ -372,7 +372,7 @@ class EntityTreeHierarchyImplTest
         
         // Create a deep tree (10 levels)
         for (int i = 0; i < 10; i++) {
-            Entity entity = new EntityFullImpl();
+            Entity entity = new EntityImpl();
             EntityTreeHierarchyImpl.NodeImpl child = new EntityTreeHierarchyImpl.NodeImpl(entity, current);
             current.put("level" + i, child);
             current = child;
@@ -405,7 +405,7 @@ class EntityTreeHierarchyImplTest
         };
         
         for (String key : specialKeys) {
-            EntityTreeHierarchyImpl.NodeImpl child = new EntityTreeHierarchyImpl.NodeImpl(new EntityFullImpl(), root);
+            EntityTreeHierarchyImpl.NodeImpl child = new EntityTreeHierarchyImpl.NodeImpl(new EntityImpl(), root);
             root.put(key, child);
         }
         

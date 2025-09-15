@@ -233,8 +233,8 @@ public class PostgresCatalog extends CatalogImpl
             int columnCount = metaData.getColumnCount();
             
             while (resultSet.next()) {
-                Entity entity = new BasicEntityImpl();
-                AspectPropertyMapImpl aspect = new AspectPropertyMapImpl(this, entity, aspectDef);
+                Entity entity = new EntityImpl();
+                AspectPropertyMapImpl aspect = new AspectPropertyMapImpl(entity, aspectDef);
                 
                 // Create properties for each column
                 for (int i = 1; i <= columnCount; i++) {
@@ -269,31 +269,24 @@ public class PostgresCatalog extends CatalogImpl
         // Convert based on expected PropertyType
         switch (expectedType) {
             case Integer:
-                if (value instanceof Number) {
-                    return ((Number) value).longValue();
-                } else if (value instanceof String) {
-                    return Long.valueOf((String) value);
-                } else {
-                    throw new SQLDataException("Expected Long type but found " + value.getClass());
-                }
+                return switch (value) {
+                    case Number n -> n.longValue();
+                    case String s -> Long.valueOf(s);
+                    default -> throw new SQLDataException("Expected Long type but found " + value.getClass());
+                };
             case Float:
-                if (value instanceof Number) {
-                    return ((Number) value).doubleValue();
-                } else if (value instanceof String) {
-                    return Double.valueOf((String) value);
-                } else {
-                    throw new SQLDataException("Expected Double type but found " + value.getClass());
-                }
+                return switch (value) {
+                    case Number n -> n.doubleValue();
+                    case String s -> Double.valueOf(s);
+                    default -> throw new SQLDataException("Expected Double type but found " + value.getClass());
+                };
             case Boolean:
-                if (value instanceof Boolean) {
-                    return value;
-                } else if (value instanceof Number) {
-                    return ((Number) value).intValue() != 0;
-                } else if (value instanceof String) {
-                    return Boolean.valueOf((String) value);
-                } else {
-                    throw new SQLDataException("Expected Boolean type but found " + value.getClass());
-                }
+                return switch (value) {
+                    case Boolean b -> value;
+                    case Number n -> n.intValue() != 0;
+                    case String s -> Boolean.valueOf(s);
+                    default -> throw new SQLDataException("Expected Boolean type but found " + value.getClass());
+                };
             case UUID:
                 if (value instanceof UUID) {
                     return value;
@@ -302,7 +295,7 @@ public class PostgresCatalog extends CatalogImpl
             case DateTime:
                 if (value instanceof java.sql.Date) {
                     return ((java.sql.Date)value).toLocalDate().toString();
-                }else if (value instanceof Date) {
+                } else if (value instanceof Date) {
                     return ((Date)value).toInstant().toString();
                 }
                 break;

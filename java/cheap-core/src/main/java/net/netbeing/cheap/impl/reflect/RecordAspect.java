@@ -1,6 +1,5 @@
 package net.netbeing.cheap.impl.reflect;
 
-import net.netbeing.cheap.impl.basic.EntityLazyIdImpl;
 import net.netbeing.cheap.model.*;
 import org.jetbrains.annotations.NotNull;
 import net.netbeing.cheap.util.reflect.GenericGetterSetter;
@@ -63,8 +62,22 @@ public class RecordAspect<R extends Record> implements Aspect
     private final R record;
 
     /**
+     * Constructs a new RecordAspect with null entity.
+     *
+     * @param def the aspect definition describing the record structure
+     * @param record the Java record instance to wrap
+     * @throws NullPointerException if any parameter is null
+     */
+    public RecordAspect(@NotNull RecordAspectDef def, @NotNull R record)
+    {
+        this.entity = null;
+        this.def = def;
+        this.record = record;
+    }
+
+    /**
      * Constructs a new RecordAspect with a pre-existing entity.
-     * 
+     *
      * <p>This constructor is used when the entity is already known and established,
      * typically when loading existing data or when the entity ID is predetermined.</p>
      *

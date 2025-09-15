@@ -5,7 +5,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.Collection;
-import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -28,10 +27,10 @@ class AspectMapHierarchyImplTest
         aspectDef = new MutableAspectDefImpl("testAspect");
         hierarchy = new AspectMapHierarchyImpl(hierarchyDef, aspectDef);
         
-        entity1 = new EntityFullImpl();
-        entity2 = new EntityFullImpl();
-        aspect1 = new AspectObjectMapImpl(catalog, entity1, aspectDef);
-        aspect2 = new AspectObjectMapImpl(catalog, entity2, aspectDef);
+        entity1 = new EntityImpl();
+        entity2 = new EntityImpl();
+        aspect1 = new AspectObjectMapImpl(entity1, aspectDef);
+        aspect2 = new AspectObjectMapImpl(entity2, aspectDef);
     }
 
     @Test
