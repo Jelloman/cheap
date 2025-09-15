@@ -30,6 +30,8 @@ import java.util.Objects;
 public record PropertyDefImpl(
         String name,
         PropertyType type,
+        Object defaultValue,
+        boolean hasDefaultValue,
         boolean isReadable,
         boolean isWritable,
         boolean isNullable,
@@ -52,18 +54,20 @@ public record PropertyDefImpl(
     }
 
     /**
-     * Creates a PropertyDefImpl with default settings (readable, writable, nullable, removable, single-valued).
+     * Creates a PropertyDefImpl with default settings (no default value, readable,
+     * writable, nullable, removable, single-valued).
      * 
      * @param name the name of the property
      * @param type the data type of the property
      */
     public PropertyDefImpl(String name, PropertyType type)
     {
-        this(name, type, true, true, true, true, false);
+        this(name, type, null, false, true, true, true, true, false);
     }
 
     /**
-     * Creates a read-only PropertyDefImpl with specified nullable and removable settings.
+     * Creates a read-only PropertyDefImpl with specified nullable and removable settings,
+     * defaulting to (no default value, readable, writable, and single-valued)
      * 
      * @param name the name of the property
      * @param type the data type of the property
@@ -73,7 +77,7 @@ public record PropertyDefImpl(
      */
     public static @NotNull PropertyDefImpl readOnly(String name, PropertyType type, boolean isNullable, boolean isRemovable)
     {
-        return new PropertyDefImpl(name, type, true, false, isNullable, isRemovable, false);
+        return new PropertyDefImpl(name, type, null, false, true, false, isNullable, isRemovable, false);
     }
 
 }

@@ -15,7 +15,7 @@ class LocalEntityImplTest
 {
     @Rule
     public ConcurrentRule concurrentRule = new ConcurrentRule();
-    
+
     private Entity entity;
     private AspectDef aspectDef1;
     private AspectDef aspectDef2;
@@ -37,7 +37,7 @@ class LocalEntityImplTest
     @Test
     void constructor_WithEntity_CreatesLocalEntity()
     {
-        LocalEntityImpl localEntity = new LocalEntityImpl(entity);
+        LocalEntityOneCatalogImpl localEntity = new LocalEntityOneCatalogImpl(entity);
         
         assertSame(entity, localEntity.entity());
     }
@@ -45,7 +45,7 @@ class LocalEntityImplTest
     @Test
     void constructor_WithEntityAndAspect_CreatesLocalEntityWithGetAspectIfPresent()
     {
-        LocalEntityImpl localEntity = new LocalEntityImpl(entity, aspect1);
+        LocalEntityOneCatalogImpl localEntity = new LocalEntityOneCatalogImpl(entity, aspect1);
         
         assertSame(entity, localEntity.entity());
         assertEquals(aspect1, localEntity.getAspectIfPresent(aspectDef1));
@@ -54,19 +54,19 @@ class LocalEntityImplTest
     @Test
     void constructor_WithNullEntity_ThrowsException()
     {
-        assertThrows(NullPointerException.class, () -> new LocalEntityImpl(null));
+        assertThrows(NullPointerException.class, () -> new LocalEntityOneCatalogImpl(null));
     }
 
     @Test
     void constructor_WithEntityAndNullGetAspectIfPresent_ThrowsException()
     {
-        assertThrows(NullPointerException.class, () -> new LocalEntityImpl(entity, null));
+        assertThrows(NullPointerException.class, () -> new LocalEntityOneCatalogImpl(entity, null));
     }
 
     @Test
     void entity_Always_ReturnsProvidedEntity()
     {
-        LocalEntityImpl localEntity = new LocalEntityImpl(entity);
+        LocalEntityOneCatalogImpl localEntity = new LocalEntityOneCatalogImpl(entity);
         
         assertSame(entity, localEntity.entity());
     }
@@ -74,7 +74,7 @@ class LocalEntityImplTest
     @Test
     void aspects_FirstCall_InitializesMap()
     {
-        LocalEntityImpl localEntity = new LocalEntityImpl(entity);
+        LocalEntityOneCatalogImpl localEntity = new LocalEntityOneCatalogImpl(entity);
         
         Map<AspectDef, Aspect> aspects = localEntity.aspects();
         
@@ -86,7 +86,7 @@ class LocalEntityImplTest
     @Test
     void aspects_MultipleCallsSameInstance_ReturnsSameMap()
     {
-        LocalEntityImpl localEntity = new LocalEntityImpl(entity);
+        LocalEntityOneCatalogImpl localEntity = new LocalEntityOneCatalogImpl(entity);
         
         Map<AspectDef, Aspect> first = localEntity.aspects();
         Map<AspectDef, Aspect> second = localEntity.aspects();
@@ -99,7 +99,7 @@ class LocalEntityImplTest
     @Repeating(repetition = 100)
     void aspects_ThreadSafety_InitializesOnlyOnce()
     {
-        LocalEntityImpl localEntity = new LocalEntityImpl(entity);
+        LocalEntityOneCatalogImpl localEntity = new LocalEntityOneCatalogImpl(entity);
         Map<AspectDef, Aspect> aspects = localEntity.aspects();
         assertNotNull(aspects);
         assertSame(aspects, localEntity.aspects());
@@ -108,7 +108,7 @@ class LocalEntityImplTest
     @Test
     void getAspectIfPresent_WithNullDef_ReturnsNull()
     {
-        LocalEntityImpl localEntity = new LocalEntityImpl(entity);
+        LocalEntityOneCatalogImpl localEntity = new LocalEntityOneCatalogImpl(entity);
         
         Aspect result = localEntity.getAspectIfPresent(null);
         
@@ -118,7 +118,7 @@ class LocalEntityImplTest
     @Test
     void getAspectIfPresent_WithNonExistentDef_ReturnsNull()
     {
-        LocalEntityImpl localEntity = new LocalEntityImpl(entity);
+        LocalEntityOneCatalogImpl localEntity = new LocalEntityOneCatalogImpl(entity);
         
         Aspect result = localEntity.getAspectIfPresent(aspectDef1);
         
@@ -128,7 +128,7 @@ class LocalEntityImplTest
     @Test
     void aspect_WithExistingDef_ReturnsGetAspectIfPresent()
     {
-        LocalEntityImpl localEntity = new LocalEntityImpl(entity);
+        LocalEntityOneCatalogImpl localEntity = new LocalEntityOneCatalogImpl(entity);
         localEntity.aspects().put(aspectDef1, aspect1);
         
         Aspect result = localEntity.getAspectIfPresent(aspectDef1);
@@ -139,7 +139,7 @@ class LocalEntityImplTest
     @Test
     void getAspectIfPresent_BeforeAspectsInitialized_InitializesAndReturnsNull()
     {
-        LocalEntityImpl localEntity = new LocalEntityImpl(entity);
+        LocalEntityOneCatalogImpl localEntity = new LocalEntityOneCatalogImpl(entity);
         assertNull(localEntity.aspects); // Not yet initialized
         
         Aspect result = localEntity.getAspectIfPresent(aspectDef1);
@@ -151,7 +151,7 @@ class LocalEntityImplTest
     @Test
     void getAspectIfPresent_AfterAspectsInitialized_UsesExistingMap()
     {
-        LocalEntityImpl localEntity = new LocalEntityImpl(entity);
+        LocalEntityOneCatalogImpl localEntity = new LocalEntityOneCatalogImpl(entity);
         Map<AspectDef, Aspect> aspectsMap = localEntity.aspects();
         aspectsMap.put(aspectDef1, aspect1);
         
@@ -164,7 +164,7 @@ class LocalEntityImplTest
     @Test
     void aspects_AddAndRetrieve_WorksCorrectly()
     {
-        LocalEntityImpl localEntity = new LocalEntityImpl(entity);
+        LocalEntityOneCatalogImpl localEntity = new LocalEntityOneCatalogImpl(entity);
         Map<AspectDef, Aspect> aspectsMap = localEntity.aspects();
         
         aspectsMap.put(aspectDef1, aspect1);
@@ -180,7 +180,7 @@ class LocalEntityImplTest
     @Test
     void constructor_WithInitialGetAspectIfPresent_SetsUpMapCorrectly()
     {
-        LocalEntityImpl localEntity = new LocalEntityImpl(entity, aspect1);
+        LocalEntityOneCatalogImpl localEntity = new LocalEntityOneCatalogImpl(entity, aspect1);
         
         assertNotNull(localEntity.aspects);
         assertEquals(1, localEntity.aspects.size());
@@ -192,7 +192,7 @@ class LocalEntityImplTest
     @Repeating(repetition = 20)
     void getAspectIfPresent_ConcurrentAccess_ThreadSafe()
     {
-        LocalEntityImpl localEntity = new LocalEntityImpl(entity);
+        LocalEntityOneCatalogImpl localEntity = new LocalEntityOneCatalogImpl(entity);
         localEntity.aspects().put(aspectDef1, aspect1);
         
         Aspect result = localEntity.getAspectIfPresent(aspectDef1);

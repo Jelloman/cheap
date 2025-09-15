@@ -36,7 +36,7 @@ class EntityLazyIdImplTest
         assertNotNull(entity);
         // GlobalId should be lazily initialized
         assertNotNull(entity.local()); // Should be immediately available
-        assertInstanceOf(LocalEntityImpl.class, entity.local());
+        assertInstanceOf(LocalEntityOneCatalogImpl.class, entity.local());
     }
 
     @Test
@@ -47,7 +47,7 @@ class EntityLazyIdImplTest
         
         LocalEntity local = entity.local();
         assertNotNull(local);
-        assertInstanceOf(LocalEntityImpl.class, local);
+        assertInstanceOf(LocalEntityOneCatalogImpl.class, local);
         // GlobalId should be lazily initialized
         
         // Verify the aspect is available in the local entity
@@ -109,7 +109,7 @@ class EntityLazyIdImplTest
         LocalEntity local = entity.local();
         
         assertNotNull(local);
-        assertInstanceOf(LocalEntityImpl.class, local);
+        assertInstanceOf(LocalEntityOneCatalogImpl.class, local);
         assertSame(entity, local.entity());
     }
 
@@ -129,7 +129,7 @@ class EntityLazyIdImplTest
     void local_WithProvidedLocalEntityWithExistingEntity_ThrowsException()
     {
         Entity tempEntity = new EntityFullImpl();
-        LocalEntity providedLocal = new LocalEntityImpl(tempEntity);
+        LocalEntity providedLocal = new LocalEntityOneCatalogImpl(tempEntity);
 
         assertThrows(IllegalArgumentException.class, () -> new EntityLazyIdImpl(providedLocal));
     }
@@ -273,7 +273,7 @@ class EntityLazyIdImplTest
     @Test
     void constructor_existingEntity_throwsException()
     {
-        LocalEntity providedLocal = new LocalEntityImpl(new EntityFullImpl());
+        LocalEntity providedLocal = new LocalEntityOneCatalogImpl(new EntityFullImpl());
 
         assertThrows(IllegalArgumentException.class, () -> new EntityLazyIdImpl(providedLocal));
     }

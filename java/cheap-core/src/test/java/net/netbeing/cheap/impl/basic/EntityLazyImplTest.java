@@ -67,7 +67,7 @@ class EntityLazyImplTest
         LocalEntity local = entity.local();
         
         assertNotNull(local);
-        assertInstanceOf(LocalEntityImpl.class, local);
+        assertInstanceOf(LocalEntityOneCatalogImpl.class, local);
     }
 
     @Test

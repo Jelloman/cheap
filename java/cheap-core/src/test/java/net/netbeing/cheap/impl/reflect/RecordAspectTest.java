@@ -1,10 +1,7 @@
 package net.netbeing.cheap.impl.reflect;
 
-import net.netbeing.cheap.impl.basic.BasicEntityImpl;
-import net.netbeing.cheap.impl.basic.CatalogDefImpl;
 import net.netbeing.cheap.impl.basic.CatalogImpl;
 import net.netbeing.cheap.model.Catalog;
-import net.netbeing.cheap.model.CatalogSpecies;
 import net.netbeing.cheap.model.Entity;
 import net.netbeing.cheap.model.Property;
 import org.junit.jupiter.api.AfterEach;

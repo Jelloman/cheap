@@ -7,7 +7,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
- * Implementation of an Aspect that stores properties as Property objects in a LinkedHashMap.
+ * Implementation of an Aspect that stores properties as Property objects in a HashMap.
  * This implementation provides type-safe property access and validation while maintaining
  * insertion order.
  * <p>
@@ -27,42 +27,39 @@ public class AspectPropertyMapImpl extends AspectBaseImpl
     /**
      * Creates a new AspectPropertyMapImpl with default capacity.
      * 
-     * @param catalog the catalog this aspect belongs to
      * @param entity the entity this aspect is attached to
      * @param def the aspect definition describing this aspect's structure
      */
-    public AspectPropertyMapImpl(@NotNull Catalog catalog, @NotNull Entity entity, AspectDef def)
+    public AspectPropertyMapImpl(Entity entity, AspectDef def)
     {
-        super(catalog, entity, def);
+        super(entity, def);
         this.props = new LinkedHashMap<>();
     }
 
     /**
      * Creates a new AspectPropertyMapImpl with specified initial capacity.
      * 
-     * @param catalog the catalog this aspect belongs to
      * @param entity the entity this aspect is attached to
      * @param def the aspect definition describing this aspect's structure
      * @param initialCapacity the initial capacity of the internal map
      */
-    public AspectPropertyMapImpl(@NotNull Catalog catalog, @NotNull Entity entity, AspectDef def, int initialCapacity)
+    public AspectPropertyMapImpl(Entity entity, AspectDef def, int initialCapacity)
     {
-        super(catalog, entity, def);
+        super(entity, def);
         this.props = new LinkedHashMap<>(initialCapacity);
     }
 
     /**
      * Creates a new AspectPropertyMapImpl with specified initial capacity and load factor.
      * 
-     * @param catalog the catalog this aspect belongs to
      * @param entity the entity this aspect is attached to
      * @param def the aspect definition describing this aspect's structure
      * @param initialCapacity the initial capacity of the internal map
      * @param loadFactor the load factor of the internal map
      */
-    public AspectPropertyMapImpl(@NotNull Catalog catalog, @NotNull Entity entity, AspectDef def, int initialCapacity, float loadFactor)
+    public AspectPropertyMapImpl(Entity entity, AspectDef def, int initialCapacity, float loadFactor)
     {
-        super(catalog, entity, def);
+        super(entity, def);
         this.props = new LinkedHashMap<>(initialCapacity, loadFactor);
     }
 
@@ -75,7 +72,11 @@ public class AspectPropertyMapImpl extends AspectBaseImpl
     @Override
     public boolean contains(@NotNull String propName)
     {
-        return props.containsKey(propName);
+        if (props.containsKey(propName)) {
+            return true;
+        }
+        PropertyDef propDef = def.propertyDef(propName);
+        return propDef != null && propDef.hasDefaultValue();
     }
 
     /**
@@ -87,8 +88,11 @@ public class AspectPropertyMapImpl extends AspectBaseImpl
     @Override
     public Object unsafeReadObj(@NotNull String propName)
     {
-        Property prop = props.get(propName);
-        return (prop == null) ? null : prop.unsafeRead();
+        if (props.containsKey(propName)) {
+            return props.get(propName).unsafeRead();
+        }
+        PropertyDef propDef = def.propertyDef(propName);
+        return (propDef != null && propDef.hasDefaultValue()) ? propDef.defaultValue() : null;
     }
 
     /**
@@ -107,13 +111,16 @@ public class AspectPropertyMapImpl extends AspectBaseImpl
         if (!def.isReadable()) {
             throw new UnsupportedOperationException("Aspect '" + name + "' is not readable.");
         }
-        Property prop = props.get(propName);
-        if (prop == null) {
+        PropertyDef propDef = def.propertyDef(propName);
+        if (propDef == null) {
             throw new IllegalArgumentException("Aspect '" + name + "'does not contain prop named '" + propName + "'");
         }
-        PropertyDef propDef = prop.def();
         if (!propDef.isReadable()) {
             throw new UnsupportedOperationException("Property '" + propDef.name() + "' in Aspect '" + name + "' is not readable.");
+        }
+        Property prop = props.get(propName);
+        if (prop == null) {
+            prop = new PropertyImpl(propDef);
         }
         return prop;
     }
@@ -134,20 +141,21 @@ public class AspectPropertyMapImpl extends AspectBaseImpl
         if (!def.isWritable()) {
             throw new UnsupportedOperationException("Aspect '" + name + "' is not writable.");
         }
-        PropertyDef propDef = prop.def();
-        String propName = propDef.name();
-        Property currProp = props.get(propName);
-        if (currProp == null) {
+        String propName = prop.def().name();
+        PropertyDef stdPropDef = def.propertyDef(propName);
+        if (stdPropDef == null) {
             if (!def.canAddProperties()) {
                 throw new IllegalArgumentException("Aspect '" + name + "' does not contain prop named '" + propName + "' and is not extensible.");
             }
+            if (!prop.def().isWritable()) {
+                throw new UnsupportedOperationException("Provided property '" + propName + "' is marked not writable.");
+            }
         } else {
-            if (!propDef.isWritable()) {
+            if (!stdPropDef.isWritable()) {
                 throw new UnsupportedOperationException("Property '" + propName + "' is not writable.");
             }
-            PropertyDef currDef = currProp.def();
-            if (currDef != propDef) { //FIXME: use Entities.equal after writing it
-                throw new ClassCastException("PropertyDef '" + propName + "' is not equal to existing PropertyDef '" + currDef.name() + "'.");
+            if (!stdPropDef.equals(prop.def())) {
+                throw new IllegalArgumentException("Provided definition of '" + propName + "' conflicts with the existing definition.");
             }
         }
         props.put(propName, prop);
@@ -174,11 +182,13 @@ public class AspectPropertyMapImpl extends AspectBaseImpl
     @Override
     public void unsafeWrite(@NotNull String propName, Object value)
     {
+        AspectDef def = def();
+        PropertyDef stdPropDef = def.propertyDef(propName);
         Property prop = props.get(propName);
-        if (prop == null) {
+        if (prop == null && stdPropDef == null) {
             throw new IllegalArgumentException("Aspect '" + def().name() + "' does not contain prop named '" + propName + "'");
         }
-        Property newProp = new PropertyImpl(prop.def(), value);
+        Property newProp = new PropertyImpl(stdPropDef, value);
         props.put(propName, newProp);
     }
 

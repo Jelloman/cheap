@@ -65,7 +65,7 @@ class EntityLazyLocalImplTest
         LocalEntity local = entity.local();
         
         assertNotNull(local);
-        assertInstanceOf(LocalEntityImpl.class, local);
+        assertInstanceOf(LocalEntityOneCatalogImpl.class, local);
         // Verify consistency
         assertSame(local, entity.local());
     }
@@ -227,7 +227,7 @@ class EntityLazyLocalImplTest
 
         // Both should have similar structure
         assertNotNull(lazyLocal);
-        assertInstanceOf(LocalEntityImpl.class, lazyLocal);
+        assertInstanceOf(LocalEntityOneCatalogImpl.class, lazyLocal);
 
         // Entities should reference themselves
         assertSame(lazyEntity, lazyLocal.entity());

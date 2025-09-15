@@ -5,8 +5,8 @@ package net.netbeing.cheap.model;
  * A property definition specifies the name, type, and access characteristics of
  * a property that can be associated with aspects.
  * 
- * <p>In the CHEAP model, properties represent the atomic units of data storage,
- * similar to columns in a database table or individual attributes in a file.
+ * <p>In the CHEAP model, properties represent the atomic units of data,
+ * similar to columns in a database table or instance variables in objects.
  * The PropertyDef serves as the schema definition that determines how property
  * values are stored, accessed, and validated.</p>
  */
@@ -29,11 +29,34 @@ public interface PropertyDef
     PropertyType type();
 
     /**
-     * Determines whether properties of this type can be read.
+     * Returns the default value of this property, which may be null.
+     * Defaults to null.
+     *
+     * @return the default value
+     */
+    default Object defaultValue() {
+        return null;
+    }
+
+    /**
+     * Determines whether this property has a default value. This allows for
+     * a difference between not having a default value and having a default value
+     * of null. Defaults to false.
+     *
+     * @return true if the default value should be used
+     */
+    default boolean hasDefaultValue() {
+        return false;
+    }
+
+    /**
+     * Determines whether properties of this type can be read. Defaults to true.
      * 
      * @return true if the property can be read, false otherwise
      */
-    boolean isReadable();
+    default boolean isReadable() {
+        return true;
+    }
 
     /**
      * Determines whether properties of this type can be written or modified.

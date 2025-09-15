@@ -31,8 +31,11 @@ public final class PropertyImpl implements Property
      */
     PropertyImpl(@NotNull PropertyDef def)
     {
+        if (!def.hasDefaultValue()) {
+            throw new IllegalArgumentException("A value must be provided for Property " + def.name() + " because it has no default value.");
+        }
         this.def = def;
-        this.val = null;
+        this.val = def.defaultValue();
     }
 
     /**

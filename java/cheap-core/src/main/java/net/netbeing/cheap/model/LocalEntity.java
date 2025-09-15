@@ -2,6 +2,8 @@ package net.netbeing.cheap.model;
 
 import org.jetbrains.annotations.NotNull;
 
+import java.util.NoSuchElementException;
+
 /**
  * LocalEntity keeps track of one or more Catalog(s) that contain its Aspects.
  * LocalEntity references are therefore sufficient to access Aspects, without
@@ -38,6 +40,33 @@ public interface LocalEntity extends Entity
             }
         }
         return null;
+    }
+
+    /**
+     * Adds an aspect to this entity. If the aspect already has an entity specified
+     * and is flagged as non-transferable, an exception will be thrown.
+     *
+     * <p>The default implementation iterates through the catalogs returned by
+     * the {@link #catalogs() catalogs} method and inserts the Aspect into the
+     * first Catalog that contains the matching AspectDef. If no catalog is found,
+     * an exception is thrown.</p>
+     *
+     * @param aspect the aspect to attach to the entity
+     */
+    default void add(@NotNull Aspect aspect)
+    {
+        if (aspect.entity() != null && aspect.entity() != null && !aspect.isTransferable()) {
+            throw new IllegalStateException("An Aspect flagged as non-transferable may not be reassigned to a different entity.");
+        }
+        for (Catalog cat : catalogs()) {
+            AspectMapHierarchy aspectMap = cat.aspects(aspect.def());
+            if (aspectMap != null) {
+                aspect.setEntity(this);
+                aspectMap.add(aspect);
+                return;
+            }
+        }
+        throw new NoSuchElementException("No Catalog was found to store the " + aspect.def().name() + " aspect in.");
     }
 
 }

@@ -3,9 +3,11 @@ package net.netbeing.cheap.impl.basic;
 import net.netbeing.cheap.model.*;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Objects;
+
 /**
  * Abstract base class for Aspect implementations providing common functionality.
- * This class manages the basic relationships between an aspect, its entity, catalog,
+ * This class manages the basic relationships between an aspect, its entity
  * and aspect definition.
  * <p>
  * Subclasses must implement the specific property storage and access mechanisms
@@ -14,75 +16,26 @@ import org.jetbrains.annotations.NotNull;
  * @see Aspect
  * @see AspectDef
  * @see Entity
- * @see Catalog
  */
 public abstract class AspectBaseImpl implements Aspect
 {
-    /** The catalog this aspect belongs to. */
-    protected Catalog catalog;
-    
     /** The entity this aspect is attached to. */
     protected Entity entity;
     
     /** The aspect definition describing this aspect's structure. */
-    protected AspectDef def;
+    protected final AspectDef def;
 
     /**
-     * Creates a new AspectBaseImpl with the specified catalog, entity, and aspect definition.
+     * Creates a new AspectBaseImpl with the specified entity, and aspect definition.
      * 
-     * @param catalog the catalog this aspect belongs to
-     * @param entity the entity this aspect is attached to
+     * @param entity the entity this aspect is attached to, may be null
      * @param def the aspect definition describing this aspect's structure
      */
-    public AspectBaseImpl(@NotNull Catalog catalog, @NotNull Entity entity, AspectDef def)
+    public AspectBaseImpl(Entity entity, @NotNull AspectDef def)
     {
-        this.catalog = catalog;
+        Objects.requireNonNull(def, "Aspect may not have a null AspectDef.");
         this.entity = entity;
         this.def = def;
-    }
-
-    /**
-     * Creates a new AspectBaseImpl with the specified catalog, entity, aspect definition,
-     * and initial capacity hint for subclass implementations.
-     * 
-     * @param catalog the catalog this aspect belongs to
-     * @param entity the entity this aspect is attached to
-     * @param def the aspect definition describing this aspect's structure
-     * @param initialCapacity initial capacity hint for subclass storage implementations
-     */
-    public AspectBaseImpl(@NotNull Catalog catalog, @NotNull Entity entity, AspectDef def, int initialCapacity)
-    {
-        this.catalog = catalog;
-        this.entity = entity;
-        this.def = def;
-    }
-
-    /**
-     * Creates a new AspectBaseImpl with the specified catalog, entity, aspect definition,
-     * initial capacity, and load factor hints for subclass implementations.
-     * 
-     * @param catalog the catalog this aspect belongs to
-     * @param entity the entity this aspect is attached to
-     * @param def the aspect definition describing this aspect's structure
-     * @param initialCapacity initial capacity hint for subclass storage implementations
-     * @param loadFactor load factor hint for subclass storage implementations
-     */
-    public AspectBaseImpl(@NotNull Catalog catalog, @NotNull Entity entity, AspectDef def, int initialCapacity, float loadFactor)
-    {
-        this.catalog = catalog;
-        this.entity = entity;
-        this.def = def;
-    }
-
-    /**
-     * Returns the catalog this aspect belongs to.
-     * 
-     * @return the catalog containing this aspect
-     */
-    @Override
-    public Catalog catalog()
-    {
-        return catalog;
     }
 
     /**
@@ -94,6 +47,23 @@ public abstract class AspectBaseImpl implements Aspect
     public Entity entity()
     {
         return entity;
+    }
+
+    /**
+     * Set the entity that owns this aspect. If the entity is already set
+     * and this is not flagged as transferable by its AspectDef, an
+     * Exception will be thrown.
+     *
+     * @param entity the entity to attach this aspect to, never null
+     */
+    @Override
+    public void setEntity(@NotNull Entity entity)
+    {
+        Objects.requireNonNull(entity, "Aspects may not be assigned a null entity.");
+        if (this.entity != null && !isTransferable()) {
+            throw new IllegalStateException("An Aspect flagged as non-transferable may not be reassigned to a different entity.");
+        }
+        this.entity = entity;
     }
 
     /**

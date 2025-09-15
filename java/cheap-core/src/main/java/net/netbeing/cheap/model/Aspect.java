@@ -23,14 +23,6 @@ import org.jetbrains.annotations.NotNull;
 public interface Aspect
 {
     /**
-     * Returns the entity that owns this aspect. The aspect provides additional
-     * data about this entity within the catalog context.
-     *
-     * @return the entity that owns this aspect, never null
-     */
-    Entity entity();
-
-    /**
      * Returns the aspect definition that describes this aspect's structure,
      * including the properties it contains and their types.
      * 
@@ -42,12 +34,20 @@ public interface Aspect
     AspectDef def();
 
     /**
-     * Returns the catalog that contains this aspect. The catalog provides the
-     * context for aspect storage and cross-aspect operations.
+     * Returns the entity that owns this aspect.
      *
-     * @return the catalog containing this aspect, never null
+     * @return the entity that owns this aspect, never null
      */
-    Catalog catalog();
+    Entity entity();
+
+    /**
+     * Set the entity that owns this aspect. If the entity is already set
+     * and this is not flagged as transferable by its AspectDef, an
+     * Exception will be thrown.
+     *
+     * @param entity the entity to attach this aspect to, never null
+     */
+    void setEntity(@NotNull Entity entity);
 
     /**
      * Reads a property value without performing validation against the aspect definition.
@@ -183,14 +183,6 @@ public interface Aspect
         return unsafeReadObj(propName);
     }
 
-    /**
-     * Read as t.
-     *
-     * @param <T>      the type parameter
-     * @param propName the prop name
-     * @param type     the type
-     * @return the t
-     */
     default <T> T readAs(@NotNull String propName, @NotNull Class<T> type)
     {
         AspectDef def = def();
@@ -202,12 +194,6 @@ public interface Aspect
         return type.cast(objVal);
     }
 
-    /**
-     * Get property.
-     *
-     * @param propName the prop name
-     * @return the property
-     */
     default Property get(@NotNull String propName)
     {
         AspectDef def = def();
@@ -225,11 +211,6 @@ public interface Aspect
         return new PropertyImpl(propDef, unsafeReadObj(propName));
     }
 
-    /**
-     * Put.
-     *
-     * @param prop the prop
-     */
     default void put(@NotNull Property prop)
     {
         AspectDef def = def();
@@ -252,11 +233,6 @@ public interface Aspect
         }
     }
 
-    /**
-     * Remove.
-     *
-     * @param prop the prop
-     */
     default void remove(@NotNull Property prop)
     {
         AspectDef def = def();
@@ -281,12 +257,6 @@ public interface Aspect
         unsafeRemove(propName);
     }
 
-    /**
-     * Write.
-     *
-     * @param propName the prop name
-     * @param value    the value
-     */
     default void write(@NotNull String propName, Object value)
     {
         AspectDef def = def();
@@ -308,11 +278,6 @@ public interface Aspect
         unsafeWrite(propName, value);
     }
 
-    /**
-     * Put all.
-     *
-     * @param properties the properties
-     */
     default void putAll(@NotNull Iterable<Property> properties)
     {
         for (Property prop : properties) {
@@ -320,11 +285,6 @@ public interface Aspect
         }
     }
 
-    /**
-     * Unsafe write all.
-     *
-     * @param properties the properties
-     */
     default void unsafeWriteAll(@NotNull Iterable<Property> properties)
     {
         for (Property prop : properties) {
