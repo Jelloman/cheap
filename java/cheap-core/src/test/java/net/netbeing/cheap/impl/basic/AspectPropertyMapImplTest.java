@@ -227,7 +227,7 @@ class AspectPropertyMapImplTest
             () -> aspect.put(newProperty)
         );
         
-        assertTrue(exception.getMessage().contains("is not writable"));
+        assertTrue(exception.getMessage().contains("is marked not writable"));
     }
 
     @Test
@@ -237,19 +237,21 @@ class AspectPropertyMapImplTest
         aspectDef = new MutableAspectDefImpl("testAspect");
         aspect = new AspectPropertyMapImpl(entity, aspectDef);
         PropertyDefImpl propDef1 = new PropertyDefImpl("prop", PropertyType.String, true, true, true, true, false);
+        aspectDef.add(propDef1);
+
         PropertyDefImpl propDef2 = new PropertyDefImpl("prop", PropertyType.Integer, true, true, true, true, false);
         
         Property existingProperty = new PropertyImpl(propDef1, "value");
         aspect.props.put("prop", existingProperty);
         
         Property newProperty = new PropertyImpl(propDef2, 42);
-        
-        ClassCastException exception = assertThrows(
-            ClassCastException.class,
+
+        IllegalArgumentException exception = assertThrows(
+            IllegalArgumentException.class,
             () -> aspect.put(newProperty)
         );
         
-        assertTrue(exception.getMessage().contains("is not equal to existing PropertyDef"));
+        assertTrue(exception.getMessage().contains("conflicts with the existing definition"));
     }
 
     @Test

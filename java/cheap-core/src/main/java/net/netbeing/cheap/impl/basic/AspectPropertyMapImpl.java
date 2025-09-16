@@ -111,18 +111,18 @@ public class AspectPropertyMapImpl extends AspectBaseImpl
         if (!def.isReadable()) {
             throw new UnsupportedOperationException("Aspect '" + name + "' is not readable.");
         }
-        PropertyDef propDef = def.propertyDef(propName);
-        if (propDef == null) {
-            throw new IllegalArgumentException("Aspect '" + name + "'does not contain prop named '" + propName + "'");
-        }
-        if (!propDef.isReadable()) {
-            throw new UnsupportedOperationException("Property '" + propDef.name() + "' in Aspect '" + name + "' is not readable.");
-        }
         Property prop = props.get(propName);
-        if (prop == null) {
-            prop = new PropertyImpl(propDef);
+        if (prop != null) {
+            if (!prop.def().isReadable()) {
+                throw new UnsupportedOperationException("Property '" + propName + "' is not readable.");
+            }
+            return prop;
         }
-        return prop;
+        PropertyDef propDef = def.propertyDef(propName);
+        if (propDef == null || !propDef.hasDefaultValue()) {
+            throw new IllegalArgumentException("Aspect '" + name + "' does not contain prop named '"+ propName + "'.");
+        }
+        return new PropertyImpl(propDef, propDef.defaultValue());
     }
 
     /**
@@ -137,15 +137,15 @@ public class AspectPropertyMapImpl extends AspectBaseImpl
     public void put(@NotNull Property prop)
     {
         AspectDef def = def();
-        String name = def.name();
+        String aspectName = def.name();
         if (!def.isWritable()) {
-            throw new UnsupportedOperationException("Aspect '" + name + "' is not writable.");
+            throw new UnsupportedOperationException("Aspect '" + aspectName + "' is not writable.");
         }
         String propName = prop.def().name();
         PropertyDef stdPropDef = def.propertyDef(propName);
         if (stdPropDef == null) {
             if (!def.canAddProperties()) {
-                throw new IllegalArgumentException("Aspect '" + name + "' does not contain prop named '" + propName + "' and is not extensible.");
+                throw new IllegalArgumentException("Aspect '" + aspectName + "' does not contain prop named '" + propName + "' and is not extensible.");
             }
             if (!prop.def().isWritable()) {
                 throw new UnsupportedOperationException("Provided property '" + propName + "' is marked not writable.");
@@ -184,12 +184,16 @@ public class AspectPropertyMapImpl extends AspectBaseImpl
     {
         AspectDef def = def();
         PropertyDef stdPropDef = def.propertyDef(propName);
-        Property prop = props.get(propName);
-        if (prop == null && stdPropDef == null) {
-            throw new IllegalArgumentException("Aspect '" + def().name() + "' does not contain prop named '" + propName + "'");
+        if (stdPropDef != null) {
+            // ignore and replace any current prop
+            props.put(propName, new PropertyImpl(stdPropDef, value));
+        } else {
+            Property prop = props.get(propName);
+            if (prop == null) {
+                throw new IllegalArgumentException("Aspect '" + def().name() + "' does not contain prop named '" + propName + "'");
+            }
+            props.put(propName, new PropertyImpl(prop.def(), value));
         }
-        Property newProp = new PropertyImpl(stdPropDef, value);
-        props.put(propName, newProp);
     }
 
     /**

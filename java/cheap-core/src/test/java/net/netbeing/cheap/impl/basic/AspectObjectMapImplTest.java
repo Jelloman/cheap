@@ -91,7 +91,7 @@ class AspectObjectMapImplTest
         aspect.unsafeAdd(property1);
         
         Object result = aspect.unsafeReadObj("prop1");
-        assertSame(property1, result);
+        assertSame(property1.unsafeRead(), result);
     }
 
     @Test
@@ -100,7 +100,7 @@ class AspectObjectMapImplTest
         aspect.unsafeAdd(property1);
         
         assertTrue(aspect.contains("prop1"));
-        assertSame(property1, aspect.unsafeReadObj("prop1"));
+        assertSame(property1.unsafeRead(), aspect.unsafeReadObj("prop1"));
     }
 
     @Test
@@ -111,8 +111,8 @@ class AspectObjectMapImplTest
         
         assertTrue(aspect.contains("prop1"));
         assertTrue(aspect.contains("prop2"));
-        assertSame(property1, aspect.unsafeReadObj("prop1"));
-        assertSame(property2, aspect.unsafeReadObj("prop2"));
+        assertSame(property1.unsafeRead(), aspect.unsafeReadObj("prop1"));
+        assertSame(property2.unsafeRead(), aspect.unsafeReadObj("prop2"));
     }
 
     @Test
@@ -136,9 +136,8 @@ class AspectObjectMapImplTest
         aspect.unsafeWrite("prop1", "new-value");
         
         Object result = aspect.unsafeReadObj("prop1");
-        assertInstanceOf(Property.class, result);
-        Property prop = (Property) result;
-        assertEquals("new-value", prop.unsafeRead());
+        assertInstanceOf(String.class, result);
+        assertEquals("new-value", result);
     }
 
     @Test

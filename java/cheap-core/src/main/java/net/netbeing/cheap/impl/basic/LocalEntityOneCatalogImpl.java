@@ -20,9 +20,8 @@ public class LocalEntityOneCatalogImpl extends EntityImpl implements LocalEntity
      *
      * @param catalog the catalog this entity has its Aspects in
      */
-    public LocalEntityOneCatalogImpl(@NotNull Catalog catalog)
+    public LocalEntityOneCatalogImpl(Catalog catalog)
     {
-        Objects.requireNonNull(catalog, "Catalog may not be null in LocalEntityOneCatalogImpl.");
         this.catalog = catalog;
     }
 
@@ -32,10 +31,9 @@ public class LocalEntityOneCatalogImpl extends EntityImpl implements LocalEntity
      * @param globalId the id of this catalog-as-entity
      * @param catalog the catalog this entity has its Aspects in
      */
-    public LocalEntityOneCatalogImpl(@NotNull UUID globalId, @NotNull Catalog catalog)
+    public LocalEntityOneCatalogImpl(@NotNull UUID globalId, Catalog catalog)
     {
         super(globalId);
-        Objects.requireNonNull(catalog, "Catalog may not be null in LocalEntityOneCatalogImpl.");
         this.catalog = catalog;
     }
 

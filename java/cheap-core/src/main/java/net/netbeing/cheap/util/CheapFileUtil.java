@@ -1,12 +1,9 @@
 package net.netbeing.cheap.util;
 
 import lombok.experimental.UtilityClass;
-import net.netbeing.cheap.impl.basic.EntityLazyIdImpl;
-import net.netbeing.cheap.impl.basic.EntityTreeHierarchyImpl;
+import net.netbeing.cheap.impl.basic.*;
 import net.netbeing.cheap.impl.basic.EntityTreeHierarchyImpl.NodeImpl;
 import net.netbeing.cheap.impl.basic.EntityTreeHierarchyImpl.LeafNodeImpl;
-import net.netbeing.cheap.impl.basic.LocalEntityOneCatalogImpl;
-import net.netbeing.cheap.impl.basic.WeakAspectMap;
 import net.netbeing.cheap.impl.reflect.RecordAspect;
 import net.netbeing.cheap.impl.reflect.RecordAspectDef;
 import net.netbeing.cheap.model.*;
@@ -163,7 +160,7 @@ public class CheapFileUtil
         AspectMapHierarchy aspects = catalog.aspects(aspectDef);
 
         try (Stream<FileRec> stream = stream(dir, maxDepth, options)) {
-            stream.forEach(rec -> aspects.add(new RecordAspect<>(aspectDef, rec)));
+            stream.forEach(rec -> aspects.add(new RecordAspect<>(new EntityImpl(), aspectDef, rec)));
         }
     }
 

@@ -46,7 +46,7 @@ public class CatalogImpl extends LocalEntityOneCatalogImpl implements Catalog
      */
     public CatalogImpl()
     {
-        this(null, CatalogSpecies.SINK, null, null, false);
+        this(UUID.randomUUID(), CatalogSpecies.SINK, null, null, false);
     }
 
     /**
@@ -57,7 +57,7 @@ public class CatalogImpl extends LocalEntityOneCatalogImpl implements Catalog
      */
     public CatalogImpl(CatalogSpecies species, Catalog upstream)
     {
-        this(null, species, null, upstream, false);
+        this(UUID.randomUUID(), species, null, upstream, false);
     }
 
     /**
