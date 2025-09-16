@@ -1,0 +1,34 @@
+{
+  "$id": "https://netbeing.net/cheap/entitylisthierarchy.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "EntityListHierarchy",
+  "description": "An ordered list containing entity UUIDs (ENTITY_LIST type)",
+  "allOf": [
+    {
+      "$ref": "hierarchy.schema.json"
+    },
+    {
+      "type": "object",
+      "properties": {
+        "def": {
+          "type": "object",
+          "properties": {
+            "type": {
+              "const": "ENTITY_LIST"
+            }
+          },
+          "required": ["type"]
+        },
+        "entities": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "description": "Ordered list of entity UUIDs, duplicates allowed"
+        }
+      },
+      "required": ["entities"]
+    }
+  ]
+}

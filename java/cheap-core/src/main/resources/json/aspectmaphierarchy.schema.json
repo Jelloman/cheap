@@ -1,0 +1,30 @@
+{
+  "$id": "https://netbeing.net/cheap/aspectmaphierarchy.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "AspectMapHierarchy",
+  "description": "A hierarchy that maps entity UUIDs to their aspects of a specific type (aspect_map type)",
+  "type": "object",
+  "properties": {
+    "def": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "aspect_map"
+        }
+      },
+      "required": ["type"]
+    },
+    "aspectDefName": {
+      "type": "string",
+      "description": "The name of the aspect definition for all aspects in this hierarchy"
+    },
+    "aspects": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "aspect.schema.json"
+      },
+      "description": "Map of entity UUID to aspect instance"
+    }
+  },
+  "required": ["aspectDefName", "aspects"]
+}

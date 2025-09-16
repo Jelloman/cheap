@@ -1,0 +1,33 @@
+{
+  "$id": "https://netbeing.net/cheap/hierarchydir.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "HierarchyDir",
+  "description": "A directory hierarchy that maps string names to sub-hierarchies (HIERARCHY_DIR type)",
+  "allOf": [
+    {
+      "$ref": "hierarchy.schema.json"
+    },
+    {
+      "type": "object",
+      "properties": {
+        "def": {
+          "type": "object",
+          "properties": {
+            "type": {
+              "const": "HIERARCHY_DIR"
+            }
+          },
+          "required": ["type"]
+        },
+        "hierarchies": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "hierarchy.schema.json"
+          },
+          "description": "Map of hierarchy names to hierarchy instances"
+        }
+      },
+      "required": ["hierarchies"]
+    }
+  ]
+}

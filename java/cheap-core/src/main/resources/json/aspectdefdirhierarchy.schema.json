@@ -1,0 +1,33 @@
+{
+  "$id": "https://netbeing.net/cheap/aspectdefdirhierarchy.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "AspectDefDirHierarchy",
+  "description": "A directory of aspect definitions by name",
+  "allOf": [
+    {
+      "$ref": "hierarchy.schema.json"
+    },
+    {
+      "type": "object",
+      "properties": {
+        "def": {
+          "type": "object",
+          "properties": {
+            "type": {
+              "const": "aspect_def_dir"
+            }
+          },
+          "required": ["type"]
+        },
+        "aspectDefs": {
+          "description": "A directory of aspect definitions by name",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "aspectdef.schema.json"
+          }
+        }
+      },
+      "required": ["aspectDefs"]
+    }
+  ]
+}

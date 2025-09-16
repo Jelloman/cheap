@@ -1,0 +1,24 @@
+{
+  "$id": "https://netbeing.net/cheap/hierarchydef.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "HierarchyDef",
+  "description": "Definition of a hierarchy within a catalog in the CHEAP data model",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "The unique name identifier for this hierarchy definition"
+    },
+    "type": {
+      "type": "string",
+      "enum": ["hierarchy_dir", "aspect_def_dir", "entity_list", "entity_set", "entity_dir", "entity_tree", "aspect_map"],
+      "description": "The type of hierarchy this definition describes"
+    },
+    "isModifiable": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether hierarchies of this type can be modified after creation"
+    }
+  },
+  "required": ["name", "type"]
+}

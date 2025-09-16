@@ -1,0 +1,41 @@
+{
+  "$id": "https://netbeing.net/cheap/aspectdef.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "AspectDef",
+  "description": "Definition of an aspect type within the CHEAP data model",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "The unique name identifier for this aspect definition"
+    },
+    "propertyDefs": {
+      "type": "array",
+      "items": {
+        "$ref": "propertydef.schema.json"
+      },
+      "description": "All property definitions that belong to this aspect"
+    },
+    "isReadable": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether aspects of this type can be read"
+    },
+    "isWritable": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether aspects of this type can be written or modified"
+    },
+    "canAddProperties": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether new properties can be dynamically added to aspects of this type"
+    },
+    "canRemoveProperties": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether properties can be dynamically removed from aspects of this type"
+    }
+  },
+  "required": ["name", "propertyDefs"]
+}

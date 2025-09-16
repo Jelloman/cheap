@@ -1,0 +1,35 @@
+{
+  "$id": "https://netbeing.net/cheap/entitysethierarchy.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "EntitySetHierarchy",
+  "description": "An unordered set containing unique entity UUIDs (ENTITY_SET type)",
+  "allOf": [
+    {
+      "$ref": "hierarchy.schema.json"
+    },
+    {
+      "type": "object",
+      "properties": {
+        "def": {
+          "type": "object",
+          "properties": {
+            "type": {
+              "const": "ENTITY_SET"
+            }
+          },
+          "required": ["type"]
+        },
+        "entities": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "uniqueItems": true,
+          "description": "Unordered set of unique entity UUIDs"
+        }
+      },
+      "required": ["entities"]
+    }
+  ]
+}

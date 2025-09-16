@@ -1,0 +1,34 @@
+{
+  "$id": "https://netbeing.net/cheap/entitydirectoryhierarchy.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "EntityDirectoryHierarchy",
+  "description": "A string-to-entity UUID mapping (ENTITY_DIR type)",
+  "allOf": [
+    {
+      "$ref": "hierarchy.schema.json"
+    },
+    {
+      "type": "object",
+      "properties": {
+        "def": {
+          "type": "object",
+          "properties": {
+            "type": {
+              "const": "ENTITY_DIR"
+            }
+          },
+          "required": ["type"]
+        },
+        "entities": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "description": "Map of string names to entity UUIDs"
+        }
+      },
+      "required": ["entities"]
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "$id": "https://netbeing.net/cheap/property.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Property",
+  "description": "An individual property within an aspect",
+  "type": "object",
+  "properties": {
+    "def": {
+      "$ref": "propertydef.schema.json",
+      "description": "The property definition that describes this property's type and constraints"
+    },
+    "value": {
+      "description": "The property value - type depends on the PropertyDef"
+    }
+  },
+  "required": ["def"]
+}

@@ -1,0 +1,37 @@
+{
+  "$id": "https://netbeing.net/cheap/hierarchy.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Hierarchy",
+  "description": "Base hierarchy containing organized entities",
+  "type": "object",
+  "properties": {
+    "def": {
+      "$ref": "hierarchydef.schema.json",
+      "description": "The hierarchy definition that describes this hierarchy's characteristics"
+    }
+  },
+  "required": ["def"],
+  "anyOf": [
+    {
+      "$ref": "aspectdefdirhierarchy.schema.json"
+    },
+    {
+      "$ref": "aspectmaphierarchy.schema.json"
+    },
+    {
+      "$ref": "entitydirectoryhierarchy.schema.json"
+    },
+    {
+      "$ref": "entitylisthierarchy.schema.json"
+    },
+    {
+      "$ref": "entitysethierarchy.schema.json"
+    },
+    {
+      "$ref": "entitytreehierarchy.schema.json"
+    },
+    {
+      "$ref": "hierarchydir.schema.json"
+    }
+  ]
+}

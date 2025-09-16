@@ -1,0 +1,24 @@
+{
+  "$id": "https://netbeing.net/cheap/catalogdef.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "CatalogDef",
+  "description": "Definition of a catalog in the CHEAP data model",
+  "type": "object",
+  "properties": {
+    "aspectDefs": {
+      "description": "Directory of aspect definitions that are typically found in catalogs with this definition",
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "aspectdef.schema.json"
+      }
+    },
+    "hierarchyDefs": {
+      "type": "array",
+      "items": {
+        "$ref": "hierarchydef.schema.json"
+      },
+      "description": "Collection of hierarchy definitions that are typically found in catalogs with this definition"
+    }
+  },
+  "required": ["aspectDefs", "hierarchyDefs"]
+}

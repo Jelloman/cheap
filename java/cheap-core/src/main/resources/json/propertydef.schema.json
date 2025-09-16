@@ -1,0 +1,48 @@
+{
+  "$id": "https://netbeing.net/cheap/propertydef.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "PropertyDef",
+  "description": "Definition of a property within an aspect in the CHEAP data model",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "The unique name identifier for this property definition"
+    },
+    "type": {
+      "type": "string",
+      "enum": ["Integer", "Float", "Boolean", "String", "Text", "BigInteger", "DateTime", "URI", "UUID", "CLOB", "BLOB"],
+      "description": "The data type of this property"
+    },
+    "defaultValue": {
+      "description": "The default value of this property, which may be null"
+    },
+    "hasDefaultValue": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this property has a default value"
+    },
+    "isReadable": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether properties of this type can be read"
+    },
+    "isWritable": {
+      "type": "boolean",
+      "description": "Whether properties of this type can be written or modified"
+    },
+    "isNullable": {
+      "type": "boolean",
+      "description": "Whether properties of this type can have null values"
+    },
+    "isRemovable": {
+      "type": "boolean",
+      "description": "Whether properties of this type can be removed from their parent aspect"
+    },
+    "isMultivalued": {
+      "type": "boolean",
+      "description": "Whether properties of this type can hold multiple values"
+    }
+  },
+  "required": ["name", "type", "isWritable", "isNullable", "isRemovable", "isMultivalued"]
+}

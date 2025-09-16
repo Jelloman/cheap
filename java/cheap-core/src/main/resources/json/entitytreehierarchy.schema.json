@@ -1,0 +1,58 @@
+{
+  "$id": "https://netbeing.net/cheap/entitytreehierarchy.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "EntityTreeHierarchy",
+  "description": "A tree structure with named nodes where leaves contain entity UUIDs (ENTITY_TREE type)",
+  "$defs": {
+    "treeNode": {
+      "type": "object",
+      "properties": {
+        "isLeaf": {
+          "type": "boolean",
+          "description": "Whether this node is a leaf node (has no children)"
+        },
+        "parentPath": {
+          "type": "string",
+          "description": "Path to the parent node, or null if this is the root"
+        },
+        "entityId": {
+          "type": "string",
+          "format": "uuid",
+          "description": "The entity UUID associated with this node, if any"
+        },
+        "children": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/treeNode"
+          },
+          "description": "Child nodes keyed by name"
+        }
+      },
+      "required": ["isLeaf"]
+    }
+  },
+  "allOf": [
+    {
+      "$ref": "hierarchy.schema.json"
+    },
+    {
+      "type": "object",
+      "properties": {
+        "def": {
+          "type": "object",
+          "properties": {
+            "type": {
+              "const": "ENTITY_TREE"
+            }
+          },
+          "required": ["type"]
+        },
+        "root": {
+          "$ref": "#/$defs/treeNode",
+          "description": "The root node of the tree hierarchy"
+        }
+      },
+      "required": ["root"]
+    }
+  ]
+}

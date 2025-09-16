@@ -1,0 +1,65 @@
+{
+  "$id": "https://netbeing.net/cheap/aspect.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Aspect",
+  "description": "An aspect instance with arbitrary properties but no sub-objects",
+  "type": "object",
+  "properties": {
+    "aspectDefName": {
+      "type": "string",
+      "description": "The name of the aspect definition this aspect conforms to"
+    },
+    "entityId": {
+      "type": "string",
+      "format": "uuid",
+      "description": "The UUID of the entity this aspect belongs to"
+    },
+    "isTransferable": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this aspect may be transferred between entities"
+    }
+  },
+  "required": ["aspectDefName", "entityId"],
+  "additionalProperties": {
+    "oneOf": [
+      {
+        "type": "null"
+      },
+      {
+        "type": "boolean"
+      },
+      {
+        "type": "number"
+      },
+      {
+        "type": "integer"
+      },
+      {
+        "type": "string"
+      },
+      {
+        "type": "array",
+        "items": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "integer"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

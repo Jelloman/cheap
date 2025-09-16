@@ -2,11 +2,19 @@
   <dictionary name="project">
     <words>
       <w>aspectdef</w>
+      <w>aspectdefdir</w>
+      <w>aspectdefdirhierarchy</w>
+      <w>aspectmaphierarchy</w>
       <w>bigserial</w>
       <w>bpchar</w>
       <w>catalogdef</w>
       <w>daterange</w>
+      <w>entitydirectoryhierarchy</w>
+      <w>entitylisthierarchy</w>
+      <w>entitysethierarchy</w>
+      <w>entitytreehierarchy</w>
       <w>hierarchydef</w>
+      <w>hierarchydir</w>
       <w>lseg</w>
       <w>macaddr</w>
       <w>numrange</w>
