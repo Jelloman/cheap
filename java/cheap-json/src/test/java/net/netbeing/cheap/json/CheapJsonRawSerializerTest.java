@@ -263,16 +263,13 @@ public class CheapJsonRawSerializerTest
     @Test
     void testSimpleCatalogToJson()
     {
-        // Create a simple catalog with minimal data for testing
-        UUID catalogId = UUID.fromString("550e8400-e29b-41d4-a716-446655440000");
-        
         // Create a simple catalog with no custom aspects or hierarchies
         CatalogImpl catalog = new CatalogImpl();
         
         String result = CheapJsonRawSerializer.toJson(catalog, true);
         
         // Just verify it contains expected base structure
-        assertTrue(result.contains("\"globalId\":\"" + catalog.globalId().toString() + "\""));
+        assertTrue(result.contains("\"globalId\":\"" + catalog.globalId() + "\""));
         assertTrue(result.contains("\"species\":\"sink\""));
         assertTrue(result.contains("\"strict\":false"));
         assertTrue(result.contains("\"hierarchies\":"));
