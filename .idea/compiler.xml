@@ -9,9 +9,11 @@
           <entry name="$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.projectlombok/lombok/1.18.38/57f8f5e02e92a30fd21b80cbd426a4172b5f8e29/lombok-1.18.38.jar" />
         </processorPath>
         <module name="cheap.cheap-db.test" />
+        <module name="cheap.cheap-json.main" />
         <module name="cheap.cheap-core.test" />
         <module name="cheap.cheap-db.main" />
         <module name="cheap.cheap-core.main" />
+        <module name="cheap.cheap-json.test" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
@@ -21,6 +23,9 @@
       <module name="cheap.cheap-db" target="24" />
       <module name="cheap.cheap-db.main" target="24" />
       <module name="cheap.cheap-db.test" target="24" />
+      <module name="cheap.cheap-json" target="24" />
+      <module name="cheap.cheap-json.main" target="24" />
+      <module name="cheap.cheap-json.test" target="24" />
     </bytecodeTargetLevel>
   </component>
   <component name="JavacSettings">
@@ -31,6 +36,9 @@
       <module name="cheap.cheap-db" options="-Xlint:-processing -Xlint:unchecked" />
       <module name="cheap.cheap-db.main" options="-Xlint:-processing -Xlint:unchecked" />
       <module name="cheap.cheap-db.test" options="-Xlint:-processing -Xlint:unchecked" />
+      <module name="cheap.cheap-json" options="-Xlint:-processing -Xlint:unchecked" />
+      <module name="cheap.cheap-json.main" options="-Xlint:-processing -Xlint:unchecked" />
+      <module name="cheap.cheap-json.test" options="-Xlint:-processing -Xlint:unchecked" />
     </option>
   </component>
 </project>

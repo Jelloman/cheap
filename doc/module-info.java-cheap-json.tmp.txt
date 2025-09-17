@@ -1,0 +1,17 @@
+/**
+ * The cheap-json module provides JSON schema definitions and utilities
+ * for the CHEAP data model.
+ * 
+ * <p>This module contains:
+ * <ul>
+ *   <li>JSON schemas for all CHEAP model components</li>
+ *   <li>Utilities for JSON serialization and validation</li>
+ * </ul>
+ */
+module net.netbeing.cheap.json
+{
+    requires net.netbeing.cheap.core;
+    requires java.base;
+    
+    exports net.netbeing.cheap.json;
+}

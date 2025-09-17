@@ -1,0 +1,47 @@
+/*
+ * Build configuration for cheap-json module.
+ * This module contains JSON schemas and utilities for the CHEAP data model.
+ */
+
+plugins {
+    // Apply the java-library plugin for API and implementation separation.
+    `java-library`
+    id("io.freefair.lombok") version "8.14.2"
+}
+
+repositories {
+    // Use Maven Central for resolving dependencies.
+    mavenCentral()
+}
+
+dependencies {
+    testImplementation(libs.junit.jupiter)
+    testRuntimeOnly(libs.junit.platform.launcher)
+    testRuntimeOnly(libs.junit.jupiter)
+
+    // This dependency is exported to consumers, that is to say found on their compile classpath.
+    api(project(":cheap-core"))
+
+    // This dependency is used internally, and not exposed to consumers on their own compile classpath.
+    implementation(libs.guava)
+    compileOnly(libs.jetbrains.annotations)
+}
+
+// Apply a specific Java toolchain to ease working on different environments.
+java {
+    modularity.inferModulePath = true
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(24)
+    }
+}
+
+tasks.named<Test>("test") {
+    // Use JUnit Platform for unit tests.
+    useJUnitPlatform()
+}
+
+gradle.projectsEvaluated {
+    tasks.withType<JavaCompile> {
+        options.compilerArgs.addAll(listOf("-Xlint:unchecked"))
+    }
+}

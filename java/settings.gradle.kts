@@ -13,3 +13,4 @@ plugins {
 rootProject.name = "cheap"
 include("cheap-core")
 include("cheap-db")
+include("cheap-json")
