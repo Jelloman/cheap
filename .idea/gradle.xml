@@ -5,6 +5,7 @@
     <option name="linkedExternalProjectsSettings">
       <GradleProjectSettings>
         <option name="externalProjectPath" value="$PROJECT_DIR$/java" />
+        <option name="gradleHome" value="C:\ProgramData\chocolatey\lib\gradle\tools\gradle-9.0.0" />
         <option name="gradleJvm" value="temurin-24" />
         <option name="modules">
           <set>

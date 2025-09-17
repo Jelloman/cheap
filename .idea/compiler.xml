@@ -14,6 +14,14 @@
         <module name="cheap.cheap-core.main" />
       </profile>
     </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="cheap.cheap-core" target="24" />
+      <module name="cheap.cheap-core.main" target="24" />
+      <module name="cheap.cheap-core.test" target="24" />
+      <module name="cheap.cheap-db" target="24" />
+      <module name="cheap.cheap-db.main" target="24" />
+      <module name="cheap.cheap-db.test" target="24" />
+    </bytecodeTargetLevel>
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
