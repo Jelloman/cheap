@@ -15,16 +15,16 @@ repositories {
 }
 
 dependencies {
-    testImplementation(libs.junit.jupiter)
-    testRuntimeOnly(libs.junit.platform.launcher)
-    testRuntimeOnly(libs.junit.jupiter)
-
     // This dependency is exported to consumers, that is to say found on their compile classpath.
     api(project(":cheap-core"))
 
     // This dependency is used internally, and not exposed to consumers on their own compile classpath.
     implementation(libs.guava)
+
     compileOnly(libs.jetbrains.annotations)
+
+    testImplementation(libs.junit.jupiter)
+    testRuntimeOnly(libs.junit.platform.launcher)
 }
 
 // Apply a specific Java toolchain to ease working on different environments.

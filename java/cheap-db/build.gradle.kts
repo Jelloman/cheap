@@ -1,17 +1,22 @@
+import org.gradle.internal.impldep.org.apache.maven.model.Build
+
 plugins {
-    id("java")
+    // Apply the java-library plugin for API and implementation separation.
+    `java-library`
     id("io.freefair.lombok") version "8.14.2"
 }
 
 group = "net.netbeing"
-version = "unspecified"
+version = "0.1"
 
 repositories {
     mavenCentral()
 }
 
 dependencies {
-    implementation(project(":cheap-core"))
+    // This dependency is exported to consumers, that is to say found on their compile classpath.
+    api(project(":cheap-core"))
+
     implementation(libs.sqlite.jdbc)
     implementation(libs.postgresql)
 

@@ -54,9 +54,9 @@ public interface Catalog extends Entity
      * The URI of this catalog. Usually a URL, but need not be.
      * Cheap is not concerned with network layers, only modeling.
      *
-     * @return the location of this catalog
+     * @return the URI of this catalog, usually a URL; may be null
      */
-    @NotNull URI uri();
+    URI uri();
 
     /**
      * Returns the upstream catalog that this catalog derives its data from,
