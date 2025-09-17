@@ -15,27 +15,29 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class CheapFactoryTest
 {
+    private final CheapFactory factory = new CheapFactory();
+
     @Test
     void testCreateCatalog()
     {
         // Test default catalog creation
-        Catalog catalog = CheapFactory.createCatalog();
+        Catalog catalog = factory.createCatalog();
         assertNotNull(catalog);
         assertEquals(CatalogSpecies.SINK, catalog.species());
         assertNull(catalog.upstream());
         assertFalse(catalog.isStrict());
         
         // Test catalog with species and upstream
-        Catalog upstreamCatalog = CheapFactory.createCatalog();
-        Catalog mirrorCatalog = CheapFactory.createCatalog(CatalogSpecies.MIRROR, upstreamCatalog);
+        Catalog upstreamCatalog = factory.createCatalog();
+        Catalog mirrorCatalog = factory.createCatalog(CatalogSpecies.MIRROR, upstreamCatalog);
         assertNotNull(mirrorCatalog);
         assertEquals(CatalogSpecies.MIRROR, mirrorCatalog.species());
         assertEquals(upstreamCatalog, mirrorCatalog.upstream());
         
         // Test full catalog configuration
         UUID catalogId = UUID.randomUUID();
-        CatalogDef catalogDef = CheapFactory.createCatalogDef();
-        Catalog fullCatalog = CheapFactory.createCatalog(catalogId, CatalogSpecies.CACHE, catalogDef, upstreamCatalog, true);
+        CatalogDef catalogDef = factory.createCatalogDef();
+        Catalog fullCatalog = factory.createCatalog(catalogId, CatalogSpecies.CACHE, catalogDef, upstreamCatalog, true);
         assertNotNull(fullCatalog);
         assertEquals(catalogId, fullCatalog.globalId());
         assertEquals(CatalogSpecies.CACHE, fullCatalog.species());
@@ -48,11 +50,11 @@ class CheapFactoryTest
     void testCreateCatalogDef()
     {
         // Test default catalog definition
-        CatalogDef catalogDef = CheapFactory.createCatalogDef();
+        CatalogDef catalogDef = factory.createCatalogDef();
         assertNotNull(catalogDef);
         
         // Test copy constructor
-        CatalogDef copiedDef = CheapFactory.createCatalogDef(catalogDef);
+        CatalogDef copiedDef = factory.createCatalogDef(catalogDef);
         assertNotNull(copiedDef);
         assertNotSame(catalogDef, copiedDef);
     }
@@ -61,21 +63,21 @@ class CheapFactoryTest
     void testCreateEntity()
     {
         // Test default entity creation
-        Entity entity1 = CheapFactory.createEntity();
+        Entity entity1 = factory.createEntity();
         assertNotNull(entity1);
         assertNotNull(entity1.globalId());
         
-        Entity entity2 = CheapFactory.createEntity();
+        Entity entity2 = factory.createEntity();
         assertNotEquals(entity1.globalId(), entity2.globalId());
         
         // Test entity with specified UUID
         UUID specificId = UUID.randomUUID();
-        Entity entityWithId = CheapFactory.createEntity(specificId);
+        Entity entityWithId = factory.createEntity(specificId);
         assertNotNull(entityWithId);
         assertEquals(specificId, entityWithId.globalId());
         
         // Test lazy entity
-        Entity lazyEntity = CheapFactory.createLazyEntity();
+        Entity lazyEntity = factory.createLazyEntity();
         assertNotNull(lazyEntity);
         assertNotNull(lazyEntity.globalId());
     }
@@ -83,10 +85,10 @@ class CheapFactoryTest
     @Test
     void testCreateLocalEntity()
     {
-        Catalog catalog = CheapFactory.createCatalog();
+        Catalog catalog = factory.createCatalog();
         
         // Test local entity creation
-        LocalEntity localEntity = CheapFactory.createLocalEntity(catalog);
+        LocalEntity localEntity = factory.createLocalEntity(catalog);
         assertNotNull(localEntity);
         // Check if catalog is in the iterable
         boolean foundCatalog = false;
@@ -100,7 +102,7 @@ class CheapFactoryTest
         
         // Test local entity with specific ID
         UUID entityId = UUID.randomUUID();
-        LocalEntity localEntityWithId = CheapFactory.createLocalEntity(entityId, catalog);
+        LocalEntity localEntityWithId = factory.createLocalEntity(entityId, catalog);
         assertNotNull(localEntityWithId);
         assertEquals(entityId, localEntityWithId.globalId());
         foundCatalog = false;
@@ -113,7 +115,7 @@ class CheapFactoryTest
         assertTrue(foundCatalog);
         
         // Test multi-catalog entity
-        LocalEntity multiEntity = CheapFactory.createMultiCatalogEntity(catalog);
+        LocalEntity multiEntity = factory.createMultiCatalogEntity(catalog);
         assertNotNull(multiEntity);
         foundCatalog = false;
         for (Catalog c : multiEntity.catalogs()) {
@@ -125,7 +127,7 @@ class CheapFactoryTest
         assertTrue(foundCatalog);
         
         // Test caching entities
-        LocalEntity cachingEntity = CheapFactory.createCachingEntity(catalog);
+        LocalEntity cachingEntity = factory.createCachingEntity(catalog);
         assertNotNull(cachingEntity);
         foundCatalog = false;
         for (Catalog c : cachingEntity.catalogs()) {
@@ -136,7 +138,7 @@ class CheapFactoryTest
         }
         assertTrue(foundCatalog);
         
-        LocalEntity cachingMultiEntity = CheapFactory.createCachingMultiCatalogEntity(catalog);
+        LocalEntity cachingMultiEntity = factory.createCachingMultiCatalogEntity(catalog);
         assertNotNull(cachingMultiEntity);
         foundCatalog = false;
         for (Catalog c : cachingMultiEntity.catalogs()) {
@@ -152,14 +154,14 @@ class CheapFactoryTest
     void testCreateHierarchyDef()
     {
         // Test hierarchy definition with all parameters
-        HierarchyDef hierarchyDef = CheapFactory.createHierarchyDef("testHierarchy", HierarchyType.ENTITY_SET, true);
+        HierarchyDef hierarchyDef = factory.createHierarchyDef("testHierarchy", HierarchyType.ENTITY_SET, true);
         assertNotNull(hierarchyDef);
         assertEquals("testHierarchy", hierarchyDef.name());
         assertEquals(HierarchyType.ENTITY_SET, hierarchyDef.type());
         assertTrue(hierarchyDef.isModifiable());
         
         // Test hierarchy definition with default modifiable=true
-        HierarchyDef defaultModifiableDef = CheapFactory.createHierarchyDef("testHierarchy2", HierarchyType.ENTITY_LIST);
+        HierarchyDef defaultModifiableDef = factory.createHierarchyDef("testHierarchy2", HierarchyType.ENTITY_LIST);
         assertNotNull(defaultModifiableDef);
         assertEquals("testHierarchy2", defaultModifiableDef.name());
         assertEquals(HierarchyType.ENTITY_LIST, defaultModifiableDef.type());
@@ -169,15 +171,15 @@ class CheapFactoryTest
     @Test
     void testCreateHierarchyDir()
     {
-        HierarchyDef def = CheapFactory.createHierarchyDef("testDir", HierarchyType.HIERARCHY_DIR);
+        HierarchyDef def = factory.createHierarchyDef("testDir", HierarchyType.HIERARCHY_DIR);
         
         // Test basic hierarchy directory
-        HierarchyDir hierarchyDir = CheapFactory.createHierarchyDir(def);
+        HierarchyDir hierarchyDir = factory.createHierarchyDir(def);
         assertNotNull(hierarchyDir);
         assertEquals(def, hierarchyDir.def());
         
         // Test hierarchy directory with performance tuning
-        HierarchyDir tunedHierarchyDir = CheapFactory.createHierarchyDir(def, 64, 0.8f);
+        HierarchyDir tunedHierarchyDir = factory.createHierarchyDir(def, 64, 0.8f);
         assertNotNull(tunedHierarchyDir);
         assertEquals(def, tunedHierarchyDir.def());
     }
@@ -185,26 +187,26 @@ class CheapFactoryTest
     @Test
     void testCreateEntityHierarchies()
     {
-        HierarchyDef def = CheapFactory.createHierarchyDef("testEntityHierarchy", HierarchyType.ENTITY_SET);
+        HierarchyDef def = factory.createHierarchyDef("testEntityHierarchy", HierarchyType.ENTITY_SET);
         
         // Test entity directory hierarchy
-        EntityDirectoryHierarchy entityDir = CheapFactory.createEntityDirectoryHierarchy(def);
+        EntityDirectoryHierarchy entityDir = factory.createEntityDirectoryHierarchy(def);
         assertNotNull(entityDir);
         assertEquals(def, entityDir.def());
         
         // Test entity list hierarchy
-        EntityListHierarchy entityList = CheapFactory.createEntityListHierarchy(def);
+        EntityListHierarchy entityList = factory.createEntityListHierarchy(def);
         assertNotNull(entityList);
         assertEquals(def, entityList.def());
         
         // Test entity set hierarchy
-        EntitySetHierarchy entitySet = CheapFactory.createEntitySetHierarchy(def);
+        EntitySetHierarchy entitySet = factory.createEntitySetHierarchy(def);
         assertNotNull(entitySet);
         assertEquals(def, entitySet.def());
         
         // Test entity tree hierarchy
-        Entity rootEntity = CheapFactory.createEntity();
-        EntityTreeHierarchy entityTree = CheapFactory.createEntityTreeHierarchy(def, rootEntity);
+        Entity rootEntity = factory.createEntity();
+        EntityTreeHierarchy entityTree = factory.createEntityTreeHierarchy(def, rootEntity);
         assertNotNull(entityTree);
         assertEquals(def, entityTree.def());
         assertEquals(rootEntity, entityTree.root().value());
@@ -215,17 +217,17 @@ class CheapFactoryTest
     {
         // Create aspect definition for the hierarchy
         Map<String, PropertyDef> propertyDefs = new HashMap<>();
-        propertyDefs.put("name", CheapFactory.createPropertyDef("name", PropertyType.String));
-        AspectDef aspectDef = CheapFactory.createMutableAspectDef("testAspect", propertyDefs);
+        propertyDefs.put("name", factory.createPropertyDef("name", PropertyType.String));
+        AspectDef aspectDef = factory.createMutableAspectDef("testAspect", propertyDefs);
         
         // Test aspect map hierarchy with auto-generated hierarchy def
-        AspectMapHierarchy aspectMap = CheapFactory.createAspectMapHierarchy(aspectDef);
+        AspectMapHierarchy aspectMap = factory.createAspectMapHierarchy(aspectDef);
         assertNotNull(aspectMap);
         assertEquals(aspectDef, aspectMap.aspectDef());
         
         // Test aspect map hierarchy with custom hierarchy def
-        HierarchyDef customDef = CheapFactory.createHierarchyDef("customAspectMap", HierarchyType.ASPECT_MAP);
-        AspectMapHierarchy customAspectMap = CheapFactory.createAspectMapHierarchy(customDef, aspectDef);
+        HierarchyDef customDef = factory.createHierarchyDef("customAspectMap", HierarchyType.ASPECT_MAP);
+        AspectMapHierarchy customAspectMap = factory.createAspectMapHierarchy(customDef, aspectDef);
         assertNotNull(customAspectMap);
         assertEquals(customDef, customAspectMap.def());
         assertEquals(aspectDef, customAspectMap.aspectDef());
@@ -235,7 +237,7 @@ class CheapFactoryTest
     void testCreateAspectDef()
     {
         // Test mutable aspect definition
-        AspectDef mutableAspectDef = CheapFactory.createMutableAspectDef("testMutableAspect");
+        AspectDef mutableAspectDef = factory.createMutableAspectDef("testMutableAspect");
         assertNotNull(mutableAspectDef);
         assertEquals("testMutableAspect", mutableAspectDef.name());
         assertTrue(mutableAspectDef.canAddProperties());
@@ -243,9 +245,9 @@ class CheapFactoryTest
         
         // Test mutable aspect definition with property definitions
         Map<String, PropertyDef> propertyDefs = new HashMap<>();
-        propertyDefs.put("name", CheapFactory.createPropertyDef("name", PropertyType.String));
-        propertyDefs.put("age", CheapFactory.createPropertyDef("age", PropertyType.Integer));
-        AspectDef mutableWithProps = CheapFactory.createMutableAspectDef("testWithProps", propertyDefs);
+        propertyDefs.put("name", factory.createPropertyDef("name", PropertyType.String));
+        propertyDefs.put("age", factory.createPropertyDef("age", PropertyType.Integer));
+        AspectDef mutableWithProps = factory.createMutableAspectDef("testWithProps", propertyDefs);
         assertNotNull(mutableWithProps);
         assertEquals("testWithProps", mutableWithProps.name());
         assertEquals(2, mutableWithProps.propertyDefs().size());
@@ -253,7 +255,7 @@ class CheapFactoryTest
         assertTrue(mutableWithProps.canRemoveProperties());
         
         // Test immutable aspect definition
-        AspectDef immutableAspectDef = CheapFactory.createImmutableAspectDef("testImmutableAspect", propertyDefs);
+        AspectDef immutableAspectDef = factory.createImmutableAspectDef("testImmutableAspect", propertyDefs);
         assertNotNull(immutableAspectDef);
         assertEquals("testImmutableAspect", immutableAspectDef.name());
         assertEquals(2, immutableAspectDef.propertyDefs().size());
@@ -265,12 +267,12 @@ class CheapFactoryTest
     void testCreateAspectDefDir()
     {
         // Test aspect definition directory
-        AspectDefDir aspectDefDir = CheapFactory.createAspectDefDir();
+        AspectDefDir aspectDefDir = factory.createAspectDefDir();
         assertNotNull(aspectDefDir);
         
         // Test aspect definition directory hierarchy
-        HierarchyDef def = CheapFactory.createHierarchyDef("aspectDefDir", HierarchyType.ASPECT_DEF_DIR);
-        AspectDefDirHierarchy aspectDefDirHierarchy = CheapFactory.createAspectDefDirHierarchy(def);
+        HierarchyDef def = factory.createHierarchyDef("aspectDefDir", HierarchyType.ASPECT_DEF_DIR);
+        AspectDefDirHierarchy aspectDefDirHierarchy = factory.createAspectDefDirHierarchy(def);
         assertNotNull(aspectDefDirHierarchy);
         assertEquals(def, aspectDefDirHierarchy.def());
     }
@@ -279,7 +281,7 @@ class CheapFactoryTest
     void testCreatePropertyDef()
     {
         // Test property definition with all parameters
-        PropertyDef fullPropertyDef = CheapFactory.createPropertyDef(
+        PropertyDef fullPropertyDef = factory.createPropertyDef(
             "testProp", PropertyType.String, "default", true, true, true, true, true, false);
         assertNotNull(fullPropertyDef);
         assertEquals("testProp", fullPropertyDef.name());
@@ -293,13 +295,13 @@ class CheapFactoryTest
         assertFalse(fullPropertyDef.isMultivalued());
         
         // Test property definition with default settings
-        PropertyDef defaultPropertyDef = CheapFactory.createPropertyDef("defaultProp", PropertyType.Integer);
+        PropertyDef defaultPropertyDef = factory.createPropertyDef("defaultProp", PropertyType.Integer);
         assertNotNull(defaultPropertyDef);
         assertEquals("defaultProp", defaultPropertyDef.name());
         assertEquals(PropertyType.Integer, defaultPropertyDef.type());
         
         // Test property definition with specified accessibility
-        PropertyDef accessPropertyDef = CheapFactory.createPropertyDef(
+        PropertyDef accessPropertyDef = factory.createPropertyDef(
             "accessProp", PropertyType.Boolean, true, false, false, true, true);
         assertNotNull(accessPropertyDef);
         assertEquals("accessProp", accessPropertyDef.name());
@@ -310,7 +312,7 @@ class CheapFactoryTest
         assertTrue(accessPropertyDef.isMultivalued());
         
         // Test read-only property definition
-        PropertyDef readOnlyDef = CheapFactory.createReadOnlyPropertyDef("readOnlyProp", PropertyType.String, true, false);
+        PropertyDef readOnlyDef = factory.createReadOnlyPropertyDef("readOnlyProp", PropertyType.String, true, false);
         assertNotNull(readOnlyDef);
         assertEquals("readOnlyProp", readOnlyDef.name());
         assertTrue(readOnlyDef.isReadable());
@@ -322,10 +324,10 @@ class CheapFactoryTest
     @Test
     void testCreateProperty()
     {
-        PropertyDef propertyDef = CheapFactory.createPropertyDef("testProp", PropertyType.String);
+        PropertyDef propertyDef = factory.createPropertyDef("testProp", PropertyType.String);
         
         // Test property creation with value
-        Property property = CheapFactory.createProperty(propertyDef, "test value");
+        Property property = factory.createProperty(propertyDef, "test value");
         assertNotNull(property);
         assertEquals(propertyDef, property.def());
         assertEquals("test value", property.unsafeRead());
@@ -334,55 +336,156 @@ class CheapFactoryTest
     @Test
     void testCreateAspects()
     {
-        Entity entity = CheapFactory.createEntity();
+        Entity entity = factory.createEntity();
         Map<String, PropertyDef> propertyDefs = new HashMap<>();
-        propertyDefs.put("name", CheapFactory.createPropertyDef("name", PropertyType.String));
-        AspectDef aspectDef = CheapFactory.createMutableAspectDef("testAspect", propertyDefs);
+        propertyDefs.put("name", factory.createPropertyDef("name", PropertyType.String));
+        AspectDef aspectDef = factory.createMutableAspectDef("testAspect", propertyDefs);
         
         // Test object map aspect creation
-        Aspect objectMapAspect = CheapFactory.createObjectMapAspect(entity, aspectDef);
+        Aspect objectMapAspect = factory.createObjectMapAspect(entity, aspectDef);
         assertNotNull(objectMapAspect);
         assertEquals(entity, objectMapAspect.entity());
         assertEquals(aspectDef, objectMapAspect.def());
         
         // Test object map aspect with initial capacity
-        Aspect tunedObjectMapAspect = CheapFactory.createObjectMapAspect(entity, aspectDef, 32);
+        Aspect tunedObjectMapAspect = factory.createObjectMapAspect(entity, aspectDef, 32);
         assertNotNull(tunedObjectMapAspect);
         assertEquals(entity, tunedObjectMapAspect.entity());
         assertEquals(aspectDef, tunedObjectMapAspect.def());
         
         // Test object map aspect with full performance tuning
-        Aspect fullTunedObjectMapAspect = CheapFactory.createObjectMapAspect(entity, aspectDef, 32, 0.9f);
+        Aspect fullTunedObjectMapAspect = factory.createObjectMapAspect(entity, aspectDef, 32, 0.9f);
         assertNotNull(fullTunedObjectMapAspect);
         assertEquals(entity, fullTunedObjectMapAspect.entity());
         assertEquals(aspectDef, fullTunedObjectMapAspect.def());
         
         // Test property map aspect creation
-        Aspect propertyMapAspect = CheapFactory.createPropertyMapAspect(entity, aspectDef);
+        Aspect propertyMapAspect = factory.createPropertyMapAspect(entity, aspectDef);
         assertNotNull(propertyMapAspect);
         assertEquals(entity, propertyMapAspect.entity());
         assertEquals(aspectDef, propertyMapAspect.def());
         
         // Test property map aspect with initial capacity
-        Aspect tunedPropertyMapAspect = CheapFactory.createPropertyMapAspect(entity, aspectDef, 16);
+        Aspect tunedPropertyMapAspect = factory.createPropertyMapAspect(entity, aspectDef, 16);
         assertNotNull(tunedPropertyMapAspect);
         assertEquals(entity, tunedPropertyMapAspect.entity());
         assertEquals(aspectDef, tunedPropertyMapAspect.def());
         
         // Test property map aspect with full performance tuning
-        Aspect fullTunedPropertyMapAspect = CheapFactory.createPropertyMapAspect(entity, aspectDef, 16, 0.7f);
+        Aspect fullTunedPropertyMapAspect = factory.createPropertyMapAspect(entity, aspectDef, 16, 0.7f);
         assertNotNull(fullTunedPropertyMapAspect);
         assertEquals(entity, fullTunedPropertyMapAspect.entity());
         assertEquals(aspectDef, fullTunedPropertyMapAspect.def());
     }
 
     @Test
-    void testFactoryClassIsUtility()
+    void testFactoryConfiguration()
     {
-        // Verify that CheapFactory cannot be instantiated
-        assertThrows(Exception.class, () -> {
-            CheapFactory.class.getDeclaredConstructor().newInstance();
-        });
+        // Test default factory configuration
+        assertEquals(LocalEntityType.SINGLE_CATALOG, factory.getDefaultLocalEntityType());
+        
+        // Test factory with custom configuration
+        CheapFactory customFactory = new CheapFactory(LocalEntityType.MULTI_CATALOG);
+        assertEquals(LocalEntityType.MULTI_CATALOG, customFactory.getDefaultLocalEntityType());
+        
+        // Test null configuration
+        assertThrows(NullPointerException.class, () -> new CheapFactory(null));
+    }
+
+    @Test
+    void testLocalEntityTypeBasedCreation()
+    {
+        Catalog catalog = factory.createCatalog();
+        
+        // Test default factory creates SINGLE_CATALOG type
+        LocalEntity defaultEntity = factory.createLocalEntity(catalog);
+        assertNotNull(defaultEntity);
+        // Verify it's the correct implementation type by checking behavior
+        assertTrue(defaultEntity instanceof net.netbeing.cheap.impl.basic.LocalEntityOneCatalogImpl);
+        
+        // Test different LocalEntityType configurations
+        CheapFactory singleFactory = new CheapFactory(LocalEntityType.SINGLE_CATALOG);
+        LocalEntity singleEntity = singleFactory.createLocalEntity(catalog);
+        assertNotNull(singleEntity);
+        assertTrue(singleEntity instanceof net.netbeing.cheap.impl.basic.LocalEntityOneCatalogImpl);
+        
+        CheapFactory multiFactory = new CheapFactory(LocalEntityType.MULTI_CATALOG);
+        LocalEntity multiEntity = multiFactory.createLocalEntity(catalog);
+        assertNotNull(multiEntity);
+        assertTrue(multiEntity instanceof net.netbeing.cheap.impl.basic.LocalEntityMultiCatalogImpl);
+        
+        CheapFactory cachingSingleFactory = new CheapFactory(LocalEntityType.CACHING_SINGLE_CATALOG);
+        LocalEntity cachingSingleEntity = cachingSingleFactory.createLocalEntity(catalog);
+        assertNotNull(cachingSingleEntity);
+        assertTrue(cachingSingleEntity instanceof net.netbeing.cheap.impl.basic.CachingEntityOneCatalogImpl);
+        
+        CheapFactory cachingMultiFactory = new CheapFactory(LocalEntityType.CACHING_MULTI_CATALOG);
+        LocalEntity cachingMultiEntity = cachingMultiFactory.createLocalEntity(catalog);
+        assertNotNull(cachingMultiEntity);
+        assertTrue(cachingMultiEntity instanceof net.netbeing.cheap.impl.basic.CachingEntityMultiCatalogImpl);
+    }
+
+    @Test
+    void testLocalEntityWithSpecificType()
+    {
+        Catalog catalog = factory.createCatalog();
+        
+        // Test creating entities with specific types
+        LocalEntity singleEntity = factory.createLocalEntity(LocalEntityType.SINGLE_CATALOG, catalog);
+        assertNotNull(singleEntity);
+        assertTrue(singleEntity instanceof net.netbeing.cheap.impl.basic.LocalEntityOneCatalogImpl);
+        
+        LocalEntity multiEntity = factory.createLocalEntity(LocalEntityType.MULTI_CATALOG, catalog);
+        assertNotNull(multiEntity);
+        assertTrue(multiEntity instanceof net.netbeing.cheap.impl.basic.LocalEntityMultiCatalogImpl);
+        
+        // Test with globalId for SINGLE_CATALOG (should work)
+        UUID entityId = UUID.randomUUID();
+        LocalEntity singleWithId = factory.createLocalEntity(LocalEntityType.SINGLE_CATALOG, entityId, catalog);
+        assertNotNull(singleWithId);
+        assertEquals(entityId, singleWithId.globalId());
+        
+        // Test with globalId for MULTI_CATALOG (should throw exception)
+        assertThrows(UnsupportedOperationException.class, () -> 
+            factory.createLocalEntity(LocalEntityType.MULTI_CATALOG, entityId, catalog));
+        
+        // Test with globalId for CACHING types (should throw exceptions)
+        assertThrows(UnsupportedOperationException.class, () -> 
+            factory.createLocalEntity(LocalEntityType.CACHING_SINGLE_CATALOG, entityId, catalog));
+        
+        assertThrows(UnsupportedOperationException.class, () -> 
+            factory.createLocalEntity(LocalEntityType.CACHING_MULTI_CATALOG, entityId, catalog));
+    }
+
+    @Test
+    void testExplicitLocalEntityCreationMethods()
+    {
+        Catalog catalog = factory.createCatalog();
+        UUID entityId = UUID.randomUUID();
+        
+        // Test explicit single catalog entity creation
+        LocalEntity singleEntity = factory.createSingleCatalogEntity(catalog);
+        assertNotNull(singleEntity);
+        assertTrue(singleEntity instanceof net.netbeing.cheap.impl.basic.LocalEntityOneCatalogImpl);
+        
+        LocalEntity singleEntityWithId = factory.createSingleCatalogEntity(entityId, catalog);
+        assertNotNull(singleEntityWithId);
+        assertEquals(entityId, singleEntityWithId.globalId());
+        assertTrue(singleEntityWithId instanceof net.netbeing.cheap.impl.basic.LocalEntityOneCatalogImpl);
+        
+        // Test explicit multi-catalog entity creation
+        LocalEntity multiEntity = factory.createMultiCatalogEntity(catalog);
+        assertNotNull(multiEntity);
+        assertTrue(multiEntity instanceof net.netbeing.cheap.impl.basic.LocalEntityMultiCatalogImpl);
+        
+        // Test explicit caching entity creation
+        LocalEntity cachingEntity = factory.createCachingEntity(catalog);
+        assertNotNull(cachingEntity);
+        assertTrue(cachingEntity instanceof net.netbeing.cheap.impl.basic.CachingEntityOneCatalogImpl);
+        
+        LocalEntity cachingMultiEntity = factory.createCachingMultiCatalogEntity(catalog);
+        assertNotNull(cachingMultiEntity);
+        assertTrue(cachingMultiEntity instanceof net.netbeing.cheap.impl.basic.CachingEntityMultiCatalogImpl);
     }
 
     @Test
@@ -390,15 +493,15 @@ class CheapFactoryTest
     {
         // Test that null parameters throw appropriate exceptions
         assertThrows(NullPointerException.class, () -> 
-            CheapFactory.createCatalog(null, null));
+            factory.createCatalog(null, null));
         
         assertThrows(NullPointerException.class, () -> 
-            CheapFactory.createEntity((UUID) null));
+            factory.createEntity((UUID) null));
         
         assertThrows(NullPointerException.class, () -> 
-            CheapFactory.createHierarchyDef(null, HierarchyType.ENTITY_SET));
+            factory.createHierarchyDef(null, HierarchyType.ENTITY_SET));
         
         assertThrows(NullPointerException.class, () -> 
-            CheapFactory.createPropertyDef(null, PropertyType.String));
+            factory.createPropertyDef(null, PropertyType.String));
     }
 }
