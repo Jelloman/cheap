@@ -1,5 +1,6 @@
 package net.netbeing.cheap.json;
 
+import com.google.common.collect.ImmutableMap;
 import net.netbeing.cheap.impl.basic.*;
 import net.netbeing.cheap.model.*;
 import org.junit.jupiter.api.Test;
@@ -231,7 +232,7 @@ public class CheapJsonRawSerializerTest
         PropertyDef prop1 = new PropertyDefImpl("name", PropertyType.String, null, false, true, true, false, false, false);
         PropertyDef prop2 = new PropertyDefImpl("age", PropertyType.Integer, null, false, true, true, true, false, false);
         
-        Map<String, PropertyDef> propDefMap = Map.of("name", prop1, "age", prop2);
+        Map<String, PropertyDef> propDefMap = ImmutableMap.of("age", prop2, "name", prop1);
         AspectDef aspectDef = new ImmutableAspectDefImpl("person", propDefMap);
         
         StringBuilder sb = new StringBuilder();
