@@ -19,6 +19,7 @@
       <w>macaddr</w>
       <w>numrange</w>
       <w>postgre</w>
+      <w>propertydef</w>
       <w>regclass</w>
       <w>regconfig</w>
       <w>regdictionary</w>

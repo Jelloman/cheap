@@ -6,32 +6,226 @@
   "type": "object",
   "properties": {
     "def": {
-      "$ref": "hierarchydef.schema.json",
-      "description": "The hierarchy definition that describes this hierarchy's characteristics"
+      "description": "Definition of the hierarchy",
+      "$ref": "hierarchydef.schema.json"
     }
   },
   "required": ["def"],
+  "$comment": "This is really 'oneOf', but the type field is a different const in each, so it effectively is.",
   "anyOf": [
     {
-      "$ref": "aspectdefdirhierarchy.schema.json"
+      "$ref": "#/$defs/aspectDefDirHierarchy"
     },
     {
-      "$ref": "aspectmaphierarchy.schema.json"
+      "$ref": "#/$defs/aspectMapHierarchy"
     },
     {
-      "$ref": "entitydirectoryhierarchy.schema.json"
+      "$ref": "#/$defs/entityDirectoryHierarchy"
     },
     {
-      "$ref": "entitylisthierarchy.schema.json"
+      "$ref": "#/$defs/entityListHierarchy"
     },
     {
-      "$ref": "entitysethierarchy.schema.json"
+      "$ref": "#/$defs/entitySetHierarchy"
     },
     {
-      "$ref": "entitytreehierarchy.schema.json"
+      "$ref": "#/$defs/entityTreeHierarchy"
     },
     {
-      "$ref": "hierarchydir.schema.json"
+      "$ref": "#/$defs/hierarchyDir"
     }
-  ]
+  ],
+  "$defs": {
+    "aspectDefDirHierarchy": {
+      "title": "AspectDefDirHierarchy",
+      "description": "A directory of aspect definitions by name",
+      "type": "object",
+      "properties": {
+        "def": {
+          "type": "object",
+          "properties": {
+            "type": {
+              "const": "aspect_def_dir"
+            }
+          },
+          "required": ["type"]
+        },
+        "aspectDefs": {
+          "description": "A directory of aspect definitions by name",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "aspectdef.schema.json"
+          }
+        }
+      },
+      "required": ["aspectDefs"]
+    },
+    "aspectMapHierarchy": {
+      "title": "AspectMapHierarchy",
+      "description": "A hierarchy that maps entity UUIDs to their aspects of a specific type (aspect_map type)",
+      "type": "object",
+      "properties": {
+        "def": {
+          "type": "object",
+          "properties": {
+            "type": {
+              "const": "aspect_map"
+            }
+          },
+          "required": ["type"]
+        },
+        "aspectDefName": {
+          "type": "string",
+          "description": "The name of the aspect definition for all aspects in this hierarchy"
+        },
+        "aspects": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "aspect.schema.json"
+          },
+          "description": "Map of entity UUID to aspect instance"
+        }
+      },
+      "required": ["aspectDefName", "aspects"]
+    },
+    "entityDirectoryHierarchy": {
+      "title": "EntityDirectoryHierarchy",
+      "description": "A string-to-entity UUID mapping (entity_dir type)",
+      "type": "object",
+      "properties": {
+        "def": {
+          "type": "object",
+          "properties": {
+            "type": {
+              "const": "entity_dir"
+            }
+          },
+          "required": ["type"]
+        },
+        "entities": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "description": "Map of string names to entity UUIDs"
+        }
+      },
+      "required": ["entities"]
+    },
+    "entityListHierarchy": {
+      "title": "EntityListHierarchy",
+      "description": "An ordered list containing entity UUIDs (entity_list type)",
+      "type": "object",
+      "properties": {
+        "def": {
+          "type": "object",
+          "properties": {
+            "type": {
+              "const": "entity_list"
+            }
+          },
+          "required": ["type"]
+        },
+        "entities": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "description": "Ordered list of entity UUIDs, duplicates allowed"
+        }
+      },
+      "required": ["entities"]
+    },
+    "entitySetHierarchy": {
+      "title": "EntitySetHierarchy",
+      "description": "An unordered set containing unique entity UUIDs (entity_set type)",
+      "type": "object",
+      "properties": {
+        "def": {
+          "type": "object",
+          "properties": {
+            "type": {
+              "const": "entity_set"
+            }
+          },
+          "required": ["type"]
+        },
+        "entities": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "uniqueItems": true,
+          "description": "Unordered set of unique entity UUIDs"
+        }
+      },
+      "required": ["entities"]
+    },
+    "entityTreeHierarchy": {
+      "title": "EntityTreeHierarchy",
+      "description": "A tree structure with named nodes where leaves contain entity UUIDs (entity_tree type)",
+      "type": "object",
+      "properties": {
+        "def": {
+          "type": "object",
+          "properties": {
+            "type": {
+              "const": "entity_tree"
+            }
+          },
+          "required": ["type"]
+        },
+        "root": {
+          "$ref": "#/$defs/treeNode",
+          "description": "The root node of the tree hierarchy"
+        }
+      },
+      "required": ["root"]
+    },
+    "hierarchyDir": {
+      "title": "HierarchyDir",
+      "description": "A directory hierarchy that maps string names to other hierarchy names (hierarchy_dir type)",
+      "$comment": "NOTE: The first hierarchyDir in a Catalog is the complete set of hierarchies and is implicit in the catalog JSON schema. Any additional hierarchyDirs are represented here as string-to-string mappings, with the value being the name used in the definitive hierarchyDir (AKA hierarchy 0)",
+      "type": "object",
+      "properties": {
+        "def": {
+          "type": "object",
+          "properties": {
+            "type": {
+              "const": "hierarchy_dir"
+            }
+          },
+          "required": ["type"]
+        },
+        "hierarchies": {
+          "type": "object",
+          "description": "Map of arbitrary names to the 'official' hierarchy name used in hierarchy 0",
+          "additionalProperties": { "type": "string" }
+        }
+      },
+      "required": ["hierarchies"]
+    },
+    "treeNode": {
+      "type": "object",
+      "properties": {
+        "entityId": {
+          "type": "string",
+          "format": "uuid",
+          "description": "The entity UUID associated with this node, if any"
+        },
+        "children": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/treeNode"
+          },
+          "description": "Child nodes keyed by name"
+        }
+      },
+      "$comment": "Leaf nodes MUST have an entity ID, non-leaf nodes optionally can have an entity ID",
+      "minProperties": 1
+    }
+  }
 }
