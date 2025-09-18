@@ -59,6 +59,16 @@ public class CheapJsonRawSerializer
     }
     
     /**
+     * Converts a Catalog to JSON and returns as a String.
+     */
+    public static String catalogToJson(Catalog catalog)
+    {
+        StringBuilder sb = new StringBuilder();
+        catalogToJson(catalog, sb, false, 0);
+        return sb.toString();
+    }
+    
+    /**
      * Converts a Catalog to JSON with optional pretty printing.
      */
     public static void catalogToJson(Catalog catalog, StringBuilder sb, boolean prettyPrint, int indent)
@@ -151,6 +161,16 @@ public class CheapJsonRawSerializer
     }
     
     /**
+     * Converts a CatalogDef to JSON and returns as a String.
+     */
+    public static String catalogDefToJson(CatalogDef catalogDef)
+    {
+        StringBuilder sb = new StringBuilder();
+        catalogDefToJson(catalogDef, sb, false, 0);
+        return sb.toString();
+    }
+    
+    /**
      * Converts a CatalogDef to JSON with optional pretty printing.
      */
     public static void catalogDefToJson(CatalogDef catalogDef, StringBuilder sb, boolean prettyPrint, int indent)
@@ -193,6 +213,16 @@ public class CheapJsonRawSerializer
     }
     
     /**
+     * Converts an AspectDef to JSON and returns as a String.
+     */
+    public static String aspectDefToJson(AspectDef aspectDef)
+    {
+        StringBuilder sb = new StringBuilder();
+        aspectDefToJson(aspectDef, sb, false, 0);
+        return sb.toString();
+    }
+    
+    /**
      * Converts an AspectDef to JSON with optional pretty printing.
      */
     public static void aspectDefToJson(AspectDef aspectDef, StringBuilder sb, boolean prettyPrint, int indent)
@@ -231,6 +261,16 @@ public class CheapJsonRawSerializer
     public static void propertyDefToJson(PropertyDef propertyDef, StringBuilder sb)
     {
         propertyDefToJson(propertyDef, sb, false, 0);
+    }
+    
+    /**
+     * Converts a PropertyDef to JSON and returns as a String.
+     */
+    public static String propertyDefToJson(PropertyDef propertyDef)
+    {
+        StringBuilder sb = new StringBuilder();
+        propertyDefToJson(propertyDef, sb, false, 0);
+        return sb.toString();
     }
     
     /**
@@ -278,6 +318,16 @@ public class CheapJsonRawSerializer
     }
     
     /**
+     * Converts a HierarchyDef to JSON and returns as a String.
+     */
+    public static String hierarchyDefToJson(HierarchyDef hierarchyDef)
+    {
+        StringBuilder sb = new StringBuilder();
+        hierarchyDefToJson(hierarchyDef, sb, false, 0);
+        return sb.toString();
+    }
+    
+    /**
      * Converts a HierarchyDef to JSON with optional pretty printing.
      */
     public static void hierarchyDefToJson(HierarchyDef hierarchyDef, StringBuilder sb, boolean prettyPrint, int indent)
@@ -299,6 +349,16 @@ public class CheapJsonRawSerializer
     public static void hierarchyToJson(Hierarchy hierarchy, StringBuilder sb)
     {
         hierarchyToJson(hierarchy, sb, false, 0);
+    }
+    
+    /**
+     * Converts a Hierarchy to JSON and returns as a String.
+     */
+    public static String hierarchyToJson(Hierarchy hierarchy)
+    {
+        StringBuilder sb = new StringBuilder();
+        hierarchyToJson(hierarchy, sb, false, 0);
+        return sb.toString();
     }
     
     /**
@@ -326,6 +386,16 @@ public class CheapJsonRawSerializer
     public static void aspectToJson(Aspect aspect, StringBuilder sb)
     {
         aspectToJson(aspect, sb, false, 0);
+    }
+    
+    /**
+     * Converts an Aspect to JSON and returns as a String.
+     */
+    public static String aspectToJson(Aspect aspect)
+    {
+        StringBuilder sb = new StringBuilder();
+        aspectToJson(aspect, sb, false, 0);
+        return sb.toString();
     }
     
     /**
@@ -365,6 +435,16 @@ public class CheapJsonRawSerializer
     }
     
     /**
+     * Converts a Property to JSON and returns as a String.
+     */
+    public static String propertyToJson(Property property)
+    {
+        StringBuilder sb = new StringBuilder();
+        propertyToJson(property, sb, false, 0);
+        return sb.toString();
+    }
+    
+    /**
      * Converts a Property to JSON with optional pretty printing.
      */
     public static void propertyToJson(Property property, StringBuilder sb, boolean prettyPrint, int indent)
@@ -389,6 +469,16 @@ public class CheapJsonRawSerializer
     public static void aspectDefDirHierarchyToJson(AspectDefDirHierarchy hierarchy, StringBuilder sb)
     {
         aspectDefDirHierarchyToJson(hierarchy, sb, false, 0);
+    }
+    
+    /**
+     * Converts an AspectDefDirHierarchy to JSON and returns as a String.
+     */
+    public static String aspectDefDirHierarchyToJson(AspectDefDirHierarchy hierarchy)
+    {
+        StringBuilder sb = new StringBuilder();
+        aspectDefDirHierarchyToJson(hierarchy, sb, false, 0);
+        return sb.toString();
     }
     
     /**
@@ -421,6 +511,16 @@ public class CheapJsonRawSerializer
     public static void aspectMapHierarchyToJson(AspectMapHierarchy hierarchy, StringBuilder sb)
     {
         aspectMapHierarchyToJson(hierarchy, sb, false, 0);
+    }
+    
+    /**
+     * Converts an AspectMapHierarchy to JSON and returns as a String.
+     */
+    public static String aspectMapHierarchyToJson(AspectMapHierarchy hierarchy)
+    {
+        StringBuilder sb = new StringBuilder();
+        aspectMapHierarchyToJson(hierarchy, sb, false, 0);
+        return sb.toString();
     }
     
     /**
@@ -458,6 +558,16 @@ public class CheapJsonRawSerializer
     }
     
     /**
+     * Converts an EntityDirectoryHierarchy to JSON and returns as a String.
+     */
+    public static String entityDirectoryHierarchyToJson(EntityDirectoryHierarchy hierarchy)
+    {
+        StringBuilder sb = new StringBuilder();
+        entityDirectoryHierarchyToJson(hierarchy, sb, false, 0);
+        return sb.toString();
+    }
+    
+    /**
      * Converts an EntityDirectoryHierarchy to JSON with optional pretty printing.
      */
     public static void entityDirectoryHierarchyToJson(EntityDirectoryHierarchy hierarchy, StringBuilder sb, boolean prettyPrint, int indent)
@@ -487,6 +597,16 @@ public class CheapJsonRawSerializer
     public static void entityListHierarchyToJson(EntityListHierarchy hierarchy, StringBuilder sb)
     {
         entityListHierarchyToJson(hierarchy, sb, false, 0);
+    }
+    
+    /**
+     * Converts an EntityListHierarchy to JSON and returns as a String.
+     */
+    public static String entityListHierarchyToJson(EntityListHierarchy hierarchy)
+    {
+        StringBuilder sb = new StringBuilder();
+        entityListHierarchyToJson(hierarchy, sb, false, 0);
+        return sb.toString();
     }
     
     /**
@@ -521,6 +641,16 @@ public class CheapJsonRawSerializer
     }
     
     /**
+     * Converts an EntitySetHierarchy to JSON and returns as a String.
+     */
+    public static String entitySetHierarchyToJson(EntitySetHierarchy hierarchy)
+    {
+        StringBuilder sb = new StringBuilder();
+        entitySetHierarchyToJson(hierarchy, sb, false, 0);
+        return sb.toString();
+    }
+    
+    /**
      * Converts an EntitySetHierarchy to JSON with optional pretty printing.
      */
     public static void entitySetHierarchyToJson(EntitySetHierarchy hierarchy, StringBuilder sb, boolean prettyPrint, int indent)
@@ -552,6 +682,16 @@ public class CheapJsonRawSerializer
     }
     
     /**
+     * Converts an EntityTreeHierarchy to JSON and returns as a String.
+     */
+    public static String entityTreeHierarchyToJson(EntityTreeHierarchy hierarchy)
+    {
+        StringBuilder sb = new StringBuilder();
+        entityTreeHierarchyToJson(hierarchy, sb, false, 0);
+        return sb.toString();
+    }
+    
+    /**
      * Converts an EntityTreeHierarchy to JSON with optional pretty printing.
      */
     public static void entityTreeHierarchyToJson(EntityTreeHierarchy hierarchy, StringBuilder sb, boolean prettyPrint, int indent)
@@ -572,6 +712,16 @@ public class CheapJsonRawSerializer
     public static void hierarchyDirToJson(HierarchyDir hierarchy, StringBuilder sb)
     {
         hierarchyDirToJson(hierarchy, sb, false, 0);
+    }
+    
+    /**
+     * Converts a HierarchyDir to JSON and returns as a String.
+     */
+    public static String hierarchyDirToJson(HierarchyDir hierarchy)
+    {
+        StringBuilder sb = new StringBuilder();
+        hierarchyDirToJson(hierarchy, sb, false, 0);
+        return sb.toString();
     }
     
     /**
@@ -604,6 +754,16 @@ public class CheapJsonRawSerializer
     public static void treeNodeToJson(EntityTreeHierarchy.Node node, StringBuilder sb)
     {
         treeNodeToJson(node, sb, false, 0);
+    }
+    
+    /**
+     * Converts a TreeNode to JSON and returns as a String.
+     */
+    public static String treeNodeToJson(EntityTreeHierarchy.Node node)
+    {
+        StringBuilder sb = new StringBuilder();
+        treeNodeToJson(node, sb, false, 0);
+        return sb.toString();
     }
     
     /**
@@ -653,28 +813,26 @@ public class CheapJsonRawSerializer
      */
     private static void valueToJson(Object value, StringBuilder sb, boolean prettyPrint, int indent)
     {
-        if (value == null) {
-            sb.append("null");
-        } else if (value instanceof String) {
-            sb.append("\"").append(escapeJson((String) value)).append("\"");
-        } else if (value instanceof Number) {
-            sb.append(value.toString());
-        } else if (value instanceof Boolean) {
-            sb.append(value.toString());
-        } else if (value instanceof Collection<?> collection) {
-            sb.append("[");
-            boolean first = true;
-            for (Object item : collection) {
-                if (!first) sb.append(",");
-                appendNewlineAndIndent(sb, prettyPrint, indent + 1);
-                valueToJson(item, sb, prettyPrint, indent + 1);
-                first = false;
+        switch (value) {
+            case null -> sb.append("null");
+            case String s -> sb.append("\"").append(escapeJson(s)).append("\"");
+            case Number number -> sb.append(value.toString());
+            case Boolean b -> sb.append(value.toString());
+            case Collection<?> collection -> {
+                sb.append("[");
+                boolean first = true;
+                for (Object item : collection) {
+                    if (!first) sb.append(",");
+                    appendNewlineAndIndent(sb, prettyPrint, indent + 1);
+                    valueToJson(item, sb, prettyPrint, indent + 1);
+                    first = false;
+                }
+                appendNewlineAndIndent(sb, prettyPrint, indent);
+                sb.append("]");
             }
-            appendNewlineAndIndent(sb, prettyPrint, indent);
-            sb.append("]");
-        } else {
-            // Fallback for other types - convert to string
-            sb.append("\"").append(escapeJson(value.toString())).append("\"");
+            default ->
+                // Fallback for other types - convert to string
+                sb.append("\"").append(escapeJson(value.toString())).append("\"");
         }
     }
     
@@ -714,9 +872,7 @@ public class CheapJsonRawSerializer
     {
         if (prettyPrint) {
             sb.append("\n");
-            for (int i = 0; i < indent * 2; i++) {
-                sb.append(" ");
-            }
+            sb.append(" ".repeat(Math.max(0, indent * 2)));
         }
     }
 }

@@ -1,0 +1,48 @@
+{
+  "globalId" : "550e8400-e29b-41d4-a716-444444444444",
+  "uri" : null,
+  "species" : "sink",
+  "strict" : false,
+  "def" : {
+    "aspectDefs" : { },
+    "hierarchyDefs" : [ {
+      "name" : "hierarchies",
+      "type" : "hl",
+      "isModifiable" : true
+    }, {
+      "name" : "aspectage",
+      "type" : "ad",
+      "isModifiable" : true
+    }, {
+      "name" : "taskQueue",
+      "type" : "el",
+      "isModifiable" : true
+    } ]
+  },
+  "hierarchies" : {
+    "hierarchies" : {
+      "def" : {
+        "type" : "hierarchy_dir"
+      },
+      "hierarchies" : {
+        "hierarchies" : "hierarchies",
+        "aspectage" : "aspectage",
+        "taskQueue" : "taskQueue"
+      }
+    },
+    "aspectage" : {
+      "def" : {
+        "type" : "aspect_def_dir"
+      },
+      "aspectDefs" : { }
+    },
+    "taskQueue" : {
+      "def" : {
+        "type" : "entity_list"
+      },
+      "entities" : [ "550e8400-e29b-41d4-a716-446655440000", "550e8400-e29b-41d4-a716-446655440001" ]
+    }
+  },
+  "aspectDefs" : { },
+  "aspects" : { }
+}

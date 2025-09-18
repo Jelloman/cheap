@@ -1,0 +1,55 @@
+{
+  "globalId" : "550e8400-e29b-41d4-a716-444444444444",
+  "uri" : null,
+  "species" : "sink",
+  "strict" : false,
+  "def" : {
+    "aspectDefs" : { },
+    "hierarchyDefs" : [ {
+      "name" : "fileSystem",
+      "type" : "et",
+      "isModifiable" : true
+    }, {
+      "name" : "hierarchies",
+      "type" : "hl",
+      "isModifiable" : true
+    }, {
+      "name" : "aspectage",
+      "type" : "ad",
+      "isModifiable" : true
+    } ]
+  },
+  "hierarchies" : {
+    "fileSystem" : {
+      "def" : {
+        "type" : "entity_tree"
+      },
+      "root" : {
+        "entityId" : "550e8400-e29b-41d4-a716-446655440000",
+        "children" : {
+          "documents" : {
+            "entityId" : "550e8400-e29b-41d4-a716-446655440001"
+          }
+        }
+      }
+    },
+    "hierarchies" : {
+      "def" : {
+        "type" : "hierarchy_dir"
+      },
+      "hierarchies" : {
+        "fileSystem" : "fileSystem",
+        "hierarchies" : "hierarchies",
+        "aspectage" : "aspectage"
+      }
+    },
+    "aspectage" : {
+      "def" : {
+        "type" : "aspect_def_dir"
+      },
+      "aspectDefs" : { }
+    }
+  },
+  "aspectDefs" : { },
+  "aspects" : { }
+}

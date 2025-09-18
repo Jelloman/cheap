@@ -11,6 +11,7 @@ tempus-fugit = "1.1"
 embedded-postgres = "2.1.1"
 flyway = "11.12.0"
 flyway-pg = "11.12.0"
+jackson = "2.18.2"
 
 
 [libraries]
@@ -25,3 +26,5 @@ tempus-fugit = { module = "com.google.code.tempus-fugit:tempus-fugit", version.r
 embedded-postgres = { module = "io.zonky.test:embedded-postgres", version.ref = "embedded-postgres" }
 flyway = { module = "org.flywaydb:flyway-core", version.ref = "flyway"}
 flyway-pg = { module = "org.flywaydb:flyway-database-postgresql", version.ref = "flyway-pg"}
+jackson-core = { module = "com.fasterxml.jackson.core:jackson-core", version.ref = "jackson" }
+jackson-databind = { module = "com.fasterxml.jackson.core:jackson-databind", version.ref = "jackson" }
