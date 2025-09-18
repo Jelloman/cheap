@@ -99,4 +99,12 @@ net.netbeing.cheap/
 - Lombok managed via Gradle plugin rather than direct dependencies
 - Dependencies managed through Gradle version catalogs (`libs.*`)
 - Null safety enforced with JetBrains annotations
+
+## Unit testing
 - Comprehensive test coverage with JUnit Jupiter
+- Do not use mocks unless explicitly instructed
+- When constructing collections within a unit test, use Guava Immutable* collections whenever possible. Prefer ImmutableMap.of() to Map.of(), and ImmutableList.of() to List.of().
+- When constructing Cheap elements, prefer constructors that pass in a fixed UUID for global ID.
+- When testing JSON output, prefer testing the entire output
+- Whenever testing expected String values, if an inline String would be longer than 10 lines, put it in a file in the test/resources directory instead.
+- 
