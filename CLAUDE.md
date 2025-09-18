@@ -23,6 +23,7 @@ This is a multi-module Gradle-based Java project using Java 24 with modules.
 java/
 ├── cheap-core/          # Core library module
 ├── cheap-db/            # Database module (depends on cheap-core)
+├── cheap-json/          # JSON module (depends on cheap-core)
 ├── settings.gradle.kts  # Multi-module build configuration
 └── gradle/
     └── libs.versions.toml # Version catalog for dependencies
@@ -43,6 +44,7 @@ cd java && ./gradlew clean build
 # Build specific module
 cd java && ./gradlew :cheap-core:build
 cd java && ./gradlew :cheap-db:build
+cd java && ./gradlew :cheap-json:build
 ```
 
 ## Architecture
@@ -51,19 +53,27 @@ cd java && ./gradlew :cheap-db:build
 - **Root Project**: `cheap`
 - **Core Module**: `cheap-core` - Main library containing CHEAP model implementation
 - **Database Module**: `cheap-db` - Database-related functionality (depends on cheap-core)
+- **JSON Module**: `cheap-json` - JSON serialization and schemas (depends on cheap-core)
 - **Main Package**: `net.netbeing.cheap`
 - **Exported Packages**:
   - `net.netbeing.cheap.model` - Core interfaces and data model
-  - `net.netbeing.cheap.impl.basic` - Basic implementations 
+  - `net.netbeing.cheap.impl.basic` - Basic implementations
   - `net.netbeing.cheap.impl.reflect` - Reflection-based implementations
   - `net.netbeing.cheap.util` - Utility classes
+  - `net.netbeing.cheap.db` - Database persistence functionality
+  - `net.netbeing.cheap.json` - JSON serialization utilities
 
 ### Key Dependencies
-- **Guava** - Core utilities
-- **Apache Commons Math3** - Mathematical operations (API dependency)
+- **Guava** - Core utilities (used across all modules)
+- **Apache Commons Math3** - Mathematical operations (API dependency in cheap-core)
 - **Lombok** - Code generation (via Gradle plugin `io.freefair.lombok`)
-- **Jetbrains Annotations** - Null safety annotations
+- **JetBrains Annotations** - Null safety annotations
 - **JUnit Jupiter** - Testing framework
+- **SQLite JDBC** - SQLite database driver (cheap-db module)
+- **PostgreSQL JDBC** - PostgreSQL database driver (cheap-db module)
+- **Jackson Core/Databind** - JSON processing (cheap-json module)
+- **Flyway** - Database migration tool (cheap-db tests)
+- **Embedded Postgres** - In-memory PostgreSQL for testing (cheap-db tests)
 
 ### Package Organization
 ```
@@ -72,7 +82,11 @@ net.netbeing.cheap/
 ├── impl/
 │   ├── basic/       # Basic implementations (~30 classes)
 │   └── reflect/     # Reflection-based implementations
-└── util/            # Utility classes
+├── util/            # Utility classes
+│   └── reflect/     # Reflection utility classes
+├── db/              # Database persistence functionality (cheap-db module)
+└── json/            # JSON serialization and schemas (cheap-json module)
+    └── jackson/     # Jackson-specific implementations
 ```
 
 ### Core Concepts
