@@ -50,6 +50,15 @@ public class CatalogImpl extends LocalEntityOneCatalogImpl implements Catalog
     }
 
     /**
+     * Creates a new non-strict SINK catalog with a wrapper CatalogDef that
+     * fully delegates to this catalog.
+     */
+    public CatalogImpl(UUID globalId)
+    {
+        this(globalId, CatalogSpecies.SINK, null, null, false);
+    }
+
+    /**
      * Creates a new non-strict catalog with the specified species and upstream,
      * and a wrapper CatalogDef that fully delegates to this catalog.
      *

@@ -4,6 +4,7 @@ import net.netbeing.cheap.model.*;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
@@ -28,7 +29,7 @@ public class AspectObjectMapImpl extends AspectBaseImpl
     public AspectObjectMapImpl(Entity entity, @NotNull AspectDef def)
     {
         super(entity, def);
-        this.props = new HashMap<>();
+        this.props = new LinkedHashMap<>();
     }
 
     /**
@@ -41,7 +42,7 @@ public class AspectObjectMapImpl extends AspectBaseImpl
     public AspectObjectMapImpl(Entity entity, @NotNull AspectDef def, int initialCapacity)
     {
         super(entity, def);
-        this.props = new HashMap<>(initialCapacity);
+        this.props = new LinkedHashMap<>(initialCapacity);
     }
 
     /**
@@ -55,7 +56,7 @@ public class AspectObjectMapImpl extends AspectBaseImpl
     public AspectObjectMapImpl(Entity entity, @NotNull AspectDef def, int initialCapacity, float loadFactor)
     {
         super(entity, def);
-        this.props = new HashMap<>(initialCapacity, loadFactor);
+        this.props = new LinkedHashMap<>(initialCapacity, loadFactor);
     }
 
     /**
