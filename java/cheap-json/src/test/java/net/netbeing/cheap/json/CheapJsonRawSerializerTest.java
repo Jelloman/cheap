@@ -84,7 +84,7 @@ public class CheapJsonRawSerializerTest
         Entity entity = new EntityImpl(UUID.fromString("550e8400-e29b-41d4-a716-446655440000"));
         PropertyDef prop1 = new PropertyDefImpl("name", PropertyType.String, null, false, true, true, false, false, false);
         
-        Map<String, PropertyDef> propDefMap = Map.of("name", prop1);
+        Map<String, PropertyDef> propDefMap = ImmutableMap.of("name", prop1);
         AspectDef aspectDef = new ImmutableAspectDefImpl("testAspect", propDefMap);
         
         AspectObjectMapImpl aspect = new AspectObjectMapImpl(entity, aspectDef);
@@ -246,7 +246,7 @@ public class CheapJsonRawSerializerTest
     void testCatalogDefToJson() throws IOException
     {
         PropertyDef prop = new PropertyDefImpl("name", PropertyType.String, null, false, true, true, false, false, false);
-        Map<String, PropertyDef> propDefMap = Map.of("name", prop);
+        Map<String, PropertyDef> propDefMap = ImmutableMap.of("name", prop);
         AspectDef aspectDef = new ImmutableAspectDefImpl("person", propDefMap);
         
         HierarchyDef hierarchyDef = new HierarchyDefImpl("entities", HierarchyType.ENTITY_SET, true);
@@ -297,12 +297,12 @@ public class CheapJsonRawSerializerTest
         // Create AspectDefs for AspectMapHierarchies
         PropertyDef nameProp = new PropertyDefImpl("name", PropertyType.String, null, false, true, true, false, false, false);
         PropertyDef ageProp = new PropertyDefImpl("age", PropertyType.Integer, null, false, true, true, true, false, false);
-        Map<String, PropertyDef> personProps = Map.of("name", nameProp, "age", ageProp);
+        Map<String, PropertyDef> personProps = ImmutableMap.of("name", nameProp, "age", ageProp);
         AspectDef personAspectDef = new ImmutableAspectDefImpl("person", personProps);
         
         PropertyDef titleProp = new PropertyDefImpl("title", PropertyType.String, null, false, true, true, false, false, false);
         PropertyDef descProp = new PropertyDefImpl("description", PropertyType.String, null, false, true, true, true, false, false);
-        Map<String, PropertyDef> docProps = Map.of("title", titleProp, "description", descProp);
+        Map<String, PropertyDef> docProps = ImmutableMap.of("title", titleProp, "description", descProp);
         AspectDef docAspectDef = new ImmutableAspectDefImpl("document", docProps);
         
         // Add AspectDefs to catalog
@@ -398,10 +398,6 @@ public class CheapJsonRawSerializerTest
         // Verify aspects are properly serialized
         assertTrue(result.contains("\"aspectDefName\":\"person\""), "Should contain person aspect");
         assertTrue(result.contains("\"aspectDefName\":\"document\""), "Should contain document aspect");
-        
-        // Print the result for manual inspection if needed
-        System.out.println("Full catalog JSON:");
-        System.out.println(result);
     }
 
     private String loadJsonFromFile(String filename) throws IOException
