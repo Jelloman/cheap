@@ -7,7 +7,10 @@
       "Bash(tree:*)",
       "Bash(sqlite3:*)",
       "Bash(grep:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(java:*)",
+      "Bash(cd:*)",
+      "Bash(ls:*)"
     ],
     "deny": [],
     "ask": []

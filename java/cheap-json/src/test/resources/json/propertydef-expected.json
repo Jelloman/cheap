@@ -1,0 +1,10 @@
+{
+  "name":"testProp",
+  "type":"String",
+  "hasDefaultValue":false,
+  "isReadable":true,
+  "isWritable":false,
+  "isNullable":true,
+  "isRemovable":false,
+  "isMultivalued":false
+}

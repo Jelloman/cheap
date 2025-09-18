@@ -19,168 +19,130 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 public class CheapJsonRawSerializerTest
 {
+    private static final UUID CATALOG_ID = UUID.fromString("550e8400-e29b-41d4-a716-444444444444");
+
+    private static CatalogImpl createTestCatalog()
+    {
+        CatalogImpl catalog = new CatalogImpl(CATALOG_ID);
+
+        // Create a simple AspectDef
+        PropertyDef nameProp = new PropertyDefImpl("name", PropertyType.String, null, false, true, true, false, false, false);
+        PropertyDef ageProp = new PropertyDefImpl("age", PropertyType.Integer, null, false, true, true, true, false, false);
+        Map<String, PropertyDef> personProps = ImmutableMap.of("name", nameProp, "age", ageProp);
+        AspectDef personAspectDef = new ImmutableAspectDefImpl("person", personProps);
+
+        catalog.extend(personAspectDef);
+        return catalog;
+    }
     @Test
-    void testPropertyDefToJson()
+    void testPropertyDefToJson() throws IOException
     {
         PropertyDef propertyDef = new PropertyDefImpl("testProp", PropertyType.String, null, false, true, false, true, false, false);
         StringBuilder sb = new StringBuilder();
         CheapJsonRawSerializer.propertyDefToJson(propertyDef, sb, true, 0);
-        
-        String expected = """
-            {
-              "name":"testProp",
-              "type":"String",
-              "hasDefaultValue":false,
-              "isReadable":true,
-              "isWritable":false,
-              "isNullable":true,
-              "isRemovable":false,
-              "isMultivalued":false
-            }""";
+
+        String expected = loadJsonFromFile("propertydef-expected.json");
         assertEquals(expected, sb.toString());
     }
 
     @Test
-    void testPropertyDefWithDefaultValueToJson()
+    void testPropertyDefWithDefaultValueToJson() throws IOException
     {
         PropertyDef propertyDef = new PropertyDefImpl("testProp", PropertyType.Integer, "42", true, true, true, true, true, false);
         StringBuilder sb = new StringBuilder();
         CheapJsonRawSerializer.propertyDefToJson(propertyDef, sb, true, 0);
-        
-        String expected = """
-            {
-              "name":"testProp",
-              "type":"Integer",
-              "hasDefaultValue":true,
-              "defaultValue":"42",
-              "isReadable":true,
-              "isWritable":true,
-              "isNullable":true,
-              "isRemovable":true,
-              "isMultivalued":false
-            }""";
+
+        String expected = loadJsonFromFile("propertydef-with-default-expected.json");
         assertEquals(expected, sb.toString());
     }
 
     @Test
-    void testHierarchyDefToJson()
+    void testHierarchyDefToJson() throws IOException
     {
         HierarchyDef hierarchyDef = new HierarchyDefImpl("testHierarchy", HierarchyType.ENTITY_LIST, true);
         StringBuilder sb = new StringBuilder();
         CheapJsonRawSerializer.hierarchyDefToJson(hierarchyDef, sb, true, 0);
-        
-        String expected = """
-            {
-              "name":"testHierarchy",
-              "type":"el",
-              "isModifiable":true
-            }""";
+
+        String expected = loadJsonFromFile("hierarchydef-expected.json");
         assertEquals(expected, sb.toString());
     }
 
     @Test
-    void testAspectToJson()
+    void testAspectToJson() throws IOException
     {
         Entity entity = new EntityImpl(UUID.fromString("550e8400-e29b-41d4-a716-446655440000"));
         PropertyDef prop1 = new PropertyDefImpl("name", PropertyType.String, null, false, true, true, false, false, false);
-        
+
         Map<String, PropertyDef> propDefMap = ImmutableMap.of("name", prop1);
         AspectDef aspectDef = new ImmutableAspectDefImpl("testAspect", propDefMap);
-        
+
         AspectObjectMapImpl aspect = new AspectObjectMapImpl(entity, aspectDef);
         aspect.unsafeWrite("name", "John Doe");
-        
+
         StringBuilder sb = new StringBuilder();
         CheapJsonRawSerializer.aspectToJson(aspect, sb, true, 0);
-        
-        String expected = """
-            {
-              "aspectDefName":"testAspect",
-              "entityId":"550e8400-e29b-41d4-a716-446655440000",
-              "isTransferable":false,
-              "name":"John Doe"
-            }""";
+
+        String expected = loadJsonFromFile("aspect-expected.json");
         assertEquals(expected, sb.toString());
     }
 
     @Test
-    void testEntityListHierarchyToJson()
+    void testEntityListHierarchyToJson() throws IOException
     {
         UUID uuid1 = UUID.fromString("550e8400-e29b-41d4-a716-446655440000");
         UUID uuid2 = UUID.fromString("550e8400-e29b-41d4-a716-446655440001");
-        
+
         HierarchyDef def = new HierarchyDefImpl("entityList", HierarchyType.ENTITY_LIST, true);
         EntityListHierarchyImpl hierarchy = new EntityListHierarchyImpl(def);
         hierarchy.add(new EntityImpl(uuid1));
         hierarchy.add(new EntityImpl(uuid2));
-        
+
         StringBuilder sb = new StringBuilder();
         CheapJsonRawSerializer.entityListHierarchyToJson(hierarchy, sb, true, 0);
-        
-        String expected = """
-            {
-              "def":{"type":"entity_list"},
-              "entities":[
-                "550e8400-e29b-41d4-a716-446655440000",
-                "550e8400-e29b-41d4-a716-446655440001"
-              ]
-            }""";
+
+        String expected = loadJsonFromFile("entity-list-hierarchy-expected.json");
         assertEquals(expected, sb.toString());
     }
 
     @Test
-    void testEntitySetHierarchyToJson()
+    void testEntitySetHierarchyToJson() throws IOException
     {
         UUID uuid1 = UUID.fromString("550e8400-e29b-41d4-a716-446655440000");
         UUID uuid2 = UUID.fromString("550e8400-e29b-41d4-a716-446655440001");
-        
+
         HierarchyDef def = new HierarchyDefImpl("entitySet", HierarchyType.ENTITY_SET, true);
         EntitySetHierarchyImpl hierarchy = new EntitySetHierarchyImpl(def);
         hierarchy.add(new EntityImpl(uuid1));
         hierarchy.add(new EntityImpl(uuid2));
-        
+
         StringBuilder sb = new StringBuilder();
         CheapJsonRawSerializer.entitySetHierarchyToJson(hierarchy, sb, true, 0);
-        
+
         // LinkedHashSet preserves insertion order, so we can predict the order
-        String expected = """
-            {
-              "def":{"type":"entity_set"},
-              "entities":[
-                "550e8400-e29b-41d4-a716-446655440001",
-                "550e8400-e29b-41d4-a716-446655440000"
-              ]
-            }""";
+        String expected = loadJsonFromFile("entity-set-hierarchy-expected.json");
         assertEquals(expected, sb.toString());
     }
 
     @Test
-    void testEntityDirectoryHierarchyToJson()
+    void testEntityDirectoryHierarchyToJson() throws IOException
     {
         UUID uuid1 = UUID.fromString("550e8400-e29b-41d4-a716-446655440000");
         UUID uuid2 = UUID.fromString("550e8400-e29b-41d4-a716-446655440001");
-        
+
         HierarchyDef def = new HierarchyDefImpl("entityDir", HierarchyType.ENTITY_DIR, true);
         EntityDirectoryHierarchyImpl hierarchy = new EntityDirectoryHierarchyImpl(def);
         hierarchy.put("first", new EntityImpl(uuid1));
         hierarchy.put("second", new EntityImpl(uuid2));
-        
+
         StringBuilder sb = new StringBuilder();
         CheapJsonRawSerializer.entityDirectoryHierarchyToJson(hierarchy, sb, true, 0);
-        
-        String expected = """
-            {
-              "def":{"type":"entity_dir"},
-              "entities":{
-                "first":"550e8400-e29b-41d4-a716-446655440000",
-                "second":"550e8400-e29b-41d4-a716-446655440001"
-              }
-            }""";
+
+        String expected = loadJsonFromFile("entity-directory-hierarchy-expected.json");
         assertEquals(expected, sb.toString());
     }
 
     @Test
-    void testTreeNodeToJson()
+    void testTreeNodeToJson() throws IOException
     {
         UUID uuid = UUID.fromString("550e8400-e29b-41d4-a716-446655440000");
         Entity entity = new EntityImpl(uuid);
@@ -189,16 +151,13 @@ public class CheapJsonRawSerializerTest
 
         StringBuilder sb = new StringBuilder();
         CheapJsonRawSerializer.treeNodeToJson(hierarchy.root(), sb, true, 0);
-        
-        String expected = """
-            {
-              "entityId":"550e8400-e29b-41d4-a716-446655440000"
-            }""";
+
+        String expected = loadJsonFromFile("tree-node-expected.json");
         assertEquals(expected, sb.toString());
     }
 
     @Test
-    void testTreeNodeWithChildrenToJson()
+    void testTreeNodeWithChildrenToJson() throws IOException
     {
         UUID uuid1 = UUID.fromString("550e8400-e29b-41d4-a716-446655440000");
         UUID uuid2 = UUID.fromString("550e8400-e29b-41d4-a716-446655440001");
@@ -210,19 +169,11 @@ public class CheapJsonRawSerializerTest
 
         EntityTreeHierarchyImpl.NodeImpl childNode = new EntityTreeHierarchyImpl.NodeImpl(childEntity, hierarchy.root());
         hierarchy.root().put("child", childNode);
-        
+
         StringBuilder sb = new StringBuilder();
         CheapJsonRawSerializer.treeNodeToJson(hierarchy.root(), sb, true, 0);
-        
-        String expected = """
-            {
-              "entityId":"550e8400-e29b-41d4-a716-446655440000",
-              "children":{
-                "child":{
-                  "entityId":"550e8400-e29b-41d4-a716-446655440001"
-                }
-              }
-            }""";
+
+        String expected = loadJsonFromFile("tree-node-with-children-expected.json");
         assertEquals(expected, sb.toString());
     }
 
@@ -260,28 +211,263 @@ public class CheapJsonRawSerializerTest
         assertEquals(expected, sb.toString());
     }
 
-    @Test
-    void testSimpleCatalogToJson()
+    private CatalogImpl setupSimpleCatalog()
     {
         // Create a simple catalog with no custom aspects or hierarchies
-        CatalogImpl catalog = new CatalogImpl();
-        
-        String result = CheapJsonRawSerializer.toJson(catalog, true);
-        
-        // Just verify it contains expected base structure
-        assertTrue(result.contains("\"globalId\":\"" + catalog.globalId() + "\""));
-        assertTrue(result.contains("\"species\":\"sink\""));
-        assertTrue(result.contains("\"strict\":false"));
-        assertTrue(result.contains("\"hierarchies\":"));
-        assertTrue(result.contains("\"aspectDefs\":"));
-        assertTrue(result.contains("\"aspects\":"));
+        return new CatalogImpl(CATALOG_ID);
     }
 
     @Test
-    void testFullCatalogWithAllHierarchyTypes()
+    void testSimpleCatalogToJson() throws IOException
+    {
+        CatalogImpl catalog = setupSimpleCatalog();
+
+        String result = CheapJsonRawSerializer.toJson(catalog, true);
+
+        String expected = loadJsonFromFile("simple-catalog-expected.json");
+        assertEquals(expected, result);
+    }
+
+    @Test
+    void testSimpleCatalogToJsonCompact() throws IOException
+    {
+        CatalogImpl catalog = setupSimpleCatalog();
+
+        String result = CheapJsonRawSerializer.toJson(catalog, false);
+
+        String expected = loadJsonFromFile("simple-catalog-expected-compact.json");
+        assertEquals(expected, result);
+    }
+
+    @Test
+    void testCatalogWithAspectDefToJson() throws IOException
+    {
+        CatalogImpl catalog = createTestCatalog();
+
+        String result = CheapJsonRawSerializer.toJson(catalog, true);
+
+        String expected = loadJsonFromFile("catalog-with-aspectdef-expected.json");
+        assertEquals(expected, result);
+    }
+
+    @Test
+    void testCatalogWithAspectDefToJsonCompact() throws IOException
+    {
+        CatalogImpl catalog = createTestCatalog();
+
+        String result = CheapJsonRawSerializer.toJson(catalog, false);
+
+        String expected = loadJsonFromFile("catalog-with-aspectdef-expected-compact.json");
+        assertEquals(expected, result);
+    }
+
+    private CatalogImpl setupCatalogWithEntityDirectoryHierarchy()
+    {
+        CatalogImpl catalog = new CatalogImpl(CATALOG_ID);
+
+        UUID entityId1 = UUID.fromString("550e8400-e29b-41d4-a716-446655440000");
+        UUID entityId2 = UUID.fromString("550e8400-e29b-41d4-a716-446655440001");
+        Entity entity1 = new EntityImpl(entityId1);
+        Entity entity2 = new EntityImpl(entityId2);
+
+        HierarchyDef entityDirDef = new HierarchyDefImpl("userDirectory", HierarchyType.ENTITY_DIR, true);
+        EntityDirectoryHierarchyImpl entityDirectory = new EntityDirectoryHierarchyImpl(entityDirDef);
+        entityDirectory.put("admin", entity1);
+        entityDirectory.put("user1", entity2);
+        catalog.hierarchies().put("userDirectory", entityDirectory);
+
+        return catalog;
+    }
+
+    @Test
+    void testCatalogWithEntityDirectoryHierarchy() throws IOException
+    {
+        CatalogImpl catalog = setupCatalogWithEntityDirectoryHierarchy();
+
+        String result = CheapJsonRawSerializer.toJson(catalog, true);
+
+        String expected = loadJsonFromFile("entity-directory-expected.json");
+        assertEquals(expected, result);
+    }
+
+    @Test
+    void testCatalogWithEntityDirectoryHierarchyCompact() throws IOException
+    {
+        CatalogImpl catalog = setupCatalogWithEntityDirectoryHierarchy();
+
+        String result = CheapJsonRawSerializer.toJson(catalog, false);
+
+        String expected = loadJsonFromFile("entity-directory-expected-compact.json");
+        assertEquals(expected, result);
+    }
+
+    private CatalogImpl setupCatalogWithEntityListHierarchy()
+    {
+        CatalogImpl catalog = new CatalogImpl(CATALOG_ID);
+
+        UUID entityId1 = UUID.fromString("550e8400-e29b-41d4-a716-446655440000");
+        UUID entityId2 = UUID.fromString("550e8400-e29b-41d4-a716-446655440001");
+        Entity entity1 = new EntityImpl(entityId1);
+        Entity entity2 = new EntityImpl(entityId2);
+
+        HierarchyDef entityListDef = new HierarchyDefImpl("taskQueue", HierarchyType.ENTITY_LIST, true);
+        EntityListHierarchyImpl entityList = new EntityListHierarchyImpl(entityListDef);
+        entityList.add(entity1);
+        entityList.add(entity2);
+        catalog.hierarchies().put("taskQueue", entityList);
+
+        return catalog;
+    }
+
+    @Test
+    void testCatalogWithEntityListHierarchy() throws IOException
+    {
+        CatalogImpl catalog = setupCatalogWithEntityListHierarchy();
+
+        String result = CheapJsonRawSerializer.toJson(catalog, true);
+
+        String expected = loadJsonFromFile("entity-list-expected.json");
+        assertEquals(expected, result);
+    }
+
+    @Test
+    void testCatalogWithEntityListHierarchyCompact() throws IOException
+    {
+        CatalogImpl catalog = setupCatalogWithEntityListHierarchy();
+
+        String result = CheapJsonRawSerializer.toJson(catalog, false);
+
+        String expected = loadJsonFromFile("entity-list-expected-compact.json");
+        assertEquals(expected, result);
+    }
+
+    private CatalogImpl setupCatalogWithEntitySetHierarchy()
+    {
+        CatalogImpl catalog = new CatalogImpl(CATALOG_ID);
+
+        UUID entityId1 = UUID.fromString("550e8400-e29b-41d4-a716-446655440000");
+        UUID entityId2 = UUID.fromString("550e8400-e29b-41d4-a716-446655440001");
+        Entity entity1 = new EntityImpl(entityId1);
+        Entity entity2 = new EntityImpl(entityId2);
+
+        HierarchyDef entitySetDef = new HierarchyDefImpl("activeUsers", HierarchyType.ENTITY_SET, true);
+        EntitySetHierarchyImpl entitySet = new EntitySetHierarchyImpl(entitySetDef);
+        entitySet.add(entity1);
+        entitySet.add(entity2);
+        catalog.hierarchies().put("activeUsers", entitySet);
+
+        return catalog;
+    }
+
+    @Test
+    void testCatalogWithEntitySetHierarchy() throws IOException
+    {
+        CatalogImpl catalog = setupCatalogWithEntitySetHierarchy();
+
+        String result = CheapJsonRawSerializer.toJson(catalog, true);
+
+        String expected = loadJsonFromFile("entity-set-expected.json");
+        assertEquals(expected, result);
+    }
+
+    @Test
+    void testCatalogWithEntitySetHierarchyCompact() throws IOException
+    {
+        CatalogImpl catalog = setupCatalogWithEntitySetHierarchy();
+
+        String result = CheapJsonRawSerializer.toJson(catalog, false);
+
+        String expected = loadJsonFromFile("entity-set-expected-compact.json");
+        assertEquals(expected, result);
+    }
+
+    private CatalogImpl setupCatalogWithEntityTreeHierarchy()
+    {
+        CatalogImpl catalog = new CatalogImpl(CATALOG_ID);
+
+        UUID entityId1 = UUID.fromString("550e8400-e29b-41d4-a716-446655440000");
+        UUID entityId2 = UUID.fromString("550e8400-e29b-41d4-a716-446655440001");
+        Entity parentEntity = new EntityImpl(entityId1);
+        Entity childEntity = new EntityImpl(entityId2);
+
+        HierarchyDef entityTreeDef = new HierarchyDefImpl("fileSystem", HierarchyType.ENTITY_TREE, true);
+        EntityTreeHierarchyImpl entityTree = new EntityTreeHierarchyImpl(entityTreeDef, parentEntity);
+        EntityTreeHierarchyImpl.NodeImpl childNode = new EntityTreeHierarchyImpl.NodeImpl(childEntity, entityTree.root());
+        entityTree.root().put("documents", childNode);
+        catalog.hierarchies().put("fileSystem", entityTree);
+
+        return catalog;
+    }
+
+    @Test
+    void testCatalogWithEntityTreeHierarchy() throws IOException
+    {
+        CatalogImpl catalog = setupCatalogWithEntityTreeHierarchy();
+
+        String result = CheapJsonRawSerializer.toJson(catalog, true);
+
+        String expected = loadJsonFromFile("entity-tree-expected.json");
+        assertEquals(expected, result);
+    }
+
+    @Test
+    void testCatalogWithEntityTreeHierarchyCompact() throws IOException
+    {
+        CatalogImpl catalog = setupCatalogWithEntityTreeHierarchy();
+
+        String result = CheapJsonRawSerializer.toJson(catalog, false);
+
+        String expected = loadJsonFromFile("entity-tree-expected-compact.json");
+        assertEquals(expected, result);
+    }
+
+    private CatalogImpl setupCatalogWithAspectMapHierarchy()
+    {
+        CatalogImpl catalog = new CatalogImpl(CATALOG_ID);
+
+        UUID entityId = UUID.fromString("550e8400-e29b-41d4-a716-446655440000");
+        Entity entity = new EntityImpl(entityId);
+
+        PropertyDef nameProp = new PropertyDefImpl("name", PropertyType.String, null, false, true, true, false, false, false);
+        Map<String, PropertyDef> personProps = ImmutableMap.of("name", nameProp);
+        AspectDef personAspectDef = new ImmutableAspectDefImpl("person", personProps);
+        catalog.extend(personAspectDef);
+
+        AspectMapHierarchyImpl personAspects = new AspectMapHierarchyImpl(personAspectDef);
+        AspectObjectMapImpl personAspect = new AspectObjectMapImpl(entity, personAspectDef);
+        personAspect.unsafeWrite("name", "John Doe");
+        personAspects.put(entity, personAspect);
+        catalog.hierarchies().put("personData", personAspects);
+
+        return catalog;
+    }
+
+    @Test
+    void testCatalogWithAspectMapHierarchy() throws IOException
+    {
+        CatalogImpl catalog = setupCatalogWithAspectMapHierarchy();
+
+        String result = CheapJsonRawSerializer.toJson(catalog, true);
+
+        String expected = loadJsonFromFile("aspect-map-expected.json");
+        assertEquals(expected, result);
+    }
+
+    @Test
+    void testCatalogWithAspectMapHierarchyCompact() throws IOException
+    {
+        CatalogImpl catalog = setupCatalogWithAspectMapHierarchy();
+
+        String result = CheapJsonRawSerializer.toJson(catalog, false);
+
+        String expected = loadJsonFromFile("aspect-map-expected-compact.json");
+        assertEquals(expected, result);
+    }
+
+    private CatalogImpl setupFullCatalogWithAllHierarchyTypes()
     {
         // Create a catalog with all hierarchy types and real data
-        CatalogImpl catalog = new CatalogImpl();
+        CatalogImpl catalog = new CatalogImpl(CATALOG_ID);
         
         // Create some entities to use across hierarchies
         UUID entityId1 = UUID.fromString("10000000-0000-0000-0000-000000000001");
@@ -369,39 +555,45 @@ public class CheapJsonRawSerializerTest
         docAspects.put(entity3, docAspect1);
         docAspects.put(entity4, docAspect2);
         catalog.hierarchies().put("documents", docAspects);
-        
-        // Generate JSON and verify it contains all expected components
+
+        return catalog;
+    }
+
+    @Test
+    void testFullCatalogWithAllHierarchyTypes() throws IOException
+    {
+        CatalogImpl catalog = setupFullCatalogWithAllHierarchyTypes();
+
         String result = CheapJsonRawSerializer.toJson(catalog, true);
-        
-        // Verify the JSON contains all the hierarchy types and data
-        assertTrue(result.contains("\"userDirectory\""), "Should contain entity directory");
-        assertTrue(result.contains("\"taskQueue\""), "Should contain entity list");
-        assertTrue(result.contains("\"activeUsers\""), "Should contain entity set");
-        assertTrue(result.contains("\"fileSystem\""), "Should contain entity tree");
-        assertTrue(result.contains("\"personData\""), "Should contain person aspect map");
-        assertTrue(result.contains("\"documents\""), "Should contain document aspect map");
-        
-        // Verify specific data content
-        assertTrue(result.contains("\"admin\""), "Should contain admin user");
-        assertTrue(result.contains("\"John Doe\""), "Should contain person name");
-        assertTrue(result.contains("\"User Manual\""), "Should contain document title");
-        assertTrue(result.contains("\"type\":\"entity_dir\""), "Should contain entity_dir type");
-        assertTrue(result.contains("\"type\":\"entity_list\""), "Should contain entity_list type");
-        assertTrue(result.contains("\"type\":\"entity_set\""), "Should contain entity_set type");
-        assertTrue(result.contains("\"type\":\"entity_tree\""), "Should contain entity_tree type");
-        assertTrue(result.contains("\"type\":\"aspect_map\""), "Should contain aspect_map type");
-        
-        // Verify nested tree structure
-        assertTrue(result.contains("\"children\""), "Should contain tree children");
-        assertTrue(result.contains("\"reports\""), "Should contain nested tree node");
-        
-        // Verify aspects are properly serialized
-        assertTrue(result.contains("\"aspectDefName\":\"person\""), "Should contain person aspect");
-        assertTrue(result.contains("\"aspectDefName\":\"document\""), "Should contain document aspect");
+
+        String expected = loadJsonFromFile("full-catalog-expected.json");
+        assertEquals(expected, result);
+    }
+
+    @Test
+    void testFullCatalogWithAllHierarchyTypesCompact() throws IOException
+    {
+        CatalogImpl catalog = setupFullCatalogWithAllHierarchyTypes();
+
+        String result = CheapJsonRawSerializer.toJson(catalog, false);
+
+        String expected = loadJsonFromFile("full-catalog-expected-compact.json");
+        assertEquals(expected, result);
     }
 
     private String loadJsonFromFile(String filename) throws IOException
     {
+        // Try to use classpath first
+        try {
+            var resource = getClass().getClassLoader().getResourceAsStream("json/" + filename);
+            if (resource != null) {
+                return new String(resource.readAllBytes()).trim();
+            }
+        } catch (Exception e) {
+            // Fall back to file system path
+        }
+
+        // Fall back to the original path approach
         Path path = Paths.get("src/test/resources/json/" + filename);
         return Files.readString(path).trim();
     }
