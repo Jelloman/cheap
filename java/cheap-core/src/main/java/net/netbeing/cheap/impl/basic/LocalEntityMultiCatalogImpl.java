@@ -30,6 +30,21 @@ public class LocalEntityMultiCatalogImpl extends EntityImpl implements LocalEnti
     }
 
     /**
+     * Creates a new LocalEntityMultiCatalogImpl with the specified global ID and catalog.
+     * The aspects map will be initialized on first access.
+     *
+     * @param globalId the UUID for this entity
+     * @param catalog the catalog this entity has its Aspects in
+     */
+    public LocalEntityMultiCatalogImpl(@NotNull UUID globalId, @NotNull Catalog catalog)
+    {
+        super(globalId);
+        Objects.requireNonNull(catalog, "Catalog may not be null in LocalEntityMultiCatalogImpl.");
+        this.catalogs = new HashSet<>();
+        this.catalogs.add(catalog);
+    }
+
+    /**
      * Return the set of Catalogs that this entity has Aspects in.
      *
      * @return this object, which is an Iterable of Catalogs

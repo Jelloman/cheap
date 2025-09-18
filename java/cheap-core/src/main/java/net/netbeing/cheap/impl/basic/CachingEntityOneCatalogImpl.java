@@ -6,6 +6,7 @@ import net.netbeing.cheap.model.*;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
+import java.util.UUID;
 
 /**
  * Implementation of LocalEntity that only has Aspects in a single Catalog, and
@@ -31,6 +32,18 @@ public class CachingEntityOneCatalogImpl extends LocalEntityOneCatalogImpl
     public CachingEntityOneCatalogImpl(@NotNull Catalog catalog)
     {
         super(catalog);
+    }
+
+    /**
+     * Creates a new CachingEntityOneCatalogImpl with the specified global ID and catalog.
+     * The aspects cache will be initialized on first access.
+     *
+     * @param globalId the UUID for this entity
+     * @param catalog the catalog this entity has its Aspects in
+     */
+    public CachingEntityOneCatalogImpl(@NotNull UUID globalId, @NotNull Catalog catalog)
+    {
+        super(globalId, catalog);
     }
 
     private void createAspectCache()

@@ -205,7 +205,6 @@ public class CheapFactory
      * @param globalId the UUID for the entity, or null for random UUID
      * @param catalog the catalog this entity belongs to
      * @return a new LocalEntity instance
-     * @throws UnsupportedOperationException if globalId is specified for MULTI_CATALOG or CACHING_MULTI_CATALOG types
      */
     public @NotNull LocalEntity createLocalEntity(@NotNull LocalEntityType type, UUID globalId, @NotNull Catalog catalog)
     {
@@ -213,27 +212,15 @@ public class CheapFactory
             case SINGLE_CATALOG -> globalId != null 
                 ? new LocalEntityOneCatalogImpl(globalId, catalog)
                 : new LocalEntityOneCatalogImpl(catalog);
-            case MULTI_CATALOG -> {
-                if (globalId != null) {
-                    throw new UnsupportedOperationException(
-                        "Custom globalId is not supported for MULTI_CATALOG type. Use explicit factory methods instead.");
-                }
-                yield new LocalEntityMultiCatalogImpl(catalog);
-            }
-            case CACHING_SINGLE_CATALOG -> {
-                if (globalId != null) {
-                    throw new UnsupportedOperationException(
-                        "Custom globalId is not supported for CACHING_SINGLE_CATALOG type. Use explicit factory methods instead.");
-                }
-                yield new CachingEntityOneCatalogImpl(catalog);
-            }
-            case CACHING_MULTI_CATALOG -> {
-                if (globalId != null) {
-                    throw new UnsupportedOperationException(
-                        "Custom globalId is not supported for CACHING_MULTI_CATALOG type. Use explicit factory methods instead.");
-                }
-                yield new CachingEntityMultiCatalogImpl(catalog);
-            }
+            case MULTI_CATALOG -> globalId != null
+                ? new LocalEntityMultiCatalogImpl(globalId, catalog)
+                : new LocalEntityMultiCatalogImpl(catalog);
+            case CACHING_SINGLE_CATALOG -> globalId != null
+                ? new CachingEntityOneCatalogImpl(globalId, catalog)
+                : new CachingEntityOneCatalogImpl(catalog);
+            case CACHING_MULTI_CATALOG -> globalId != null
+                ? new CachingEntityMultiCatalogImpl(globalId, catalog)
+                : new CachingEntityMultiCatalogImpl(catalog);
         };
     }
 
@@ -272,6 +259,18 @@ public class CheapFactory
     }
 
     /**
+     * Creates a new local entity that can belong to multiple catalogs with specified global ID.
+     *
+     * @param globalId the UUID for the entity
+     * @param catalog the initial catalog this entity belongs to
+     * @return a new LocalEntity instance
+     */
+    public @NotNull LocalEntity createMultiCatalogEntity(@NotNull UUID globalId, @NotNull Catalog catalog)
+    {
+        return new LocalEntityMultiCatalogImpl(globalId, catalog);
+    }
+
+    /**
      * Creates a new caching local entity associated with a catalog.
      *
      * @param catalog the catalog this entity belongs to
@@ -283,6 +282,18 @@ public class CheapFactory
     }
 
     /**
+     * Creates a new caching local entity associated with a catalog with specified global ID.
+     *
+     * @param globalId the UUID for the entity
+     * @param catalog the catalog this entity belongs to
+     * @return a new LocalEntity instance with caching
+     */
+    public @NotNull LocalEntity createCachingEntity(@NotNull UUID globalId, @NotNull Catalog catalog)
+    {
+        return new CachingEntityOneCatalogImpl(globalId, catalog);
+    }
+
+    /**
      * Creates a new caching local entity that can belong to multiple catalogs.
      *
      * @param catalog the initial catalog this entity belongs to
@@ -291,6 +302,18 @@ public class CheapFactory
     public @NotNull LocalEntity createCachingMultiCatalogEntity(@NotNull Catalog catalog)
     {
         return new CachingEntityMultiCatalogImpl(catalog);
+    }
+
+    /**
+     * Creates a new caching local entity that can belong to multiple catalogs with specified global ID.
+     *
+     * @param globalId the UUID for the entity
+     * @param catalog the initial catalog this entity belongs to
+     * @return a new LocalEntity instance with caching
+     */
+    public @NotNull LocalEntity createCachingMultiCatalogEntity(@NotNull UUID globalId, @NotNull Catalog catalog)
+    {
+        return new CachingEntityMultiCatalogImpl(globalId, catalog);
     }
 
     // ===== Hierarchy Factory Methods =====

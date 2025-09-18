@@ -8,6 +8,8 @@ import net.netbeing.cheap.model.Catalog;
 import net.netbeing.cheap.model.Entity;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.UUID;
+
 /**
  * Implementation of LocalEntity that only has Aspects in a single Catalog, and
  * caches Aspects within this instance for faster lookup.
@@ -24,7 +26,7 @@ public class CachingEntityMultiCatalogImpl extends LocalEntityMultiCatalogImpl
     protected volatile Cache<@NotNull AspectDef, @NotNull Aspect> aspects;
 
     /**
-     * Creates a new CachingEntityOneCatalogImpl for the specified catalog.
+     * Creates a new CachingEntityMultiCatalogImpl for the specified catalog.
      * The aspects cache will be initialized on first access.
      *
      * @param catalog the catalog this entity has its Aspects in
@@ -32,6 +34,18 @@ public class CachingEntityMultiCatalogImpl extends LocalEntityMultiCatalogImpl
     public CachingEntityMultiCatalogImpl(@NotNull Catalog catalog)
     {
         super(catalog);
+    }
+
+    /**
+     * Creates a new CachingEntityMultiCatalogImpl with the specified global ID and catalog.
+     * The aspects cache will be initialized on first access.
+     *
+     * @param globalId the UUID for this entity
+     * @param catalog the catalog this entity has its Aspects in
+     */
+    public CachingEntityMultiCatalogImpl(@NotNull UUID globalId, @NotNull Catalog catalog)
+    {
+        super(globalId, catalog);
     }
 
     private void createAspectCache()
