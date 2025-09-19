@@ -9,14 +9,6 @@
       "name" : "fileSystem",
       "type" : "et",
       "isModifiable" : true
-    }, {
-      "name" : "hierarchies",
-      "type" : "hl",
-      "isModifiable" : true
-    }, {
-      "name" : "aspectage",
-      "type" : "ad",
-      "isModifiable" : true
     } ]
   },
   "aspectDefs" : { },
@@ -34,6 +26,5 @@
         }
       }
     }
-  },
-  "aspects" : { }
+  }
 }

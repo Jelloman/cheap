@@ -25,16 +25,6 @@
       "name":"entities",
       "type":"es",
       "isModifiable":true
-    },
-    {
-      "name":"hierarchies",
-      "type":"hl",
-      "isModifiable":true
-    },
-    {
-      "name":"aspectage",
-      "type":"ad",
-      "isModifiable":true
     }
   ]
 }

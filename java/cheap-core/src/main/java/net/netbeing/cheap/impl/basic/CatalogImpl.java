@@ -4,6 +4,9 @@ import net.netbeing.cheap.model.*;
 import org.jetbrains.annotations.NotNull;
 
 import java.net.URI;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -15,7 +18,6 @@ import java.util.UUID;
  * @see CatalogDef
  * @see LocalEntity
  * @see LocalEntityOneCatalogImpl
- * @see HierarchyDir
  */
 public class CatalogImpl extends LocalEntityOneCatalogImpl implements Catalog
 {
@@ -32,13 +34,13 @@ public class CatalogImpl extends LocalEntityOneCatalogImpl implements Catalog
     private final boolean strict;
 
     /** The upstream catalog this catalog mirrors, or null for root catalogs. */
-    private final Catalog upstream;
+    private final UUID upstream;
     
     /** Directory of hierarchies contained in this catalog. */
-    private final HierarchyDirImpl hierarchies;
+    private final Map<String, Hierarchy> hierarchies;
     
     /** Directory of aspect definitions available in this catalog. */
-    private final AspectDefDirHierarchyImpl aspectage;
+    private final Map<String, AspectDef> aspectage;
 
     /**
      * Creates a new non-strict SINK catalog with a wrapper CatalogDef that
@@ -64,7 +66,7 @@ public class CatalogImpl extends LocalEntityOneCatalogImpl implements Catalog
      *
      * @throws IllegalArgumentException if a SOURCE/SINK catalog has an upstream; or for other species, if it lacks one
      */
-    public CatalogImpl(CatalogSpecies species, Catalog upstream)
+    public CatalogImpl(CatalogSpecies species, UUID upstream)
     {
         this(UUID.randomUUID(), species, null, upstream, false);
     }
@@ -76,9 +78,8 @@ public class CatalogImpl extends LocalEntityOneCatalogImpl implements Catalog
      * @param upstream the upstream catalog to mirror, or null for root catalogs
      * @throws IllegalArgumentException if a SOURCE/SINK catalog has an upstream; or for other species, if it lacks one
      */
-    public CatalogImpl(UUID globalId, CatalogSpecies species, CatalogDef def, Catalog upstream, boolean strict)
+    public CatalogImpl(UUID globalId, CatalogSpecies species, CatalogDef def, UUID upstream, boolean strict)
     {
-        //noinspection DataFlowIssue
         super(globalId, null);
         this.catalog = this;
 
@@ -103,10 +104,8 @@ public class CatalogImpl extends LocalEntityOneCatalogImpl implements Catalog
         this.upstream = upstream;
         this.strict = strict;
 
-        this.hierarchies = new HierarchyDirImpl(CatalogDefaultHierarchies.CATALOG_ROOT);
-        this.aspectage = new AspectDefDirHierarchyImpl(CatalogDefaultHierarchies.ASPECTAGE);
-        hierarchies.put(CatalogDefaultHierarchies.CATALOG_ROOT_NAME, hierarchies);
-        hierarchies.put(CatalogDefaultHierarchies.ASPECTAGE_NAME, aspectage);
+        this.hierarchies = new LinkedHashMap<>();
+        this.aspectage = new LinkedHashMap<>();
 
         this.def = def != null ? def : new CatalogDefWrapper(this);
     }
@@ -161,7 +160,7 @@ public class CatalogImpl extends LocalEntityOneCatalogImpl implements Catalog
      * @return the upstream catalog, or {@code null} for SOURCE and SINK catalogs
      */
     @Override
-    public Catalog upstream()
+    public UUID upstream()
     {
         return upstream;
     }
@@ -180,28 +179,26 @@ public class CatalogImpl extends LocalEntityOneCatalogImpl implements Catalog
     }
 
     /**
-     * Returns the directory of hierarchies in this catalog.
-     * 
-     * @return the hierarchy directory containing all hierarchies in this catalog
+     * Returns the collection of hierarchies contained within this catalog.
+     *
+     * @return the hierarchy collection for this catalog, never null
      */
     @Override
-    public @NotNull HierarchyDir hierarchies()
+    public @NotNull Iterable<Hierarchy> hierarchies()
     {
-        return hierarchies;
+        return Collections.unmodifiableCollection(hierarchies.values());
     }
 
     /**
-     * Returns the directory of all AspectDefs contained within this catalog.
-     * This is always a superset of the AspectDefDir provided by the CatalogDef.
+     * Returns the collection of all AspectDefs contained within this catalog.
+     * This is always a superset of the AspectDef collection provided by the CatalogDef.
      *
-     * <p>This is one of the two fixed hierarchies present in every catalog.</p>
-     *
-     * @return the AspectDef directory for this catalog, never null
+     * @return the AspectDef collection for this catalog, never null
      */
     @Override
-    public @NotNull AspectDefDir aspectDefs()
+    public @NotNull Iterable<AspectDef> aspectDefs()
     {
-        return aspectage;
+        return Collections.unmodifiableCollection(aspectage.values());
     }
 
     /**
@@ -216,4 +213,33 @@ public class CatalogImpl extends LocalEntityOneCatalogImpl implements Catalog
         return hierarchies.get(name);
     }
 
+    /**
+     * Adds a new hierarchy to this catalog. This will replace the existing hierarchy of the
+     * same name, if one exists, unless the existing hierarchy is an AspectMapHierarchy.
+     *
+     * @param hierarchy the hierarchy to add
+     */
+    @Override
+    public Hierarchy addHierarchy(@NotNull Hierarchy hierarchy)
+    {
+        String hName = hierarchy.def().name();
+        Hierarchy existing = hierarchy(hName);
+        if (existing instanceof AspectMapHierarchy) {
+            throw new UnsupportedOperationException("A hierarchy may not be added to a Catalog with the same name as an existing AspectMapHierarchy.");
+        }
+        if (hierarchy instanceof AspectMapHierarchy) {
+            AspectDef aspectDef = ((AspectMapHierarchy) hierarchy).aspectDef();
+            aspectage.put(aspectDef.name(), aspectDef);
+        }
+        return hierarchies.put(hName, hierarchy);
+    }
+
+    @Override
+    public boolean containsAspects(@NotNull String name)
+    {
+        if (hierarchies.get(name) instanceof AspectMapHierarchy) {
+            return true; //!aMap.isEmpty();
+        }
+        return false;
+    }
 }

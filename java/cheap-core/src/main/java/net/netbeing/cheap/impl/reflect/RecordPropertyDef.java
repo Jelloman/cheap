@@ -4,7 +4,7 @@ import net.netbeing.cheap.model.PropertyDef;
 import net.netbeing.cheap.model.PropertyType;
 
 import java.lang.reflect.RecordComponent;
-import java.util.*;
+import java.util.Objects;
 
 /**
  * A {@link PropertyDef} implementation for Java record components that provides read-only property definitions

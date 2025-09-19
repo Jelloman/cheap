@@ -51,6 +51,7 @@ public record PropertyDefImpl(
         if (name.isEmpty()) {
             throw new IllegalArgumentException("Property names must have at least 1 character.");
         }
+        name = name.intern();
     }
 
     /**
@@ -95,4 +96,26 @@ public record PropertyDefImpl(
         return new PropertyDefImpl(name, type, null, false, true, false, isNullable, isRemovable, false);
     }
 
+    /**
+     * Tests whether this is equal to another object. True if the other is a PropertyDef
+     * and has the same name.
+     *
+     * @param other the reference object with which to compare.
+     * @return true if the other is a PropertyDef and has the same name
+     */
+    public boolean equals(Object other)
+    {
+        return (other instanceof PropertyDef) && name == ((PropertyDef) other).name();
+    }
+
+    /**
+     * Generate a hashcode based only on name.
+     *
+     * @return hashcode based only on name
+     */
+    @Override
+    public int hashCode()
+    {
+        return name.hashCode();
+    }
 }

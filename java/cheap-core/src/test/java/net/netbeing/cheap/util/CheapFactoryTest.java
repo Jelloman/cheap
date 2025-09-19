@@ -4,6 +4,7 @@ import net.netbeing.cheap.model.*;
 import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
 
@@ -28,7 +29,7 @@ class CheapFactoryTest
         assertFalse(catalog.isStrict());
         
         // Test catalog with species and upstream
-        Catalog upstreamCatalog = factory.createCatalog();
+        UUID upstreamCatalog = UUID.randomUUID();
         Catalog mirrorCatalog = factory.createCatalog(CatalogSpecies.MIRROR, upstreamCatalog);
         assertNotNull(mirrorCatalog);
         assertEquals(CatalogSpecies.MIRROR, mirrorCatalog.species());
@@ -169,22 +170,6 @@ class CheapFactoryTest
     }
 
     @Test
-    void testCreateHierarchyDir()
-    {
-        HierarchyDef def = factory.createHierarchyDef("testDir", HierarchyType.HIERARCHY_DIR);
-        
-        // Test basic hierarchy directory
-        HierarchyDir hierarchyDir = factory.createHierarchyDir(def);
-        assertNotNull(hierarchyDir);
-        assertEquals(def, hierarchyDir.def());
-        
-        // Test hierarchy directory with performance tuning
-        HierarchyDir tunedHierarchyDir = factory.createHierarchyDir(def, 64, 0.8f);
-        assertNotNull(tunedHierarchyDir);
-        assertEquals(def, tunedHierarchyDir.def());
-    }
-
-    @Test
     void testCreateEntityHierarchies()
     {
         HierarchyDef def = factory.createHierarchyDef("testEntityHierarchy", HierarchyType.ENTITY_SET);
@@ -216,7 +201,7 @@ class CheapFactoryTest
     void testCreateAspectMapHierarchy()
     {
         // Create aspect definition for the hierarchy
-        Map<String, PropertyDef> propertyDefs = new HashMap<>();
+        Map<String, PropertyDef> propertyDefs = new LinkedHashMap<>();
         propertyDefs.put("name", factory.createPropertyDef("name", PropertyType.String));
         AspectDef aspectDef = factory.createMutableAspectDef("testAspect", propertyDefs);
         
@@ -244,7 +229,7 @@ class CheapFactoryTest
         assertTrue(mutableAspectDef.canRemoveProperties());
         
         // Test mutable aspect definition with property definitions
-        Map<String, PropertyDef> propertyDefs = new HashMap<>();
+        Map<String, PropertyDef> propertyDefs = new LinkedHashMap<>();
         propertyDefs.put("name", factory.createPropertyDef("name", PropertyType.String));
         propertyDefs.put("age", factory.createPropertyDef("age", PropertyType.Integer));
         AspectDef mutableWithProps = factory.createMutableAspectDef("testWithProps", propertyDefs);
@@ -261,20 +246,6 @@ class CheapFactoryTest
         assertEquals(2, immutableAspectDef.propertyDefs().size());
         assertFalse(immutableAspectDef.canAddProperties());
         assertFalse(immutableAspectDef.canRemoveProperties());
-    }
-
-    @Test
-    void testCreateAspectDefDir()
-    {
-        // Test aspect definition directory
-        AspectDefDir aspectDefDir = factory.createAspectDefDir();
-        assertNotNull(aspectDefDir);
-        
-        // Test aspect definition directory hierarchy
-        HierarchyDef def = factory.createHierarchyDef("aspectDefDir", HierarchyType.ASPECT_DEF_DIR);
-        AspectDefDirHierarchy aspectDefDirHierarchy = factory.createAspectDefDirHierarchy(def);
-        assertNotNull(aspectDefDirHierarchy);
-        assertEquals(def, aspectDefDirHierarchy.def());
     }
 
     @Test
@@ -337,7 +308,7 @@ class CheapFactoryTest
     void testCreateAspects()
     {
         Entity entity = factory.createEntity();
-        Map<String, PropertyDef> propertyDefs = new HashMap<>();
+        Map<String, PropertyDef> propertyDefs = new LinkedHashMap<>();
         propertyDefs.put("name", factory.createPropertyDef("name", PropertyType.String));
         AspectDef aspectDef = factory.createMutableAspectDef("testAspect", propertyDefs);
         

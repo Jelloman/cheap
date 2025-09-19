@@ -1,8 +1,8 @@
 package net.netbeing.cheap.impl.basic;
 
 import net.netbeing.cheap.model.Entity;
-import net.netbeing.cheap.model.HierarchyDef;
 import net.netbeing.cheap.model.EntityTreeHierarchy;
+import net.netbeing.cheap.model.HierarchyDef;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
@@ -25,7 +25,7 @@ public class EntityTreeHierarchyImpl implements EntityTreeHierarchy
      * Implementation of a tree node that can have child nodes.
      * This node type extends HashMap to provide string-to-node mappings.
      */
-    public static class NodeImpl extends HashMap<String, Node> implements Node
+    public static class NodeImpl extends LinkedHashMap<String, Node> implements Node
     {
         /** The entity value stored at this node. */
         private final Entity value;

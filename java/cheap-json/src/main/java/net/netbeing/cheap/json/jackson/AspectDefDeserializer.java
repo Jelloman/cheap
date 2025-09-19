@@ -10,10 +10,7 @@ import net.netbeing.cheap.util.CheapFactory;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 class AspectDefDeserializer extends JsonDeserializer<AspectDef>
 {
@@ -68,7 +65,7 @@ class AspectDefDeserializer extends JsonDeserializer<AspectDef>
             throw new JsonMappingException(p, "Missing required field: name");
         }
 
-        Map<String, PropertyDef> propertyDefMap = new HashMap<>();
+        Map<String, PropertyDef> propertyDefMap = new LinkedHashMap<>();
         for (PropertyDef propertyDef : propertyDefs) {
             propertyDefMap.put(propertyDef.name(), propertyDef);
         }

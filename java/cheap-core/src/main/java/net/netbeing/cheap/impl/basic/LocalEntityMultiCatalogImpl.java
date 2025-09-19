@@ -4,7 +4,10 @@ import com.google.common.collect.Iterables;
 import net.netbeing.cheap.model.*;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.Set;
+import java.util.UUID;
 
 /**
  * Implementation of a LocalEntity that has Aspects in multiple Catalogs.

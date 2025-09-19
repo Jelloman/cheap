@@ -1,5 +1,9 @@
 package net.netbeing.cheap.model;
 
+import org.jetbrains.annotations.NotNull;
+
+import java.util.Objects;
+
 /**
  * Defines the metadata and constraints for a property within the CHEAP data model.
  * A property definition specifies the name, type, and access characteristics of
@@ -17,7 +21,7 @@ public interface PropertyDef
      * 
      * @return the property name, never null
      */
-    String name();
+    @NotNull String name();
 
     /**
      * Returns the data type of this property.
@@ -26,7 +30,7 @@ public interface PropertyDef
      * 
      * @return the property type, never null
      */
-    PropertyType type();
+    @NotNull PropertyType type();
 
     /**
      * Returns the default value of this property, which may be null.
@@ -86,4 +90,23 @@ public interface PropertyDef
      * @return true if the property can hold multiple values, false if it holds a single value
      */
     boolean isMultivalued();
+
+    /**
+     * Perform a full comparison of every field of this PropertyDef.
+     * Normal equals() compares only by name, for performance reasons.
+     *
+     * @return true if the other PropertyDef is fully identical to this one
+     */
+    default boolean fullyEquals(PropertyDef other)
+    {
+        return other != null &&
+            hasDefaultValue() == other.hasDefaultValue() &&
+            isReadable() == other.isReadable() &&
+            isWritable() == other.isWritable() &&
+            isNullable() == other.isNullable() &&
+            isRemovable() == other.isRemovable() &&
+            Objects.equals(defaultValue(), other.defaultValue()) &&
+            type().equals(other.type()) &&
+            name().equals(other.name());
+    }
 }

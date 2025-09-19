@@ -12,6 +12,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
 
@@ -36,7 +37,7 @@ class EntityDirectoryHierarchyDeserializer extends JsonDeserializer<EntityDirect
             throw new JsonMappingException(p, "Expected START_OBJECT token");
         }
 
-        Map<String, Entity> entityIds = new HashMap<>();
+        Map<String, Entity> entityIds = new LinkedHashMap<>();
 
         EntityDirectoryHierarchy hierarchy = null;
 

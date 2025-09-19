@@ -59,12 +59,13 @@ public interface Catalog extends Entity
     URI uri();
 
     /**
-     * Returns the upstream catalog that this catalog derives its data from,
-     * or null if this is a source or sink catalog without an upstream source.
+     * Returns the globalId of the upstream catalog that this catalog derives
+     * its data from, or null if this is a source or sink catalog without an
+     * upstream source.
      * 
      * @return the upstream catalog, or null if this is a source or sink
      */
-    Catalog upstream();
+    UUID upstream();
 
     /**
      * Flags whether this catalog is strict, which means it only contains the
@@ -76,31 +77,22 @@ public interface Catalog extends Entity
     boolean isStrict();
 
     /**
-     * Returns the directory of hierarchies contained within this catalog.
-     * This special hierarchy manages the collection of all other hierarchies
-     * in the catalog and provides named access to them.
+     * Returns the collection of hierarchies contained within this catalog.
      *
-     * <p>This is one of the two fixed hierarchies present in every catalog.</p>
-     *
-     * @return the hierarchy directory for this catalog, never null
+     * @return the hierarchy collection for this catalog, never null
      */
-    @NotNull HierarchyDir hierarchies();
+    @NotNull Iterable<Hierarchy> hierarchies();
 
     /**
-     * Returns the directory of all AspectDefs contained within this catalog.
-     * This is always a superset of the AspectDefDir provided by the CatalogDef.
+     * Returns the collection of all AspectDefs contained within this catalog.
+     * This is always a superset of the AspectDef collection provided by the CatalogDef.
      *
-     * <p>This is one of the two fixed hierarchies present in every catalog.</p>
-     *
-     * @return the AspectDef directory for this catalog, never null
+     * @return the AspectDef collection for this catalog, never null
      */
-    @NotNull AspectDefDir aspectDefs();
+    @NotNull Iterable<AspectDef> aspectDefs();
 
     /**
      * Retrieves a specific hierarchy by name from this catalog.
-     * 
-     * <p>This is a convenience method that provides direct access to named
-     * hierarchies without requiring navigation through the hierarchies directory.</p>
      *
      * @param name the name of the hierarchy to retrieve, may be null
      * @return the hierarchy with the specified name, or null if not found
@@ -108,10 +100,28 @@ public interface Catalog extends Entity
     Hierarchy hierarchy(@NotNull String name);
 
     /**
+     * Adds a new hierarchy to this catalog. This will replace the existing hierarchy
+     * of the same name, if one exists, unless the existing hierarchy is an AspectMapHierarchy.
+     *
+     * @param hierarchy the hierarchy to add
+     * @return the existing hierarchy that was replaced
+     */
+    Hierarchy addHierarchy(@NotNull Hierarchy hierarchy);
+
+    /**
+     * Returns true if there are one or more Aspects in this catalog with the
+     * specified AspectDef name.
+     *
+     * @param name AspectDef name
+     * @return true if this catalog contains at least one such aspect
+     */
+    boolean containsAspects(@NotNull String name);
+
+    /**
      * Retrieves the aspect map hierarchy for a specific aspect definition.
-     * This provides access to all aspects of the specified type. If the map is
-     * not found, but the AspectDef is present in the CatalogDef, then a new,
-     * empty map will be created.
+     * This provides access to ALL aspects of the specified type in this catalog.
+     * If the map is not found, but the AspectDef is present in the CatalogDef,
+     * then a new, empty AspectMapHierarchy will be created.
      * 
      * @param aspectDef the aspect definition to find aspects for, must not be null
      * @return the aspect map hierarchy containing all aspects of the specified type
@@ -135,10 +145,9 @@ public interface Catalog extends Entity
         AspectMapHierarchy aspectMap = (AspectMapHierarchy) hierarchy(name);
         if (aspectMap == null) {
             // If it's in our CatalogDef, create it upon demand
-            AspectDef aspectDef = def().aspectDefs().get(name);
+            AspectDef aspectDef = def().aspectDef(name);
             if (aspectDef != null) {
-                aspectMap = new AspectMapHierarchyImpl(aspectDef);
-                hierarchies().add(aspectMap);
+                aspectMap = extend(aspectDef);
             }
         }
         return aspectMap;
@@ -152,20 +161,29 @@ public interface Catalog extends Entity
      *
      * @param aspectDef the type of aspect to add
      * @throws UnsupportedOperationException if we are strict and the AspectDef is not in our CatalogDef
+     * @return the new or existing AspectMapHierarchy
      */
-    default void extend(@NotNull AspectDef aspectDef)
+    default AspectMapHierarchy extend(@NotNull AspectDef aspectDef)
     {
-        if (aspectDefs().contains(aspectDef.name())) {
-            // We already have it; do nothing
-            return;
+        AspectMapHierarchy aMap = aspects(aspectDef);
+        if (aMap != null) {
+            if (!aspectDef.fullyEquals(aMap.aspectDef())) {
+                throw new IllegalArgumentException("A catalog may not be extended with a new AspectDef that is not identical to an existing AspectDef with the same name.");
+            }
+            return aMap;
         }
+        AspectDef officialAspectDef = def().aspectDef(aspectDef.name());
         if (isStrict()) {
-            if (!def().aspectDefs().contains(aspectDef.name())) {
+            if (officialAspectDef == null) {
                 throw new UnsupportedOperationException("A strict catalog may not be extended with a new AspectDef.");
             }
             // Otherwise, this is a valid aspect type and we continue
         }
+        if (officialAspectDef != null && !officialAspectDef.fullyEquals(aspectDef)) {
+            throw new IllegalArgumentException("A catalog may not be extended with a new AspectDef that is not identical to an existing AspectDef with the same name.");
+        }
         AspectMapHierarchy aspectMap = new AspectMapHierarchyImpl(aspectDef);
-        hierarchies().add(aspectMap);
+        addHierarchy(aspectMap);
+        return aspectMap;
     }
 }

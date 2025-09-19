@@ -2,10 +2,12 @@ package net.netbeing.cheap.impl.basic;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import net.netbeing.cheap.model.*;
+import net.netbeing.cheap.model.Aspect;
+import net.netbeing.cheap.model.AspectDef;
+import net.netbeing.cheap.model.Catalog;
+import net.netbeing.cheap.model.Entity;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Objects;
 import java.util.UUID;
 
 /**

@@ -5,18 +5,37 @@
   "strict":false,
   "def":{
     "aspectDefs":{
+      "person":{
+        "name":"person",
+        "propertyDefs":[
+          {
+            "name":"name",
+            "type":"String",
+            "hasDefaultValue":false,
+            "isReadable":true,
+            "isWritable":true,
+            "isNullable":false,
+            "isRemovable":false,
+            "isMultivalued":false
+          },
+          {
+            "name":"age",
+            "type":"Integer",
+            "hasDefaultValue":false,
+            "isReadable":true,
+            "isWritable":true,
+            "isNullable":true,
+            "isRemovable":false,
+            "isMultivalued":false
+          }
+        ],
+        "isReadable":true,
+        "isWritable":true,
+        "canAddProperties":false,
+        "canRemoveProperties":false
+      }
     },
     "hierarchyDefs":[
-      {
-        "name":"hierarchies",
-        "type":"hl",
-        "isModifiable":true
-      },
-      {
-        "name":"aspectage",
-        "type":"ad",
-        "isModifiable":true
-      },
       {
         "name":"person",
         "type":"am",
@@ -33,7 +52,5 @@
       "aspects":{
       }
     }
-  },
-  "aspects":{
   }
 }

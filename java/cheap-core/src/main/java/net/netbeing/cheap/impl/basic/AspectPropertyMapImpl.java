@@ -154,7 +154,7 @@ public class AspectPropertyMapImpl extends AspectBaseImpl
             if (!stdPropDef.isWritable()) {
                 throw new UnsupportedOperationException("Property '" + propName + "' is not writable.");
             }
-            if (!stdPropDef.equals(prop.def())) {
+            if (!stdPropDef.fullyEquals(prop.def())) {
                 throw new IllegalArgumentException("Provided definition of '" + propName + "' conflicts with the existing definition.");
             }
         }

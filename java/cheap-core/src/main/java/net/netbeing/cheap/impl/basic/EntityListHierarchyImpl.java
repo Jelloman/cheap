@@ -1,8 +1,8 @@
 package net.netbeing.cheap.impl.basic;
 
 import net.netbeing.cheap.model.Entity;
-import net.netbeing.cheap.model.HierarchyDef;
 import net.netbeing.cheap.model.EntityListHierarchy;
+import net.netbeing.cheap.model.HierarchyDef;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -26,11 +26,24 @@ public class EntityListHierarchyImpl extends ArrayList<Entity> implements Entity
 
     /**
      * Creates a new EntityListHierarchyImpl with the specified hierarchy definition.
-     * 
+     *
      * @param def the hierarchy definition for this entity list
      */
     public EntityListHierarchyImpl(HierarchyDef def)
     {
+        this.def = def;
+    }
+
+    /**
+     * Creates a new EntityListHierarchyImpl with the specified hierarchy definition and
+     * initial capacity.
+     *
+     * @param def the hierarchy definition for this entity list
+     * @param initialCapacity initial capacity of list
+     */
+    public EntityListHierarchyImpl(HierarchyDef def, int initialCapacity)
+    {
+        super(initialCapacity);
         this.def = def;
     }
 

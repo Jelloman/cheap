@@ -1,8 +1,6 @@
 package net.netbeing.cheap.impl.basic;
 
-import net.netbeing.cheap.model.Aspect;
 import net.netbeing.cheap.model.Entity;
-import net.netbeing.cheap.model.LocalEntity;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;

@@ -5,7 +5,7 @@ import net.netbeing.cheap.model.PropertyType;
 
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Method;
-import java.util.*;
+import java.util.Objects;
 
 /**
  * A {@link PropertyDef} implementation for Plain Old Java Objects (POJOs) that provides property definitions

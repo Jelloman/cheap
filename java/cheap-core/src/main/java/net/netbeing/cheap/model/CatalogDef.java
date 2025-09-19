@@ -21,7 +21,7 @@ public interface CatalogDef
      *
      * @return collection of aspect definitions
      */
-    @NotNull AspectDefDir aspectDefs();
+    @NotNull Iterable<AspectDef> aspectDefs();
 
     /**
      * Returns  a read-only collection of hierarchy definitions that are typically found
@@ -30,7 +30,7 @@ public interface CatalogDef
      *
      * @return collection of hierarchy definitions
      */
-    @NotNull Collection<HierarchyDef> hierarchyDefs();
+    @NotNull Iterable<HierarchyDef> hierarchyDefs();
 
     /**
      * Retrieves a hierarchy definition by name.
@@ -39,5 +39,13 @@ public interface CatalogDef
      * @return the hierarchy definition with the given name, or {@code null} if not found
      */
     HierarchyDef hierarchyDef(String name);
+
+    /**
+     * Retrieves an aspect definition by name.
+     *
+     * @param name the name of the aspect definition to retrieve
+     * @return the aspect definition with the given name, or {@code null} if not found
+     */
+    AspectDef aspectDef(String name);
 
 }

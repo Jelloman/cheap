@@ -86,70 +86,45 @@ public class CheapJsonRawSerializer
         sb.append("\"species\":\"").append(catalog.species().name().toLowerCase()).append("\",");
         appendNewlineAndIndent(sb, prettyPrint, indent + 1);
         sb.append("\"strict\":").append(catalog.isStrict()).append(",");
-        
+
+        if (catalog.upstream() != null) {
+            appendNewlineAndIndent(sb, prettyPrint, indent + 1);
+            sb.append("\"upstream\":\"").append(escapeJson(catalog.upstream().toString())).append("\",");
+        }
+
         appendNewlineAndIndent(sb, prettyPrint, indent + 1);
         sb.append("\"def\":");
         catalogDefToJson(catalog.def(), sb, prettyPrint, indent + 1);
         sb.append(",");
         
-        if (catalog.upstream() != null) {
-            appendNewlineAndIndent(sb, prettyPrint, indent + 1);
-            sb.append("\"upstream\":\"").append(escapeJson(catalog.upstream().globalId().toString())).append("\",");
-        }
-
-        appendNewlineAndIndent(sb, prettyPrint, indent + 1);
-        sb.append("\"aspectDefs\":{");
         boolean first = true;
-        for (AspectDef aspectDef : catalog.aspectDefs()) {
-            if (!first) sb.append(",");
-            appendNewlineAndIndent(sb, prettyPrint, indent + 2);
-            sb.append("\"").append(escapeJson(aspectDef.name())).append("\":");
-            aspectDefToJson(aspectDef, sb, prettyPrint, indent + 2);
-            first = false;
+
+        if (!catalog.isStrict()) {
+            appendNewlineAndIndent(sb, prettyPrint, indent + 1);
+            sb.append("\"aspectDefs\":{");
+            for (AspectDef aspectDef : catalog.aspectDefs()) {
+                // Elide those AspectDefs that are in the CatalogDef
+                if (catalog.def().aspectDef(aspectDef.name()) == null) {
+                    if (!first) sb.append(",");
+                    appendNewlineAndIndent(sb, prettyPrint, indent + 2);
+                    sb.append("\"").append(escapeJson(aspectDef.name())).append("\":");
+                    aspectDefToJson(aspectDef, sb, prettyPrint, indent + 2);
+                    first = false;
+                }
+            }
+            appendNewlineAndIndent(sb, prettyPrint, indent + 1);
+            sb.append("},");
         }
-        appendNewlineAndIndent(sb, prettyPrint, indent + 1);
-        sb.append("},");
 
         appendNewlineAndIndent(sb, prettyPrint, indent + 1);
         sb.append("\"hierarchies\":{");
         first = true;
-        for (Map.Entry<String, Hierarchy> entry : catalog.hierarchies().entrySet()) {
-            Hierarchy h = entry.getValue();
-            // Skip main HierarchyDir and AspectDefDir. The aspectDefs was serialized above,
-            // and the main hierarchy dir is implicitly serialized by this very loop.
-            if ((h == catalog.hierarchies()) || (h == catalog.aspectDefs())) {
-                continue;
-            }
+        for (Hierarchy hierarchy : catalog.hierarchies()) {
             if (!first) sb.append(",");
             appendNewlineAndIndent(sb, prettyPrint, indent + 2);
-            sb.append("\"").append(escapeJson(entry.getKey())).append("\":");
-            hierarchyToJson(entry.getValue(), sb, prettyPrint, indent + 2);
+            sb.append("\"").append(escapeJson(hierarchy.def().name())).append("\":");
+            hierarchyToJson(hierarchy, sb, prettyPrint, indent + 2);
             first = false;
-        }
-        appendNewlineAndIndent(sb, prettyPrint, indent + 1);
-        sb.append("},");
-        
-        appendNewlineAndIndent(sb, prettyPrint, indent + 1);
-        sb.append("\"aspects\":{");
-        first = true;
-        for (AspectDef aspectDef : catalog.aspectDefs()) {
-            AspectMapHierarchy aspectMap = catalog.aspects(aspectDef);
-            if (aspectMap != null && !aspectMap.isEmpty()) {
-                if (!first) sb.append(",");
-                appendNewlineAndIndent(sb, prettyPrint, indent + 2);
-                sb.append("\"").append(escapeJson(aspectDef.name())).append("\":{");
-                boolean firstAspect = true;
-                for (Map.Entry<Entity, Aspect> aspectEntry : aspectMap.entrySet()) {
-                    if (!firstAspect) sb.append(",");
-                    appendNewlineAndIndent(sb, prettyPrint, indent + 3);
-                    sb.append("\"").append(escapeJson(aspectEntry.getKey().globalId().toString())).append("\":");
-                    aspectToJson(aspectEntry.getValue(), sb, prettyPrint, indent + 3);
-                    firstAspect = false;
-                }
-                appendNewlineAndIndent(sb, prettyPrint, indent + 2);
-                sb.append("}");
-                first = false;
-            }
         }
         appendNewlineAndIndent(sb, prettyPrint, indent + 1);
         sb.append("}");
@@ -375,13 +350,11 @@ public class CheapJsonRawSerializer
         HierarchyType type = hierarchy.def().type();
         
         switch (type) {
-            case ASPECT_DEF_DIR -> aspectDefDirHierarchyToJson((AspectDefDirHierarchy) hierarchy, sb, prettyPrint, indent);
             case ASPECT_MAP -> aspectMapHierarchyToJson((AspectMapHierarchy) hierarchy, sb, prettyPrint, indent);
             case ENTITY_DIR -> entityDirectoryHierarchyToJson((EntityDirectoryHierarchy) hierarchy, sb, prettyPrint, indent);
             case ENTITY_LIST -> entityListHierarchyToJson((EntityListHierarchy) hierarchy, sb, prettyPrint, indent);
             case ENTITY_SET -> entitySetHierarchyToJson((EntitySetHierarchy) hierarchy, sb, prettyPrint, indent);
             case ENTITY_TREE -> entityTreeHierarchyToJson((EntityTreeHierarchy) hierarchy, sb, prettyPrint, indent);
-            case HIERARCHY_DIR -> hierarchyDirToJson((HierarchyDir) hierarchy, sb, prettyPrint, indent);
             default -> throw new IllegalArgumentException("Unknown hierarchy type: " + type);
         }
     }
@@ -389,34 +362,37 @@ public class CheapJsonRawSerializer
     /**
      * Converts an Aspect to JSON.
      */
-    public static void aspectToJson(Aspect aspect, StringBuilder sb)
+    public static void aspectToJson(Aspect aspect, StringBuilder sb, boolean includeMetadata)
     {
-        aspectToJson(aspect, sb, false, 0);
+        aspectToJson(aspect, sb, false, includeMetadata, 0);
     }
     
     /**
      * Converts an Aspect to JSON and returns as a String.
      */
-    public static String aspectToJson(Aspect aspect)
+    public static String aspectToJson(Aspect aspect, boolean includeMetadata)
     {
         StringBuilder sb = new StringBuilder();
-        aspectToJson(aspect, sb, false, 0);
+        aspectToJson(aspect, sb, false, includeMetadata, 0);
         return sb.toString();
     }
     
     /**
      * Converts an Aspect to JSON with optional pretty printing.
      */
-    public static void aspectToJson(Aspect aspect, StringBuilder sb, boolean prettyPrint, int indent)
+    public static void aspectToJson(Aspect aspect, StringBuilder sb, boolean prettyPrint, boolean includeMetadata, int indent)
     {
         sb.append("{");
-        appendNewlineAndIndent(sb, prettyPrint, indent + 1);
-        sb.append("\"aspectDefName\":\"").append(escapeJson(aspect.def().name())).append("\",");
-        appendNewlineAndIndent(sb, prettyPrint, indent + 1);
-        sb.append("\"entityId\":\"").append(escapeJson(aspect.entity().globalId().toString())).append("\",");
-        appendNewlineAndIndent(sb, prettyPrint, indent + 1);
-        sb.append("\"isTransferable\":").append(aspect.isTransferable());
-        
+
+        if (includeMetadata) {
+            appendNewlineAndIndent(sb, prettyPrint, indent + 1);
+            sb.append("\"aspectDefName\":\"").append(escapeJson(aspect.def().name())).append("\",");
+            appendNewlineAndIndent(sb, prettyPrint, indent + 1);
+            sb.append("\"entityId\":\"").append(escapeJson(aspect.entity().globalId().toString())).append("\",");
+            appendNewlineAndIndent(sb, prettyPrint, indent + 1);
+            sb.append("\"isTransferable\":").append(aspect.isTransferable());
+        }
+
         // Add all properties
         for (PropertyDef propertyDef : aspect.def().propertyDefs()) {
             Object value = aspect.unsafeReadObj(propertyDef.name());
@@ -470,48 +446,6 @@ public class CheapJsonRawSerializer
     // ========== Hierarchy Sub-types ==========
     
     /**
-     * Converts an AspectDefDirHierarchy to JSON.
-     */
-    public static void aspectDefDirHierarchyToJson(AspectDefDirHierarchy hierarchy, StringBuilder sb)
-    {
-        aspectDefDirHierarchyToJson(hierarchy, sb, false, 0);
-    }
-    
-    /**
-     * Converts an AspectDefDirHierarchy to JSON and returns as a String.
-     */
-    public static String aspectDefDirHierarchyToJson(AspectDefDirHierarchy hierarchy)
-    {
-        StringBuilder sb = new StringBuilder();
-        aspectDefDirHierarchyToJson(hierarchy, sb, false, 0);
-        return sb.toString();
-    }
-    
-    /**
-     * Converts an AspectDefDirHierarchy to JSON with optional pretty printing.
-     */
-    public static void aspectDefDirHierarchyToJson(AspectDefDirHierarchy hierarchy, StringBuilder sb, boolean prettyPrint, int indent)
-    {
-        sb.append("{");
-        appendNewlineAndIndent(sb, prettyPrint, indent + 1);
-        sb.append("\"def\":{\"type\":\"aspect_def_dir\"},");
-        appendNewlineAndIndent(sb, prettyPrint, indent + 1);
-        sb.append("\"aspectDefs\":{");
-        boolean first = true;
-        for (AspectDef aspectDef : hierarchy.aspectDefs()) {
-            if (!first) sb.append(",");
-            appendNewlineAndIndent(sb, prettyPrint, indent + 2);
-            sb.append("\"").append(escapeJson(aspectDef.name())).append("\":");
-            aspectDefToJson(aspectDef, sb, prettyPrint, indent + 2);
-            first = false;
-        }
-        appendNewlineAndIndent(sb, prettyPrint, indent + 1);
-        sb.append("}");
-        appendNewlineAndIndent(sb, prettyPrint, indent);
-        sb.append("}");
-    }
-    
-    /**
      * Converts an AspectMapHierarchy to JSON.
      */
     public static void aspectMapHierarchyToJson(AspectMapHierarchy hierarchy, StringBuilder sb)
@@ -546,7 +480,7 @@ public class CheapJsonRawSerializer
             if (!first) sb.append(",");
             appendNewlineAndIndent(sb, prettyPrint, indent + 2);
             sb.append("\"").append(escapeJson(entry.getKey().globalId().toString())).append("\":");
-            aspectToJson(entry.getValue(), sb, prettyPrint, indent + 2);
+            aspectToJson(entry.getValue(), sb, prettyPrint, false, indent + 2);
             first = false;
         }
         appendNewlineAndIndent(sb, prettyPrint, indent + 1);
@@ -708,48 +642,6 @@ public class CheapJsonRawSerializer
         appendNewlineAndIndent(sb, prettyPrint, indent + 1);
         sb.append("\"root\":");
         treeNodeToJson(hierarchy.root(), sb, prettyPrint, indent + 1);
-        appendNewlineAndIndent(sb, prettyPrint, indent);
-        sb.append("}");
-    }
-    
-    /**
-     * Converts a HierarchyDir to JSON.
-     */
-    public static void hierarchyDirToJson(HierarchyDir hierarchy, StringBuilder sb)
-    {
-        hierarchyDirToJson(hierarchy, sb, false, 0);
-    }
-    
-    /**
-     * Converts a HierarchyDir to JSON and returns as a String.
-     */
-    public static String hierarchyDirToJson(HierarchyDir hierarchy)
-    {
-        StringBuilder sb = new StringBuilder();
-        hierarchyDirToJson(hierarchy, sb, false, 0);
-        return sb.toString();
-    }
-    
-    /**
-     * Converts a HierarchyDir to JSON with optional pretty printing.
-     */
-    public static void hierarchyDirToJson(HierarchyDir hierarchy, StringBuilder sb, boolean prettyPrint, int indent)
-    {
-        sb.append("{");
-        appendNewlineAndIndent(sb, prettyPrint, indent + 1);
-        sb.append("\"def\":{\"type\":\"hierarchy_dir\"},");
-        appendNewlineAndIndent(sb, prettyPrint, indent + 1);
-        sb.append("\"hierarchies\":{");
-        boolean first = true;
-        for (Map.Entry<String, Hierarchy> entry : hierarchy.entrySet()) {
-            if (!first) sb.append(",");
-            appendNewlineAndIndent(sb, prettyPrint, indent + 2);
-            sb.append("\"").append(escapeJson(entry.getKey())).append("\":\"");
-            sb.append(escapeJson(entry.getValue().def().name())).append("\"");
-            first = false;
-        }
-        appendNewlineAndIndent(sb, prettyPrint, indent + 1);
-        sb.append("}");
         appendNewlineAndIndent(sb, prettyPrint, indent);
         sb.append("}");
     }

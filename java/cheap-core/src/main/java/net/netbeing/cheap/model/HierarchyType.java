@@ -11,25 +11,13 @@ package net.netbeing.cheap.model;
 public enum HierarchyType
 {
     /**
-     * An ordered directory (map) of named hierarchies within the same catalog.
-     * This is used to organize and provide access to other hierarchies by name.
-     */
-    HIERARCHY_DIR("HL"),
-    
-    /**
-     * A directory of aspect definitions, queryable by UUID or full name.
-     * This hierarchy type manages the metadata about available aspect types.
-     */
-    ASPECT_DEF_DIR("AD"),
-    
-    /**
      * An ordered list containing only entity IDs. This hierarchy type maintains
      * sequence and allows duplicate references to the same entity.
      */
     ENTITY_LIST("EL"),
     
     /**
-     * An unordered set containing only unique entity IDs. This hierarchy type
+     * A possibly-ordered set containing only unique entity IDs. This hierarchy type
      * ensures no duplicate entity references and provides efficient membership testing.
      */
     ENTITY_SET("ES"),

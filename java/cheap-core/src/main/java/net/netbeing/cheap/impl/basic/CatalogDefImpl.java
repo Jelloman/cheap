@@ -1,10 +1,14 @@
 package net.netbeing.cheap.impl.basic;
 
-import net.netbeing.cheap.model.*;
+import net.netbeing.cheap.model.AspectDef;
+import net.netbeing.cheap.model.CatalogDef;
+import net.netbeing.cheap.model.CatalogSpecies;
+import net.netbeing.cheap.model.HierarchyDef;
 import org.jetbrains.annotations.NotNull;
 
-import java.net.URI;
-import java.util.*;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
  * Basic implementation of a CatalogDef that defines the structure and properties
@@ -19,18 +23,16 @@ import java.util.*;
 public class CatalogDefImpl implements CatalogDef
 {
     /** Map of hierarchy names to their definitions. */
-    private final Map<String,HierarchyDef> hierarchyDefs = new LinkedHashMap<>(4);
+    private final Map<String,HierarchyDef> hierarchyDefs = new LinkedHashMap<>();
 
     /** Map of hierarchy names to their definitions. */
-    private final AspectDefDirImpl aspectDefs = new AspectDefDirImpl();
+    private final Map<String,AspectDef> aspectDefs = new LinkedHashMap<>();
 
     /**
      * Creates a new CatalogDefImpl with no HierarchyDefs or AspectDefs.
      */
     public CatalogDefImpl()
     {
-        this.hierarchyDefs.put(CatalogDefaultHierarchies.CATALOG_ROOT_NAME, CatalogDefaultHierarchies.CATALOG_ROOT);
-        this.hierarchyDefs.put(CatalogDefaultHierarchies.ASPECTAGE_NAME, CatalogDefaultHierarchies.ASPECTAGE);
     }
 
     /**
@@ -59,21 +61,15 @@ public class CatalogDefImpl implements CatalogDef
         }
         if (aspectDefs != null) {
             for (AspectDef aDef : aspectDefs) {
-                this.aspectDefs.add(aDef);
+                this.aspectDefs.put(aDef.name(), aDef);
             }
-        }
-        if (!this.hierarchyDefs.containsKey(CatalogDefaultHierarchies.CATALOG_ROOT_NAME)) {
-            this.hierarchyDefs.put(CatalogDefaultHierarchies.CATALOG_ROOT_NAME, CatalogDefaultHierarchies.CATALOG_ROOT);
-        }
-        if (!this.hierarchyDefs.containsKey(CatalogDefaultHierarchies.ASPECTAGE_NAME)) {
-            this.hierarchyDefs.put(CatalogDefaultHierarchies.ASPECTAGE_NAME, CatalogDefaultHierarchies.ASPECTAGE);
         }
     }
 
     @Override
-    public @NotNull AspectDefDir aspectDefs()
+    public @NotNull Iterable<AspectDef> aspectDefs()
     {
-        return aspectDefs;
+        return Collections.unmodifiableCollection(aspectDefs.values());
     }
 
     /**
@@ -82,7 +78,7 @@ public class CatalogDefImpl implements CatalogDef
      * @return collection of hierarchy definitions
      */
     @Override
-    public @NotNull Collection<HierarchyDef> hierarchyDefs()
+    public @NotNull Iterable<HierarchyDef> hierarchyDefs()
     {
         return Collections.unmodifiableCollection(hierarchyDefs.values());
     }
@@ -98,4 +94,17 @@ public class CatalogDefImpl implements CatalogDef
     {
         return hierarchyDefs.get(name);
     }
+
+    /**
+     * Retrieves an aspect definition by name.
+     *
+     * @param name the name of the aspect definition to retrieve
+     * @return the aspect definition with the given name, or {@code null} if not found
+     */
+    @Override
+    public AspectDef aspectDef(String name)
+    {
+        return aspectDefs.get(name);
+    }
+
 }

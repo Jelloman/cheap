@@ -3,7 +3,6 @@ package net.netbeing.cheap.impl.basic;
 import net.netbeing.cheap.model.*;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 

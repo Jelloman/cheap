@@ -15,7 +15,7 @@ import static java.util.Map.entry;
 public class PostgresCatalog extends CatalogImpl
 {
     protected final List<String> tables = new LinkedList<>();
-    protected final Map<String, AspectDef> tableAspects = new HashMap<>();
+    protected final Map<String, AspectDef> tableAspects = new LinkedHashMap<>();
     protected DataSource dataSource;
     
     public PostgresCatalog(@NotNull DataSource dataSource) {
@@ -255,7 +255,7 @@ public class PostgresCatalog extends CatalogImpl
             throw new RuntimeException("Failed to load table data for table: " + tableName, e);
         }
 
-        this.hierarchies().add(hierarchy);
+        this.addHierarchy(hierarchy);
 
         return hierarchy;
     }

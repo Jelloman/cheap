@@ -156,8 +156,11 @@ public class CheapFileUtil
      */
     public void loadFileRecordsOnly(Catalog catalog, Path dir, int maxDepth, FileVisitOption... options) throws IOException
     {
-        RecordAspectDef aspectDef = (RecordAspectDef) catalog.aspectDefs().get(FILE_REC_ASPECT_NAME);
-        AspectMapHierarchy aspects = catalog.aspects(aspectDef);
+        AspectMapHierarchy aspects = catalog.aspects(FILE_REC_ASPECT_NAME);
+        if (aspects == null) {
+            throw new IllegalStateException("Catalog does not contain aspects named '" + FILE_REC_ASPECT_NAME + ".");
+        }
+        RecordAspectDef aspectDef = (RecordAspectDef) aspects.aspectDef();
 
         try (Stream<FileRec> stream = stream(dir, maxDepth, options)) {
             stream.forEach(rec -> aspects.add(new RecordAspect<>(new EntityImpl(), aspectDef, rec)));
@@ -191,8 +194,11 @@ public class CheapFileUtil
     public void loadFileHierarchy(@NotNull Catalog catalog, @NotNull HierarchyDef hierarchyDef,
                                   @NotNull Path dir, int maxDepth, FileVisitOption... options) throws IOException
     {
-        final RecordAspectDef aspectDef = (RecordAspectDef) catalog.aspectDefs().get(FILE_REC_ASPECT_NAME);
-        final AspectMapHierarchy aspects = catalog.aspects(aspectDef);
+        AspectMapHierarchy aspects = catalog.aspects(FILE_REC_ASPECT_NAME);
+        if (aspects == null) {
+            throw new IllegalStateException("Catalog does not contain aspects named '" + FILE_REC_ASPECT_NAME + ".");
+        }
+        RecordAspectDef aspectDef = (RecordAspectDef) aspects.aspectDef();
 
         var walkState = new Object() {
             EntityTreeHierarchyImpl hierarchy;
@@ -213,7 +219,7 @@ public class CheapFileUtil
                 // Create the hierarchy and root entity the first time through
                 if (walkState.hierarchy == null) {
                     walkState.hierarchy = new EntityTreeHierarchyImpl(hierarchyDef, nodeEntity);
-                    catalog.hierarchies().put(hierarchyDef.name(), walkState.hierarchy);
+                    catalog.addHierarchy(walkState.hierarchy);
                     walkState.root = walkState.hierarchy.root();
                     walkState.currentNode = walkState.root;
                     walkState.currentFile = newFile;

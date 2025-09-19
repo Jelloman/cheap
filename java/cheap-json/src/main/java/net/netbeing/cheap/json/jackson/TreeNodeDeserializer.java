@@ -11,6 +11,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
 
@@ -36,7 +37,7 @@ class TreeNodeDeserializer extends JsonDeserializer<EntityTreeHierarchy.Node>
         }
 
         UUID entityId = null;
-        Map<String, EntityTreeHierarchy.Node> children = new HashMap<>();
+        Map<String, EntityTreeHierarchy.Node> children = new LinkedHashMap<>();
 
         while (p.nextToken() != JsonToken.END_OBJECT) {
             String fieldName = p.currentName();

@@ -92,12 +92,6 @@ class EntityDirectoryHierarchyImplTest
     }
 
     @Test
-    void put_NullKey_ThrowsException()
-    {
-        assertThrows(NullPointerException.class, () -> entityDirectory.put(null, entity1));
-    }
-
-    @Test
     void put_EmptyStringKey_AcceptsEmptyString()
     {
         Entity result = entityDirectory.put("", entity1);

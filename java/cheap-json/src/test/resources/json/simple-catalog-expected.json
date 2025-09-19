@@ -7,22 +7,10 @@
     "aspectDefs":{
     },
     "hierarchyDefs":[
-      {
-        "name":"hierarchies",
-        "type":"hl",
-        "isModifiable":true
-      },
-      {
-        "name":"aspectage",
-        "type":"ad",
-        "isModifiable":true
-      }
     ]
   },
   "aspectDefs":{
   },
   "hierarchies":{
-  },
-  "aspects":{
   }
 }

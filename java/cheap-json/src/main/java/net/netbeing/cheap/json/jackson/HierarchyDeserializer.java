@@ -63,13 +63,11 @@ class HierarchyDeserializer extends JsonDeserializer<Hierarchy>
         // Note: This is a simplified approach that requires the type to be determinable from the def field
 
         return switch (type) {
-            case ASPECT_DEF_DIR -> p.readValueAs(AspectDefDirHierarchy.class);
             case ASPECT_MAP -> p.readValueAs(AspectMapHierarchy.class);
             case ENTITY_DIR -> p.readValueAs(EntityDirectoryHierarchy.class);
             case ENTITY_LIST -> p.readValueAs(EntityListHierarchy.class);
             case ENTITY_SET -> p.readValueAs(EntitySetHierarchy.class);
             case ENTITY_TREE -> p.readValueAs(EntityTreeHierarchy.class);
-            case HIERARCHY_DIR -> p.readValueAs(HierarchyDir.class);
             default -> throw new JsonMappingException(p, "Unknown hierarchy type: " + type);
         };
     }
@@ -77,8 +75,6 @@ class HierarchyDeserializer extends JsonDeserializer<Hierarchy>
     private HierarchyType fromTypeCode(String typeCode) throws JsonMappingException
     {
         return switch (typeCode) {
-            case "HL" -> HierarchyType.HIERARCHY_DIR;
-            case "AD" -> HierarchyType.ASPECT_DEF_DIR;
             case "EL" -> HierarchyType.ENTITY_LIST;
             case "ES" -> HierarchyType.ENTITY_SET;
             case "ED" -> HierarchyType.ENTITY_DIR;
@@ -91,8 +87,6 @@ class HierarchyDeserializer extends JsonDeserializer<Hierarchy>
     private HierarchyType fromTypeValue(String typeValue) throws JsonMappingException
     {
         return switch (typeValue) {
-            case "hierarchy_dir" -> HierarchyType.HIERARCHY_DIR;
-            case "aspect_def_dir" -> HierarchyType.ASPECT_DEF_DIR;
             case "entity_list" -> HierarchyType.ENTITY_LIST;
             case "entity_set" -> HierarchyType.ENTITY_SET;
             case "entity_dir" -> HierarchyType.ENTITY_DIR;

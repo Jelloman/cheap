@@ -1,15 +1,8 @@
 package net.netbeing.cheap.impl.basic;
 
-import com.google.common.base.Function;
-import com.google.common.collect.Collections2;
-import com.google.common.collect.Maps;
+import com.google.common.collect.Iterables;
 import net.netbeing.cheap.model.*;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.Map;
 
 /**
  * Thin implementation of CatalogDef that merely wraps an existing Catalog.
@@ -21,7 +14,6 @@ import java.util.Map;
 public class CatalogDefWrapper implements CatalogDef
 {
     private final Catalog catalog;
-    private final Map<String,HierarchyDef> hierarchyDefs;
 
     /**
      * Creates a new CatalogDefImpl with no HierarchyDefs or AspectDefs.
@@ -29,9 +21,6 @@ public class CatalogDefWrapper implements CatalogDef
     public CatalogDefWrapper(@NotNull Catalog catalog)
     {
         this.catalog = catalog;
-        // Create a lazy wrapper around the catalog hierarchies
-        this.hierarchyDefs = Maps.transformValues(catalog.hierarchies(), (Hierarchy h) -> h.def());
-    //Collections2.transform(catalog.hierarchies().values(), (Hierarchy h) -> h.def());
     }
 
     /**
@@ -40,7 +29,7 @@ public class CatalogDefWrapper implements CatalogDef
      * @return an AspectDefDir
      */
     @Override
-    public @NotNull AspectDefDir aspectDefs()
+    public @NotNull Iterable<AspectDef> aspectDefs()
     {
         return catalog.aspectDefs();
     }
@@ -51,9 +40,9 @@ public class CatalogDefWrapper implements CatalogDef
      * @return collection of hierarchy definitions
      */
     @Override
-    public @NotNull Collection<HierarchyDef> hierarchyDefs()
+    public @NotNull Iterable<HierarchyDef> hierarchyDefs()
     {
-        return hierarchyDefs.values();
+        return Iterables.transform(catalog.hierarchies(), h -> h.def());
     }
 
     /**
@@ -65,6 +54,23 @@ public class CatalogDefWrapper implements CatalogDef
     @Override
     public HierarchyDef hierarchyDef(String name)
     {
-        return hierarchyDefs.get(name);
+        Hierarchy hierarchy = catalog.hierarchy(name);
+        return hierarchy != null ? hierarchy.def() : null;
+    }
+
+    /**
+     * Retrieves an aspect definition by name.
+     *
+     * @param name the name of the aspect definition to retrieve
+     * @return the aspect definition with the given name, or {@code null} if not found
+     */
+    @Override
+    public AspectDef aspectDef(String name)
+    {
+        if (!catalog.containsAspects(name)) {
+            return null;
+        }
+        AspectMapHierarchy aMap = catalog.aspects(name);
+        return aMap != null ? aMap.aspectDef() : null;
     }
 }

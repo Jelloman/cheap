@@ -1,11 +1,11 @@
 package net.netbeing.cheap.impl.basic;
 
 import net.netbeing.cheap.model.Entity;
-import net.netbeing.cheap.model.HierarchyDef;
 import net.netbeing.cheap.model.EntitySetHierarchy;
+import net.netbeing.cheap.model.HierarchyDef;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 
 /**
  * Basic implementation of an EntitySetHierarchy using a HashSet.
@@ -19,7 +19,7 @@ import java.util.HashSet;
  * @see Entity
  * @see HierarchyDef
  */
-public class EntitySetHierarchyImpl extends HashSet<Entity> implements EntitySetHierarchy
+public class EntitySetHierarchyImpl extends LinkedHashSet<Entity> implements EntitySetHierarchy
 {
     /** The hierarchy definition describing this entity set. */
     private final HierarchyDef def;
@@ -31,6 +31,19 @@ public class EntitySetHierarchyImpl extends HashSet<Entity> implements EntitySet
      */
     public EntitySetHierarchyImpl(HierarchyDef def)
     {
+        this.def = def;
+    }
+
+    /**
+     * Creates a new EntitySetHierarchyImpl with the specified hierarchy definition and
+     * initial capacity.
+     *
+     * @param def the hierarchy definition for this entity set
+     * @param initialCapacity initial capacity of set
+     */
+    public EntitySetHierarchyImpl(HierarchyDef def, int initialCapacity)
+    {
+        super(initialCapacity);
         this.def = def;
     }
 

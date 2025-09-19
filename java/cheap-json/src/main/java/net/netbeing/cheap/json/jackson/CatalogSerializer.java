@@ -25,49 +25,32 @@ class CatalogSerializer extends JsonSerializer<Catalog>
         
         gen.writeStringField("species", catalog.species().name().toLowerCase());
         gen.writeBooleanField("strict", catalog.isStrict());
-        
+
+        if (catalog.upstream() != null) {
+            gen.writeStringField("upstream", catalog.upstream().toString());
+        }
+
         gen.writeFieldName("def");
         gen.writeObject(catalog.def());
         
-        if (catalog.upstream() != null) {
-            gen.writeStringField("upstream", catalog.upstream().globalId().toString());
+        if (!catalog.isStrict()) {
+            gen.writeFieldName("aspectDefs");
+            gen.writeStartObject();
+            for (AspectDef aspectDef : catalog.aspectDefs()) {
+                // Elide those AspectDefs that are in the CatalogDef
+                if (catalog.def().aspectDef(aspectDef.name()) == null) {
+                    gen.writeFieldName(aspectDef.name());
+                    gen.writeObject(aspectDef);
+                }
+            }
+            gen.writeEndObject();
         }
-
-        gen.writeFieldName("aspectDefs");
-        gen.writeStartObject();
-        for (AspectDef aspectDef : catalog.aspectDefs()) {
-            gen.writeFieldName(aspectDef.name());
-            gen.writeObject(aspectDef);
-        }
-        gen.writeEndObject();
 
         gen.writeFieldName("hierarchies");
         gen.writeStartObject();
-        for (Map.Entry<String, Hierarchy> entry : catalog.hierarchies().entrySet()) {
-            Hierarchy h = entry.getValue();
-            // Skip main HierarchyDir and AspectDefDir. The aspectDefs was serialized above,
-            // and the main hierarchy dir is implicitly serialized by this very loop.
-            if ((h == catalog.hierarchies()) || (h == catalog.aspectDefs())) {
-                continue;
-            }
-            gen.writeFieldName(entry.getKey());
+        for (Hierarchy h : catalog.hierarchies()) {
+            gen.writeFieldName(h.def().name());
             gen.writeObject(h);
-        }
-        gen.writeEndObject();
-        
-        gen.writeFieldName("aspects");
-        gen.writeStartObject();
-        for (AspectDef aspectDef : catalog.aspectDefs()) {
-            AspectMapHierarchy aspectMap = catalog.aspects(aspectDef);
-            if (aspectMap != null && !aspectMap.isEmpty()) {
-                gen.writeFieldName(aspectDef.name());
-                gen.writeStartObject();
-                for (Map.Entry<Entity, Aspect> aspectEntry : aspectMap.entrySet()) {
-                    gen.writeFieldName(aspectEntry.getKey().globalId().toString());
-                    gen.writeObject(aspectEntry.getValue());
-                }
-                gen.writeEndObject();
-            }
         }
         gen.writeEndObject();
         

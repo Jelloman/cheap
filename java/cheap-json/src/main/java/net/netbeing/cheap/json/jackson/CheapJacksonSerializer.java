@@ -89,20 +89,16 @@ public class CheapJacksonSerializer
         module.addSerializer(Property.class, new PropertySerializer());
         
         // Register serializers for hierarchy subtypes (both interfaces and implementations)
-        module.addSerializer(AspectDefDirHierarchy.class, new AspectDefDirHierarchySerializer());
         module.addSerializer(AspectMapHierarchy.class, new AspectMapHierarchySerializer());
         module.addSerializer(EntityDirectoryHierarchy.class, new EntityDirectoryHierarchySerializer());
         module.addSerializer(EntityListHierarchy.class, new EntityListHierarchySerializer());
         module.addSerializer(EntitySetHierarchy.class, new EntitySetHierarchySerializer());
         module.addSerializer(EntityTreeHierarchy.class, new EntityTreeHierarchySerializer());
-        module.addSerializer(HierarchyDir.class, new HierarchyDirSerializer());
         module.addSerializer(EntityTreeHierarchy.Node.class, new TreeNodeSerializer());
         
         // Also register for implementation classes that might be used
         try {
             // Use Class.forName to handle implementation classes that might not be in the module path
-            @SuppressWarnings("unchecked")
-            Class<AspectDefDirHierarchy> aspectDefDirHierarchyImpl = (Class<AspectDefDirHierarchy>) Class.forName("net.netbeing.cheap.impl.basic.AspectDefDirHierarchyImpl");
             @SuppressWarnings("unchecked")
             Class<AspectMapHierarchy> aspectMapHierarchyImpl = (Class<AspectMapHierarchy>) Class.forName("net.netbeing.cheap.impl.basic.AspectMapHierarchyImpl");
             @SuppressWarnings("unchecked")
@@ -113,16 +109,12 @@ public class CheapJacksonSerializer
             Class<EntitySetHierarchy> entitySetHierarchyImpl = (Class<EntitySetHierarchy>) Class.forName("net.netbeing.cheap.impl.basic.EntitySetHierarchyImpl");
             @SuppressWarnings("unchecked")
             Class<EntityTreeHierarchy> entityTreeHierarchyImpl = (Class<EntityTreeHierarchy>) Class.forName("net.netbeing.cheap.impl.basic.EntityTreeHierarchyImpl");
-            @SuppressWarnings("unchecked")
-            Class<HierarchyDir> hierarchyDirImpl = (Class<HierarchyDir>) Class.forName("net.netbeing.cheap.impl.basic.HierarchyDirImpl");
-            
-            module.addSerializer(aspectDefDirHierarchyImpl, new AspectDefDirHierarchySerializer());
+
             module.addSerializer(aspectMapHierarchyImpl, new AspectMapHierarchySerializer());
             module.addSerializer(entityDirectoryHierarchyImpl, new EntityDirectoryHierarchySerializer());
             module.addSerializer(entityListHierarchyImpl, new EntityListHierarchySerializer());
             module.addSerializer(entitySetHierarchyImpl, new EntitySetHierarchySerializer());
             module.addSerializer(entityTreeHierarchyImpl, new EntityTreeHierarchySerializer());
-            module.addSerializer(hierarchyDirImpl, new HierarchyDirSerializer());
         } catch (ClassNotFoundException e) {
             // Implementation classes not available, will fall back to interface serializers
         }

@@ -1,8 +1,11 @@
 package net.netbeing.cheap.impl.reflect;
 
-import net.netbeing.cheap.model.*;
-import org.jetbrains.annotations.NotNull;
+import net.netbeing.cheap.model.Aspect;
+import net.netbeing.cheap.model.AspectDef;
+import net.netbeing.cheap.model.Entity;
+import net.netbeing.cheap.model.Property;
 import net.netbeing.cheap.util.reflect.GenericGetterSetter;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
 

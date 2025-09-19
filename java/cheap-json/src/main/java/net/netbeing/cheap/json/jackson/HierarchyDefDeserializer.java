@@ -61,8 +61,6 @@ class HierarchyDefDeserializer extends JsonDeserializer<HierarchyDef>
     private HierarchyType fromTypeCode(String typeCode) throws JsonMappingException
     {
         return switch (typeCode) {
-            case "HL" -> HierarchyType.HIERARCHY_DIR;
-            case "AD" -> HierarchyType.ASPECT_DEF_DIR;
             case "EL" -> HierarchyType.ENTITY_LIST;
             case "ES" -> HierarchyType.ENTITY_SET;
             case "ED" -> HierarchyType.ENTITY_DIR;

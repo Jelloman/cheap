@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -41,6 +42,7 @@ public class CheapJsonRawSerializerTest
         StringBuilder sb = new StringBuilder();
         CheapJsonRawSerializer.propertyDefToJson(propertyDef, sb, true, 0);
 
+        Files.writeString(Paths.get("D:\\src\\tmp\\raw", "propertydef-expected.json"), sb, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
         String expected = loadJsonFromFile("propertydef-expected.json");
         assertEquals(expected, sb.toString());
     }
@@ -52,6 +54,7 @@ public class CheapJsonRawSerializerTest
         StringBuilder sb = new StringBuilder();
         CheapJsonRawSerializer.propertyDefToJson(propertyDef, sb, true, 0);
 
+        Files.writeString(Paths.get("D:\\src\\tmp\\raw", "propertydef-with-default-expected.json"), sb, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
         String expected = loadJsonFromFile("propertydef-with-default-expected.json");
         assertEquals(expected, sb.toString());
     }
@@ -63,6 +66,7 @@ public class CheapJsonRawSerializerTest
         StringBuilder sb = new StringBuilder();
         CheapJsonRawSerializer.hierarchyDefToJson(hierarchyDef, sb, true, 0);
 
+        Files.writeString(Paths.get("D:\\src\\tmp\\raw", "hierarchydef-expected.json"), sb, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
         String expected = loadJsonFromFile("hierarchydef-expected.json");
         assertEquals(expected, sb.toString());
     }
@@ -80,8 +84,9 @@ public class CheapJsonRawSerializerTest
         aspect.unsafeWrite("name", "John Doe");
 
         StringBuilder sb = new StringBuilder();
-        CheapJsonRawSerializer.aspectToJson(aspect, sb, true, 0);
+        CheapJsonRawSerializer.aspectToJson(aspect, sb, true, true, 0);
 
+        Files.writeString(Paths.get("D:\\src\\tmp\\raw", "aspect-expected.json"), sb, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
         String expected = loadJsonFromFile("aspect-expected.json");
         assertEquals(expected, sb.toString());
     }
@@ -100,6 +105,7 @@ public class CheapJsonRawSerializerTest
         StringBuilder sb = new StringBuilder();
         CheapJsonRawSerializer.entityListHierarchyToJson(hierarchy, sb, true, 0);
 
+        Files.writeString(Paths.get("D:\\src\\tmp\\raw", "entity-list-hierarchy-expected.json"), sb, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
         String expected = loadJsonFromFile("entity-list-hierarchy-expected.json");
         assertEquals(expected, sb.toString());
     }
@@ -119,6 +125,7 @@ public class CheapJsonRawSerializerTest
         CheapJsonRawSerializer.entitySetHierarchyToJson(hierarchy, sb, true, 0);
 
         // LinkedHashSet preserves insertion order, so we can predict the order
+        Files.writeString(Paths.get("D:\\src\\tmp\\raw", "entity-set-hierarchy-expected.json"), sb, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
         String expected = loadJsonFromFile("entity-set-hierarchy-expected.json");
         assertEquals(expected, sb.toString());
     }
@@ -137,6 +144,7 @@ public class CheapJsonRawSerializerTest
         StringBuilder sb = new StringBuilder();
         CheapJsonRawSerializer.entityDirectoryHierarchyToJson(hierarchy, sb, true, 0);
 
+        Files.writeString(Paths.get("D:\\src\\tmp\\raw", "entity-directory-hierarchy-expected.json"), sb, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
         String expected = loadJsonFromFile("entity-directory-hierarchy-expected.json");
         assertEquals(expected, sb.toString());
     }
@@ -152,6 +160,7 @@ public class CheapJsonRawSerializerTest
         StringBuilder sb = new StringBuilder();
         CheapJsonRawSerializer.treeNodeToJson(hierarchy.root(), sb, true, 0);
 
+        Files.writeString(Paths.get("D:\\src\\tmp\\raw", "tree-node-expected.json"), sb, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
         String expected = loadJsonFromFile("tree-node-expected.json");
         assertEquals(expected, sb.toString());
     }
@@ -173,6 +182,7 @@ public class CheapJsonRawSerializerTest
         StringBuilder sb = new StringBuilder();
         CheapJsonRawSerializer.treeNodeToJson(hierarchy.root(), sb, true, 0);
 
+        Files.writeString(Paths.get("D:\\src\\tmp\\raw", "tree-node-with-children-expected.json"), sb, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
         String expected = loadJsonFromFile("tree-node-with-children-expected.json");
         assertEquals(expected, sb.toString());
     }
@@ -188,7 +198,8 @@ public class CheapJsonRawSerializerTest
         
         StringBuilder sb = new StringBuilder();
         CheapJsonRawSerializer.aspectDefToJson(aspectDef, sb, true, 0);
-        
+
+        Files.writeString(Paths.get("D:\\src\\tmp\\raw", "aspectdef-expected.json"), sb, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
         String expected = loadJsonFromFile("aspectdef-expected.json");
         assertEquals(expected, sb.toString());
     }
@@ -206,7 +217,8 @@ public class CheapJsonRawSerializerTest
         
         StringBuilder sb = new StringBuilder();
         CheapJsonRawSerializer.catalogDefToJson(catalogDef, sb, true, 0);
-        
+
+        Files.writeString(Paths.get("D:\\src\\tmp\\raw", "catalogdef-expected.json"), sb, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
         String expected = loadJsonFromFile("catalogdef-expected.json");
         assertEquals(expected, sb.toString());
     }
@@ -224,6 +236,7 @@ public class CheapJsonRawSerializerTest
 
         String result = CheapJsonRawSerializer.toJson(catalog, true);
 
+        Files.writeString(Paths.get("D:\\src\\tmp\\raw", "simple-catalog-expected.json"), result, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
         String expected = loadJsonFromFile("simple-catalog-expected.json");
         assertEquals(expected, result);
     }
@@ -235,6 +248,7 @@ public class CheapJsonRawSerializerTest
 
         String result = CheapJsonRawSerializer.toJson(catalog, false);
 
+        Files.writeString(Paths.get("D:\\src\\tmp\\raw", "simple-catalog-expected-compact.json"), result, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
         String expected = loadJsonFromFile("simple-catalog-expected-compact.json");
         assertEquals(expected, result);
     }
@@ -246,6 +260,7 @@ public class CheapJsonRawSerializerTest
 
         String result = CheapJsonRawSerializer.toJson(catalog, true);
 
+        Files.writeString(Paths.get("D:\\src\\tmp\\raw", "catalog-with-aspectdef-expected.json"), result, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
         String expected = loadJsonFromFile("catalog-with-aspectdef-expected.json");
         assertEquals(expected, result);
     }
@@ -257,6 +272,7 @@ public class CheapJsonRawSerializerTest
 
         String result = CheapJsonRawSerializer.toJson(catalog, false);
 
+        Files.writeString(Paths.get("D:\\src\\tmp\\raw", "catalog-with-aspectdef-expected-compact.json"), result, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
         String expected = loadJsonFromFile("catalog-with-aspectdef-expected-compact.json");
         assertEquals(expected, result);
     }
@@ -274,7 +290,7 @@ public class CheapJsonRawSerializerTest
         EntityDirectoryHierarchyImpl entityDirectory = new EntityDirectoryHierarchyImpl(entityDirDef);
         entityDirectory.put("admin", entity1);
         entityDirectory.put("user1", entity2);
-        catalog.hierarchies().put("userDirectory", entityDirectory);
+        catalog.addHierarchy(entityDirectory);
 
         return catalog;
     }
@@ -286,6 +302,7 @@ public class CheapJsonRawSerializerTest
 
         String result = CheapJsonRawSerializer.toJson(catalog, true);
 
+        Files.writeString(Paths.get("D:\\src\\tmp\\raw", "entity-directory-expected.json"), result, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
         String expected = loadJsonFromFile("entity-directory-expected.json");
         assertEquals(expected, result);
     }
@@ -297,6 +314,7 @@ public class CheapJsonRawSerializerTest
 
         String result = CheapJsonRawSerializer.toJson(catalog, false);
 
+        Files.writeString(Paths.get("D:\\src\\tmp\\raw", "entity-directory-expected-compact.json"), result, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
         String expected = loadJsonFromFile("entity-directory-expected-compact.json");
         assertEquals(expected, result);
     }
@@ -314,7 +332,7 @@ public class CheapJsonRawSerializerTest
         EntityListHierarchyImpl entityList = new EntityListHierarchyImpl(entityListDef);
         entityList.add(entity1);
         entityList.add(entity2);
-        catalog.hierarchies().put("taskQueue", entityList);
+        catalog.addHierarchy(entityList);
 
         return catalog;
     }
@@ -326,6 +344,7 @@ public class CheapJsonRawSerializerTest
 
         String result = CheapJsonRawSerializer.toJson(catalog, true);
 
+        Files.writeString(Paths.get("D:\\src\\tmp\\raw", "entity-list-expected.json"), result, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
         String expected = loadJsonFromFile("entity-list-expected.json");
         assertEquals(expected, result);
     }
@@ -337,6 +356,7 @@ public class CheapJsonRawSerializerTest
 
         String result = CheapJsonRawSerializer.toJson(catalog, false);
 
+        Files.writeString(Paths.get("D:\\src\\tmp\\raw", "entity-list-expected-compact.json"), result, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
         String expected = loadJsonFromFile("entity-list-expected-compact.json");
         assertEquals(expected, result);
     }
@@ -354,7 +374,7 @@ public class CheapJsonRawSerializerTest
         EntitySetHierarchyImpl entitySet = new EntitySetHierarchyImpl(entitySetDef);
         entitySet.add(entity1);
         entitySet.add(entity2);
-        catalog.hierarchies().put("activeUsers", entitySet);
+        catalog.addHierarchy(entitySet);
 
         return catalog;
     }
@@ -366,6 +386,7 @@ public class CheapJsonRawSerializerTest
 
         String result = CheapJsonRawSerializer.toJson(catalog, true);
 
+        Files.writeString(Paths.get("D:\\src\\tmp\\raw", "entity-set-expected.json"), result, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
         String expected = loadJsonFromFile("entity-set-expected.json");
         assertEquals(expected, result);
     }
@@ -377,6 +398,7 @@ public class CheapJsonRawSerializerTest
 
         String result = CheapJsonRawSerializer.toJson(catalog, false);
 
+        Files.writeString(Paths.get("D:\\src\\tmp\\raw", "entity-set-expected-compact.json"), result, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
         String expected = loadJsonFromFile("entity-set-expected-compact.json");
         assertEquals(expected, result);
     }
@@ -394,7 +416,7 @@ public class CheapJsonRawSerializerTest
         EntityTreeHierarchyImpl entityTree = new EntityTreeHierarchyImpl(entityTreeDef, parentEntity);
         EntityTreeHierarchyImpl.NodeImpl childNode = new EntityTreeHierarchyImpl.NodeImpl(childEntity, entityTree.root());
         entityTree.root().put("documents", childNode);
-        catalog.hierarchies().put("fileSystem", entityTree);
+        catalog.addHierarchy(entityTree);
 
         return catalog;
     }
@@ -406,6 +428,7 @@ public class CheapJsonRawSerializerTest
 
         String result = CheapJsonRawSerializer.toJson(catalog, true);
 
+        Files.writeString(Paths.get("D:\\src\\tmp\\raw", "entity-tree-expected.json"), result, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
         String expected = loadJsonFromFile("entity-tree-expected.json");
         assertEquals(expected, result);
     }
@@ -417,6 +440,7 @@ public class CheapJsonRawSerializerTest
 
         String result = CheapJsonRawSerializer.toJson(catalog, false);
 
+        Files.writeString(Paths.get("D:\\src\\tmp\\raw", "entity-tree-expected-compact.json"), result, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
         String expected = loadJsonFromFile("entity-tree-expected-compact.json");
         assertEquals(expected, result);
     }
@@ -431,13 +455,11 @@ public class CheapJsonRawSerializerTest
         PropertyDef nameProp = new PropertyDefImpl("name", PropertyType.String, null, false, true, true, false, false, false);
         Map<String, PropertyDef> personProps = ImmutableMap.of("name", nameProp);
         AspectDef personAspectDef = new ImmutableAspectDefImpl("person", personProps);
-        catalog.extend(personAspectDef);
+        AspectMapHierarchy personAspects = catalog.extend(personAspectDef);
 
-        AspectMapHierarchyImpl personAspects = new AspectMapHierarchyImpl(personAspectDef);
         AspectObjectMapImpl personAspect = new AspectObjectMapImpl(entity, personAspectDef);
         personAspect.unsafeWrite("name", "John Doe");
         personAspects.put(entity, personAspect);
-        catalog.hierarchies().put("personData", personAspects);
 
         return catalog;
     }
@@ -449,6 +471,7 @@ public class CheapJsonRawSerializerTest
 
         String result = CheapJsonRawSerializer.toJson(catalog, true);
 
+        Files.writeString(Paths.get("D:\\src\\tmp\\raw", "aspect-map-expected.json"), result, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
         String expected = loadJsonFromFile("aspect-map-expected.json");
         assertEquals(expected, result);
     }
@@ -460,6 +483,7 @@ public class CheapJsonRawSerializerTest
 
         String result = CheapJsonRawSerializer.toJson(catalog, false);
 
+        Files.writeString(Paths.get("D:\\src\\tmp\\raw", "aspect-map-expected-compact.json"), result, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
         String expected = loadJsonFromFile("aspect-map-expected-compact.json");
         assertEquals(expected, result);
     }
@@ -492,8 +516,8 @@ public class CheapJsonRawSerializerTest
         AspectDef docAspectDef = new ImmutableAspectDefImpl("document", docProps);
         
         // Add AspectDefs to catalog
-        catalog.extend(personAspectDef);
-        catalog.extend(docAspectDef);
+        AspectMapHierarchy personAspects = catalog.extend(personAspectDef);
+        AspectMapHierarchy docAspects = catalog.extend(docAspectDef);
 
         // 1. EntityDirectoryHierarchy
         HierarchyDef entityDirDef = new HierarchyDefImpl("userDirectory", HierarchyType.ENTITY_DIR, true);
@@ -501,7 +525,7 @@ public class CheapJsonRawSerializerTest
         entityDirectory.put("admin", entity1);
         entityDirectory.put("user1", entity2);
         entityDirectory.put("guest", entity3);
-        catalog.hierarchies().put("userDirectory", entityDirectory);
+        catalog.addHierarchy(entityDirectory);
         
         // 2. EntityListHierarchy
         HierarchyDef entityListDef = new HierarchyDefImpl("taskQueue", HierarchyType.ENTITY_LIST, true);
@@ -510,7 +534,7 @@ public class CheapJsonRawSerializerTest
         entityList.add(entity2);
         entityList.add(entity3);
         entityList.add(entity1); // Allow duplicates in list
-        catalog.hierarchies().put("taskQueue", entityList);
+        catalog.addHierarchy(entityList);
         
         // 3. EntitySetHierarchy
         HierarchyDef entitySetDef = new HierarchyDefImpl("activeUsers", HierarchyType.ENTITY_SET, true);
@@ -518,7 +542,7 @@ public class CheapJsonRawSerializerTest
         entitySet.add(entity1);
         entitySet.add(entity2);
         entitySet.add(entity4);
-        catalog.hierarchies().put("activeUsers", entitySet);
+        catalog.addHierarchy(entitySet);
         
         // 4. EntityTreeHierarchy
         HierarchyDef entityTreeDef = new HierarchyDefImpl("fileSystem", HierarchyType.ENTITY_TREE, true);
@@ -530,10 +554,9 @@ public class CheapJsonRawSerializerTest
         // Add nested child
         EntityTreeHierarchyImpl.NodeImpl subChild = new EntityTreeHierarchyImpl.NodeImpl(entity4, childNode1);
         childNode1.put("reports", subChild);
-        catalog.hierarchies().put("fileSystem", entityTree);
+        catalog.addHierarchy(entityTree);
         
         // 5. First AspectMapHierarchy (person aspects)
-        AspectMapHierarchyImpl personAspects = new AspectMapHierarchyImpl(personAspectDef);
         AspectObjectMapImpl personAspect1 = new AspectObjectMapImpl(entity1, personAspectDef);
         personAspect1.unsafeWrite("name", "John Doe");
         personAspect1.unsafeWrite("age", "30");
@@ -542,10 +565,8 @@ public class CheapJsonRawSerializerTest
         personAspect2.unsafeWrite("age", "25");
         personAspects.put(entity1, personAspect1);
         personAspects.put(entity2, personAspect2);
-        catalog.hierarchies().put("personData", personAspects);
-        
+
         // 6. Second AspectMapHierarchy (document aspects)
-        AspectMapHierarchyImpl docAspects = new AspectMapHierarchyImpl(docAspectDef);
         AspectObjectMapImpl docAspect1 = new AspectObjectMapImpl(entity3, docAspectDef);
         docAspect1.unsafeWrite("title", "User Manual");
         docAspect1.unsafeWrite("description", "Complete user guide");
@@ -554,7 +575,6 @@ public class CheapJsonRawSerializerTest
         docAspect2.unsafeWrite("description", "REST API reference");
         docAspects.put(entity3, docAspect1);
         docAspects.put(entity4, docAspect2);
-        catalog.hierarchies().put("documents", docAspects);
 
         return catalog;
     }
@@ -566,6 +586,7 @@ public class CheapJsonRawSerializerTest
 
         String result = CheapJsonRawSerializer.toJson(catalog, true);
 
+        Files.writeString(Paths.get("D:\\src\\tmp\\raw", "full-catalog-expected.json"), result, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
         String expected = loadJsonFromFile("full-catalog-expected.json");
         assertEquals(expected, result);
     }
@@ -577,6 +598,7 @@ public class CheapJsonRawSerializerTest
 
         String result = CheapJsonRawSerializer.toJson(catalog, false);
 
+        Files.writeString(Paths.get("D:\\src\\tmp\\raw", "full-catalog-expected-compact.json"), result, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
         String expected = loadJsonFromFile("full-catalog-expected-compact.json");
         assertEquals(expected, result);
     }

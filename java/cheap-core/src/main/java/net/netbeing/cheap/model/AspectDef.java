@@ -1,6 +1,7 @@
 package net.netbeing.cheap.model;
 
 import java.util.Collection;
+import java.util.Objects;
 
 /**
  * Defines the structure and metadata for an aspect type within the CHEAP data model.
@@ -76,6 +77,30 @@ public interface AspectDef
      */
     default boolean canRemoveProperties()
     {
+        return true;
+    }
+
+    /**
+     * Perform a full comparison of every field of this AspectDef.
+     * Normal equals() compares only by name, for performance reasons.
+     *
+     * @return true if the other AspectDef is fully identical to this one
+     */
+    default boolean fullyEquals(AspectDef other)
+    {
+        if (!(name().equals(other.name())) ||
+            isReadable() != other.isReadable() ||
+            isWritable() != other.isWritable() ||
+            canAddProperties() != other.canAddProperties() ||
+            canRemoveProperties() != other.canRemoveProperties()) {
+            return false;
+        }
+        for (PropertyDef propDef : propertyDefs()) {
+            PropertyDef otherPropDef = other.propertyDef(propDef.name());
+            if (otherPropDef == null || !propDef.fullyEquals(otherPropDef)) {
+                return false;
+            }
+        }
         return true;
     }
 }

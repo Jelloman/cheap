@@ -75,7 +75,7 @@ public class CheapFactory
      * @param upstream the upstream catalog, or null for SOURCE/SINK catalogs
      * @return a new Catalog instance
      */
-    public @NotNull Catalog createCatalog(@NotNull CatalogSpecies species, Catalog upstream)
+    public @NotNull Catalog createCatalog(@NotNull CatalogSpecies species, UUID upstream)
     {
         return new CatalogImpl(species, upstream);
     }
@@ -91,7 +91,7 @@ public class CheapFactory
      * @return a new Catalog instance
      */
     public @NotNull Catalog createCatalog(@NotNull UUID globalId, @NotNull CatalogSpecies species, 
-                                                CatalogDef def, Catalog upstream, boolean strict)
+                                                CatalogDef def, UUID upstream, boolean strict)
     {
         return new CatalogImpl(globalId, species, def, upstream, strict);
     }
@@ -345,31 +345,6 @@ public class CheapFactory
     }
 
     /**
-     * Creates a new hierarchy directory.
-     *
-     * @param def the hierarchy definition for this directory
-     * @return a new HierarchyDir instance
-     */
-    public @NotNull HierarchyDir createHierarchyDir(@NotNull HierarchyDef def)
-    {
-        return new HierarchyDirImpl(def);
-    }
-
-    /**
-     * Creates a new hierarchy directory with performance tuning.
-     *
-     * @param def the hierarchy definition for this directory
-     * @param initialCapacity the initial capacity for the internal map
-     * @param loadFactor the load factor for the internal map
-     * @return a new HierarchyDir instance
-     */
-    public @NotNull HierarchyDir createHierarchyDir(@NotNull HierarchyDef def, int initialCapacity, 
-                                                          float loadFactor)
-    {
-        return new HierarchyDirImpl(def, initialCapacity, loadFactor);
-    }
-
-    /**
      * Creates a new entity directory hierarchy.
      *
      * @param def the hierarchy definition for this entity directory
@@ -489,27 +464,6 @@ public class CheapFactory
                                                              @NotNull Map<String, ? extends PropertyDef> propertyDefs)
     {
         return new ImmutableAspectDefImpl(name, propertyDefs);
-    }
-
-    /**
-     * Creates a new aspect definition directory.
-     *
-     * @return a new AspectDefDir instance
-     */
-    public @NotNull AspectDefDir createAspectDefDir()
-    {
-        return new AspectDefDirImpl();
-    }
-
-    /**
-     * Creates a new aspect definition directory hierarchy.
-     *
-     * @param def the hierarchy definition for this hierarchy
-     * @return a new AspectDefDirHierarchy instance
-     */
-    public @NotNull AspectDefDirHierarchy createAspectDefDirHierarchy(@NotNull HierarchyDef def)
-    {
-        return new AspectDefDirHierarchyImpl(def);
     }
 
     // ===== Property Factory Methods =====

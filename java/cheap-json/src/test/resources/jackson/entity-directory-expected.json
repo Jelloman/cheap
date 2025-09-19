@@ -9,14 +9,6 @@
       "name" : "userDirectory",
       "type" : "ed",
       "isModifiable" : true
-    }, {
-      "name" : "hierarchies",
-      "type" : "hl",
-      "isModifiable" : true
-    }, {
-      "name" : "aspectage",
-      "type" : "ad",
-      "isModifiable" : true
     } ]
   },
   "aspectDefs" : { },
@@ -26,10 +18,9 @@
         "type" : "entity_dir"
       },
       "entities" : {
-        "user1" : "550e8400-e29b-41d4-a716-446655440001",
-        "admin" : "550e8400-e29b-41d4-a716-446655440000"
+        "admin" : "550e8400-e29b-41d4-a716-446655440000",
+        "user1" : "550e8400-e29b-41d4-a716-446655440001"
       }
     }
-  },
-  "aspects" : { }
+  }
 }

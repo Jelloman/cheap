@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -25,7 +26,7 @@ class ImmutableAspectDefImplTest
         propDef2 = new PropertyDefImpl("prop2", PropertyType.Integer);
         propDef3 = new PropertyDefImpl("prop3", PropertyType.Boolean);
         
-        propertyDefs = new HashMap<>();
+        propertyDefs = new LinkedHashMap<>();
         propertyDefs.put("prop1", propDef1);
         propertyDefs.put("prop2", propDef2);
     }
@@ -199,7 +200,7 @@ class ImmutableAspectDefImplTest
     @Test
     void propertyDefs_WithDuplicatePropertyNames_LastOneWins()
     {
-        Map<String, PropertyDef> duplicateMap = new HashMap<>();
+        Map<String, PropertyDef> duplicateMap = new LinkedHashMap<>();
         PropertyDef originalProp = new PropertyDefImpl("sameName", PropertyType.String);
         PropertyDef duplicateProp = new PropertyDefImpl("sameName", PropertyType.Integer);
         

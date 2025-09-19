@@ -44,13 +44,7 @@ public class CheapFileUtilTest
         fileRecAspectDef = new RecordAspectDef(FileRec.class);
         
         // Add the FileRec aspect definition to the catalog
-        AspectDefDirHierarchy aspectage = (AspectDefDirHierarchy) catalog.hierarchy("aspectage");
-        aspectage.add(fileRecAspectDef);
-        
-        // Create and add the FileRec aspect hierarchy to the catalog
-        HierarchyDefImpl hierarchyDef = new HierarchyDefImpl(fileRecAspectDef.name(), HierarchyType.ASPECT_MAP);
-        AspectMapHierarchy aspectMapHierarchy = new AspectMapHierarchyImpl(hierarchyDef, fileRecAspectDef);
-        catalog.hierarchies().put(fileRecAspectDef.name(), aspectMapHierarchy);
+        catalog.extend(fileRecAspectDef);
     }
 
     @Test
@@ -88,8 +82,9 @@ public class CheapFileUtilTest
     void aspectDef_AvailableInCatalog()
     {
         // Verify that the aspect definition was properly added to the catalog using the constant
-        assertNotNull(catalog.aspectDefs().get(CheapFileUtil.FILE_REC_ASPECT_NAME));
-        assertEquals(fileRecAspectDef, catalog.aspectDefs().get(CheapFileUtil.FILE_REC_ASPECT_NAME));
+        AspectMapHierarchy aMap = catalog.aspects(CheapFileUtil.FILE_REC_ASPECT_NAME);
+        assertNotNull(aMap);
+        assertEquals(fileRecAspectDef, aMap.aspectDef());
     }
 
     @Test
