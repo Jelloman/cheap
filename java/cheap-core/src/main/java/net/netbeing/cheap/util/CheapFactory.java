@@ -409,10 +409,23 @@ public class CheapFactory
      * @param rootEntity the entity to use as the root of the tree
      * @return a new EntityTreeHierarchy instance
      */
-    public @NotNull EntityTreeHierarchy createEntityTreeHierarchy(@NotNull HierarchyDef def, 
-                                                                         @NotNull Entity rootEntity)
+    public @NotNull EntityTreeHierarchy createEntityTreeHierarchy(@NotNull HierarchyDef def,
+                                                                  @NotNull Entity rootEntity)
     {
         return new EntityTreeHierarchyImpl(def, rootEntity);
+    }
+
+    /**
+     * Creates a new entity tree hierarchy.
+     *
+     * @param def the hierarchy definition for this entity tree
+     * @param rootNode the node to use as the root of the tree
+     * @return a new EntityTreeHierarchy instance
+     */
+    public @NotNull EntityTreeHierarchy createEntityTreeHierarchy(@NotNull HierarchyDef def,
+                                                                  @NotNull EntityTreeHierarchy.Node rootNode)
+    {
+        return new EntityTreeHierarchyImpl(def, rootNode);
     }
 
     /**

@@ -5,6 +5,7 @@ import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonMappingException;
+import net.netbeing.cheap.impl.basic.EntityImpl;
 import net.netbeing.cheap.model.*;
 import net.netbeing.cheap.util.CheapFactory;
 import org.jetbrains.annotations.NotNull;
@@ -35,7 +36,8 @@ class EntitySetHierarchyDeserializer extends JsonDeserializer<EntitySetHierarchy
             throw new JsonMappingException(p, "Expected START_OBJECT token");
         }
 
-        Set<UUID> entityIds = new HashSet<>();
+        Set<Entity> entityIds = new HashSet<>();
+        EntitySetHierarchy hierarchy = null;
 
         while (p.nextToken() != JsonToken.END_OBJECT) {
             String fieldName = p.currentName();
@@ -43,23 +45,18 @@ class EntitySetHierarchyDeserializer extends JsonDeserializer<EntitySetHierarchy
 
             switch (fieldName) {
                 case "def" -> {
-                    if (p.currentToken() == JsonToken.START_OBJECT) {
-                        while (p.nextToken() != JsonToken.END_OBJECT) {
-                            String defField = p.currentName();
-                            p.nextToken();
-                            if ("type".equals(defField)) {
-                                String typeValue = p.getValueAsString();
-                                if (!"entity_set".equals(typeValue)) {
-                                    throw new JsonMappingException(p, "Expected type 'entity_set'");
-                                }
-                            }
-                        }
+                    HierarchyDef def = context.readValue(p, HierarchyDef.class);
+                    hierarchy = factory.createEntitySetHierarchy(def);
+                    if (!entityIds.isEmpty()) {
+                        hierarchy.addAll(entityIds);
+                        entityIds = hierarchy;
                     }
                 }
                 case "entities" -> {
                     if (p.currentToken() == JsonToken.START_ARRAY) {
                         while (p.nextToken() != JsonToken.END_ARRAY) {
-                            entityIds.add(UUID.fromString(p.getValueAsString()));
+                            UUID id = UUID.fromString(p.getValueAsString());
+                            entityIds.add(factory.createEntity(id));
                         }
                     }
                 }
@@ -67,6 +64,10 @@ class EntitySetHierarchyDeserializer extends JsonDeserializer<EntitySetHierarchy
             }
         }
 
-        throw new JsonMappingException(p, "EntitySetHierarchy deserialization requires access to catalog context for proper reconstruction");
+        if (hierarchy == null) {
+            throw new JsonMappingException(p, "Missing required field: def");
+        }
+
+        return hierarchy;
     }
 }

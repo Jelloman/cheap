@@ -19,6 +19,7 @@
       "isModifiable" : true
     } ]
   },
+  "aspectDefs" : { },
   "hierarchies" : {
     "userDirectory" : {
       "def" : {
@@ -28,24 +29,7 @@
         "user1" : "550e8400-e29b-41d4-a716-446655440001",
         "admin" : "550e8400-e29b-41d4-a716-446655440000"
       }
-    },
-    "hierarchies" : {
-      "def" : {
-        "type" : "hierarchy_dir"
-      },
-      "hierarchies" : {
-        "userDirectory" : "userDirectory",
-        "hierarchies" : "hierarchies",
-        "aspectage" : "aspectage"
-      }
-    },
-    "aspectage" : {
-      "def" : {
-        "type" : "aspect_def_dir"
-      },
-      "aspectDefs" : { }
     }
   },
-  "aspectDefs" : { },
   "aspects" : { }
 }

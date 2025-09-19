@@ -96,28 +96,34 @@ public class CheapJsonRawSerializer
             appendNewlineAndIndent(sb, prettyPrint, indent + 1);
             sb.append("\"upstream\":\"").append(escapeJson(catalog.upstream().globalId().toString())).append("\",");
         }
-        
-        appendNewlineAndIndent(sb, prettyPrint, indent + 1);
-        sb.append("\"hierarchies\":{");
-        boolean first = true;
-        for (Map.Entry<String, Hierarchy> entry : catalog.hierarchies().entrySet()) {
-            if (!first) sb.append(",");
-            appendNewlineAndIndent(sb, prettyPrint, indent + 2);
-            sb.append("\"").append(escapeJson(entry.getKey())).append("\":");
-            hierarchyToJson(entry.getValue(), sb, prettyPrint, indent + 2);
-            first = false;
-        }
-        appendNewlineAndIndent(sb, prettyPrint, indent + 1);
-        sb.append("},");
-        
+
         appendNewlineAndIndent(sb, prettyPrint, indent + 1);
         sb.append("\"aspectDefs\":{");
-        first = true;
+        boolean first = true;
         for (AspectDef aspectDef : catalog.aspectDefs()) {
             if (!first) sb.append(",");
             appendNewlineAndIndent(sb, prettyPrint, indent + 2);
             sb.append("\"").append(escapeJson(aspectDef.name())).append("\":");
             aspectDefToJson(aspectDef, sb, prettyPrint, indent + 2);
+            first = false;
+        }
+        appendNewlineAndIndent(sb, prettyPrint, indent + 1);
+        sb.append("},");
+
+        appendNewlineAndIndent(sb, prettyPrint, indent + 1);
+        sb.append("\"hierarchies\":{");
+        first = true;
+        for (Map.Entry<String, Hierarchy> entry : catalog.hierarchies().entrySet()) {
+            Hierarchy h = entry.getValue();
+            // Skip main HierarchyDir and AspectDefDir. The aspectDefs was serialized above,
+            // and the main hierarchy dir is implicitly serialized by this very loop.
+            if ((h == catalog.hierarchies()) || (h == catalog.aspectDefs())) {
+                continue;
+            }
+            if (!first) sb.append(",");
+            appendNewlineAndIndent(sb, prettyPrint, indent + 2);
+            sb.append("\"").append(escapeJson(entry.getKey())).append("\":");
+            hierarchyToJson(entry.getValue(), sb, prettyPrint, indent + 2);
             first = false;
         }
         appendNewlineAndIndent(sb, prettyPrint, indent + 1);

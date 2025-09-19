@@ -47,6 +47,7 @@
       "isModifiable" : true
     } ]
   },
+  "aspectDefs" : { },
   "hierarchies" : {
     "fileSystem" : {
       "def" : {
@@ -101,23 +102,6 @@
         }
       }
     },
-    "hierarchies" : {
-      "def" : {
-        "type" : "hierarchy_dir"
-      },
-      "hierarchies" : {
-        "fileSystem" : "fileSystem",
-        "userDirectory" : "userDirectory",
-        "personData" : "person",
-        "hierarchies" : "hierarchies",
-        "documents" : "document",
-        "aspectage" : "aspectage",
-        "person" : "person",
-        "document" : "document",
-        "activeUsers" : "activeUsers",
-        "taskQueue" : "taskQueue"
-      }
-    },
     "documents" : {
       "def" : {
         "type" : "aspect_map"
@@ -139,12 +123,6 @@
           "description" : "REST API reference"
         }
       }
-    },
-    "aspectage" : {
-      "def" : {
-        "type" : "aspect_def_dir"
-      },
-      "aspectDefs" : { }
     },
     "person" : {
       "def" : {
@@ -173,6 +151,5 @@
       "entities" : [ "10000000-0000-0000-0000-000000000001", "10000000-0000-0000-0000-000000000002", "10000000-0000-0000-0000-000000000003", "10000000-0000-0000-0000-000000000001" ]
     }
   },
-  "aspectDefs" : { },
   "aspects" : { }
 }

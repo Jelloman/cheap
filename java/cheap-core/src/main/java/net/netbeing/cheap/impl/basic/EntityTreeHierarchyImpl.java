@@ -172,18 +172,39 @@ public class EntityTreeHierarchyImpl implements EntityTreeHierarchy
     private final HierarchyDef def;
     
     /** The root node of this tree hierarchy. */
-    private final NodeImpl root;
+    private final Node root;
+
+    /**
+     * Creates a new EntityTreeHierarchyImpl with the specified hierarchy definition and a root with a null entity.
+     *
+     * @param def the hierarchy definition for this entity tree
+     */
+    public EntityTreeHierarchyImpl(HierarchyDef def)
+    {
+        this(def, new NodeImpl(null));
+    }
 
     /**
      * Creates a new EntityTreeHierarchyImpl with the specified hierarchy definition and root entity.
-     * 
+     *
      * @param def the hierarchy definition for this entity tree
      * @param rootEntity the entity to use as the root of the tree
      */
     public EntityTreeHierarchyImpl(HierarchyDef def, Entity rootEntity)
     {
+        this(def, new NodeImpl(rootEntity));
+    }
+
+    /**
+     * Creates a new EntityTreeHierarchyImpl with the specified hierarchy definition and root node.
+     *
+     * @param def the hierarchy definition for this entity tree
+     * @param rootNode the node to use as the root of the tree
+     */
+    public EntityTreeHierarchyImpl(HierarchyDef def, Node rootNode)
+    {
         this.def = def;
-        this.root = new NodeImpl(rootEntity);
+        this.root = rootNode;
     }
 
     /**
@@ -202,7 +223,7 @@ public class EntityTreeHierarchyImpl implements EntityTreeHierarchy
      * 
      * @return the root node of the tree
      */
-    public Node root()
+    public @NotNull Node root()
     {
         return root;
     }

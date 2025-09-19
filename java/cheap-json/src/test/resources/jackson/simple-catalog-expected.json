@@ -15,23 +15,7 @@
       "isModifiable" : true
     } ]
   },
-  "hierarchies" : {
-    "hierarchies" : {
-      "def" : {
-        "type" : "hierarchy_dir"
-      },
-      "hierarchies" : {
-        "hierarchies" : "hierarchies",
-        "aspectage" : "aspectage"
-      }
-    },
-    "aspectage" : {
-      "def" : {
-        "type" : "aspect_def_dir"
-      },
-      "aspectDefs" : { }
-    }
-  },
   "aspectDefs" : { },
+  "hierarchies" : { },
   "aspects" : { }
 }

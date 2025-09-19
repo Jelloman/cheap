@@ -24,28 +24,15 @@
       }
     ]
   },
+  "aspectDefs":{
+  },
   "hierarchies":{
-    "hierarchies":{
-      "def":{"type":"hierarchy_dir"},
-      "hierarchies":{
-        "hierarchies":"hierarchies",
-        "aspectage":"aspectage",
-        "person":"person"
-      }
-    },
-    "aspectage":{
-      "def":{"type":"aspect_def_dir"},
-      "aspectDefs":{
-      }
-    },
     "person":{
       "def":{"type":"aspect_map"},
       "aspectDefName":"person",
       "aspects":{
       }
     }
-  },
-  "aspectDefs":{
   },
   "aspects":{
   }

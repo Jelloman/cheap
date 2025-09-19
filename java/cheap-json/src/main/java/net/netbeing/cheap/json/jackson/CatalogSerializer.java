@@ -32,20 +32,26 @@ class CatalogSerializer extends JsonSerializer<Catalog>
         if (catalog.upstream() != null) {
             gen.writeStringField("upstream", catalog.upstream().globalId().toString());
         }
-        
-        gen.writeFieldName("hierarchies");
-        gen.writeStartObject();
-        for (Map.Entry<String, Hierarchy> entry : catalog.hierarchies().entrySet()) {
-            gen.writeFieldName(entry.getKey());
-            gen.writeObject(entry.getValue());
-        }
-        gen.writeEndObject();
-        
+
         gen.writeFieldName("aspectDefs");
         gen.writeStartObject();
         for (AspectDef aspectDef : catalog.aspectDefs()) {
             gen.writeFieldName(aspectDef.name());
             gen.writeObject(aspectDef);
+        }
+        gen.writeEndObject();
+
+        gen.writeFieldName("hierarchies");
+        gen.writeStartObject();
+        for (Map.Entry<String, Hierarchy> entry : catalog.hierarchies().entrySet()) {
+            Hierarchy h = entry.getValue();
+            // Skip main HierarchyDir and AspectDefDir. The aspectDefs was serialized above,
+            // and the main hierarchy dir is implicitly serialized by this very loop.
+            if ((h == catalog.hierarchies()) || (h == catalog.aspectDefs())) {
+                continue;
+            }
+            gen.writeFieldName(entry.getKey());
+            gen.writeObject(h);
         }
         gen.writeEndObject();
         

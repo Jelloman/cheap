@@ -54,7 +54,7 @@ class EntityTreeHierarchyImplTest
     @Test
     void constructor_NullRootEntity_AcceptsNull()
     {
-        EntityTreeHierarchyImpl tree = new EntityTreeHierarchyImpl(hierarchyDef, null);
+        EntityTreeHierarchyImpl tree = new EntityTreeHierarchyImpl(hierarchyDef);
         
         assertSame(hierarchyDef, tree.def());
         assertNotNull(tree.root());
@@ -214,7 +214,6 @@ class EntityTreeHierarchyImplTest
         
         assertNotNull(entries);
         assertTrue(entries.isEmpty());
-        assertEquals(0, entries.size());
     }
 
     @Test
@@ -361,7 +360,6 @@ class EntityTreeHierarchyImplTest
         assertEquals(2, root.size());
         
         root.clear();
-        assertEquals(0, root.size());
         assertTrue(root.isEmpty());
     }
 

@@ -61,6 +61,8 @@ class TreeNodeDeserializer extends JsonDeserializer<EntityTreeHierarchy.Node>
             }
         }
 
+        // TreeNode deserialization would require access to the EntityTreeHierarchy context
+        // For now, return a placeholder that indicates incomplete deserialization
         throw new JsonMappingException(p, "TreeNode deserialization requires access to hierarchy context for proper reconstruction");
     }
 }

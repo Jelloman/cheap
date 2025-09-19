@@ -32,7 +32,7 @@ class AspectDefDirHierarchyDeserializer extends JsonDeserializer<AspectDefDirHie
             throw new JsonMappingException(p, "Expected START_OBJECT token");
         }
 
-        HierarchyDef def = null;
+        AspectDefDirHierarchy hierarchy = null;
 
         while (p.nextToken() != JsonToken.END_OBJECT) {
             String fieldName = p.currentName();
@@ -40,24 +40,18 @@ class AspectDefDirHierarchyDeserializer extends JsonDeserializer<AspectDefDirHie
 
             switch (fieldName) {
                 case "def" -> {
-                    if (p.currentToken() == JsonToken.START_OBJECT) {
-                        while (p.nextToken() != JsonToken.END_OBJECT) {
-                            String defField = p.currentName();
-                            p.nextToken();
-                            if ("type".equals(defField)) {
-                                String typeValue = p.getValueAsString();
-                                if (!"aspect_def_dir".equals(typeValue)) {
-                                    throw new JsonMappingException(p, "Expected type 'aspect_def_dir'");
-                                }
-                            }
-                        }
-                    }
+                    HierarchyDef def = context.readValue(p, HierarchyDef.class);
+                    hierarchy = factory.createAspectDefDirHierarchy(def);
                 }
-                case "aspectDefs" -> p.skipChildren();
+                case "aspectDefs" -> p.skipChildren(); // Skip aspect defs - they'll be populated separately
                 default -> p.skipChildren();
             }
         }
 
-        throw new JsonMappingException(p, "AspectDefDirHierarchy deserialization requires access to catalog context for proper reconstruction");
+        if (hierarchy == null) {
+            throw new JsonMappingException(p, "Missing required field: def");
+        }
+
+        return hierarchy;
     }
 }

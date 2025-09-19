@@ -36,24 +36,16 @@ class HierarchyDirDeserializer extends JsonDeserializer<HierarchyDir>
 
         Map<String, String> hierarchyNames = new HashMap<>();
 
+        HierarchyDir hierarchy = null;
+
         while (p.nextToken() != JsonToken.END_OBJECT) {
             String fieldName = p.currentName();
             p.nextToken();
 
             switch (fieldName) {
                 case "def" -> {
-                    if (p.currentToken() == JsonToken.START_OBJECT) {
-                        while (p.nextToken() != JsonToken.END_OBJECT) {
-                            String defField = p.currentName();
-                            p.nextToken();
-                            if ("type".equals(defField)) {
-                                String typeValue = p.getValueAsString();
-                                if (!"hierarchy_dir".equals(typeValue)) {
-                                    throw new JsonMappingException(p, "Expected type 'hierarchy_dir'");
-                                }
-                            }
-                        }
-                    }
+                    HierarchyDef def = context.readValue(p, HierarchyDef.class);
+                    hierarchy = factory.createHierarchyDir(def);
                 }
                 case "hierarchies" -> {
                     if (p.currentToken() == JsonToken.START_OBJECT) {
@@ -68,6 +60,10 @@ class HierarchyDirDeserializer extends JsonDeserializer<HierarchyDir>
             }
         }
 
-        throw new JsonMappingException(p, "HierarchyDir deserialization requires access to catalog context for proper reconstruction");
+        if (hierarchy == null) {
+            throw new JsonMappingException(p, "Missing required field: def");
+        }
+
+        return hierarchy;
     }
 }

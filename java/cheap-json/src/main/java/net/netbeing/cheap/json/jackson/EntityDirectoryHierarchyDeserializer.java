@@ -5,6 +5,7 @@ import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonMappingException;
+import net.netbeing.cheap.impl.basic.EntityImpl;
 import net.netbeing.cheap.model.*;
 import net.netbeing.cheap.util.CheapFactory;
 import org.jetbrains.annotations.NotNull;
@@ -35,7 +36,9 @@ class EntityDirectoryHierarchyDeserializer extends JsonDeserializer<EntityDirect
             throw new JsonMappingException(p, "Expected START_OBJECT token");
         }
 
-        Map<String, UUID> entityIds = new HashMap<>();
+        Map<String, Entity> entityIds = new HashMap<>();
+
+        EntityDirectoryHierarchy hierarchy = null;
 
         while (p.nextToken() != JsonToken.END_OBJECT) {
             String fieldName = p.currentName();
@@ -43,17 +46,11 @@ class EntityDirectoryHierarchyDeserializer extends JsonDeserializer<EntityDirect
 
             switch (fieldName) {
                 case "def" -> {
-                    if (p.currentToken() == JsonToken.START_OBJECT) {
-                        while (p.nextToken() != JsonToken.END_OBJECT) {
-                            String defField = p.currentName();
-                            p.nextToken();
-                            if ("type".equals(defField)) {
-                                String typeValue = p.getValueAsString();
-                                if (!"entity_dir".equals(typeValue)) {
-                                    throw new JsonMappingException(p, "Expected type 'entity_dir'");
-                                }
-                            }
-                        }
+                    HierarchyDef def = context.readValue(p, HierarchyDef.class);
+                    hierarchy = factory.createEntityDirectoryHierarchy(def);
+                    if (!entityIds.isEmpty()) {
+                        hierarchy.putAll(entityIds);
+                        entityIds = hierarchy;
                     }
                 }
                 case "entities" -> {
@@ -61,7 +58,8 @@ class EntityDirectoryHierarchyDeserializer extends JsonDeserializer<EntityDirect
                         while (p.nextToken() != JsonToken.END_OBJECT) {
                             String key = p.currentName();
                             p.nextToken();
-                            entityIds.put(key, UUID.fromString(p.getValueAsString()));
+                            UUID id = UUID.fromString(p.getValueAsString());
+                            entityIds.put(key, factory.createEntity(id));
                         }
                     }
                 }
@@ -69,6 +67,10 @@ class EntityDirectoryHierarchyDeserializer extends JsonDeserializer<EntityDirect
             }
         }
 
-        throw new JsonMappingException(p, "EntityDirectoryHierarchy deserialization requires access to catalog context for proper reconstruction");
+        if (hierarchy == null) {
+            throw new JsonMappingException(p, "Missing required field: def");
+        }
+
+        return hierarchy;
     }
 }

@@ -23,6 +23,7 @@
       "isModifiable" : true
     } ]
   },
+  "aspectDefs" : { },
   "hierarchies" : {
     "personData" : {
       "def" : {
@@ -38,23 +39,6 @@
         }
       }
     },
-    "hierarchies" : {
-      "def" : {
-        "type" : "hierarchy_dir"
-      },
-      "hierarchies" : {
-        "personData" : "person",
-        "hierarchies" : "hierarchies",
-        "aspectage" : "aspectage",
-        "person" : "person"
-      }
-    },
-    "aspectage" : {
-      "def" : {
-        "type" : "aspect_def_dir"
-      },
-      "aspectDefs" : { }
-    },
     "person" : {
       "def" : {
         "type" : "aspect_map"
@@ -63,6 +47,5 @@
       "aspects" : { }
     }
   },
-  "aspectDefs" : { },
   "aspects" : { }
 }

@@ -1,5 +1,7 @@
 package net.netbeing.cheap.model;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.util.Map;
 
 /**
@@ -71,5 +73,6 @@ public interface EntityTreeHierarchy extends Hierarchy
      *
      * @return the root node of the tree, never null
      */
-    Node root();
+    @NotNull Node root();
+
 }

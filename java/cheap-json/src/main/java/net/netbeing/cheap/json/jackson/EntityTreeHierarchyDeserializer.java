@@ -33,6 +33,8 @@ class EntityTreeHierarchyDeserializer extends JsonDeserializer<EntityTreeHierarc
         }
 
         EntityTreeHierarchy.Node root = null;
+        EntityTreeHierarchy hierarchy = null;
+        HierarchyDef def = null;
 
         while (p.nextToken() != JsonToken.END_OBJECT) {
             String fieldName = p.currentName();
@@ -40,24 +42,25 @@ class EntityTreeHierarchyDeserializer extends JsonDeserializer<EntityTreeHierarc
 
             switch (fieldName) {
                 case "def" -> {
-                    if (p.currentToken() == JsonToken.START_OBJECT) {
-                        while (p.nextToken() != JsonToken.END_OBJECT) {
-                            String defField = p.currentName();
-                            p.nextToken();
-                            if ("type".equals(defField)) {
-                                String typeValue = p.getValueAsString();
-                                if (!"entity_tree".equals(typeValue)) {
-                                    throw new JsonMappingException(p, "Expected type 'entity_tree'");
-                                }
-                            }
-                        }
+                    def = context.readValue(p, HierarchyDef.class);
+                    if (root != null) {
+                        hierarchy = factory.createEntityTreeHierarchy(def, root);
                     }
                 }
-                case "root" -> root = p.readValueAs(EntityTreeHierarchy.Node.class);
+                case "root" -> {
+                    root = p.readValueAs(EntityTreeHierarchy.Node.class);
+                    if (def != null) {
+                        hierarchy = factory.createEntityTreeHierarchy(def, root);
+                    }
+                }
                 default -> p.skipChildren();
             }
         }
 
-        throw new JsonMappingException(p, "EntityTreeHierarchy deserialization requires access to catalog context for proper reconstruction");
+        if (hierarchy == null) {
+            throw new JsonMappingException(p, "Missing required fields: def and root");
+        }
+
+        return hierarchy;
     }
 }

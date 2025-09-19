@@ -19,23 +19,8 @@
       "isModifiable" : true
     } ]
   },
+  "aspectDefs" : { },
   "hierarchies" : {
-    "hierarchies" : {
-      "def" : {
-        "type" : "hierarchy_dir"
-      },
-      "hierarchies" : {
-        "hierarchies" : "hierarchies",
-        "aspectage" : "aspectage",
-        "activeUsers" : "activeUsers"
-      }
-    },
-    "aspectage" : {
-      "def" : {
-        "type" : "aspect_def_dir"
-      },
-      "aspectDefs" : { }
-    },
     "activeUsers" : {
       "def" : {
         "type" : "entity_set"
@@ -43,6 +28,5 @@
       "entities" : [ "550e8400-e29b-41d4-a716-446655440001", "550e8400-e29b-41d4-a716-446655440000" ]
     }
   },
-  "aspectDefs" : { },
   "aspects" : { }
 }

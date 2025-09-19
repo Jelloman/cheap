@@ -19,6 +19,7 @@
       "isModifiable" : true
     } ]
   },
+  "aspectDefs" : { },
   "hierarchies" : {
     "fileSystem" : {
       "def" : {
@@ -32,24 +33,7 @@
           }
         }
       }
-    },
-    "hierarchies" : {
-      "def" : {
-        "type" : "hierarchy_dir"
-      },
-      "hierarchies" : {
-        "fileSystem" : "fileSystem",
-        "hierarchies" : "hierarchies",
-        "aspectage" : "aspectage"
-      }
-    },
-    "aspectage" : {
-      "def" : {
-        "type" : "aspect_def_dir"
-      },
-      "aspectDefs" : { }
     }
   },
-  "aspectDefs" : { },
   "aspects" : { }
 }
