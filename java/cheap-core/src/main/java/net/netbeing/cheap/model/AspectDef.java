@@ -60,7 +60,10 @@ public interface AspectDef
 
     /**
      * Determines whether new properties can be dynamically added to aspects of this type.
-     * This controls the mutability of the aspect schema at runtime.
+     * This controls the mutability of the aspect at runtime, but it does NOT control the
+     * mutability of the AspectDef itself; the addition of a new Property to an Aspect of
+     * this type must not modify this AspectDef. (Extension of an AspectDef may be possible,
+     * but it is implementation-dependent and not done via this interface.)
      * 
      * @return true if properties can be added, false otherwise; defaults to true
      */

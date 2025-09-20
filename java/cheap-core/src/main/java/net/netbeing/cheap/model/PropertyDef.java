@@ -109,4 +109,38 @@ public interface PropertyDef
             type().equals(other.type()) &&
             name().equals(other.name());
     }
+
+    /**
+     * Validates that a property value is compatible with this property definition.
+     *
+     * @param value the value to validate
+     * @param throwExceptions whether this method should throw exceptions or merely return true/false
+     * @throws IllegalArgumentException if the value is invalid for the property definition, and throwExceptions is true
+     */
+    default boolean validatePropertyValue(Object value, boolean throwExceptions)
+    {
+        // Check nullability
+        if (value == null && !isNullable()) {
+            if (throwExceptions) {
+                throw new IllegalArgumentException("Property '" + name() + "' does not allow null values");
+            }
+            return false;
+        }
+
+        // Check type compatibility if value is not null
+        if (value != null) {
+            PropertyType expectedType = type();
+            Class<?> expectedJavaClass = expectedType.getJavaClass();
+
+            if (!expectedJavaClass.isAssignableFrom(value.getClass())) {
+                if (throwExceptions) {
+                    throw new IllegalArgumentException("Property '" + name() + "' expects type "
+                        + expectedJavaClass.getSimpleName() + " but got " + value.getClass().getSimpleName());
+                }
+                return false;
+            }
+        }
+        return true;
+    }
+
 }
