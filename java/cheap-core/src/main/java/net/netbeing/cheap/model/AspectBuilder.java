@@ -26,15 +26,6 @@ import java.util.UUID;
 public interface AspectBuilder
 {
     /**
-     * Sets the entity ID for the aspect being built.
-     *
-     * @param entityId the UUID of the entity this aspect will be attached to, must not be null
-     * @return this builder instance for method chaining
-     * @throws IllegalArgumentException if entityId is null
-     */
-    AspectBuilder entityId(@NotNull UUID entityId);
-
-    /**
      * Sets the entity for the aspect being built.
      *
      * @param entity the entity this aspect will be attached to, must not be null
