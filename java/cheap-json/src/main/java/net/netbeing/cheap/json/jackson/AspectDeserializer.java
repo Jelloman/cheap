@@ -10,9 +10,7 @@ import net.netbeing.cheap.util.CheapFactory;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 class AspectDeserializer extends JsonDeserializer<Aspect>
 {
@@ -35,24 +33,47 @@ class AspectDeserializer extends JsonDeserializer<Aspect>
             throw new JsonMappingException(p, "Expected START_OBJECT token");
         }
 
-        String aspectDefName = null;
-        UUID entityId = null;
-        boolean isTransferable = true;
+        AspectDef aspectDef = (AspectDef) context.getAttribute("CheapAspectDef");
+        Entity entity = (Entity) context.getAttribute("CheapEntity");
+        Aspect aspect = null;
+        Map<String,String> propValues = null;
 
         while (p.nextToken() != JsonToken.END_OBJECT) {
             String fieldName = p.currentName();
             p.nextToken();
 
             switch (fieldName) {
-                case "aspectDefName" -> aspectDefName = p.getValueAsString();
-                case "entityId" -> entityId = UUID.fromString(p.getValueAsString());
-                case "isTransferable" -> isTransferable = p.getBooleanValue();
-                default -> p.skipChildren();
+                case "aspectDefName" -> {
+                    aspectDef = factory.getAspectDef(p.getValueAsString());
+                    if (aspectDef == null) {
+                        throw new JsonMappingException(p, "AspectDef named '"+p.getValueAsString()+"' not found.");
+                    }
+                }
+                case "entityId" -> {
+                    UUID entityId = UUID.fromString(p.getValueAsString());
+                    if (entity != null) {
+                        if (!entity.globalId().equals(entityId)) {
+                            throw new JsonMappingException(p, "Entity ID conflict in Aspect deserialization.");
+                        }
+                    } else {
+                        entity = factory.getOrRegisterNewEntity(entityId);
+                    }
+                }
+                default -> {
+                    // FIXME: write and use AspectBuilder via the factory.
+                    if (aspect != null) {
+                        aspect.write(fieldName, p.getValueAsString());
+                    }
+                    propValues.put(fieldName, p.getValueAsString());
+                }
             }
         }
 
-        if (aspectDefName == null || entityId == null) {
-            throw new JsonMappingException(p, "Missing required fields: aspectDefName and entityId");
+        if (entity == null) {
+            throw new JsonMappingException(p, "Missing entity in Aspect deserialization.");
+        }
+        if (aspectDef == null) {
+            throw new JsonMappingException(p, "Missing aspectDef in Aspect deserialization.");
         }
 
         throw new JsonMappingException(p, "Aspect deserialization requires access to catalog context for proper reconstruction");

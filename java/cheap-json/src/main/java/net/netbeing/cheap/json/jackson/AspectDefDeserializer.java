@@ -62,7 +62,7 @@ class AspectDefDeserializer extends JsonDeserializer<AspectDef>
         }
 
         if (name == null) {
-            throw new JsonMappingException(p, "Missing required field: name");
+            throw new JsonMappingException(p, "Missing required field in AspectDef: name");
         }
 
         Map<String, PropertyDef> propertyDefMap = new LinkedHashMap<>();
@@ -70,10 +70,22 @@ class AspectDefDeserializer extends JsonDeserializer<AspectDef>
             propertyDefMap.put(propertyDef.name(), propertyDef);
         }
 
+        // TODO: add factory method with all fields
+        AspectDef def = null;
         if (isWritable && canAddProperties && canRemoveProperties) {
-            return factory.createMutableAspectDef(name, propertyDefMap);
+            def = factory.createMutableAspectDef(name, propertyDefMap);
         } else {
-            return factory.createImmutableAspectDef(name, propertyDefMap);
+            def = factory.createImmutableAspectDef(name, propertyDefMap);
         }
+        AspectDef existingDef = factory.getAspectDef(name);
+        if (existingDef != null) {
+            if (!existingDef.fullyEquals(def)) {
+                throw new JsonMappingException(p, "Attempted to deserialize AspectDef " + name + " that conflicts with the AspectDef already registered with that name.");
+            }
+        } else {
+            factory.registerAspectDef(def);
+        }
+
+        return def;
     }
 }

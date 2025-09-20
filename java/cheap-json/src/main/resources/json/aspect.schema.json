@@ -13,11 +13,6 @@
       "type": "string",
       "format": "uuid",
       "description": "The UUID of the entity this aspect belongs to"
-    },
-    "isTransferable": {
-      "type": "boolean",
-      "default": false,
-      "description": "Whether this aspect may be transferred between entities"
     }
   },
   "required": ["aspectDefName", "entityId"],

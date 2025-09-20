@@ -13,18 +13,16 @@ class AspectSerializer extends JsonSerializer<Aspect>
 {
     private final boolean includeEntityId;
     private final boolean includeAspectDefName;
-    private final boolean includeIsTransferable;
 
     public AspectSerializer()
     {
-        this(false, false, false);
+        this(false, false);
     }
 
-    public AspectSerializer(boolean includeEntityId, boolean includeAspectDefName, boolean includeIsTransferable)
+    public AspectSerializer(boolean includeEntityId, boolean includeAspectDefName)
     {
         this.includeEntityId = includeEntityId;
         this.includeAspectDefName = includeAspectDefName;
-        this.includeIsTransferable = includeIsTransferable;
     }
 
     @Override
@@ -38,10 +36,7 @@ class AspectSerializer extends JsonSerializer<Aspect>
         if (includeEntityId) {
             gen.writeStringField("entityId", aspect.entity().globalId().toString());
         }
-        if (includeIsTransferable) {
-            gen.writeBooleanField("isTransferable", aspect.isTransferable());
-        }
-        
+
         // Add all properties
         for (PropertyDef propertyDef : aspect.def().propertyDefs()) {
             Object value = aspect.unsafeReadObj(propertyDef.name());

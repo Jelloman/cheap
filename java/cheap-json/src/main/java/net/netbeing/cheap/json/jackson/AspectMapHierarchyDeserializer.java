@@ -5,11 +5,13 @@ import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.util.TokenBuffer;
 import net.netbeing.cheap.model.*;
 import net.netbeing.cheap.util.CheapFactory;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
+import java.util.UUID;
 
 class AspectMapHierarchyDeserializer extends JsonDeserializer<AspectMapHierarchy>
 {
@@ -32,9 +34,10 @@ class AspectMapHierarchyDeserializer extends JsonDeserializer<AspectMapHierarchy
             throw new JsonMappingException(p, "Expected START_OBJECT token");
         }
 
-        String aspectDefName = null;
+        AspectDef aspectDef = null;
         AspectMapHierarchy hierarchy = null;
         HierarchyDef def = null;
+        TokenBuffer aspects = null;
 
         while (p.nextToken() != JsonToken.END_OBJECT) {
             String fieldName = p.currentName();
@@ -43,31 +46,60 @@ class AspectMapHierarchyDeserializer extends JsonDeserializer<AspectMapHierarchy
             switch (fieldName) {
                 case "def" -> {
                     def = context.readValue(p, HierarchyDef.class);
-                    // We need an AspectDef to create the hierarchy, we'll get it from aspectDefName
-                    // For now, create the hierarchy without the AspectDef and set it later
-                }
-                case "aspectDefName" -> {
-                    aspectDefName = p.getValueAsString();
-                    if (hierarchy == null) {
-                        // Create a minimal AspectDef for this hierarchy
-                        AspectDef aspectDef = factory.createMutableAspectDef(aspectDefName);
-                        hierarchy = factory.createAspectMapHierarchy(aspectDef);
+                    if (hierarchy == null && aspectDef != null) {
+                        hierarchy = factory.createAspectMapHierarchy(def, aspectDef);
                     }
                 }
-                case "aspects" -> p.skipChildren(); // Skip aspects - they'll be populated separately
+                case "aspectDefName" -> {
+                    aspectDef = factory.getAspectDef(p.getValueAsString());
+                    if (aspectDef == null) {
+                        throw new JsonMappingException(p, "AspectDef named '"+p.getValueAsString()+"' not found.");
+                    }
+                    if (hierarchy == null && def != null) {
+                        hierarchy = factory.createAspectMapHierarchy(def, aspectDef);
+                    }
+                }
+                case "aspects" -> {
+                    if (hierarchy == null) {
+                        aspects = context.readValue(p, TokenBuffer.class);
+                    } else {
+                        deserializeAspects(hierarchy, p, context);
+                    }
+                }
                 default -> p.skipChildren();
             }
         }
 
-        if (hierarchy == null) {
-            if (aspectDefName != null) {
-                AspectDef aspectDef = factory.createMutableAspectDef(aspectDefName);
-                hierarchy = factory.createAspectMapHierarchy(aspectDef);
-            } else {
-                throw new JsonMappingException(p, "Missing required field: aspectDefName");
-            }
+        if (aspectDef == null) {
+            throw new JsonMappingException(p, "Missing required field: aspectDefName");
+        }
+        if (def == null) {
+            throw new JsonMappingException(p, "Missing required field: aspectDefName");
+        }
+        if (aspects != null) {
+            // We encountered the aspects before the AspectDef, so deserialize them now.
+            deserializeAspects(hierarchy, aspects.asParser(p), context);
         }
 
         return hierarchy;
+    }
+
+    private void deserializeAspects(AspectMapHierarchy hierarchy, JsonParser p, DeserializationContext context)
+        throws IOException
+    {
+        context.setAttribute("CheapAspectDef", hierarchy.aspectDef());
+        if (p.currentToken() == JsonToken.START_OBJECT) {
+            while (p.nextToken() != JsonToken.END_OBJECT) {
+                String entityIdStr = p.currentName();
+                UUID entityId = UUID.fromString(entityIdStr);
+                Entity key = factory.getOrRegisterNewEntity(entityId);
+                context.setAttribute("CheapEntity", key);
+                p.nextToken();
+                Aspect aspect = context.readValue(p, Aspect.class);
+                context.setAttribute("CheapEntity", null);
+                hierarchy.put(key, aspect);
+            }
+        }
+        context.setAttribute("CheapAspectDef", null);
     }
 }

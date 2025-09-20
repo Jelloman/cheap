@@ -388,9 +388,7 @@ public class CheapJsonRawSerializer
             appendNewlineAndIndent(sb, prettyPrint, indent + 1);
             sb.append("\"aspectDefName\":\"").append(escapeJson(aspect.def().name())).append("\",");
             appendNewlineAndIndent(sb, prettyPrint, indent + 1);
-            sb.append("\"entityId\":\"").append(escapeJson(aspect.entity().globalId().toString())).append("\",");
-            appendNewlineAndIndent(sb, prettyPrint, indent + 1);
-            sb.append("\"isTransferable\":").append(aspect.isTransferable());
+            sb.append("\"entityId\":\"").append(escapeJson(aspect.entity().globalId().toString())).append("\"");
         }
 
         // Add all properties

@@ -4,6 +4,7 @@ import net.netbeing.cheap.impl.basic.*;
 import net.netbeing.cheap.model.*;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
@@ -26,6 +27,9 @@ public class CheapFactory
 {
     /** The default LocalEntity type to create when not explicitly specified. */
     private final LocalEntityType defaultLocalEntityType;
+
+    private final Map<String, AspectDef> aspectDefs = new HashMap<>();
+    private final Map<UUID, Entity> entities = new HashMap<>();
 
     /**
      * Creates a new CheapFactory with the default LocalEntity type of SINGLE_CATALOG.
@@ -54,6 +58,52 @@ public class CheapFactory
     public @NotNull LocalEntityType getDefaultLocalEntityType()
     {
         return defaultLocalEntityType;
+    }
+
+    /**
+     * Return the AspectDef registered in this factory with the given name, or
+     * null if not found.
+     *
+     * @param name aspectDef name
+     * @return the aspectDef with that name
+     */
+    public AspectDef getAspectDef(@NotNull String name)
+    {
+        return aspectDefs.get(name);
+    }
+
+    /**
+     * Register an AspectDef with this factory.
+     *
+     * @param aspectDef the aspectDef to register
+     * @return the existing AspectDef registered under that name, if any
+     */
+    public AspectDef registerAspectDef(AspectDef aspectDef)
+    {
+        return aspectDefs.put(aspectDef.name(), aspectDef);
+    }
+
+    /**
+     * Return the Entity registered in this factory with the given id, or
+     * null if not found.
+     *
+     * @param id entity id
+     * @return the entity with that id
+     */
+    public Entity getEntity(@NotNull UUID id)
+    {
+        return entities.get(id);
+    }
+
+    /**
+     * Register an Entity with this factory.
+     *
+     * @param entity the Entity to register
+     * @return the existing Entity registered under that id, if any
+     */
+    public Entity registerEntity(Entity entity)
+    {
+        return entities.put(entity.globalId(), entity);
     }
 
     // ===== Catalog Factory Methods =====
@@ -143,6 +193,18 @@ public class CheapFactory
     }
 
     /**
+     * Creates a new entity with a random UUID.
+     *
+     * @return a new Entity instance
+     */
+    public @NotNull Entity createAndRegisterEntity()
+    {
+        Entity e = new EntityImpl();
+        entities.put(e.globalId(),e);
+        return e;
+    }
+
+    /**
      * Creates a new entity with the specified global ID.
      *
      * @param globalId the UUID for the entity
@@ -151,6 +213,24 @@ public class CheapFactory
     public @NotNull Entity createEntity(@NotNull UUID globalId)
     {
         return new EntityImpl(globalId);
+    }
+
+    /**
+     * Find the registered entity with the specified global ID; if it's not
+     * found, create and register a new one.
+     *
+     * @param globalId the UUID for the entity
+     * @return a new Entity instance
+     */
+    public @NotNull Entity getOrRegisterNewEntity(@NotNull UUID globalId)
+    {
+        Entity e = entities.get(globalId);
+        if (e != null) {
+            return e;
+        }
+        e = new EntityImpl(globalId);
+        entities.put(e.globalId(),e);
+        return e;
     }
 
     /**
@@ -421,8 +501,8 @@ public class CheapFactory
      * @param aspectDef the aspect definition for aspects in this hierarchy
      * @return a new AspectMapHierarchy instance
      */
-    public @NotNull AspectMapHierarchy createAspectMapHierarchy(@NotNull HierarchyDef def, 
-                                                                      @NotNull AspectDef aspectDef)
+    public @NotNull AspectMapHierarchy createAspectMapHierarchy(@NotNull HierarchyDef def,
+                                                                @NotNull AspectDef aspectDef)
     {
         return new AspectMapHierarchyImpl(def, aspectDef);
     }
@@ -460,8 +540,8 @@ public class CheapFactory
      * @param propertyDefs the map of property names to property definitions
      * @return a new immutable AspectDef instance
      */
-    public @NotNull AspectDef createImmutableAspectDef(@NotNull String name, 
-                                                             @NotNull Map<String, ? extends PropertyDef> propertyDefs)
+    public @NotNull AspectDef createImmutableAspectDef(@NotNull String name,
+                                                       @NotNull Map<String, ? extends PropertyDef> propertyDefs)
     {
         return new ImmutableAspectDefImpl(name, propertyDefs);
     }
