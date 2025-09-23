@@ -58,12 +58,12 @@ public class EntityTreeHierarchyImpl implements EntityTreeHierarchy
         /**
          * Returns whether this node is a leaf node.
          * 
-         * @return {@code false} as this implementation can have children
+         * @return {@code true} only if this node has no children
          */
         @Override
         public boolean isLeaf()
         {
-            return false;
+            return isEmpty();
         }
 
         /**
@@ -172,7 +172,7 @@ public class EntityTreeHierarchyImpl implements EntityTreeHierarchy
     private final HierarchyDef def;
     
     /** The root node of this tree hierarchy. */
-    private final Node root;
+    private Node root;
 
     /**
      * Creates a new EntityTreeHierarchyImpl with the specified hierarchy definition and a root with a null entity.
@@ -223,8 +223,19 @@ public class EntityTreeHierarchyImpl implements EntityTreeHierarchy
      * 
      * @return the root node of the tree
      */
+    @Override
     public @NotNull Node root()
     {
         return root;
+    }
+
+    /**
+     * Set a new root node.
+     *
+     * @param newRoot the new root
+     */
+    public void setRoot(@NotNull Node newRoot)
+    {
+        this.root = newRoot;
     }
 }

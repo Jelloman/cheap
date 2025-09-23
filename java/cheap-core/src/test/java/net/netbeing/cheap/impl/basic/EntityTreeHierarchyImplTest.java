@@ -37,7 +37,7 @@ class EntityTreeHierarchyImplTest
         assertNotNull(tree.root());
         assertSame(rootEntity, tree.root().value());
         assertNull(tree.root().getParent());
-        assertFalse(tree.root().isLeaf());
+        assertTrue(tree.root().isLeaf());
         assertTrue(tree.root().isEmpty());
     }
 
@@ -75,7 +75,7 @@ class EntityTreeHierarchyImplTest
         assertNotNull(root);
         assertSame(rootEntity, root.value());
         assertNull(root.getParent());
-        assertFalse(root.isLeaf());
+        assertTrue(root.isLeaf()); // has no children so is a leaf
     }
 
     // NodeImpl Tests
@@ -86,7 +86,7 @@ class EntityTreeHierarchyImplTest
         
         assertSame(childEntity1, node.value());
         assertNull(node.getParent());
-        assertFalse(node.isLeaf());
+        assertTrue(node.isLeaf()); // has no children so is a leaf
         assertTrue(node.isEmpty());
     }
 
@@ -95,10 +95,12 @@ class EntityTreeHierarchyImplTest
     {
         EntityTreeHierarchyImpl.NodeImpl parent = new EntityTreeHierarchyImpl.NodeImpl(rootEntity);
         EntityTreeHierarchyImpl.NodeImpl child = new EntityTreeHierarchyImpl.NodeImpl(childEntity1, parent);
-        
+        parent.put("child", child);
+
         assertSame(childEntity1, child.value());
         assertSame(parent, child.getParent());
-        assertFalse(child.isLeaf());
+        assertTrue(child.isLeaf()); // has no children so is a leaf
+        assertFalse(parent.isLeaf());
     }
 
     @Test
@@ -131,13 +133,12 @@ class EntityTreeHierarchyImplTest
     }
 
     @Test
-    void nodeImpl_IsLeaf_AlwaysReturnsFalse()
+    void nodeImpl_IsLeaf_ReturnsTrueOnlyWithChildren()
     {
         EntityTreeHierarchyImpl.NodeImpl node = new EntityTreeHierarchyImpl.NodeImpl(childEntity1);
-        
-        assertFalse(node.isLeaf());
-        
-        // Should still be false even with children
+
+        assertTrue(node.isLeaf()); // has no children so is a leaf
+
         node.put("child", new EntityTreeHierarchyImpl.NodeImpl(childEntity2));
         assertFalse(node.isLeaf());
     }
@@ -301,8 +302,8 @@ class EntityTreeHierarchyImplTest
         // Verify leaf status
         assertFalse(root.isLeaf());
         assertFalse(child1.isLeaf());
-        assertFalse(child2.isLeaf());
-        assertFalse(grandChild1Node.isLeaf());
+        assertTrue(child2.isLeaf());
+        assertTrue(grandChild1Node.isLeaf());
         assertTrue(grandChild2Leaf.isLeaf());
     }
 
@@ -322,7 +323,7 @@ class EntityTreeHierarchyImplTest
         assertSame(regularChild, root.get("regular"));
         assertSame(leafChild, root.get("leaf"));
         
-        assertFalse(regularChild.isLeaf());
+        assertTrue(regularChild.isLeaf());
         assertTrue(leafChild.isLeaf());
         
         // Regular child can have children

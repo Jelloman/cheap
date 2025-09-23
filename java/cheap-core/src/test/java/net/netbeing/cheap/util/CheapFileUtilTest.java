@@ -493,7 +493,7 @@ public class CheapFileUtilTest
         Node root = hierarchy.root();
         
         // Root should be the single file
-        assertFalse(root.isLeaf()); // Root is always a NodeImpl (non-leaf) in EntityTreeHierarchy
+        assertTrue(root.isLeaf()); // Root is empty, so leaf
         Entity rootEntity = root.value();
         Aspect rootAspect = rootEntity.getAspect(fileRecAspectDef, catalog);
         @SuppressWarnings("unchecked")
