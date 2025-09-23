@@ -1,9 +1,11 @@
 package net.netbeing.cheap.util;
 
+import lombok.SneakyThrows;
 import net.netbeing.cheap.impl.basic.*;
 import net.netbeing.cheap.model.*;
 import org.jetbrains.annotations.NotNull;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -27,27 +29,31 @@ public class CheapFactory
 {
     /** The default LocalEntity type to create when not explicitly specified. */
     private final LocalEntityType defaultLocalEntityType;
-
+    private final Class<? extends AspectBuilder> aspectBuilderClass;
     private final Map<String, AspectDef> aspectDefs = new HashMap<>();
     private final Map<UUID, Entity> entities = new HashMap<>();
 
     /**
-     * Creates a new CheapFactory with the default LocalEntity type of SINGLE_CATALOG.
+     * Creates a new CheapFactory with the defaults of LocalEntityType.SINGLE_CATALOG
+     * and AspectObjectMapBuilder.class.
      */
     public CheapFactory()
     {
-        this(LocalEntityType.SINGLE_CATALOG);
+        this(null, null);
     }
 
     /**
-     * Creates a new CheapFactory with the specified default LocalEntity type.
+     * Creates a new CheapFactory with the specified default LocalEntity type and
+     * aspectBuilderClass. If null, these will default to LocalEntityType.SINGLE_CATALOG
+     * and AspectObjectMapBuilder.class.
      *
      * @param defaultLocalEntityType the default type of LocalEntity to create
+     * @param aspectBuilderClass the default aspectBuilderClass
      */
-    public CheapFactory(@NotNull LocalEntityType defaultLocalEntityType)
+    public CheapFactory(LocalEntityType defaultLocalEntityType, Class<? extends AspectBuilder> aspectBuilderClass)
     {
-        this.defaultLocalEntityType = Objects.requireNonNull(defaultLocalEntityType, 
-            "Default LocalEntity type cannot be null");
+        this.defaultLocalEntityType = defaultLocalEntityType != null ? defaultLocalEntityType : LocalEntityType.SINGLE_CATALOG;
+        this.aspectBuilderClass = aspectBuilderClass != null ? aspectBuilderClass : AspectObjectMapBuilder.class;
     }
 
     /**
@@ -58,6 +64,30 @@ public class CheapFactory
     public @NotNull LocalEntityType getDefaultLocalEntityType()
     {
         return defaultLocalEntityType;
+    }
+
+    /**
+     * Returns the default AspectBuilder type configured for this factory.
+     *
+     * @return the default AspectBuilder type
+     */
+    public Class<? extends AspectBuilder> getAspectBuilderClass()
+    {
+        return aspectBuilderClass;
+    }
+
+    /**
+     * Returns the default AspectBuilder type configured for this factory.
+     *
+     * @return the default AspectBuilder type
+     */
+    public AspectBuilder createAspectBuilder()
+    {
+        try {
+            return aspectBuilderClass.getDeclaredConstructor().newInstance();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     /**

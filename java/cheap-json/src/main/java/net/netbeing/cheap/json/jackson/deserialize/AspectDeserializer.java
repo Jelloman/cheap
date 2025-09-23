@@ -33,10 +33,15 @@ class AspectDeserializer extends JsonDeserializer<Aspect>
             throw new JsonMappingException(p, "Expected START_OBJECT token");
         }
 
+        AspectBuilder builder = factory.createAspectBuilder();
         AspectDef aspectDef = (AspectDef) context.getAttribute("CheapAspectDef");
+        if (aspectDef != null) {
+            builder.aspectDef(aspectDef);
+        }
         Entity entity = (Entity) context.getAttribute("CheapEntity");
-        Aspect aspect = null;
-        Map<String,String> propValues = null;
+        if (entity != null) {
+            builder.entity(entity);
+        }
 
         while (p.nextToken() != JsonToken.END_OBJECT) {
             String fieldName = p.currentName();
@@ -48,6 +53,7 @@ class AspectDeserializer extends JsonDeserializer<Aspect>
                     if (aspectDef == null) {
                         throw new JsonMappingException(p, "AspectDef named '"+p.getValueAsString()+"' not found.");
                     }
+                    builder.aspectDef(aspectDef);
                 }
                 case "entityId" -> {
                     UUID entityId = UUID.fromString(p.getValueAsString());
@@ -57,14 +63,11 @@ class AspectDeserializer extends JsonDeserializer<Aspect>
                         }
                     } else {
                         entity = factory.getOrRegisterNewEntity(entityId);
+                        builder.entity(entity);
                     }
                 }
                 default -> {
-                    // FIXME: write and use AspectBuilder via the factory.
-                    if (aspect != null) {
-                        aspect.write(fieldName, p.getValueAsString());
-                    }
-                    propValues.put(fieldName, p.getValueAsString());
+                    builder.property(fieldName, p.getValueAsString());
                 }
             }
         }
@@ -76,7 +79,7 @@ class AspectDeserializer extends JsonDeserializer<Aspect>
             throw new JsonMappingException(p, "Missing aspectDef in Aspect deserialization.");
         }
 
-        throw new JsonMappingException(p, "Aspect deserialization requires access to catalog context for proper reconstruction");
+        return builder.build();
     }
 
     @SuppressWarnings("unchecked")

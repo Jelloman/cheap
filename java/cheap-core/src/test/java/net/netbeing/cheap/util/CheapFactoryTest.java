@@ -356,11 +356,12 @@ class CheapFactoryTest
         assertEquals(LocalEntityType.SINGLE_CATALOG, factory.getDefaultLocalEntityType());
         
         // Test factory with custom configuration
-        CheapFactory customFactory = new CheapFactory(LocalEntityType.MULTI_CATALOG);
+        CheapFactory customFactory = new CheapFactory(LocalEntityType.MULTI_CATALOG, null);
         assertEquals(LocalEntityType.MULTI_CATALOG, customFactory.getDefaultLocalEntityType());
-        
-        // Test null configuration
-        assertThrows(NullPointerException.class, () -> new CheapFactory(null));
+
+        // Test null configuration (both parameters null should use defaults)
+        CheapFactory nullFactory = new CheapFactory(null, null);
+        assertEquals(LocalEntityType.SINGLE_CATALOG, nullFactory.getDefaultLocalEntityType());
     }
 
     @Test
@@ -375,22 +376,22 @@ class CheapFactoryTest
         assertTrue(defaultEntity instanceof net.netbeing.cheap.impl.basic.LocalEntityOneCatalogImpl);
         
         // Test different LocalEntityType configurations
-        CheapFactory singleFactory = new CheapFactory(LocalEntityType.SINGLE_CATALOG);
+        CheapFactory singleFactory = new CheapFactory(LocalEntityType.SINGLE_CATALOG, null);
         LocalEntity singleEntity = singleFactory.createLocalEntity(catalog);
         assertNotNull(singleEntity);
         assertTrue(singleEntity instanceof net.netbeing.cheap.impl.basic.LocalEntityOneCatalogImpl);
-        
-        CheapFactory multiFactory = new CheapFactory(LocalEntityType.MULTI_CATALOG);
+
+        CheapFactory multiFactory = new CheapFactory(LocalEntityType.MULTI_CATALOG, null);
         LocalEntity multiEntity = multiFactory.createLocalEntity(catalog);
         assertNotNull(multiEntity);
         assertTrue(multiEntity instanceof net.netbeing.cheap.impl.basic.LocalEntityMultiCatalogImpl);
-        
-        CheapFactory cachingSingleFactory = new CheapFactory(LocalEntityType.CACHING_SINGLE_CATALOG);
+
+        CheapFactory cachingSingleFactory = new CheapFactory(LocalEntityType.CACHING_SINGLE_CATALOG, null);
         LocalEntity cachingSingleEntity = cachingSingleFactory.createLocalEntity(catalog);
         assertNotNull(cachingSingleEntity);
         assertTrue(cachingSingleEntity instanceof net.netbeing.cheap.impl.basic.CachingEntityOneCatalogImpl);
-        
-        CheapFactory cachingMultiFactory = new CheapFactory(LocalEntityType.CACHING_MULTI_CATALOG);
+
+        CheapFactory cachingMultiFactory = new CheapFactory(LocalEntityType.CACHING_MULTI_CATALOG, null);
         LocalEntity cachingMultiEntity = cachingMultiFactory.createLocalEntity(catalog);
         assertNotNull(cachingMultiEntity);
         assertTrue(cachingMultiEntity instanceof net.netbeing.cheap.impl.basic.CachingEntityMultiCatalogImpl);

@@ -31,6 +31,15 @@ public interface AspectDef
     Collection<? extends PropertyDef> propertyDefs();
 
     /**
+     * Return the number of properties in this AspectDef.
+     *
+     * @return the number of properties in this AspectDef
+     */
+    default int size() {
+        return propertyDefs().size();
+    }
+
+    /**
      * Retrieves a specific property definition by name.
      * 
      * @param name the name of the property definition to retrieve

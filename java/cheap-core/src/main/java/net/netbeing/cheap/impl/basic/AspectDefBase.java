@@ -56,9 +56,7 @@ public abstract class AspectDefBase implements AspectDef
     }
 
     /**
-     * Returns the name of this aspect definition.
-     * 
-     * @return the aspect definition name
+     * {@inheritDoc}
      */
     @Override
     public String name()
@@ -67,9 +65,7 @@ public abstract class AspectDefBase implements AspectDef
     }
 
     /**
-     * Returns a collection of all property definitions in this aspect.
-     * 
-     * @return collection of property definitions
+     * {@inheritDoc}
      */
     @Override
     public Collection<? extends PropertyDef> propertyDefs()
@@ -78,10 +74,16 @@ public abstract class AspectDefBase implements AspectDef
     }
 
     /**
-     * Retrieves a property definition by name.
-     * 
-     * @param propName the name of the property definition to retrieve
-     * @return the property definition with the given name, or {@code null} if not found
+     * {@inheritDoc}
+     */
+    @Override
+    public int size()
+    {
+        return propertyDefs.size();
+    }
+
+    /**
+     * {@inheritDoc}
      */
     @Override
     public PropertyDef propertyDef(@NotNull String propName)

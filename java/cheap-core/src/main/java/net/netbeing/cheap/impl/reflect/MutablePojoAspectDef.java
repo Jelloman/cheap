@@ -42,7 +42,7 @@ import java.util.Map;
  * 
  * <p>JavaBean property discovery:</p>
  * <ul>
- *   <li>Uses {@link Introspector#getBeanInfo} to find properties</li>
+ *   <li>Uses {@link Introspector#getBeanInfo(Class,Class)} to find properties</li>
  *   <li>Excludes {@code Object} class properties (like {@code getClass()})</li>
  *   <li>Includes properties with getter methods, setter methods, or both</li>
  *   <li>Preserves mutability information for each property</li>
@@ -177,7 +177,7 @@ public class MutablePojoAspectDef extends MutableAspectDefImpl
      * 
      * <p>Introspection process:</p>
      * <ol>
-     *   <li>Uses {@link Introspector#getBeanInfo} excluding {@code Object} class methods</li>
+     *   <li>Uses {@link Introspector#getBeanInfo(Class,Class)} excluding {@code Object} class methods</li>
      *   <li>Converts each {@link PropertyDescriptor} to a {@link PojoPropertyDef}</li>
      *   <li>Forces immutable=false to preserve setter methods</li>
      *   <li>Returns an immutable map of property names to definitions</li>
