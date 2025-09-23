@@ -1,4 +1,4 @@
-package net.netbeing.cheap.json.jackson;
+package net.netbeing.cheap.json.jackson.deserialize;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
@@ -11,34 +11,33 @@ import net.netbeing.cheap.util.CheapFactory;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
-class EntityListHierarchyDeserializer extends JsonDeserializer<EntityListHierarchy>
+class EntitySetHierarchyDeserializer extends JsonDeserializer<EntitySetHierarchy>
 {
     private final CheapFactory factory;
 
-    public EntityListHierarchyDeserializer()
+    public EntitySetHierarchyDeserializer()
     {
         this(new CheapFactory());
     }
 
-    public EntityListHierarchyDeserializer(@NotNull CheapFactory factory)
+    public EntitySetHierarchyDeserializer(@NotNull CheapFactory factory)
     {
         this.factory = factory;
     }
 
     @Override
-    public EntityListHierarchy deserialize(JsonParser p, DeserializationContext context) throws IOException
+    public EntitySetHierarchy deserialize(JsonParser p, DeserializationContext context) throws IOException
     {
         if (p.currentToken() != JsonToken.START_OBJECT) {
             throw new JsonMappingException(p, "Expected START_OBJECT token");
         }
 
-        List<Entity> entityIds = new ArrayList<>();
-
-        EntityListHierarchy hierarchy = null;
+        Set<Entity> entityIds = new HashSet<>();
+        EntitySetHierarchy hierarchy = null;
 
         while (p.nextToken() != JsonToken.END_OBJECT) {
             String fieldName = p.currentName();
@@ -47,7 +46,7 @@ class EntityListHierarchyDeserializer extends JsonDeserializer<EntityListHierarc
             switch (fieldName) {
                 case "def" -> {
                     HierarchyDef def = context.readValue(p, HierarchyDef.class);
-                    hierarchy = factory.createEntityListHierarchy(def);
+                    hierarchy = factory.createEntitySetHierarchy(def);
                     if (!entityIds.isEmpty()) {
                         hierarchy.addAll(entityIds);
                         entityIds = hierarchy;

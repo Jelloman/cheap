@@ -1,4 +1,4 @@
-package net.netbeing.cheap.json.jackson;
+package net.netbeing.cheap.json.jackson.serialize;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;

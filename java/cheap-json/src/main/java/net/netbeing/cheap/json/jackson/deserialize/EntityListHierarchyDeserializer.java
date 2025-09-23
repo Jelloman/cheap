@@ -1,4 +1,4 @@
-package net.netbeing.cheap.json.jackson;
+package net.netbeing.cheap.json.jackson.deserialize;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
@@ -11,35 +11,34 @@ import net.netbeing.cheap.util.CheapFactory;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
-class EntityDirectoryHierarchyDeserializer extends JsonDeserializer<EntityDirectoryHierarchy>
+class EntityListHierarchyDeserializer extends JsonDeserializer<EntityListHierarchy>
 {
     private final CheapFactory factory;
 
-    public EntityDirectoryHierarchyDeserializer()
+    public EntityListHierarchyDeserializer()
     {
         this(new CheapFactory());
     }
 
-    public EntityDirectoryHierarchyDeserializer(@NotNull CheapFactory factory)
+    public EntityListHierarchyDeserializer(@NotNull CheapFactory factory)
     {
         this.factory = factory;
     }
 
     @Override
-    public EntityDirectoryHierarchy deserialize(JsonParser p, DeserializationContext context) throws IOException
+    public EntityListHierarchy deserialize(JsonParser p, DeserializationContext context) throws IOException
     {
         if (p.currentToken() != JsonToken.START_OBJECT) {
             throw new JsonMappingException(p, "Expected START_OBJECT token");
         }
 
-        Map<String, Entity> entityIds = new LinkedHashMap<>();
+        List<Entity> entityIds = new ArrayList<>();
 
-        EntityDirectoryHierarchy hierarchy = null;
+        EntityListHierarchy hierarchy = null;
 
         while (p.nextToken() != JsonToken.END_OBJECT) {
             String fieldName = p.currentName();
@@ -48,19 +47,17 @@ class EntityDirectoryHierarchyDeserializer extends JsonDeserializer<EntityDirect
             switch (fieldName) {
                 case "def" -> {
                     HierarchyDef def = context.readValue(p, HierarchyDef.class);
-                    hierarchy = factory.createEntityDirectoryHierarchy(def);
+                    hierarchy = factory.createEntityListHierarchy(def);
                     if (!entityIds.isEmpty()) {
-                        hierarchy.putAll(entityIds);
+                        hierarchy.addAll(entityIds);
                         entityIds = hierarchy;
                     }
                 }
                 case "entities" -> {
-                    if (p.currentToken() == JsonToken.START_OBJECT) {
-                        while (p.nextToken() != JsonToken.END_OBJECT) {
-                            String key = p.currentName();
-                            p.nextToken();
+                    if (p.currentToken() == JsonToken.START_ARRAY) {
+                        while (p.nextToken() != JsonToken.END_ARRAY) {
                             UUID id = UUID.fromString(p.getValueAsString());
-                            entityIds.put(key, factory.createEntity(id));
+                            entityIds.add(factory.createEntity(id));
                         }
                     }
                 }

@@ -2,6 +2,7 @@ package net.netbeing.cheap.json.jackson;
 
 import com.google.common.collect.ImmutableMap;
 import net.netbeing.cheap.impl.basic.*;
+import net.netbeing.cheap.json.jackson.serialize.CheapJacksonSerializer;
 import net.netbeing.cheap.model.*;
 import org.junit.jupiter.api.Test;
 

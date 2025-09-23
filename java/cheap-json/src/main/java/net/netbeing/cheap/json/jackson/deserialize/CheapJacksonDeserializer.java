@@ -1,4 +1,4 @@
-package net.netbeing.cheap.json.jackson;
+package net.netbeing.cheap.json.jackson.deserialize;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
