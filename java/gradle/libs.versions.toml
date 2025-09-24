@@ -11,7 +11,7 @@ tempus-fugit = "1.1"
 embedded-postgres = "2.1.1"
 flyway = "11.12.0"
 flyway-pg = "11.12.0"
-jackson = "2.18.2"
+jackson = "2.20.0"
 
 
 [libraries]

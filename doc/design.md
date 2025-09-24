@@ -105,4 +105,10 @@ PROPERTIES
 | BLOB        | BLB       | byte[]         | Binary Large Object (BLOB) for streaming binary data.                       |
 
 
+Serialization and Persistence
+-----------------------------
+* Any serialization (S11N) and persistence of CHEAP elements requires AspectDefs (and their PropertyDefs)
+  to be serialized first.
+* 
+
 

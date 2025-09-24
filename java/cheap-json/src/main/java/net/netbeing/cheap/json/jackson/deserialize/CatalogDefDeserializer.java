@@ -17,11 +17,6 @@ class CatalogDefDeserializer extends JsonDeserializer<CatalogDef>
 {
     private final CheapFactory factory;
 
-    public CatalogDefDeserializer()
-    {
-        this(new CheapFactory());
-    }
-
     public CatalogDefDeserializer(@NotNull CheapFactory factory)
     {
         this.factory = factory;

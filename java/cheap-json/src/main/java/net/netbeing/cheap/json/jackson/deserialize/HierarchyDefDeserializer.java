@@ -15,11 +15,6 @@ class HierarchyDefDeserializer extends JsonDeserializer<HierarchyDef>
 {
     private final CheapFactory factory;
 
-    public HierarchyDefDeserializer()
-    {
-        this(new CheapFactory());
-    }
-
     public HierarchyDefDeserializer(@NotNull CheapFactory factory)
     {
         this.factory = factory;

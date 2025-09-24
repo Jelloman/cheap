@@ -20,11 +20,6 @@ class EntityDirectoryHierarchyDeserializer extends JsonDeserializer<EntityDirect
 {
     private final CheapFactory factory;
 
-    public EntityDirectoryHierarchyDeserializer()
-    {
-        this(new CheapFactory());
-    }
-
     public EntityDirectoryHierarchyDeserializer(@NotNull CheapFactory factory)
     {
         this.factory = factory;

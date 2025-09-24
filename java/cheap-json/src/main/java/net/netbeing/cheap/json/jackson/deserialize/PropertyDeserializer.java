@@ -17,11 +17,6 @@ class PropertyDeserializer extends JsonDeserializer<Property>
 {
     private final CheapFactory factory;
 
-    public PropertyDeserializer()
-    {
-        this(new CheapFactory());
-    }
-
     public PropertyDeserializer(@NotNull CheapFactory factory)
     {
         this.factory = factory;
@@ -34,6 +29,10 @@ class PropertyDeserializer extends JsonDeserializer<Property>
             throw new JsonMappingException(p, "Expected START_OBJECT token");
         }
 
+        AspectDef aspectDef = (AspectDef) context.getAttribute("CheapAspectDef");
+        if (aspectDef == null) {
+            throw new JsonMappingException(p, "Property cannot be deserialized without an AspectDef.");
+        }
         PropertyDef def = null;
         Object value = null;
 
@@ -61,15 +60,10 @@ class PropertyDeserializer extends JsonDeserializer<Property>
         throw new JsonMappingException(p, "Property deserialization requires access to aspect context for proper reconstruction");
     }
 
-    @SuppressWarnings("unchecked")
-    private Object readValue(JsonParser p, PropertyType type) throws IOException
+    private Object readValue(JsonParser p, @NotNull PropertyType type) throws IOException
     {
         if (p.currentToken() == JsonToken.VALUE_NULL) {
             return null;
-        }
-
-        if (type == null) {
-            return p.getValueAsString();
         }
 
         return switch (type) {

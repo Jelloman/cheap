@@ -15,11 +15,6 @@ class PropertyDefDeserializer extends JsonDeserializer<PropertyDef>
 {
     private final CheapFactory factory;
 
-    public PropertyDefDeserializer()
-    {
-        this(new CheapFactory());
-    }
-
     public PropertyDefDeserializer(@NotNull CheapFactory factory)
     {
         this.factory = factory;

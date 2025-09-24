@@ -19,11 +19,6 @@ class EntitySetHierarchyDeserializer extends JsonDeserializer<EntitySetHierarchy
 {
     private final CheapFactory factory;
 
-    public EntitySetHierarchyDeserializer()
-    {
-        this(new CheapFactory());
-    }
-
     public EntitySetHierarchyDeserializer(@NotNull CheapFactory factory)
     {
         this.factory = factory;

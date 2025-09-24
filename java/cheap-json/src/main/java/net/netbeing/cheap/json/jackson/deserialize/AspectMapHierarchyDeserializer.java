@@ -17,11 +17,6 @@ class AspectMapHierarchyDeserializer extends JsonDeserializer<AspectMapHierarchy
 {
     private final CheapFactory factory;
 
-    public AspectMapHierarchyDeserializer()
-    {
-        this(new CheapFactory());
-    }
-
     public AspectMapHierarchyDeserializer(@NotNull CheapFactory factory)
     {
         this.factory = factory;

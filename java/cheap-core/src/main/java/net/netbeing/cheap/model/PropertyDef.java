@@ -74,14 +74,18 @@ public interface PropertyDef
      * 
      * @return true if null values are allowed, false if the property is required
      */
-    boolean isNullable();
+    default boolean isNullable() {
+        return false;
+    }
 
     /**
      * Determines whether properties of this type can be removed from their parent aspect.
      * 
      * @return true if the property can be removed, false if it is mandatory
      */
-    boolean isRemovable();
+    default boolean isRemovable() {
+        return false;
+    }
 
     /**
      * Determines whether properties of this type can hold multiple values.
@@ -89,7 +93,9 @@ public interface PropertyDef
      * 
      * @return true if the property can hold multiple values, false if it holds a single value
      */
-    boolean isMultivalued();
+    default boolean isMultivalued() {
+        return false;
+    }
 
     /**
      * Perform a full comparison of every field of this PropertyDef.

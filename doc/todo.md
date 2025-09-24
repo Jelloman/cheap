@@ -5,7 +5,6 @@
 * Convert docs to MD
 * Flesh out design doc
   * S11N/Persistence section
-    * PropertyDefs first
     * AspectDefs 2nd
     * All defs can have UUID and possibly URI (if URI there must be a UUID)
   * List of modules
@@ -56,7 +55,10 @@ Look into Arkalos - https://arkalos.com/
 
 ## Archive
 
-### Thru 9/24 unordered
+### 9/24
+
+
+### Thru 9/23 unordered
 Add AspectDef lookup to Factory.
 Add AspectDef to Catalog properly when aspects are added.
 Update serializers and their tests to put aspectDefs before hierarchies.

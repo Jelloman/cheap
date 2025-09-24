@@ -12,25 +12,39 @@ class PropertyDefSerializer extends JsonSerializer<PropertyDef>
     @Override
     public void serialize(PropertyDef propertyDef, JsonGenerator gen, SerializerProvider serializers) throws IOException
     {
+        AspectDef aspectDef = (AspectDef) context.getAttribute("CheapAspectDef");
+        if (aspectDef != null) {
+            builder.aspectDef(aspectDef);
+        }
+
         gen.writeStartObject();
         
         gen.writeStringField("name", propertyDef.name());
         gen.writeStringField("type", propertyDef.type().name());
-        
+
+        // Only write no-default values for all of the following fields
+
         if (propertyDef.hasDefaultValue()) {
-            gen.writeBooleanField("hasDefaultValue", true);
             gen.writeFieldName("defaultValue");
             writeValue(propertyDef.defaultValue(), gen);
-        } else {
-            gen.writeBooleanField("hasDefaultValue", false);
         }
-        
-        gen.writeBooleanField("isReadable", propertyDef.isReadable());
+
+        if (!propertyDef.isReadable()) {
+            gen.writeBooleanField("isReadable", false);
+        }
         gen.writeBooleanField("isWritable", propertyDef.isWritable());
-        gen.writeBooleanField("isNullable", propertyDef.isNullable());
+        if (!propertyDef.isNullable()) {
+            gen.writeBooleanField("isNullable", false);
+        }
         gen.writeBooleanField("isRemovable", propertyDef.isRemovable());
+        if (!propertyDef.isReadable()) {
+            gen.writeBooleanField("isReadable", false);
+        }
         gen.writeBooleanField("isMultivalued", propertyDef.isMultivalued());
-        
+        if (!propertyDef.isReadable()) {
+            gen.writeBooleanField("isReadable", false);
+        }
+
         gen.writeEndObject();
     }
     

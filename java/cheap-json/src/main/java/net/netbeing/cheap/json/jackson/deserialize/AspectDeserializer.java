@@ -16,11 +16,6 @@ class AspectDeserializer extends JsonDeserializer<Aspect>
 {
     private final CheapFactory factory;
 
-    public AspectDeserializer()
-    {
-        this(new CheapFactory());
-    }
-
     public AspectDeserializer(@NotNull CheapFactory factory)
     {
         this.factory = factory;
