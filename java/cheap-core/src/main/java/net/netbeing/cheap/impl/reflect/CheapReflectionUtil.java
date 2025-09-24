@@ -6,6 +6,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.*;
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.net.URI;
 import java.net.URL;
@@ -130,6 +131,7 @@ final class CheapReflectionUtil
             .put(CharSequence.class, PropertyType.String)
             .put(CharBuffer.class, PropertyType.String)
             .put(BigInteger.class, PropertyType.BigInteger)
+            .put(BigDecimal.class, PropertyType.BigDecimal)
             .put(UUID.class, PropertyType.UUID)
             .put(URI.class, PropertyType.URI)
             .put(URL.class, PropertyType.URI)
@@ -374,7 +376,7 @@ final class CheapReflectionUtil
     }
 
     /**
-     * Determines whether a setter method accepts a multi-valued property.
+     * Determines whether a setter method accepts a multivalued property.
      * 
      * <p>This method analyzes the setter's parameter type and generic parameter type to determine
      * if it accepts multiple values.</p>

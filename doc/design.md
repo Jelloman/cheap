@@ -74,7 +74,7 @@ ASPECTS
 * An Aspect is a data record that is attached to a single Entity.
 * Each Aspect is defined by a single AspectDef which defines the fields in the record.
 * Each Entity can have either zero or one Aspect of a given AspectDef.
-* Aspects are always stored in an AspectMap in a Catalog, organized by AspectDef, much like RDBMS tables.
+* Aspects are always stored in an AspectMap in a Catalog, organized by AspectDef (much like RDBMS tables).
 * AspectDefs have a full name which must be globally unique, and should follow a naming convention like Java classes.
 * Currently the design is for AspectDefs to NOT have a UUID, but that may need to be revisited.
     - Aspect versioning needs to be considered more thoroughly.
@@ -87,5 +87,22 @@ PROPERTIES
 * Properties are never structured or nested objects; such things should be Aspects or Hierarchies.
 * An individual Property object is always immutable.
   * Multivalued properties are not meant to be modified "in place".
+* 
+
+| Type Name   | Type Code | Java Class     | Description                                                                 |
+|-------------|-----------|----------------|-----------------------------------------------------------------------------|
+| Integer     | INT       | Long           | 64-bit signed integer values.                                               |
+| Float       | FLT       | Double         | 64-bit floating-point values (double precision).                            |
+| Boolean     | BLN       | Boolean        | Boolean values supporting true, false, or null states.                      |
+| String      | STR       | String         | String values with length limited to 8192 characters, processed atomically. |
+| Text        | TXT       | String         | Text values with unlimited length, processed atomically.                    |
+| BigInteger  | BGI       | BigInteger     | Arbitrary precision integer values with unlimited size.                     |
+| BigDecimal  | BGF       | BigDecimal     | Arbitrary precision floating-point values with unlimited size.              |
+| DateTime    | DAT       | ZonedDateTime  | Date and time values stored as ISO-8601 formatted strings.                  |
+| URI         | URI       | URI            | Uniform Resource Identifier values following RFC 3986 specification.        |
+| UUID        | UID       | UUID           | Universally Unique Identifier values following RFC 4122 specification.      |
+| CLOB        | CLB       | String         | Character Large Object (CLOB) for streaming text data.                      |
+| BLOB        | BLB       | byte[]         | Binary Large Object (BLOB) for streaming binary data.                       |
+
 
 

@@ -4,6 +4,11 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Reader;
 import java.io.Writer;
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.net.URI;
+import java.time.ZonedDateTime;
+import java.util.UUID;
 
 /**
  * Defines the supported data types for properties in the CHEAP model.
@@ -47,34 +52,41 @@ public enum PropertyType
      * is more important than storage efficiency.
      */
     Text("TXT", String.class),
-    
+
     /**
      * Arbitrary precision integer values with unlimited size. Stored as
      * strings to avoid platform-specific size limitations and ensure
      * exact precision for mathematical operations.
      */
-    BigInteger("BIG", String.class),
-    
+    BigInteger("BGI", BigInteger.class),
+
+    /**
+     * Arbitrary precision floating-point values with unlimited size. Stored
+     * as strings to avoid platform-specific size limitations and ensure
+     * exact precision for mathematical operations.
+     */
+    BigDecimal("BGF", BigDecimal.class),
+
     /**
      * Date and time values stored as ISO-8601 formatted strings. This ensures
      * timezone information is preserved and provides human-readable storage
      * with standardized parsing support.
      */
-    DateTime("DAT", String.class),
+    DateTime("DAT", ZonedDateTime.class),
     
     /**
      * Uniform Resource Identifier values following RFC 3986 specification.
      * Stored as strings with application-level conversion to/from URI/URL objects
      * to maintain flexibility in handling various URI schemes.
      */
-    URI("URI", String.class),
+    URI("URI", URI.class),
     
     /**
      * Universally Unique Identifier values following RFC 4122 specification.
      * Stored as strings with application-level conversion to/from UUID objects
      * to ensure consistent representation across different systems.
      */
-    UUID("UID", String.class),
+    UUID("UID", UUID.class),
     
     /**
      * Character Large Object (CLOB) for streaming text data. Represented by
