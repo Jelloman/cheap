@@ -25,21 +25,26 @@ Random notes
 
 
 
---- CATALOGS ---
-* All Cheap catalogs are considered working copies or caches.
-* There are six species of catalog:
+CATALOGS
+--------
+* All Cheap Catalogs are considered working copies or caches.
+* Every Catalog has either an upstream Catalog or an external data source (never both).
+* Catalogs are also task managers that manage and report on current AND past read and write jobs
+  to the upstream/source.
+* Each Catalog has exactly one "Species". There are six species of catalog:
     * A "source" - a read-only cache of an external data source;
     * A "sink" - a read-write working copy of an external data source;
     * A "mirror" - a read-only cache of another catalog;
     * A "cache" - a (possibly buffered) write-though cache of another catalog;
     * A "clone" - a write-back working copy of another catalog with manual writes; or
     * A "fork" - a transient copy of another catalog, intended to diverge.
-* A fork should be a short-lived transition from a mirror, cache or clone into a sink, AKA "Save As...".
+* A fork in intended to be used as a short-lived transition from a mirror, cache or clone into a sink, AKA "Save As...".
 * All catalogs can report the status of read and write operations to and from the upstream or external source.
 * Each Catalog has a Catalog Def that defines the structure and types of data it contains.
 * Mirror catalogs always have the same def as the upstream; clones and forks usually do, but can diverge.
 
---- HIERARCHIES ---
+HIERARCHIES
+-----------
 * Hierarchies come in 5 types:
     ENTITY_LIST("EL") - an ordered list containing entity IDs, possibly duplicates
     ENTITY_SET("ES") - a non-ordered set containing entity IDs
@@ -54,13 +59,15 @@ Random notes
 * Hierarchy 0 is always an entity set of all the other global hierarchies in the catalog.
 * Hierarchy 1 is always an entity set of all the entities in the catalog. Iterating hierarchy 1 may be expensive.
 
---- ENTITIES
+ENTITIES
+--------
 * Entities are nothing but IDs. All other information about entities is found in hierarchies and aspects.
 * Entity IDs can be local or global. Global Entity IDs are either UUIDs or URIs.
 * Aspects may be immutable (and should be in most cases).
 * Individual Property *objects* are always immutable. Property values can only be written into writable Aspects.
 
---- ASPECTS
+ASPECTS
+-------
 * An Aspect is a data record that is attached to a single Entity.
 * Each Aspect is defined by a single AspectDef which defines the fields in the record.
 * An AspectDef may be single (zero or one per Entity) or multiple (zero+ per Entity).
@@ -70,55 +77,6 @@ Random notes
     - Aspect versioning needs to be considered more thoroughly.
 * Each Catalog has an Aspectage, which is a directory of ALL AspectDefs in the catalog.
 
-
-
-
-TODO 6/10/25
-XX * Fork and expand RecordAspect into a writable PojoAspect
-XX * Continue to expand Hierarchy & Catalog interfaces
-TODO 6/13
-X * Refactor method maps into aspect *defs*
-
-TODO 6/14
-X * Convert project to maven
-X * Implement all 5 types of hierarchy generically
-
-TODO 6/25
-X * LocalEntity class which contains multiple AspectDef/Aspect pairs
-X * Simplify Entity -localId, replace localRef with LocalEntity class
-
-TODO 7/1
-X * FileUtil
-X    - File record
-X    - Directory record
-X    - Create records for one directory
-X    - Walker record-creation wrapping nio.Files walker.
-    -
-* Pansh project
-    - Command line
-    - 26 commands that give NYI response
-    - Implement Copy
-
-TODO 8/15
-* DBUtil
-
-
-
-TODO GLOBAL
-* Implement root catalog for DB
-* Implement root catalog for filesystem
-* cheap.net package
-    * Proxy catalog for remote catalog
-    * Catalog client and server implementations
-    * Multiple protocols
-        * JSON-over-HTTP
-        * Protocol buffers
-
-
-
-
-
-
-
-
+PROPERTIES
+----------
 
