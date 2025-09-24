@@ -1,7 +1,21 @@
 # CHEAP To-Do
+***
 
 ## TODAY
-
+* Convert docs to MD
+* Flesh out design doc
+  * S11N/Persistence section
+    * PropertyDefs first
+    * AspectDefs 2nd
+    * All defs can have UUID and possibly URI (if URI there must be a UUID)
+  * List of modules
+    * core
+      * includes FS and SQLite support
+    * db
+      * PG
+      * MySQL/Maria
+    * json
+    * net
 
 
 ## GLOBAL
@@ -21,14 +35,14 @@
     - Implement Copy
 
 Code:
-Make Hierarchy impls threadsafe (or safe/nonsafe variants).
-Global Cheap config class
-Add Catalog lookup mechanism
+* Make Hierarchy impls threadsafe (or safe/nonsafe variants).
+* Global Cheap config class
+* Add Catalog lookup mechanism
 
 Features:
-Spec kit
-Design Postgres and Sqlite schemas for storing CHEAP
-PropertyMapper integration
+* Spec kit?
+* Design Postgres and Sqlite schemas for storing CHEAP
+* PropertyMapper integration
 
 
 
@@ -42,10 +56,12 @@ Look into Arkalos - https://arkalos.com/
 
 ## Archive
 
-## Thru 9/24 unordered
+### Thru 9/24 unordered
 Add AspectDef lookup to Factory.
 Add AspectDef to Catalog properly when aspects are added.
 Update serializers and their tests to put aspectDefs before hierarchies.
+Retire both of the default hierarchies being hierarchies, make them part of Catalog. Neither hierarchy type is needed.
+Add aspects to catalog not hierarchy
 
 
 ### TODO 8/15

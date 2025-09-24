@@ -78,17 +78,15 @@ public enum PropertyType
     
     /**
      * Character Large Object (CLOB) for streaming text data. Represented by
-     * Reader for input operations and Writer for output operations, enabling
-     * efficient processing of large text content without memory constraints.
+     * a String.
      */
-    CLOB("CLB", ReaderWriter.class),
+    CLOB("CLB", String.class),
     
     /**
      * Binary Large Object (BLOB) for streaming binary data. Represented by
-     * InputStream for input operations and OutputStream for output operations,
-     * enabling efficient processing of large binary content without memory constraints.
+     * a byte array.
      */
-    BLOB("BLB", InputOutput.class)
+    BLOB("BLB", byte[].class)
     ;
 
     /**
