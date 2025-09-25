@@ -20,6 +20,13 @@ Cheap offers utility functions and callback mechanisms to allow applications to 
 filesystems, etc. but it does not mandate their usage.
 Cheap is not concerned with access control, but tries to be flexible enough to accommodate fine-grained access control.
 
+Modules
+-------
+| Module     | Description                                                                                               |
+|------------|-----------------------------------------------------------------------------------------------------------|
+| cheap-core | Core CHEAP interfaces and basic implementations. Includes filesystem functionality. Minimal dependencies. |
+| cheap-db   | Database connectors and catalog implementations.                                                          |
+| cheap-json | JSON serialization and deserialization of CHEAP elements.                                                 |
 
 
 
@@ -73,11 +80,14 @@ ASPECTS
 -------
 * An Aspect is a data record that is attached to a single Entity.
 * Each Aspect is defined by a single AspectDef which defines the fields in the record.
-* Each Entity can have either zero or one Aspect of a given AspectDef.
 * Aspects are always stored in an AspectMap in a Catalog, organized by AspectDef (much like RDBMS tables).
-* AspectDefs have a full name which must be globally unique, and should follow a naming convention like Java classes.
-* Currently the design is for AspectDefs to NOT have a UUID, but that may need to be revisited.
-    - Aspect versioning needs to be considered more thoroughly.
+* Each Entity can have at most one Aspect of a given AspectDef.
+  * If you need an entity to have multiple aspects of the same type, those aspects should really be entities 
+    of their own, and the one-to-many relationship should be an entity-entity relationship, stored either in
+    an entity tree hierarchy or a multivalued UUID property.
+* AspectDefs have a full name which must be globally unique and should use reverse domain name notation.
+* AspectDefs may optionally have a UUID. If they do, they may also optionally have a URI and/or a version number.
+  AspectDefs which are intended to be used for inter-catalog data exchange should have all three.
 
 PROPERTIES
 ----------
@@ -107,8 +117,12 @@ PROPERTIES
 
 Serialization and Persistence
 -----------------------------
-* Any serialization (S11N) and persistence of CHEAP elements requires AspectDefs (and their PropertyDefs)
-  to be serialized first.
-* 
+* Serialization (S11N) and persistence of CHEAP Catalogs has some constraints:
+  * HierarchyDefs may only be contained in a CatalogDef.
+  * PropertyDefs may only be contained in an AspectDef.
+  * Aspects may only be contained in an AspectMapHierarchy.
+  * AspectDefs must be serialized before any Aspects.
+  * HierarchyDefs must be serialized before any Hierarchies.
+* These constraints do not apply to smaller atoms of persistence, i.e., JSON representing a single Aspect only. 
 
 
