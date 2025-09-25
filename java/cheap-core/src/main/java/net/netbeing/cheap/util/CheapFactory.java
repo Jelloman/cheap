@@ -662,6 +662,54 @@ public class CheapFactory
     }
 
 
+    // ===== EntityTreeHierarchy Node Factory Methods =====
+
+    /**
+     * Creates a new non-leaf EntityTreeHierarchy.Node that can have children.
+     *
+     * @param value the entity value to store at this node
+     * @return a new non-leaf Node instance
+     */
+    public @NotNull EntityTreeHierarchy.Node createTreeNode(Entity value)
+    {
+        return new EntityTreeHierarchyImpl.NodeImpl(value);
+    }
+
+    /**
+     * Creates a new non-leaf EntityTreeHierarchy.Node with the specified parent.
+     *
+     * @param value the entity value to store at this node
+     * @param parent the parent node
+     * @return a new non-leaf Node instance
+     */
+    public @NotNull EntityTreeHierarchy.Node createTreeNode(Entity value, EntityTreeHierarchy.Node parent)
+    {
+        return new EntityTreeHierarchyImpl.NodeImpl(value, parent);
+    }
+
+    /**
+     * Creates a new leaf EntityTreeHierarchy.Node that cannot have children.
+     *
+     * @param value the entity value to store at this leaf node
+     * @return a new leaf Node instance
+     */
+    public @NotNull EntityTreeHierarchy.Node createTreeLeafNode(Entity value)
+    {
+        return new EntityTreeHierarchyImpl.LeafNodeImpl(value);
+    }
+
+    /**
+     * Creates a new leaf EntityTreeHierarchy.Node with the specified parent.
+     *
+     * @param value the entity value to store at this leaf node
+     * @param parent the parent node
+     * @return a new leaf Node instance
+     */
+    public @NotNull EntityTreeHierarchy.Node createTreeLeafNode(Entity value, EntityTreeHierarchy.Node parent)
+    {
+        return new EntityTreeHierarchyImpl.LeafNodeImpl(value, parent);
+    }
+
     // ===== Aspect Factory Methods =====
 
     /**

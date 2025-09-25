@@ -33,6 +33,7 @@ class TreeNodeDeserializer extends JsonDeserializer<EntityTreeHierarchy.Node>
 
         UUID entityId = null;
         Map<String, EntityTreeHierarchy.Node> children = new LinkedHashMap<>();
+        boolean isLeaf = false;
 
         while (p.nextToken() != JsonToken.END_OBJECT) {
             String fieldName = p.currentName();
@@ -42,6 +43,11 @@ class TreeNodeDeserializer extends JsonDeserializer<EntityTreeHierarchy.Node>
                 case "entityId" -> {
                     if (p.currentToken() != JsonToken.VALUE_NULL) {
                         entityId = UUID.fromString(p.getValueAsString());
+                    }
+                }
+                case "isLeaf" -> {
+                    if (p.currentToken() == JsonToken.VALUE_TRUE) {
+                        isLeaf = true;
                     }
                 }
                 case "children" -> {
@@ -57,8 +63,24 @@ class TreeNodeDeserializer extends JsonDeserializer<EntityTreeHierarchy.Node>
             }
         }
 
-        // TreeNode deserialization would require access to the EntityTreeHierarchy context
-        // For now, return a placeholder that indicates incomplete deserialization
-        throw new JsonMappingException(p, "TreeNode deserialization requires access to hierarchy context for proper reconstruction");
+        // Get or create entity from factory if entityId is provided
+        Entity entity = null;
+        if (entityId != null) {
+            entity = factory.getOrRegisterNewEntity(entityId);
+        }
+
+        // Create appropriate node type
+        EntityTreeHierarchy.Node node;
+        if (isLeaf) {
+            node = factory.createTreeLeafNode(entity);
+        } else {
+            node = factory.createTreeNode(entity);
+            // Add children to non-leaf nodes
+            for (Map.Entry<String, EntityTreeHierarchy.Node> entry : children.entrySet()) {
+                node.put(entry.getKey(), entry.getValue());
+            }
+        }
+
+        return node;
     }
 }
