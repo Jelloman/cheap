@@ -3,6 +3,7 @@ import org.gradle.internal.impldep.org.apache.maven.model.Build
 plugins {
     // Apply the java-library plugin for API and implementation separation.
     `java-library`
+    idea
     id("io.freefair.lombok") version "8.14.2"
 }
 
@@ -35,6 +36,11 @@ java {
     modularity.inferModulePath = true
     toolchain {
         languageVersion = JavaLanguageVersion.of(24)
+    }
+}
+idea {
+    module {
+        isDownloadJavadoc = true
     }
 }
 tasks.named<Test>("test") {

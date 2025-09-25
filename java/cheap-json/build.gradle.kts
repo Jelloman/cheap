@@ -6,6 +6,7 @@
 plugins {
     // Apply the java-library plugin for API and implementation separation.
     `java-library`
+    idea
     id("io.freefair.lombok") version "8.14.2"
 }
 
@@ -36,7 +37,11 @@ java {
         languageVersion = JavaLanguageVersion.of(24)
     }
 }
-
+idea {
+    module {
+        isDownloadJavadoc = true
+    }
+}
 tasks.named<Test>("test") {
     // Use JUnit Platform for unit tests.
     useJUnitPlatform()
