@@ -82,7 +82,6 @@ public class CheapJacksonSerializer
         module.addSerializer(Catalog.class, new CatalogSerializer());
         module.addSerializer(CatalogDef.class, new CatalogDefSerializer());
         module.addSerializer(AspectDef.class, new AspectDefSerializer());
-        module.addSerializer(PropertyDef.class, new PropertyDefSerializer());
         module.addSerializer(HierarchyDef.class, new HierarchyDefSerializer());
         module.addSerializer(Hierarchy.class, new HierarchySerializer());
         module.addSerializer(Aspect.class, new AspectSerializer());

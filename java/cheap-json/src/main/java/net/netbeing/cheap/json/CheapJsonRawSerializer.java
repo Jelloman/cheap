@@ -218,7 +218,7 @@ public class CheapJsonRawSerializer
         for (PropertyDef propertyDef : aspectDef.propertyDefs()) {
             if (!first) sb.append(",");
             appendNewlineAndIndent(sb, prettyPrint, indent + 2);
-            propertyDefToJson(propertyDef, sb, prettyPrint, indent + 2);
+            propertyDefToJson(aspectDef, propertyDef, sb, prettyPrint, indent + 2);
             first = false;
         }
         appendNewlineAndIndent(sb, prettyPrint, indent + 1);
@@ -239,25 +239,25 @@ public class CheapJsonRawSerializer
     /**
      * Converts a PropertyDef to JSON.
      */
-    public static void propertyDefToJson(PropertyDef propertyDef, StringBuilder sb)
+    public static void propertyDefToJson(AspectDef aspectDef, PropertyDef propertyDef, StringBuilder sb)
     {
-        propertyDefToJson(propertyDef, sb, false, 0);
+        propertyDefToJson(aspectDef, propertyDef, sb, false, 0);
     }
     
     /**
      * Converts a PropertyDef to JSON and returns as a String.
      */
-    public static String propertyDefToJson(PropertyDef propertyDef)
+    public static String propertyDefToJson(AspectDef aspectDef, PropertyDef propertyDef)
     {
         StringBuilder sb = new StringBuilder();
-        propertyDefToJson(propertyDef, sb, false, 0);
+        propertyDefToJson(aspectDef, propertyDef, sb, false, 0);
         return sb.toString();
     }
     
     /**
      * Converts a PropertyDef to JSON with optional pretty printing.
      */
-    public static void propertyDefToJson(PropertyDef propertyDef, StringBuilder sb, boolean prettyPrint, int indent)
+    public static void propertyDefToJson(AspectDef aspectDef, PropertyDef propertyDef, StringBuilder sb, boolean prettyPrint, int indent)
     {
         sb.append("{");
         appendNewlineAndIndent(sb, prettyPrint, indent + 1);
@@ -392,51 +392,19 @@ public class CheapJsonRawSerializer
         }
 
         // Add all properties
+        boolean first = true;
         for (PropertyDef propertyDef : aspect.def().propertyDefs()) {
             Object value = aspect.unsafeReadObj(propertyDef.name());
-            if (value != null) {
+            if (first) {
+                first = false;
+            } else {
                 sb.append(",");
-                appendNewlineAndIndent(sb, prettyPrint, indent + 1);
-                sb.append("\"").append(escapeJson(propertyDef.name())).append("\":");
-                valueToJson(value, sb, prettyPrint, indent + 1);
             }
+            appendNewlineAndIndent(sb, prettyPrint, indent + 1);
+            sb.append("\"").append(escapeJson(propertyDef.name())).append("\":");
+            valueToJson(value, sb, prettyPrint, indent + 1);
         }
         
-        appendNewlineAndIndent(sb, prettyPrint, indent);
-        sb.append("}");
-    }
-    
-    /**
-     * Converts a Property to JSON.
-     */
-    public static void propertyToJson(Property property, StringBuilder sb)
-    {
-        propertyToJson(property, sb, false, 0);
-    }
-    
-    /**
-     * Converts a Property to JSON and returns as a String.
-     */
-    public static String propertyToJson(Property property)
-    {
-        StringBuilder sb = new StringBuilder();
-        propertyToJson(property, sb, false, 0);
-        return sb.toString();
-    }
-    
-    /**
-     * Converts a Property to JSON with optional pretty printing.
-     */
-    public static void propertyToJson(Property property, StringBuilder sb, boolean prettyPrint, int indent)
-    {
-        sb.append("{");
-        appendNewlineAndIndent(sb, prettyPrint, indent + 1);
-        sb.append("\"def\":");
-        propertyDefToJson(property.def(), sb, prettyPrint, indent + 1);
-        sb.append(",");
-        appendNewlineAndIndent(sb, prettyPrint, indent + 1);
-        sb.append("\"value\":");
-        valueToJson(property.unsafeRead(), sb, prettyPrint, indent + 1);
         appendNewlineAndIndent(sb, prettyPrint, indent);
         sb.append("}");
     }

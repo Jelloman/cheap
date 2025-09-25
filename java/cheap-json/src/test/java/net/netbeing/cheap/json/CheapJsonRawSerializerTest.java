@@ -39,8 +39,10 @@ public class CheapJsonRawSerializerTest
     void testPropertyDefToJson() throws IOException
     {
         PropertyDef propertyDef = new PropertyDefImpl("testProp", PropertyType.String, null, false, true, false, true, false, false);
+        Map<String, PropertyDef> testProps = ImmutableMap.of("testProp", propertyDef);
+        AspectDef testAspectDef = new ImmutableAspectDefImpl("test", testProps);
         StringBuilder sb = new StringBuilder();
-        CheapJsonRawSerializer.propertyDefToJson(propertyDef, sb, true, 0);
+        CheapJsonRawSerializer.propertyDefToJson(testAspectDef, propertyDef, sb, true, 0);
 
         Files.writeString(Paths.get("D:\\src\\tmp\\raw", "propertydef-expected.json"), sb, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
         String expected = loadJsonFromFile("propertydef-expected.json");
@@ -51,8 +53,10 @@ public class CheapJsonRawSerializerTest
     void testPropertyDefWithDefaultValueToJson() throws IOException
     {
         PropertyDef propertyDef = new PropertyDefImpl("testProp", PropertyType.Integer, "42", true, true, true, true, true, false);
+        Map<String, PropertyDef> testProps = ImmutableMap.of("testProp", propertyDef);
+        AspectDef testAspectDef = new ImmutableAspectDefImpl("test", testProps);
         StringBuilder sb = new StringBuilder();
-        CheapJsonRawSerializer.propertyDefToJson(propertyDef, sb, true, 0);
+        CheapJsonRawSerializer.propertyDefToJson(testAspectDef, propertyDef, sb, true, 0);
 
         Files.writeString(Paths.get("D:\\src\\tmp\\raw", "propertydef-with-default-expected.json"), sb, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
         String expected = loadJsonFromFile("propertydef-with-default-expected.json");

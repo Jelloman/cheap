@@ -9,53 +9,23 @@
         "name" : "person",
         "propertyDefs" : [ {
           "name" : "age",
-          "type" : "Integer",
-          "hasDefaultValue" : false,
-          "isReadable" : true,
-          "isWritable" : true,
-          "isNullable" : true,
-          "isRemovable" : false,
-          "isMultivalued" : false
+          "type" : "Integer"
         }, {
           "name" : "name",
           "type" : "String",
-          "hasDefaultValue" : false,
-          "isReadable" : true,
-          "isWritable" : true,
-          "isNullable" : false,
-          "isRemovable" : false,
-          "isMultivalued" : false
-        } ],
-        "isReadable" : true,
-        "isWritable" : true,
-        "canAddProperties" : false,
-        "canRemoveProperties" : false
+          "isNullable" : false
+        } ]
       },
       "document" : {
         "name" : "document",
         "propertyDefs" : [ {
           "name" : "title",
           "type" : "String",
-          "hasDefaultValue" : false,
-          "isReadable" : true,
-          "isWritable" : true,
-          "isNullable" : false,
-          "isRemovable" : false,
-          "isMultivalued" : false
+          "isNullable" : false
         }, {
           "name" : "description",
-          "type" : "String",
-          "hasDefaultValue" : false,
-          "isReadable" : true,
-          "isWritable" : true,
-          "isNullable" : true,
-          "isRemovable" : false,
-          "isMultivalued" : false
-        } ],
-        "isReadable" : true,
-        "isWritable" : true,
-        "canAddProperties" : false,
-        "canRemoveProperties" : false
+          "type" : "String"
+        } ]
       }
     },
     "hierarchyDefs" : [ {

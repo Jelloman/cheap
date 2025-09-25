@@ -5,12 +5,17 @@ import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonMappingException;
-import net.netbeing.cheap.model.*;
+import net.netbeing.cheap.model.AspectDef;
+import net.netbeing.cheap.model.PropertyDef;
+import net.netbeing.cheap.model.PropertyType;
 import net.netbeing.cheap.util.CheapFactory;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 class AspectDefDeserializer extends JsonDeserializer<AspectDef>
 {
@@ -21,19 +26,24 @@ class AspectDefDeserializer extends JsonDeserializer<AspectDef>
         this.factory = factory;
     }
 
-    @Override
-    public AspectDef deserialize(JsonParser p, DeserializationContext context) throws IOException
+    private static final class Flags
     {
-        if (p.currentToken() != JsonToken.START_OBJECT) {
-            throw new JsonMappingException(p, "Expected START_OBJECT token");
-        }
-
-        String name = null;
-        List<PropertyDef> propertyDefs = new ArrayList<>();
         boolean isReadable = true;
         boolean isWritable = true;
         boolean canAddProperties = false;
         boolean canRemoveProperties = false;
+    }
+
+    @Override
+    public AspectDef deserialize(JsonParser p, DeserializationContext context) throws IOException
+    {
+        if (p.currentToken() != JsonToken.START_OBJECT) {
+            throw new JsonMappingException(p, "Expected START_OBJECT token to begin AspectDef");
+        }
+
+        String name = null;
+        List<PropertyDef> propertyDefs = new ArrayList<>();
+        Flags flags = new Flags();
 
         while (p.nextToken() != JsonToken.END_OBJECT) {
             String fieldName = p.currentName();
@@ -41,17 +51,18 @@ class AspectDefDeserializer extends JsonDeserializer<AspectDef>
 
             switch (fieldName) {
                 case "name" -> name = p.getValueAsString();
+                case "isReadable" -> flags.isReadable = p.getBooleanValue();
+                case "isWritable" -> flags.isWritable = p.getBooleanValue();
+                case "canAddProperties" -> flags.canAddProperties = p.getBooleanValue();
+                case "canRemoveProperties" -> flags.canRemoveProperties = p.getBooleanValue();
                 case "propertyDefs" -> {
                     if (p.currentToken() == JsonToken.START_ARRAY) {
                         while (p.nextToken() != JsonToken.END_ARRAY) {
-                            propertyDefs.add(p.readValueAs(PropertyDef.class));
+                            PropertyDef propDef = deserializePropertyDef(p, flags);
+                            propertyDefs.add(propDef);
                         }
                     }
                 }
-                case "isReadable" -> isReadable = p.getBooleanValue();
-                case "isWritable" -> isWritable = p.getBooleanValue();
-                case "canAddProperties" -> canAddProperties = p.getBooleanValue();
-                case "canRemoveProperties" -> canRemoveProperties = p.getBooleanValue();
                 default -> p.skipChildren();
             }
         }
@@ -67,7 +78,7 @@ class AspectDefDeserializer extends JsonDeserializer<AspectDef>
 
         // TODO: add factory method with all fields
         AspectDef def = null;
-        if (isWritable && canAddProperties && canRemoveProperties) {
+        if (flags.isWritable && flags.canAddProperties && flags.canRemoveProperties) {
             def = factory.createMutableAspectDef(name, propertyDefMap);
         } else {
             def = factory.createImmutableAspectDef(name, propertyDefMap);
@@ -82,5 +93,67 @@ class AspectDefDeserializer extends JsonDeserializer<AspectDef>
         }
 
         return def;
+    }
+
+    private PropertyDef deserializePropertyDef(JsonParser p, Flags flags) throws IOException
+    {
+        if (p.currentToken() != JsonToken.START_OBJECT) {
+            throw new JsonMappingException(p, "Expected START_OBJECT token to start PropertyDef");
+        }
+
+        String name = null;
+        PropertyType type = null;
+        Object defaultValue = null;
+        boolean hasDefaultValue = false;
+        boolean isReadable = flags.isReadable;
+        boolean isWritable = flags.isWritable;
+        boolean isNullable = true;
+        boolean isRemovable = flags.canRemoveProperties;
+        boolean isMultivalued = false;
+
+        while (p.nextToken() != JsonToken.END_OBJECT) {
+            String fieldName = p.currentName();
+            p.nextToken();
+
+            switch (fieldName) {
+                case "name" -> name = p.getValueAsString();
+                case "type" -> type = PropertyType.valueOf(p.getValueAsString());
+                case "defaultValue" -> {
+                    defaultValue = readValue(p, type);
+                    hasDefaultValue = true;
+                }
+                case "isReadable" -> isReadable = p.getBooleanValue();
+                case "isWritable" -> isWritable = p.getBooleanValue();
+                case "isNullable" -> isNullable = p.getBooleanValue();
+                case "isRemovable" -> isRemovable = p.getBooleanValue();
+                case "isMultivalued" -> isMultivalued = p.getBooleanValue();
+                default -> p.skipChildren(); // Skip unknown fields
+            }
+        }
+
+        if (name == null || type == null) {
+            throw new JsonMappingException(p, "Missing required fields: name and type");
+        }
+
+        return factory.createPropertyDef(name, type, defaultValue, hasDefaultValue, isReadable,
+            isWritable, isNullable, isRemovable, isMultivalued);
+    }
+
+    private Object readValue(JsonParser p, PropertyType type) throws IOException
+    {
+        if (p.currentToken() == JsonToken.VALUE_NULL) {
+            return null;
+        }
+
+        if (type == null) {
+            return p.getValueAsString();
+        }
+
+        return switch (type) {
+            case Integer -> p.getLongValue();
+            case Float -> p.getDoubleValue();
+            case Boolean -> p.getBooleanValue();
+            default -> p.getValueAsString();
+        };
     }
 }

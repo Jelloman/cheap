@@ -104,11 +104,11 @@
       "def":{"type":"aspect_map"},
       "aspectDefName":"person",
       "aspects":{
-        "10000000-0000-0000-0000-000000000001":{,
+        "10000000-0000-0000-0000-000000000001":{
           "name":"John Doe",
           "age":"30"
         },
-        "10000000-0000-0000-0000-000000000002":{,
+        "10000000-0000-0000-0000-000000000002":{
           "name":"Jane Smith",
           "age":"25"
         }
@@ -118,11 +118,11 @@
       "def":{"type":"aspect_map"},
       "aspectDefName":"document",
       "aspects":{
-        "10000000-0000-0000-0000-000000000003":{,
+        "10000000-0000-0000-0000-000000000003":{
           "title":"User Manual",
           "description":"Complete user guide"
         },
-        "10000000-0000-0000-0000-000000000004":{,
+        "10000000-0000-0000-0000-000000000004":{
           "title":"API Documentation",
           "description":"REST API reference"
         }
