@@ -59,26 +59,4 @@ public class ImmutableAspectDefImpl extends AspectDefBase
     {
         throw new UnsupportedOperationException("Properties cannot be removed from immutable AspectDef '" + name + "'.");
     }
-
-    /**
-     * Returns whether properties can be added to this aspect definition.
-     * 
-     * @return {@code false} as this is an immutable aspect definition
-     */
-    @Override
-    public boolean canAddProperties()
-    {
-        return false;
-    }
-
-    /**
-     * Returns whether properties can be removed from this aspect definition.
-     * 
-     * @return {@code false} as this is an immutable aspect definition
-     */
-    @Override
-    public boolean canRemoveProperties()
-    {
-        return false;
-    }
 }

@@ -33,7 +33,7 @@ import java.util.Map;
  * 
  * <p>JavaBean property discovery:</p>
  * <ul>
- *   <li>Uses {@link Introspector#getBeanInfo} to find properties</li>
+ *   <li>Uses {@link Introspector#getBeanInfo(Class,Class)} to find properties</li>
  *   <li>Excludes {@code Object} class properties (like {@code getClass()})</li>
  *   <li>Only includes properties with valid getter methods</li>
  *   <li>Setter methods are ignored to maintain immutability</li>

@@ -17,6 +17,7 @@ import java.util.Map;
 /**
  * An {@link net.netbeing.cheap.model.AspectDef} implementation for mutable Plain Old Java Objects (POJOs)
  * that provides full read-write access to properties through JavaBean-style getter and setter methods.
+ * Unlike {@link MutableAspectDefImpl}, this implementation does NOT allow addition or removal of properties.
  * 
  * <p>This class uses Java's standard introspection mechanism ({@link Introspector}) to discover JavaBean
  * properties in a POJO class and creates corresponding {@link PojoPropertyDef} instances. Unlike
@@ -129,6 +130,52 @@ public class MutablePojoAspectDef extends MutableAspectDefImpl
         }
         this.getters =  getterBuilder.build();
         this.setters =  setterBuilder.build();
+    }
+
+    /**
+     * Returns whether properties can be added to this aspect definition.
+     *
+     * @return {@code false} as this aspect definition cannot be modified
+     */
+    @Override
+    public boolean canAddProperties()
+    {
+        return false;
+    }
+
+    /**
+     * Returns whether properties can be removed from this aspect definition.
+     *
+     * @return {@code false} as this aspect definition cannot be modified
+     */
+    @Override
+    public boolean canRemoveProperties()
+    {
+        return false;
+    }
+
+    /**
+     * Attempts to add a property definition to this immutable aspect definition.
+     *
+     * @param prop the property definition to add
+     * @return never returns normally
+     * @throws UnsupportedOperationException always, as this aspect definition cannot be modified
+     */
+    public PropertyDef add(@NotNull PropertyDef prop)
+    {
+        throw new UnsupportedOperationException("Properties cannot be added to AspectDef '" + name() + "'.");
+    }
+
+    /**
+     * Attempts to remove a property definition from this immutable aspect definition.
+     *
+     * @param prop the property definition to remove
+     * @return never returns normally
+     * @throws UnsupportedOperationException always, as this aspect definition cannot be modified
+     */
+    public PropertyDef remove(@NotNull PropertyDef prop)
+    {
+        throw new UnsupportedOperationException("Properties cannot be removed from AspectDef '" + name() + "'.");
     }
 
     /**

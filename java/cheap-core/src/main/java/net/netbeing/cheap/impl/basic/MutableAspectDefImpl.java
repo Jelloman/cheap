@@ -44,6 +44,28 @@ public class MutableAspectDefImpl extends AspectDefBase
     }
 
     /**
+     * Returns whether properties can be added to this aspect definition.
+     *
+     * @return {@code true} as this is a mutable aspect definition
+     */
+    @Override
+    public boolean canAddProperties()
+    {
+        return true;
+    }
+
+    /**
+     * Returns whether properties can be removed from this aspect definition.
+     *
+     * @return {@code true} as this is a mutable aspect definition
+     */
+    @Override
+    public boolean canRemoveProperties()
+    {
+        return true;
+    }
+
+    /**
      * Adds a property definition to this mutable aspect definition.
      * 
      * @param prop the property definition to add

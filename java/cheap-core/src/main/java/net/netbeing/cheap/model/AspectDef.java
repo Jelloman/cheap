@@ -74,22 +74,22 @@ public interface AspectDef
      * this type must not modify this AspectDef. (Extension of an AspectDef may be possible,
      * but it is implementation-dependent and not done via this interface.)
      * 
-     * @return true if properties can be added, false otherwise; defaults to true
+     * @return true if properties can be added, false otherwise; defaults to false
      */
     default boolean canAddProperties()
     {
-        return true;
+        return false;
     }
 
     /**
      * Determines whether properties can be dynamically removed from aspects of this type.
      * This controls the mutability of the aspect schema at runtime.
      * 
-     * @return true if properties can be removed, false otherwise; defaults to true
+     * @return true if properties can be removed, false otherwise; defaults to false
      */
     default boolean canRemoveProperties()
     {
-        return true;
+        return false;
     }
 
     /**
