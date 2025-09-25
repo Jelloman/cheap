@@ -26,7 +26,7 @@ public class CheapJacksonDeserializerTest
     @Test
     void testDeserializeSimpleCatalog() throws IOException
     {
-        String json = loadJsonResource("simple-catalog-expected.json");
+        String json = loadJsonResource("simple-catalog.json");
         Catalog catalog = deserializer.fromJson(json);
 
         assertEquals(UUID.fromString("550e8400-e29b-41d4-a716-444444444444"), catalog.globalId());
@@ -41,7 +41,7 @@ public class CheapJacksonDeserializerTest
     @Test
     void testDeserializeCatalogWithAspectDef() throws IOException
     {
-        String json = loadJsonResource("catalog-with-aspectdef-expected.json");
+        String json = loadJsonResource("catalog-with-aspectdef.json");
         Catalog catalog = deserializer.fromJson(json);
 
         assertEquals(UUID.fromString("550e8400-e29b-41d4-a716-444444444444"), catalog.globalId());
@@ -65,7 +65,7 @@ public class CheapJacksonDeserializerTest
     @Test
     void testDeserializeEntityDirectoryHierarchy() throws IOException
     {
-        String json = loadJsonResource("entity-directory-expected.json");
+        String json = loadJsonResource("entity-directory.json");
         Catalog catalog = deserializer.fromJson(json);
 
         Hierarchy hierarchy = catalog.hierarchy("userDirectory");
@@ -87,7 +87,7 @@ public class CheapJacksonDeserializerTest
     @Test
     void testDeserializeEntityListHierarchy() throws IOException
     {
-        String json = loadJsonResource("entity-list-expected.json");
+        String json = loadJsonResource("entity-list.json");
         Catalog catalog = deserializer.fromJson(json);
 
         Hierarchy hierarchy = catalog.hierarchy("taskQueue");
@@ -105,7 +105,7 @@ public class CheapJacksonDeserializerTest
     @Test
     void testDeserializeEntitySetHierarchy() throws IOException
     {
-        String json = loadJsonResource("entity-set-expected.json");
+        String json = loadJsonResource("entity-set.json");
         Catalog catalog = deserializer.fromJson(json);
 
         Hierarchy hierarchy = catalog.hierarchy("activeUsers");
@@ -122,7 +122,7 @@ public class CheapJacksonDeserializerTest
     @Test
     void testDeserializeEntityTreeHierarchy() throws IOException
     {
-        String json = loadJsonResource("entity-tree-expected.json");
+        String json = loadJsonResource("entity-tree.json");
         Catalog catalog = deserializer.fromJson(json);
 
         Hierarchy hierarchy = catalog.hierarchy("fileSystem");
@@ -149,7 +149,7 @@ public class CheapJacksonDeserializerTest
         // Use a fresh deserializer with custom factory to avoid AspectDef conflicts from previous tests
         CheapFactory customFactory = new CheapFactory();
         CheapJacksonDeserializer freshDeserializer = new CheapJacksonDeserializer(customFactory);
-        String json = loadJsonResource("aspect-map-expected.json");
+        String json = loadJsonResource("aspect-map.json");
         Catalog catalog = freshDeserializer.fromJson(json);
 
         Hierarchy hierarchy = catalog.hierarchy("person");
@@ -175,7 +175,7 @@ public class CheapJacksonDeserializerTest
         // Use a fresh deserializer with custom factory to avoid AspectDef conflicts from previous tests
         CheapFactory customFactory = new CheapFactory();
         CheapJacksonDeserializer freshDeserializer = new CheapJacksonDeserializer(customFactory);
-        String json = loadJsonResource("full-catalog-expected.json");
+        String json = loadJsonResource("full-catalog.json");
         Catalog catalog = freshDeserializer.fromJson(json);
 
         assertEquals(UUID.fromString("550e8400-e29b-41d4-a716-444444444444"), catalog.globalId());
@@ -237,7 +237,7 @@ public class CheapJacksonDeserializerTest
     {
         // Test that compact formats can be deserialized correctly
         String compactJson = loadJsonResource("simple-catalog-expected-compact.json");
-        String prettyJson = loadJsonResource("simple-catalog-expected.json");
+        String prettyJson = loadJsonResource("simple-catalog.json");
 
         Catalog compactCatalog = deserializer.fromJson(compactJson);
         Catalog prettyCatalog = deserializer.fromJson(prettyJson);
@@ -253,7 +253,7 @@ public class CheapJacksonDeserializerTest
         CheapFactory customFactory = new CheapFactory();
         CheapJacksonDeserializer customDeserializer = new CheapJacksonDeserializer(customFactory);
 
-        String json = loadJsonResource("simple-catalog-expected.json");
+        String json = loadJsonResource("simple-catalog.json");
         Catalog catalog = customDeserializer.fromJson(json);
 
         assertSame(customFactory, customDeserializer.getFactory());

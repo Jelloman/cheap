@@ -44,8 +44,8 @@ public class CheapJsonRawSerializerTest
         StringBuilder sb = new StringBuilder();
         CheapJsonRawSerializer.propertyDefToJson(testAspectDef, propertyDef, sb, true, 0);
 
-        Files.writeString(Paths.get("D:\\src\\tmp\\raw", "propertydef-expected.json"), sb, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
-        String expected = loadJsonFromFile("propertydef-expected.json");
+        Files.writeString(Paths.get("D:\\src\\tmp\\raw", "propertydef.json"), sb, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+        String expected = loadJsonFromFile("propertydef.json");
         assertEquals(expected, sb.toString());
     }
 
@@ -58,8 +58,8 @@ public class CheapJsonRawSerializerTest
         StringBuilder sb = new StringBuilder();
         CheapJsonRawSerializer.propertyDefToJson(testAspectDef, propertyDef, sb, true, 0);
 
-        Files.writeString(Paths.get("D:\\src\\tmp\\raw", "propertydef-with-default-expected.json"), sb, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
-        String expected = loadJsonFromFile("propertydef-with-default-expected.json");
+        Files.writeString(Paths.get("D:\\src\\tmp\\raw", "propertydef-with-default.json"), sb, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+        String expected = loadJsonFromFile("propertydef-with-default.json");
         assertEquals(expected, sb.toString());
     }
 
@@ -70,8 +70,8 @@ public class CheapJsonRawSerializerTest
         StringBuilder sb = new StringBuilder();
         CheapJsonRawSerializer.hierarchyDefToJson(hierarchyDef, sb, true, 0);
 
-        Files.writeString(Paths.get("D:\\src\\tmp\\raw", "hierarchydef-expected.json"), sb, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
-        String expected = loadJsonFromFile("hierarchydef-expected.json");
+        Files.writeString(Paths.get("D:\\src\\tmp\\raw", "hierarchydef.json"), sb, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+        String expected = loadJsonFromFile("hierarchydef.json");
         assertEquals(expected, sb.toString());
     }
 
@@ -90,8 +90,8 @@ public class CheapJsonRawSerializerTest
         StringBuilder sb = new StringBuilder();
         CheapJsonRawSerializer.aspectToJson(aspect, sb, true, true, 0);
 
-        Files.writeString(Paths.get("D:\\src\\tmp\\raw", "aspect-expected.json"), sb, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
-        String expected = loadJsonFromFile("aspect-expected.json");
+        Files.writeString(Paths.get("D:\\src\\tmp\\raw", "aspect.json"), sb, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+        String expected = loadJsonFromFile("aspect.json");
         assertEquals(expected, sb.toString());
     }
 
@@ -109,8 +109,8 @@ public class CheapJsonRawSerializerTest
         StringBuilder sb = new StringBuilder();
         CheapJsonRawSerializer.entityListHierarchyToJson(hierarchy, sb, true, 0);
 
-        Files.writeString(Paths.get("D:\\src\\tmp\\raw", "entity-list-hierarchy-expected.json"), sb, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
-        String expected = loadJsonFromFile("entity-list-hierarchy-expected.json");
+        Files.writeString(Paths.get("D:\\src\\tmp\\raw", "entity-list-hierarchy.json"), sb, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+        String expected = loadJsonFromFile("entity-list-hierarchy.json");
         assertEquals(expected, sb.toString());
     }
 
@@ -129,8 +129,8 @@ public class CheapJsonRawSerializerTest
         CheapJsonRawSerializer.entitySetHierarchyToJson(hierarchy, sb, true, 0);
 
         // LinkedHashSet preserves insertion order, so we can predict the order
-        Files.writeString(Paths.get("D:\\src\\tmp\\raw", "entity-set-hierarchy-expected.json"), sb, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
-        String expected = loadJsonFromFile("entity-set-hierarchy-expected.json");
+        Files.writeString(Paths.get("D:\\src\\tmp\\raw", "entity-set-hierarchy.json"), sb, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+        String expected = loadJsonFromFile("entity-set-hierarchy.json");
         assertEquals(expected, sb.toString());
     }
 
@@ -148,8 +148,8 @@ public class CheapJsonRawSerializerTest
         StringBuilder sb = new StringBuilder();
         CheapJsonRawSerializer.entityDirectoryHierarchyToJson(hierarchy, sb, true, 0);
 
-        Files.writeString(Paths.get("D:\\src\\tmp\\raw", "entity-directory-hierarchy-expected.json"), sb, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
-        String expected = loadJsonFromFile("entity-directory-hierarchy-expected.json");
+        Files.writeString(Paths.get("D:\\src\\tmp\\raw", "entity-directory-hierarchy.json"), sb, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+        String expected = loadJsonFromFile("entity-directory-hierarchy.json");
         assertEquals(expected, sb.toString());
     }
 
@@ -164,8 +164,8 @@ public class CheapJsonRawSerializerTest
         StringBuilder sb = new StringBuilder();
         CheapJsonRawSerializer.treeNodeToJson(hierarchy.root(), sb, true, 0);
 
-        Files.writeString(Paths.get("D:\\src\\tmp\\raw", "tree-node-expected.json"), sb, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
-        String expected = loadJsonFromFile("tree-node-expected.json");
+        Files.writeString(Paths.get("D:\\src\\tmp\\raw", "tree-node.json"), sb, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+        String expected = loadJsonFromFile("tree-node.json");
         assertEquals(expected, sb.toString());
     }
 
@@ -186,8 +186,8 @@ public class CheapJsonRawSerializerTest
         StringBuilder sb = new StringBuilder();
         CheapJsonRawSerializer.treeNodeToJson(hierarchy.root(), sb, true, 0);
 
-        Files.writeString(Paths.get("D:\\src\\tmp\\raw", "tree-node-with-children-expected.json"), sb, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
-        String expected = loadJsonFromFile("tree-node-with-children-expected.json");
+        Files.writeString(Paths.get("D:\\src\\tmp\\raw", "tree-node-with-children.json"), sb, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+        String expected = loadJsonFromFile("tree-node-with-children.json");
         assertEquals(expected, sb.toString());
     }
 
@@ -203,8 +203,8 @@ public class CheapJsonRawSerializerTest
         StringBuilder sb = new StringBuilder();
         CheapJsonRawSerializer.aspectDefToJson(aspectDef, sb, true, 0);
 
-        Files.writeString(Paths.get("D:\\src\\tmp\\raw", "aspectdef-expected.json"), sb, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
-        String expected = loadJsonFromFile("aspectdef-expected.json");
+        Files.writeString(Paths.get("D:\\src\\tmp\\raw", "aspectdef.json"), sb, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+        String expected = loadJsonFromFile("aspectdef.json");
         assertEquals(expected, sb.toString());
     }
 
@@ -222,8 +222,8 @@ public class CheapJsonRawSerializerTest
         StringBuilder sb = new StringBuilder();
         CheapJsonRawSerializer.catalogDefToJson(catalogDef, sb, true, 0);
 
-        Files.writeString(Paths.get("D:\\src\\tmp\\raw", "catalogdef-expected.json"), sb, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
-        String expected = loadJsonFromFile("catalogdef-expected.json");
+        Files.writeString(Paths.get("D:\\src\\tmp\\raw", "catalogdef.json"), sb, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+        String expected = loadJsonFromFile("catalogdef.json");
         assertEquals(expected, sb.toString());
     }
 
@@ -240,8 +240,8 @@ public class CheapJsonRawSerializerTest
 
         String result = CheapJsonRawSerializer.toJson(catalog, true);
 
-        Files.writeString(Paths.get("D:\\src\\tmp\\raw", "simple-catalog-expected.json"), result, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
-        String expected = loadJsonFromFile("simple-catalog-expected.json");
+        Files.writeString(Paths.get("D:\\src\\tmp\\raw", "simple-catalog.json"), result, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+        String expected = loadJsonFromFile("simple-catalog.json");
         assertEquals(expected, result);
     }
 
@@ -264,8 +264,8 @@ public class CheapJsonRawSerializerTest
 
         String result = CheapJsonRawSerializer.toJson(catalog, true);
 
-        Files.writeString(Paths.get("D:\\src\\tmp\\raw", "catalog-with-aspectdef-expected.json"), result, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
-        String expected = loadJsonFromFile("catalog-with-aspectdef-expected.json");
+        Files.writeString(Paths.get("D:\\src\\tmp\\raw", "catalog-with-aspectdef.json"), result, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+        String expected = loadJsonFromFile("catalog-with-aspectdef.json");
         assertEquals(expected, result);
     }
 
@@ -306,8 +306,8 @@ public class CheapJsonRawSerializerTest
 
         String result = CheapJsonRawSerializer.toJson(catalog, true);
 
-        Files.writeString(Paths.get("D:\\src\\tmp\\raw", "entity-directory-expected.json"), result, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
-        String expected = loadJsonFromFile("entity-directory-expected.json");
+        Files.writeString(Paths.get("D:\\src\\tmp\\raw", "entity-directory.json"), result, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+        String expected = loadJsonFromFile("entity-directory.json");
         assertEquals(expected, result);
     }
 
@@ -348,8 +348,8 @@ public class CheapJsonRawSerializerTest
 
         String result = CheapJsonRawSerializer.toJson(catalog, true);
 
-        Files.writeString(Paths.get("D:\\src\\tmp\\raw", "entity-list-expected.json"), result, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
-        String expected = loadJsonFromFile("entity-list-expected.json");
+        Files.writeString(Paths.get("D:\\src\\tmp\\raw", "entity-list.json"), result, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+        String expected = loadJsonFromFile("entity-list.json");
         assertEquals(expected, result);
     }
 
@@ -390,8 +390,8 @@ public class CheapJsonRawSerializerTest
 
         String result = CheapJsonRawSerializer.toJson(catalog, true);
 
-        Files.writeString(Paths.get("D:\\src\\tmp\\raw", "entity-set-expected.json"), result, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
-        String expected = loadJsonFromFile("entity-set-expected.json");
+        Files.writeString(Paths.get("D:\\src\\tmp\\raw", "entity-set.json"), result, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+        String expected = loadJsonFromFile("entity-set.json");
         assertEquals(expected, result);
     }
 
@@ -432,8 +432,8 @@ public class CheapJsonRawSerializerTest
 
         String result = CheapJsonRawSerializer.toJson(catalog, true);
 
-        Files.writeString(Paths.get("D:\\src\\tmp\\raw", "entity-tree-expected.json"), result, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
-        String expected = loadJsonFromFile("entity-tree-expected.json");
+        Files.writeString(Paths.get("D:\\src\\tmp\\raw", "entity-tree.json"), result, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+        String expected = loadJsonFromFile("entity-tree.json");
         assertEquals(expected, result);
     }
 
@@ -475,8 +475,8 @@ public class CheapJsonRawSerializerTest
 
         String result = CheapJsonRawSerializer.toJson(catalog, true);
 
-        Files.writeString(Paths.get("D:\\src\\tmp\\raw", "aspect-map-expected.json"), result, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
-        String expected = loadJsonFromFile("aspect-map-expected.json");
+        Files.writeString(Paths.get("D:\\src\\tmp\\raw", "aspect-map.json"), result, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+        String expected = loadJsonFromFile("aspect-map.json");
         assertEquals(expected, result);
     }
 
@@ -590,8 +590,8 @@ public class CheapJsonRawSerializerTest
 
         String result = CheapJsonRawSerializer.toJson(catalog, true);
 
-        Files.writeString(Paths.get("D:\\src\\tmp\\raw", "full-catalog-expected.json"), result, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
-        String expected = loadJsonFromFile("full-catalog-expected.json");
+        Files.writeString(Paths.get("D:\\src\\tmp\\raw", "full-catalog.json"), result, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+        String expected = loadJsonFromFile("full-catalog.json");
         assertEquals(expected, result);
     }
 
