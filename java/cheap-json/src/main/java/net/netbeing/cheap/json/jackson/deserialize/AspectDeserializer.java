@@ -62,7 +62,15 @@ class AspectDeserializer extends JsonDeserializer<Aspect>
                     }
                 }
                 default -> {
-                    builder.property(fieldName, p.getValueAsString());
+                    if (aspectDef == null) {
+                        throw new JsonMappingException(p, "Attempted to read property named '"+fieldName+"' with any aspect or property definition.");
+                    }
+                    PropertyDef propDef = aspectDef.propertyDef(fieldName);
+                    if (propDef == null) {
+                        throw new JsonMappingException(p, "Property named '"+fieldName+"' was not found in aspect definition '"+aspectDef.name()+"'.");
+                    }
+                    Object value = readValue(p, propDef.type());
+                    builder.property(fieldName, value);
                 }
             }
         }

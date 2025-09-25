@@ -32,7 +32,6 @@ class AspectMapHierarchyDeserializer extends JsonDeserializer<AspectMapHierarchy
         AspectDef aspectDef = null;
         AspectMapHierarchy hierarchy = null;
         HierarchyDef def = null;
-        TokenBuffer aspects = null;
 
         while (p.nextToken() != JsonToken.END_OBJECT) {
             String fieldName = p.currentName();
@@ -56,7 +55,7 @@ class AspectMapHierarchyDeserializer extends JsonDeserializer<AspectMapHierarchy
                 }
                 case "aspects" -> {
                     if (hierarchy == null) {
-                        aspects = context.readValue(p, TokenBuffer.class);
+                        throw new JsonMappingException(p, "Cannot deserialize aspects into a hierarchy without definitions for both the hierarchy and the aspects.");
                     } else {
                         deserializeAspects(hierarchy, p, context);
                     }
@@ -70,10 +69,6 @@ class AspectMapHierarchyDeserializer extends JsonDeserializer<AspectMapHierarchy
         }
         if (def == null) {
             throw new JsonMappingException(p, "Missing required field: aspectDefName");
-        }
-        if (aspects != null) {
-            // We encountered the aspects before the AspectDef, so deserialize them now.
-            deserializeAspects(hierarchy, aspects.asParser(p), context);
         }
 
         return hierarchy;
