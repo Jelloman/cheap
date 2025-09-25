@@ -2,7 +2,7 @@
   "$id": "https://netbeing.net/cheap/hierarchydef.schema.json",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "HierarchyDef",
-  "description": "Definition of a hierarchy within a catalog in the CHEAP data model",
+  "description": "Definition of a hierarchy within a catalog in the Cheap data model",
   "type": "object",
   "properties": {
     "name": {

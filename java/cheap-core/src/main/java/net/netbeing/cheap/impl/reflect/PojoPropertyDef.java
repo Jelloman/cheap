@@ -11,7 +11,7 @@ import java.util.Objects;
  * A {@link PropertyDef} implementation for Plain Old Java Objects (POJOs) that provides property definitions
  * derived from JavaBean-style getter and setter methods through reflection.
  * 
- * <p>This class bridges POJO properties to the CHEAP property model by analyzing getter and setter method
+ * <p>This class bridges POJO properties to the Cheap property model by analyzing getter and setter method
  * pairs and inferring property characteristics from method signatures, return types, and annotations.
  * Unlike {@link RecordPropertyDef}, POJO properties can be read-only, write-only, or read-write depending
  * on the availability of getter and setter methods.</p>

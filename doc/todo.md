@@ -1,4 +1,4 @@
-# CHEAP To-Do
+# Cheap To-Do
 ***
 
 ## TODAY
@@ -40,7 +40,7 @@ Code:
 
 Features:
 * Spec kit?
-* Design Postgres and Sqlite schemas for storing CHEAP
+* Design Postgres and Sqlite schemas for storing Cheap
 * PropertyMapper integration
 
 

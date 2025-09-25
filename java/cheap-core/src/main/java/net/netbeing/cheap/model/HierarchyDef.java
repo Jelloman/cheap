@@ -1,11 +1,11 @@
 package net.netbeing.cheap.model;
 
 /**
- * Defines the metadata and characteristics of a hierarchy within the CHEAP data model.
+ * Defines the metadata and characteristics of a hierarchy within the Cheap data model.
  * A hierarchy definition specifies the type, name, and mutability constraints of
  * a hierarchy instance.
  * 
- * <p>In the CHEAP model, hierarchies provide the structural organization for entities
+ * <p>In the Cheap model, hierarchies provide the structural organization for entities
  * and aspects within a catalog. The HierarchyDef serves as the schema definition
  * that determines how a hierarchy behaves and what operations are permitted on it.</p>
  */

@@ -4,7 +4,7 @@ import org.jetbrains.annotations.NotNull;
 
 /**
  * Represents an individual, immutable property within an aspect, serving as the "P"
- * in the CHEAP acronym (Catalog, Hierarchy, Entity, Aspect, Property). A Property
+ * in the Cheap acronym (Catalog, Hierarchy, Entity, Aspect, Property). A Property
  * combines a value with its definition and provides type-safe access to the data.
  * 
  * <p>Properties are analogous to columns in database terminology or individual

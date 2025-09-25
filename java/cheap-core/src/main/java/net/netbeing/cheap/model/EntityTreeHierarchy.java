@@ -7,7 +7,7 @@ import java.util.Map;
 /**
  * Represents a tree-structured hierarchy of entities where nodes can have named children
  * and leaf nodes represent actual entities. This is the "ET" (Entity Tree) hierarchy type
- * in the CHEAP model.
+ * in the Cheap model.
  * 
  * <p>Tree hierarchies are useful for representing file systems, organizational structures,
  * taxonomies, or any data that has a natural parent-child relationship with named paths

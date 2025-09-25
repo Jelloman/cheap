@@ -1,6 +1,6 @@
 /*
  * Build configuration for cheap-json module.
- * This module contains JSON schemas and utilities for the CHEAP data model.
+ * This module contains JSON schemas and utilities for the Cheap data model.
  */
 
 plugins {

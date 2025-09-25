@@ -2,7 +2,7 @@
   "$id": "https://netbeing.net/cheap/propertydef.schema.json",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "PropertyDef",
-  "description": "Definition of a property within an aspect in the CHEAP data model",
+  "description": "Definition of a property within an aspect in the Cheap data model",
   "type": "object",
   "properties": {
     "name": {

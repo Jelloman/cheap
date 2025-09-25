@@ -1,11 +1,11 @@
 package net.netbeing.cheap.model;
 
 /**
- * A Species is the fundamental type of a catalog in the CHEAP data model.
+ * A Species is the fundamental type of a catalog in the Cheap data model.
  * The species determines the data source relationship and caching behavior
  * of the catalog within the overall system architecture.
  * 
- * <p>All catalogs in CHEAP are caches or working copies, but they differ in
+ * <p>All catalogs in Cheap are caches or working copies, but they differ in
  * their relationship to upstream data sources and their write-through behavior.</p>
  */
 public enum CatalogSpecies

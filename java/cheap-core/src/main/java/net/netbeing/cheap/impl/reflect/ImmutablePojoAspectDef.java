@@ -28,7 +28,7 @@ import java.util.Map;
  *   <li>Automatic property discovery using Java Bean introspection</li>
  *   <li>Read-only property definitions ignoring setter methods</li>
  *   <li>Cached getter method wrappers for efficient property access</li>
- *   <li>Integration with CHEAP's reflection utilities for type mapping</li>
+ *   <li>Integration with Cheap's reflection utilities for type mapping</li>
  * </ul>
  * 
  * <p>JavaBean property discovery:</p>
@@ -57,7 +57,7 @@ import java.util.Map;
  * 
  * <p>This class extends {@link ImmutableAspectDefImpl} and works in conjunction with
  * {@link ImmutablePojoAspect} to provide read-only access to POJO instances through
- * the CHEAP property model.</p>
+ * the Cheap property model.</p>
  * 
  * @see ImmutablePojoAspect
  * @see PojoPropertyDef

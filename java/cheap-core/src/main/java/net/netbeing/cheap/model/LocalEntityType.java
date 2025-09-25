@@ -2,7 +2,7 @@ package net.netbeing.cheap.model;
 
 /**
  * Enumeration of the different types of LocalEntity implementations available
- * in the CHEAP system. Each type corresponds to a specific implementation class
+ * in the Cheap system. Each type corresponds to a specific implementation class
  * with different performance characteristics and catalog management strategies.
  * 
  * <p>This enum is used to configure factory methods to create the appropriate

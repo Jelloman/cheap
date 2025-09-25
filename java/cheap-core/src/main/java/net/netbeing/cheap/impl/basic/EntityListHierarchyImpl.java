@@ -10,7 +10,7 @@ import java.util.ArrayList;
 /**
  * Basic implementation of an EntityListHierarchy using an ArrayList.
  * This hierarchy type represents an ordered list of entities that may contain
- * duplicates, corresponding to the ENTITY_LIST (EL) hierarchy type in CHEAP.
+ * duplicates, corresponding to the ENTITY_LIST (EL) hierarchy type in Cheap.
  * <p>
  * This implementation extends ArrayList to provide indexed access and maintain
  * insertion order while implementing the EntityListHierarchy interface.

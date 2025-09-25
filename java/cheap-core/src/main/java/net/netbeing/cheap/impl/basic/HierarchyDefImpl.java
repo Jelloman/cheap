@@ -7,7 +7,7 @@ import java.util.Objects;
 
 /**
  * Record-based implementation of HierarchyDef that defines the structure and
- * properties of a hierarchy in the CHEAP system.
+ * properties of a hierarchy in the Cheap system.
  * <p>
  * This implementation uses Java records to provide an immutable hierarchy
  * definition with automatic equals, hashCode, and toString implementations.

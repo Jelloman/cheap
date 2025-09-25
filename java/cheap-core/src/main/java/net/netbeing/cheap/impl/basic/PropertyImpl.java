@@ -6,7 +6,7 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 /**
- * Basic immutable implementation of a Property in the CHEAP system.
+ * Basic immutable implementation of a Property in the Cheap system.
  * This implementation stores a property definition and its associated value.
  * <p>
  * Properties are immutable once created - to change a property value,

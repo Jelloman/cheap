@@ -4,11 +4,11 @@ import java.util.Collection;
 import java.util.Objects;
 
 /**
- * Defines the structure and metadata for an aspect type within the CHEAP data model.
+ * Defines the structure and metadata for an aspect type within the Cheap data model.
  * An aspect definition specifies the properties that can be associated with entities
  * and controls the read/write capabilities and mutability of those properties.
  * 
- * <p>In the CHEAP model, aspects represent collections of properties that can be
+ * <p>In the Cheap model, aspects represent collections of properties that can be
  * attached to entities, similar to rows in a database table or attributes of a file.
  * The AspectDef serves as the schema definition for these aspects.</p>
  */

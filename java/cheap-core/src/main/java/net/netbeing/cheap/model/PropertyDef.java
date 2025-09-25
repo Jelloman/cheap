@@ -5,11 +5,11 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Objects;
 
 /**
- * Defines the metadata and constraints for a property within the CHEAP data model.
+ * Defines the metadata and constraints for a property within the Cheap data model.
  * A property definition specifies the name, type, and access characteristics of
  * a property that can be associated with aspects.
  * 
- * <p>In the CHEAP model, properties represent the atomic units of data,
+ * <p>In the Cheap model, properties represent the atomic units of data,
  * similar to columns in a database table or instance variables in objects.
  * The PropertyDef serves as the schema definition that determines how property
  * values are stored, accessed, and validated.</p>

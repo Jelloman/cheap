@@ -11,7 +11,7 @@ import java.time.ZonedDateTime;
 import java.util.UUID;
 
 /**
- * Defines the supported data types for properties in the CHEAP model.
+ * Defines the supported data types for properties in the Cheap model.
  * Each property type specifies storage characteristics, validation rules,
  * and the corresponding Java class used for value representation.
  * 

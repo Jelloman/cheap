@@ -10,7 +10,7 @@ import java.util.LinkedHashMap;
 /**
  * Basic implementation of an EntityDirectoryHierarchy using a HashMap.
  * This hierarchy type represents a string-to-entity mapping, corresponding
- * to the ENTITY_DIR (ED) hierarchy type in CHEAP.
+ * to the ENTITY_DIR (ED) hierarchy type in Cheap.
  * <p>
  * This implementation extends HashMap to provide efficient name-based entity
  * lookup while implementing the EntityDirectoryHierarchy interface.

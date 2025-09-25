@@ -12,7 +12,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Unit tests for the CheapFactory class.
- * Tests factory methods for creating instances of all CHEAP model objects.
+ * Tests factory methods for creating instances of all Cheap model objects.
  */
 class CheapFactoryTest
 {

@@ -3,7 +3,10 @@ Cheap Design Notes
 
 Cheap is a data caching system and metadata model. Its design is focused on flexible and performant modeling and
 usage of a wide variety of data sources and sinks.
-Cheap is NOT a database. All Cheap data is held in catalogs, and all Cheap Catalogs are caches.
+Cheap is NOT a database. All Cheap data is held in catalogs, and all Cheap Catalogs are caches or working copies
+of external data (or other Catalogs).
+
+The best analogy for understanding Cheap is **git**. Cheap is a git-like mechanism for structured data and objects. 
 
 | Tier          | RDBMS equivalent | Filesystem equivalent                 |
 |---------------|------------------|---------------------------------------|
@@ -24,9 +27,12 @@ Modules
 -------
 | Module     | Description                                                                                               |
 |------------|-----------------------------------------------------------------------------------------------------------|
-| cheap-core | Core CHEAP interfaces and basic implementations. Includes filesystem functionality. Minimal dependencies. |
+| cheap-core | Core Cheap interfaces and basic implementations. Includes filesystem functionality. Minimal dependencies. |
 | cheap-db   | Database connectors and catalog implementations.                                                          |
-| cheap-json | JSON serialization and deserialization of CHEAP elements.                                                 |
+| cheap-json | JSON serialization and deserialization of Cheap elements.                                                 |
+| cheap-net  | Networking library, including interop with wire protocols like protobuf and Cap'n Proto/Web.              |
+| cheapd     | Service to provide access to a set of catalogs through standard REST APIs or other protocols.             |
+
 
 
 
@@ -117,7 +123,7 @@ PROPERTIES
 
 Serialization and Persistence
 -----------------------------
-* Serialization (S11N) and persistence of CHEAP Catalogs has some constraints:
+* Serialization (S11N) and persistence of Cheap Catalogs has some constraints:
   * HierarchyDefs may only be contained in a CatalogDef.
   * PropertyDefs may only be contained in an AspectDef.
   * Aspects may only be contained in an AspectMapHierarchy.

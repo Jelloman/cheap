@@ -3,8 +3,8 @@ package net.netbeing.cheap.model;
 import org.jetbrains.annotations.NotNull;
 
 /**
- * Base interface for all hierarchy types in the CHEAP data model. A Hierarchy
- * represents the "H" in the CHEAP acronym (Catalog, Hierarchy, Entity, Aspect, Property)
+ * Base interface for all hierarchy types in the Cheap data model. A Hierarchy
+ * represents the "H" in the Cheap acronym (Catalog, Hierarchy, Entity, Aspect, Property)
  * and provides organized access to entities within a catalog.
  * 
  * <p>Hierarchies define the structure and organization of entities, serving roles

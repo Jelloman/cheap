@@ -1,10 +1,10 @@
 /**
  * The cheap-json module provides JSON schema definitions and utilities
- * for the CHEAP data model.
+ * for the Cheap data model.
  * 
  * <p>This module contains:
  * <ul>
- *   <li>JSON schemas for all CHEAP model components</li>
+ *   <li>JSON schemas for all Cheap model components</li>
  *   <li>Utilities for JSON serialization and validation</li>
  * </ul>
  */

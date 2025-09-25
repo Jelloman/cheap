@@ -4,7 +4,7 @@ import java.util.Map;
 
 /**
  * A hierarchy that maps entities to their aspects of a specific type.
- * This represents the ASPECT_SET (AM) hierarchy type in the CHEAP model,
+ * This represents the ASPECT_SET (AM) hierarchy type in the Cheap model,
  * providing a direct mapping from entities to their associated aspect instances.
  * 
  * <p>This hierarchy combines the standard hierarchy interface with Map functionality,

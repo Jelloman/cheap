@@ -15,9 +15,9 @@ import java.time.temporal.TemporalAccessor;
 import java.util.*;
 
 /**
- * Utility class providing reflection-based operations and type mapping functionality for the CHEAP reflection package.
+ * Utility class providing reflection-based operations and type mapping functionality for the Cheap reflection package.
  * 
- * <p>This class serves as the core utility for all reflection-based implementations in the CHEAP system.
+ * <p>This class serves as the core utility for all reflection-based implementations in the Cheap system.
  * It provides essential functionality for:</p>
  * <ul>
  *   <li>Java type to {@link PropertyType} mapping</li>
@@ -28,7 +28,7 @@ import java.util.*;
  * </ul>
  * 
  * <p><strong>Type Mapping:</strong></p>
- * <p>The class maintains a comprehensive mapping from Java types to CHEAP {@link PropertyType} values,
+ * <p>The class maintains a comprehensive mapping from Java types to Cheap {@link PropertyType} values,
  * including support for:</p>
  * <ul>
  *   <li>Primitive types and their boxed equivalents</li>
@@ -94,7 +94,7 @@ import java.util.*;
 final class CheapReflectionUtil
 {
     /**
-     * Immutable mapping from Java types to their corresponding CHEAP {@link PropertyType} values.
+     * Immutable mapping from Java types to their corresponding Cheap {@link PropertyType} values.
      * 
      * <p>This map provides efficient type resolution for commonly used Java types. The mapping includes:</p>
      * <ul>
@@ -464,7 +464,7 @@ final class CheapReflectionUtil
     }
 
     /**
-     * Determines the CHEAP PropertyType for a record component.
+     * Determines the Cheap PropertyType for a record component.
      * 
      * <p>This method delegates to {@link #typeOf(Class, Type)} using the component's
      * declared type and generic type information.</p>
@@ -480,10 +480,10 @@ final class CheapReflectionUtil
     }
 
     /**
-     * Determines the CHEAP PropertyType for a getter method's return type.
+     * Determines the Cheap PropertyType for a getter method's return type.
      * 
      * <p>This method analyzes the getter's return type and generic return type to determine
-     * the appropriate CHEAP PropertyType.</p>
+     * the appropriate Cheap PropertyType.</p>
      * 
      * @param getter the getter method to analyze
      * @return the corresponding PropertyType for the getter's return type
@@ -496,10 +496,10 @@ final class CheapReflectionUtil
     }
 
     /**
-     * Determines the CHEAP PropertyType for a setter method's parameter type.
+     * Determines the Cheap PropertyType for a setter method's parameter type.
      * 
      * <p>This method analyzes the setter's parameter type and generic parameter type to determine
-     * the appropriate CHEAP PropertyType.</p>
+     * the appropriate Cheap PropertyType.</p>
      * 
      * @param setter the setter method to analyze
      * @return the corresponding PropertyType for the setter's parameter type
@@ -513,10 +513,10 @@ final class CheapReflectionUtil
     }
 
     /**
-     * Maps a Java type to the corresponding CHEAP {@link PropertyType}.
+     * Maps a Java type to the corresponding Cheap {@link PropertyType}.
      * 
      * <p>This is the core type mapping method that handles the conversion from Java's type system
-     * to CHEAP's property type system. The mapping process follows these steps:</p>
+     * to Cheap's property type system. The mapping process follows these steps:</p>
      * 
      * <ol>
      *   <li><strong>Multi-valued type unwrapping:</strong> For arrays and Collections, extracts the component type</li>
@@ -544,7 +544,7 @@ final class CheapReflectionUtil
      * 
      * @param klass the Java class to map
      * @param genericType the generic type information, used for Collections and generics
-     * @return the corresponding CHEAP PropertyType, never null
+     * @return the corresponding Cheap PropertyType, never null
      * @throws NullPointerException if klass is null
      */
     public static PropertyType typeOf(Class<?> klass, Type genericType)

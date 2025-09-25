@@ -8,9 +8,9 @@ import java.util.Objects;
 
 /**
  * An {@link Aspect} implementation that provides read-only access to Plain Old Java Objects (POJOs)
- * through the CHEAP property model.
+ * through the Cheap property model.
  * 
- * <p>This class wraps a POJO instance and exposes its JavaBean properties as CHEAP properties
+ * <p>This class wraps a POJO instance and exposes its JavaBean properties as Cheap properties
  * using the property definitions from an {@link ImmutablePojoAspectDef}. It enforces immutability
  * by providing read-only access to properties and throwing {@link UnsupportedOperationException}
  * for any write, add, or remove operations, regardless of whether the underlying POJO has setter
@@ -20,7 +20,7 @@ import java.util.Objects;
  * <ul>
  *   <li>Read-only property access through JavaBean getter methods</li>
  *   <li>Type-safe POJO instance storage with generic type parameter</li>
- *   <li>Integration with CHEAP's entity and catalog system</li>
+ *   <li>Integration with Cheap's entity and catalog system</li>
  *   <li>Efficient property value retrieval using cached method wrappers</li>
  *   <li>Immutability enforcement at the aspect level</li>
  * </ul>
@@ -58,7 +58,7 @@ import java.util.Objects;
  * }</pre>
  * 
  * <p>This implementation works in conjunction with {@link ImmutablePojoAspectDef} to provide
- * a read-only view of POJO instances through the CHEAP property model, making it suitable
+ * a read-only view of POJO instances through the Cheap property model, making it suitable
  * for scenarios where data immutability needs to be enforced at the aspect level regardless
  * of the underlying object's mutability capabilities.</p>
  * 

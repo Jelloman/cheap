@@ -22,10 +22,10 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
- * Utility class for loading filesystem data into CHEAP catalogs.
+ * Utility class for loading filesystem data into Cheap catalogs.
  * <p>
  * This class provides methods to traverse filesystem directories and convert file/directory 
- * information into CHEAP model structures. Files and directories are represented as 
+ * information into Cheap model structures. Files and directories are represented as
  * {@link FileRec} record aspects and can be loaded into catalogs as either flat collections 
  * or hierarchical tree structures.
  * <p>
@@ -43,7 +43,7 @@ public class CheapFileUtil
     public final String FILE_REC_ASPECT_NAME = FileRec.class.getCanonicalName();
 
     /**
-     * Record representing file or directory metadata for use in CHEAP aspects.
+     * Record representing file or directory metadata for use in Cheap aspects.
      * <p>
      * This record captures essential file system information including path, size,
      * timestamps, and file type flags. It serves as the data structure for

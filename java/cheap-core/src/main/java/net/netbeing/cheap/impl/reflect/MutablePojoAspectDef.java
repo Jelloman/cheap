@@ -30,7 +30,7 @@ import java.util.Map;
  *   <li>Full read-write property definitions respecting both getters and setters</li>
  *   <li>Cached getter and setter method wrappers for efficient property access</li>
  *   <li>Support for read-only, write-only, and read-write properties</li>
- *   <li>Integration with CHEAP's reflection utilities for type mapping</li>
+ *   <li>Integration with Cheap's reflection utilities for type mapping</li>
  * </ul>
  * 
  * <p>Property access patterns:</p>
@@ -73,7 +73,7 @@ import java.util.Map;
  * 
  * <p>This class extends {@link MutableAspectDefImpl} and works in conjunction with
  * {@link MutablePojoAspect} to provide full read-write access to POJO instances through
- * the CHEAP property model.</p>
+ * the Cheap property model.</p>
  * 
  * @see MutablePojoAspect
  * @see PojoPropertyDef

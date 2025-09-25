@@ -6,14 +6,14 @@ import java.util.Collection;
 import java.util.Map;
 
 /**
- * Utility class for generating JSON representations of CHEAP data model objects
+ * Utility class for generating JSON representations of Cheap data model objects
  * with no external dependencies. Faster but less flexible than Jackson/GSON versions.
  * 
- * <p>This class provides methods for serializing CHEAP model objects to JSON format,
+ * <p>This class provides methods for serializing Cheap model objects to JSON format,
  * as defined by the JSON schemas in this module.</p>
  * 
  * <p>The JSON schemas are located in the resources/json directory and define the
- * structure for all CHEAP model components including Catalogs, Hierarchies, Entities,
+ * structure for all Cheap model components including Catalogs, Hierarchies, Entities,
  * Aspects, and Properties.</p>
  */
 public class CheapJsonRawSerializer

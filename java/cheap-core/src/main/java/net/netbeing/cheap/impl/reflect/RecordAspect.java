@@ -11,9 +11,9 @@ import java.util.Objects;
 
 /**
  * An {@link Aspect} implementation that provides read-only access to Java record instances
- * through the CHEAP property model.
+ * through the Cheap property model.
  * 
- * <p>This class wraps a Java record instance and exposes its components as CHEAP properties
+ * <p>This class wraps a Java record instance and exposes its components as Cheap properties
  * using the property definitions from a {@link RecordAspectDef}. It maintains the immutability
  * semantics of Java records by throwing {@link UnsupportedOperationException} for any write,
  * add, or remove operations.</p>
@@ -22,7 +22,7 @@ import java.util.Objects;
  * <ul>
  *   <li>Read-only property access through record component accessor methods</li>
  *   <li>Type-safe record instance storage with generic type parameter</li>
- *   <li>Integration with CHEAP's entity and catalog system</li>
+ *   <li>Integration with Cheap's entity and catalog system</li>
  *   <li>Efficient property value retrieval using cached method wrappers</li>
  * </ul>
  * 

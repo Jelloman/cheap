@@ -10,7 +10,7 @@ import java.util.LinkedHashSet;
 /**
  * Basic implementation of an EntitySetHierarchy using a HashSet.
  * This hierarchy type represents a non-ordered collection of unique entities
- * corresponding to the ENTITY_SET (ES) hierarchy type in CHEAP.
+ * corresponding to the ENTITY_SET (ES) hierarchy type in Cheap.
  * <p>
  * This implementation extends HashSet to provide efficient entity membership
  * testing and duplicate prevention while implementing the EntitySetHierarchy interface.

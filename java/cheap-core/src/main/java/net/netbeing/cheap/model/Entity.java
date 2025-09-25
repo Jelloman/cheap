@@ -5,7 +5,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.UUID;
 
 /**
- * Represents an entity in the CHEAP data model. An Entity is only a conceptual object.
+ * Represents an entity in the Cheap data model. An Entity is only a conceptual object.
  * It does not have any specific properties except for a global ID; all other properties
  * are stored in Aspects, which in turn are stored in Catalogs. Entities are not "stored"
  * anywhere, since they have no data. The global ID serves as a key to locate Aspects.

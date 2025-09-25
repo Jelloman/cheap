@@ -51,7 +51,7 @@ cd java && ./gradlew :cheap-json:build
 
 ### Module Structure
 - **Root Project**: `cheap`
-- **Core Module**: `cheap-core` - Main library containing CHEAP model implementation
+- **Core Module**: `cheap-core` - Main library containing Cheap model implementation
 - **Database Module**: `cheap-db` - Database-related functionality (depends on cheap-core)
 - **JSON Module**: `cheap-json` - JSON serialization and schemas (depends on cheap-core)
 - **Main Package**: `net.netbeing.cheap`

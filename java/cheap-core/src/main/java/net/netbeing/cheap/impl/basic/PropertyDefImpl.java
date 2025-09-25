@@ -8,7 +8,7 @@ import java.util.Objects;
 
 /**
  * Record-based implementation of PropertyDef that defines the structure and
- * constraints of a property in the CHEAP system.
+ * constraints of a property in the Cheap system.
  * <p>
  * This implementation uses Java records to provide an immutable property
  * definition with automatic equals, hashCode, and toString implementations.

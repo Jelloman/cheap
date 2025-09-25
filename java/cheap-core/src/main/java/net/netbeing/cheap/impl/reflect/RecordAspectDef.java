@@ -15,9 +15,9 @@ import java.util.Map;
 
 /**
  * An {@link net.netbeing.cheap.model.AspectDef} implementation for Java record types that automatically
- * generates CHEAP aspect definitions from record class metadata through reflection.
+ * generates Cheap aspect definitions from record class metadata through reflection.
  * 
- * <p>This class bridges Java record types to the CHEAP model by introspecting record components
+ * <p>This class bridges Java record types to the Cheap model by introspecting record components
  * and creating corresponding {@link RecordPropertyDef} instances. It provides read-only access
  * to record data through generated property definitions and cached accessor methods.</p>
  * 
@@ -26,7 +26,7 @@ import java.util.Map;
  *   <li>Automatic aspect definition generation from {@link RecordComponent} metadata</li>
  *   <li>Immutable property definitions reflecting Java record immutability</li>
  *   <li>Cached method resolution for efficient property access</li>
- *   <li>Seamless integration with CHEAP's reflection utilities</li>
+ *   <li>Seamless integration with Cheap's reflection utilities</li>
  * </ul>
  * 
  * <p>Example usage:</p>

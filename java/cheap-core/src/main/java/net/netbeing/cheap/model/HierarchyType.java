@@ -1,11 +1,11 @@
 package net.netbeing.cheap.model;
 
 /**
- * Defines the different types of hierarchies supported in the CHEAP data model.
+ * Defines the different types of hierarchies supported in the Cheap data model.
  * Each hierarchy type serves a specific organizational purpose and has unique
  * characteristics for storing and accessing entities.
  * 
- * <p>The hierarchy types follow the CHEAP model's flexible approach to data organization,
+ * <p>The hierarchy types follow the Cheap model's flexible approach to data organization,
  * allowing entities to be structured in various ways depending on the use case.</p>
  */
 public enum HierarchyType

@@ -11,7 +11,7 @@ import java.util.Objects;
  * Represents the normalized signature of a getter or setter method for reflection operations.
  * <p>
  * This record encapsulates the essential characteristics of a method signature that are
- * needed for matching getter/setter pairs in the CHEAP reflection system. It performs
+ * needed for matching getter/setter pairs in the Cheap reflection system. It performs
  * signature normalization to enable efficient matching between target methods and their
  * corresponding {@link GenericGetterSetter} interface methods.
  * <p>

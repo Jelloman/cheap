@@ -12,7 +12,7 @@ import java.util.Map;
 
 /**
  * Basic implementation of a CatalogDef that defines the structure and properties
- * of a catalog in the CHEAP data caching system.
+ * of a catalog in the Cheap data caching system.
  * <p>
  * This implementation automatically includes the default catalog hierarchies (catalog root and aspectage).
  * 

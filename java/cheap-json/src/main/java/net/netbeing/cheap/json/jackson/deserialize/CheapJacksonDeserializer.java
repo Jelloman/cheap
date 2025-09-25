@@ -10,7 +10,7 @@ import org.jetbrains.annotations.NotNull;
 import java.io.IOException;
 
 /**
- * Jackson-based JSON deserializer for CHEAP data model objects.
+ * Jackson-based JSON deserializer for Cheap data model objects.
  * Provides deserialization capabilities using Jackson with custom deserializers
  * that can be configured with a CheapFactory for object creation.
  *
@@ -20,7 +20,7 @@ import java.io.IOException;
  *   <li>Factory mode: Creates a new ObjectMapper configured with the provided CheapFactory</li>
  * </ul>
  *
- * <p>Uses custom Jackson deserializers for each CHEAP element type that leverage
+ * <p>Uses custom Jackson deserializers for each Cheap element type that leverage
  * the CheapFactory for consistent object creation.</p>
  */
 public class CheapJacksonDeserializer
@@ -92,7 +92,7 @@ public class CheapJacksonDeserializer
     }
 
     /**
-     * Creates and configures an ObjectMapper with custom deserializers for CHEAP types.
+     * Creates and configures an ObjectMapper with custom deserializers for Cheap types.
      * The deserializers are configured with the provided CheapFactory for object creation.
      */
     private static ObjectMapper createMapper(@NotNull CheapFactory factory)
@@ -101,7 +101,7 @@ public class CheapJacksonDeserializer
 
         SimpleModule module = new SimpleModule("CheapDeserializerModule");
 
-        // Register custom deserializers for each CHEAP type
+        // Register custom deserializers for each Cheap type
         module.addDeserializer(Catalog.class, new CatalogDeserializer(factory));
         module.addDeserializer(CatalogDef.class, new CatalogDefDeserializer(factory));
         module.addDeserializer(AspectDef.class, new AspectDefDeserializer(factory));

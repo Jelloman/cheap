@@ -10,7 +10,7 @@ import java.util.Objects;
  * A {@link PropertyDef} implementation for Java record components that provides read-only property definitions
  * derived from record component metadata through reflection.
  * 
- * <p>This class bridges Java record components to the CHEAP property model by automatically inferring
+ * <p>This class bridges Java record components to the Cheap property model by automatically inferring
  * property characteristics from the record component's type, annotations, and generic type information.
  * Record properties are inherently read-only since Java records are immutable by design.</p>
  * 

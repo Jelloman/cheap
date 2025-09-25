@@ -11,9 +11,9 @@ import java.util.Objects;
 
 /**
  * An {@link Aspect} implementation that provides full read-write access to Plain Old Java Objects (POJOs)
- * through the CHEAP property model.
+ * through the Cheap property model.
  * 
- * <p>This class wraps a POJO instance and exposes its JavaBean properties as CHEAP properties
+ * <p>This class wraps a POJO instance and exposes its JavaBean properties as Cheap properties
  * using the property definitions from a {@link MutablePojoAspectDef}. Unlike {@link ImmutablePojoAspect},
  * this implementation supports both reading and writing properties through their respective
  * getter and setter methods when available.</p>
@@ -22,7 +22,7 @@ import java.util.Objects;
  * <ul>
  *   <li>Full read-write property access through JavaBean getter and setter methods</li>
  *   <li>Type-safe POJO instance storage with generic type parameter</li>
- *   <li>Integration with CHEAP's entity and catalog system</li>
+ *   <li>Integration with Cheap's entity and catalog system</li>
  *   <li>Efficient property value access using cached method wrappers</li>
  *   <li>Intelligent primitive type handling for proper boxing/unboxing</li>
  * </ul>
@@ -74,7 +74,7 @@ import java.util.Objects;
  * }</pre>
  * 
  * <p>This implementation works in conjunction with {@link MutablePojoAspectDef} to provide
- * full read-write access to POJO instances through the CHEAP property model, making it suitable
+ * full read-write access to POJO instances through the Cheap property model, making it suitable
  * for scenarios where data needs to be both read from and written to through a consistent interface.</p>
  * 
  * @param <P> the specific POJO type wrapped by this aspect

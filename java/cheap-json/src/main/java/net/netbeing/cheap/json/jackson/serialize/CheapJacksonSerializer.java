@@ -10,14 +10,14 @@ import java.io.IOException;
 import java.io.StringWriter;
 
 /**
- * Jackson-based JSON serializer for CHEAP data model objects.
+ * Jackson-based JSON serializer for Cheap data model objects.
  * Provides the same functionality as CheapJsonRawSerializer but uses Jackson
  * for more flexible and extensible JSON generation.
  * 
- * <p>This class provides methods for serializing CHEAP model objects to JSON format,
+ * <p>This class provides methods for serializing Cheap model objects to JSON format,
  * as defined by the JSON schemas in this module.</p>
  * 
- * <p>Uses custom Jackson serializers for each CHEAP element type since
+ * <p>Uses custom Jackson serializers for each Cheap element type since
  * no Jackson annotations are used on the model classes.</p>
  */
 public class CheapJacksonSerializer
@@ -66,7 +66,7 @@ public class CheapJacksonSerializer
     }
     
     /**
-     * Creates and configures an ObjectMapper with custom serializers for CHEAP types.
+     * Creates and configures an ObjectMapper with custom serializers for Cheap types.
      */
     private static ObjectMapper createMapper(boolean prettyPrint)
     {
@@ -78,7 +78,7 @@ public class CheapJacksonSerializer
         
         SimpleModule module = new SimpleModule("CheapModule");
         
-        // Register custom serializers for each CHEAP type
+        // Register custom serializers for each Cheap type
         module.addSerializer(Catalog.class, new CatalogSerializer());
         module.addSerializer(CatalogDef.class, new CatalogDefSerializer());
         module.addSerializer(AspectDef.class, new AspectDefSerializer());

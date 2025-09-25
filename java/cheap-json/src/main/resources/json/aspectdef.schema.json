@@ -2,7 +2,7 @@
   "$id": "https://netbeing.net/cheap/aspectdef.schema.json",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "AspectDef",
-  "description": "Definition of an aspect type within the CHEAP data model",
+  "description": "Definition of an aspect type within the Cheap data model",
   "type": "object",
   "properties": {
     "name": {

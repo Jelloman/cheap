@@ -23,7 +23,7 @@ import java.util.UUID;
  * which implementation is used when creating LocalEntity instances.
  * <p>
  * This factory simplifies object creation and provides a clean API for
- * instantiating CHEAP model objects without directly depending on implementation classes.
+ * instantiating Cheap model objects without directly depending on implementation classes.
  */
 public class CheapFactory
 {

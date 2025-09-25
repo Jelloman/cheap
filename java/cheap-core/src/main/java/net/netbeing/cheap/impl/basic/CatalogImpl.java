@@ -10,7 +10,7 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * Full implementation of a Catalog in the CHEAP architecture. A catalog represents
+ * Full implementation of a Catalog in the Cheap architecture. A catalog represents
  * either an external data source or a mirror/clone/fork of another catalog. A catalog
  * contains hierarchies of entities and their aspects.
  *

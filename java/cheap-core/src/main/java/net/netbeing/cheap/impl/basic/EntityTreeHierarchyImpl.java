@@ -10,7 +10,7 @@ import java.util.*;
 /**
  * Basic implementation of an EntityTreeHierarchy that represents a tree structure
  * with string-to-entity or string-to-node mappings, corresponding to the
- * ENTITY_TREE (ET) hierarchy type in CHEAP.
+ * ENTITY_TREE (ET) hierarchy type in Cheap.
  * <p>
  * This implementation provides both regular nodes (which can have children) and
  * leaf nodes (which cannot have children) to build tree structures.

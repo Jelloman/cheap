@@ -7,7 +7,7 @@ import java.net.URI;
 import java.util.UUID;
 
 /**
- * Represents a catalog in the CHEAP data model, serving as the "C" in the CHEAP acronym
+ * Represents a catalog in the Cheap data model, serving as the "C" in the Cheap acronym
  * (Catalog, Hierarchy, Entity, Aspect, Property). A Catalog is the top-level container
  * that organizes and provides access to hierarchies of entities and their aspects.
  * 
@@ -15,7 +15,7 @@ import java.util.UUID;
  * in file systems. They serve as the primary caching layer and provide the organizational
  * structure for all data within their scope.</p>
  * 
- * <p>All catalogs in CHEAP are caches by design, with different types (ROOT, MIRROR)
+ * <p>All catalogs in Cheap are caches by design, with different types (ROOT, MIRROR)
  * determining their relationship to upstream data sources. Catalogs maintain two
  * special hierarchies: one for managing other hierarchies and one for managing
  * aspect definitions.</p>

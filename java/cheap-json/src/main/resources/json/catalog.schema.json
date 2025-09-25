@@ -2,7 +2,7 @@
   "$id": "https://netbeing.net/cheap/catalog.schema.json",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Catalog",
-  "description": "A complete Catalog in the CHEAP data model, serving as the top-level container for hierarchies and aspects",
+  "description": "A complete Catalog in the Cheap data model, serving as the top-level container for hierarchies and aspects",
   "type": "object",
   "$defs": {
     "catalogRef": {

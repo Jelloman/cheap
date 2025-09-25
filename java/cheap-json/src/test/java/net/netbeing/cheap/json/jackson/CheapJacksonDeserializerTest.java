@@ -16,7 +16,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Unit tests for CheapJacksonDeserializer using JSON files from test resources.
- * Tests the Jackson-based deserializer's ability to reconstruct CHEAP objects
+ * Tests the Jackson-based deserializer's ability to reconstruct Cheap objects
  * from their JSON representations.
  */
 public class CheapJacksonDeserializerTest
