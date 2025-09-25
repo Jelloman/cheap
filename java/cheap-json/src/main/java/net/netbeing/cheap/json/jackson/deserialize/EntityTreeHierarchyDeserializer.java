@@ -28,33 +28,35 @@ class EntityTreeHierarchyDeserializer extends JsonDeserializer<EntityTreeHierarc
         }
 
         EntityTreeHierarchy.Node root = null;
-        EntityTreeHierarchy hierarchy = null;
-        HierarchyDef def = null;
 
         while (p.nextToken() != JsonToken.END_OBJECT) {
             String fieldName = p.currentName();
             p.nextToken();
 
             switch (fieldName) {
-                case "def" -> {
-                    def = context.readValue(p, HierarchyDef.class);
-                    if (root != null) {
-                        hierarchy = factory.createEntityTreeHierarchy(def, root);
-                    }
-                }
                 case "root" -> {
                     root = p.readValueAs(EntityTreeHierarchy.Node.class);
-                    if (def != null) {
-                        hierarchy = factory.createEntityTreeHierarchy(def, root);
-                    }
                 }
                 default -> p.skipChildren();
             }
         }
 
-        if (hierarchy == null) {
-            throw new JsonMappingException(p, "Missing required fields: def and root");
+        // Get the current hierarchy name from Jackson context (set by CatalogDeserializer)
+        String hierarchyName = (String) context.getAttribute("hierarchyName");
+        if (hierarchyName == null) {
+            throw new JsonMappingException(p, "No hierarchy name provided in context");
         }
+
+        HierarchyDef def = factory.getHierarchyDef(hierarchyName);
+        if (def == null) {
+            throw new JsonMappingException(p, "No HierarchyDef found for hierarchy: " + hierarchyName);
+        }
+
+        if (root == null) {
+            throw new JsonMappingException(p, "Missing required field: root");
+        }
+
+        EntityTreeHierarchy hierarchy = factory.createEntityTreeHierarchy(def, root);
 
         return hierarchy;
     }

@@ -146,8 +146,11 @@ public class CheapJacksonDeserializerTest
     @Test
     void testDeserializeAspectMapHierarchy() throws IOException
     {
+        // Use a fresh deserializer with custom factory to avoid AspectDef conflicts from previous tests
+        CheapFactory customFactory = new CheapFactory();
+        CheapJacksonDeserializer freshDeserializer = new CheapJacksonDeserializer(customFactory);
         String json = loadJsonResource("aspect-map-expected.json");
-        Catalog catalog = deserializer.fromJson(json);
+        Catalog catalog = freshDeserializer.fromJson(json);
 
         Hierarchy hierarchy = catalog.hierarchy("person");
         assertNotNull(hierarchy);
@@ -158,7 +161,7 @@ public class CheapJacksonDeserializerTest
         assertEquals("person", aspectMap.aspectDef().name());
 
         assertFalse(aspectMap.isEmpty());
-        Entity entity = deserializer.getFactory().getEntity(UUID.fromString("550e8400-e29b-41d4-a716-446655440000"));
+        Entity entity = freshDeserializer.getFactory().getEntity(UUID.fromString("550e8400-e29b-41d4-a716-446655440000"));
         assertTrue(aspectMap.containsKey(entity));
 
         Aspect aspect = aspectMap.get(entity);
@@ -169,8 +172,11 @@ public class CheapJacksonDeserializerTest
     @Test
     void testDeserializeFullCatalogWithAllHierarchyTypes() throws IOException
     {
+        // Use a fresh deserializer with custom factory to avoid AspectDef conflicts from previous tests
+        CheapFactory customFactory = new CheapFactory();
+        CheapJacksonDeserializer freshDeserializer = new CheapJacksonDeserializer(customFactory);
         String json = loadJsonResource("full-catalog-expected.json");
-        Catalog catalog = deserializer.fromJson(json);
+        Catalog catalog = freshDeserializer.fromJson(json);
 
         assertEquals(UUID.fromString("550e8400-e29b-41d4-a716-444444444444"), catalog.globalId());
         assertEquals(CatalogSpecies.SINK, catalog.species());
@@ -220,10 +226,10 @@ public class CheapJacksonDeserializerTest
         // Test AspectMapHierarchy with actual data
         AspectMapHierarchy personAspects = (AspectMapHierarchy) catalog.hierarchy("person");
         assertEquals(2, personAspects.size());
-        Entity entity1 = deserializer.getFactory().getEntity(UUID.fromString("10000000-0000-0000-0000-000000000001"));
+        Entity entity1 = freshDeserializer.getFactory().getEntity(UUID.fromString("10000000-0000-0000-0000-000000000001"));
         Aspect personAspect = personAspects.get(entity1);
         assertEquals("John Doe", personAspect.readObj("name"));
-        assertEquals("30", personAspect.readObj("age"));
+        assertEquals(30L, personAspect.readObj("age"));
     }
 
     @Test

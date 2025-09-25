@@ -98,9 +98,33 @@ class AspectDeserializer extends JsonDeserializer<Aspect>
 
         return switch (type) {
             case String, Text, BigInteger, DateTime, URI, UUID -> p.getValueAsString();
-            case Integer -> p.getLongValue();
-            case Float -> p.getDoubleValue();
-            case Boolean -> p.getBooleanValue();
+            case Integer -> {
+                if (p.currentToken() == JsonToken.VALUE_STRING) {
+                    // Handle string values that represent integers (common in JSON)
+                    String value = p.getValueAsString();
+                    yield Long.parseLong(value);
+                } else {
+                    yield p.getLongValue();
+                }
+            }
+            case Float -> {
+                if (p.currentToken() == JsonToken.VALUE_STRING) {
+                    // Handle string values that represent floats
+                    String value = p.getValueAsString();
+                    yield Double.parseDouble(value);
+                } else {
+                    yield p.getDoubleValue();
+                }
+            }
+            case Boolean -> {
+                if (p.currentToken() == JsonToken.VALUE_STRING) {
+                    // Handle string values that represent booleans
+                    String value = p.getValueAsString();
+                    yield Boolean.parseBoolean(value);
+                } else {
+                    yield p.getBooleanValue();
+                }
+            }
             default -> {
                 if (p.currentToken() == JsonToken.START_ARRAY) {
                     List<Object> list = new ArrayList<>();

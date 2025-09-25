@@ -32,30 +32,20 @@ class EntityDirectoryHierarchyDeserializer extends JsonDeserializer<EntityDirect
             throw new JsonMappingException(p, "Expected START_OBJECT token");
         }
 
-        Map<String, Entity> entityIds = new LinkedHashMap<>();
-
-        EntityDirectoryHierarchy hierarchy = null;
+        Map<String, Entity> entities = new LinkedHashMap<>();
 
         while (p.nextToken() != JsonToken.END_OBJECT) {
             String fieldName = p.currentName();
             p.nextToken();
 
             switch (fieldName) {
-                case "def" -> {
-                    HierarchyDef def = context.readValue(p, HierarchyDef.class);
-                    hierarchy = factory.createEntityDirectoryHierarchy(def);
-                    if (!entityIds.isEmpty()) {
-                        hierarchy.putAll(entityIds);
-                        entityIds = hierarchy;
-                    }
-                }
                 case "entities" -> {
                     if (p.currentToken() == JsonToken.START_OBJECT) {
                         while (p.nextToken() != JsonToken.END_OBJECT) {
                             String key = p.currentName();
                             p.nextToken();
                             UUID id = UUID.fromString(p.getValueAsString());
-                            entityIds.put(key, factory.createEntity(id));
+                            entities.put(key, factory.getOrRegisterNewEntity(id));
                         }
                     }
                 }
@@ -63,9 +53,19 @@ class EntityDirectoryHierarchyDeserializer extends JsonDeserializer<EntityDirect
             }
         }
 
-        if (hierarchy == null) {
-            throw new JsonMappingException(p, "Missing required field: def");
+        // Get the current hierarchy name from Jackson context (set by CatalogDeserializer)
+        String hierarchyName = (String) context.getAttribute("hierarchyName");
+        if (hierarchyName == null) {
+            throw new JsonMappingException(p, "No hierarchy name provided in context");
         }
+
+        HierarchyDef def = factory.getHierarchyDef(hierarchyName);
+        if (def == null) {
+            throw new JsonMappingException(p, "No HierarchyDef found for hierarchy: " + hierarchyName);
+        }
+
+        EntityDirectoryHierarchy hierarchy = factory.createEntityDirectoryHierarchy(def);
+        hierarchy.putAll(entities);
 
         return hierarchy;
     }

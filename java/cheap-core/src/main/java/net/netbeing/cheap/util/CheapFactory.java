@@ -31,6 +31,7 @@ public class CheapFactory
     private final LocalEntityType defaultLocalEntityType;
     private final Class<? extends AspectBuilder> aspectBuilderClass;
     private final Map<String, AspectDef> aspectDefs = new HashMap<>();
+    private final Map<String, HierarchyDef> hierarchyDefs = new HashMap<>();
     private final Map<UUID, Entity> entities = new HashMap<>();
 
     /**
@@ -111,6 +112,29 @@ public class CheapFactory
     public AspectDef registerAspectDef(AspectDef aspectDef)
     {
         return aspectDefs.put(aspectDef.name(), aspectDef);
+    }
+
+    /**
+     * Return the HierarchyDef registered in this factory with the given name, or
+     * null if not found.
+     *
+     * @param name hierarchyDef name
+     * @return the hierarchyDef with that name
+     */
+    public HierarchyDef getHierarchyDef(@NotNull String name)
+    {
+        return hierarchyDefs.get(name);
+    }
+
+    /**
+     * Register a HierarchyDef with this factory.
+     *
+     * @param hierarchyDef the hierarchyDef to register
+     * @return the existing HierarchyDef registered under that name, if any
+     */
+    public HierarchyDef registerHierarchyDef(HierarchyDef hierarchyDef)
+    {
+        return hierarchyDefs.put(hierarchyDef.name(), hierarchyDef);
     }
 
     /**

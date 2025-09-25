@@ -41,14 +41,18 @@ class CatalogDefDeserializer extends JsonDeserializer<CatalogDef>
                     if (p.currentToken() == JsonToken.START_OBJECT) {
                         while (p.nextToken() != JsonToken.END_OBJECT) {
                             p.nextToken(); // Move to value
-                            aspectDefs.add(p.readValueAs(AspectDef.class));
+                            AspectDef aspectDef = p.readValueAs(AspectDef.class);
+                            aspectDefs.add(aspectDef);
+                            // AspectDef registration is already handled by AspectDefDeserializer
                         }
                     }
                 }
                 case "hierarchyDefs" -> {
                     if (p.currentToken() == JsonToken.START_ARRAY) {
                         while (p.nextToken() != JsonToken.END_ARRAY) {
-                            hierarchyDefs.add(p.readValueAs(HierarchyDef.class));
+                            HierarchyDef hierarchyDef = p.readValueAs(HierarchyDef.class);
+                            hierarchyDefs.add(hierarchyDef);
+                            factory.registerHierarchyDef(hierarchyDef);
                         }
                     }
                 }

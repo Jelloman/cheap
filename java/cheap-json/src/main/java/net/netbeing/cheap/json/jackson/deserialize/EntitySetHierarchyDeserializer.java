@@ -31,27 +31,18 @@ class EntitySetHierarchyDeserializer extends JsonDeserializer<EntitySetHierarchy
             throw new JsonMappingException(p, "Expected START_OBJECT token");
         }
 
-        Set<Entity> entityIds = new HashSet<>();
-        EntitySetHierarchy hierarchy = null;
+        Set<Entity> entities = new HashSet<>();
 
         while (p.nextToken() != JsonToken.END_OBJECT) {
             String fieldName = p.currentName();
             p.nextToken();
 
             switch (fieldName) {
-                case "def" -> {
-                    HierarchyDef def = context.readValue(p, HierarchyDef.class);
-                    hierarchy = factory.createEntitySetHierarchy(def);
-                    if (!entityIds.isEmpty()) {
-                        hierarchy.addAll(entityIds);
-                        entityIds = hierarchy;
-                    }
-                }
                 case "entities" -> {
                     if (p.currentToken() == JsonToken.START_ARRAY) {
                         while (p.nextToken() != JsonToken.END_ARRAY) {
                             UUID id = UUID.fromString(p.getValueAsString());
-                            entityIds.add(factory.createEntity(id));
+                            entities.add(factory.getOrRegisterNewEntity(id));
                         }
                     }
                 }
@@ -59,9 +50,19 @@ class EntitySetHierarchyDeserializer extends JsonDeserializer<EntitySetHierarchy
             }
         }
 
-        if (hierarchy == null) {
-            throw new JsonMappingException(p, "Missing required field: def");
+        // Get the current hierarchy name from Jackson context (set by CatalogDeserializer)
+        String hierarchyName = (String) context.getAttribute("hierarchyName");
+        if (hierarchyName == null) {
+            throw new JsonMappingException(p, "No hierarchy name provided in context");
         }
+
+        HierarchyDef def = factory.getHierarchyDef(hierarchyName);
+        if (def == null) {
+            throw new JsonMappingException(p, "No HierarchyDef found for hierarchy: " + hierarchyName);
+        }
+
+        EntitySetHierarchy hierarchy = factory.createEntitySetHierarchy(def);
+        hierarchy.addAll(entities);
 
         return hierarchy;
     }

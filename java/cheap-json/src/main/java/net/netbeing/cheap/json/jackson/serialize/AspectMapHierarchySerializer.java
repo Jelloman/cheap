@@ -14,12 +14,7 @@ class AspectMapHierarchySerializer extends JsonSerializer<AspectMapHierarchy>
     public void serialize(AspectMapHierarchy hierarchy, JsonGenerator gen, SerializerProvider serializers) throws IOException
     {
         gen.writeStartObject();
-        
-        gen.writeFieldName("def");
-        gen.writeStartObject();
-        gen.writeStringField("type", "aspect_map");
-        gen.writeEndObject();
-        
+
         gen.writeStringField("aspectDefName", hierarchy.aspectDef().name());
         
         gen.writeFieldName("aspects");

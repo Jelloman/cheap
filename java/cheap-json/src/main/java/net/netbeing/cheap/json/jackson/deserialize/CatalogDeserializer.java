@@ -5,12 +5,15 @@ import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import net.netbeing.cheap.model.*;
 import net.netbeing.cheap.util.CheapFactory;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 class CatalogDeserializer extends JsonDeserializer<Catalog>
@@ -35,6 +38,7 @@ class CatalogDeserializer extends JsonDeserializer<Catalog>
         boolean strict = false;
         CatalogDef def = null;
         UUID upstreamId = null;
+        Map<String, JsonNode> hierarchyData = new HashMap<>();
 
         while (p.nextToken() != JsonToken.END_OBJECT) {
             String fieldName = p.currentName();
@@ -55,7 +59,18 @@ class CatalogDeserializer extends JsonDeserializer<Catalog>
                         upstreamId = UUID.fromString(p.getValueAsString());
                     }
                 }
-                case "hierarchies", "aspectDefs", "aspects" -> p.skipChildren();
+                case "aspectDefs" -> p.skipChildren(); // Already handled in def
+                case "hierarchies" -> {
+                    if (p.currentToken() == JsonToken.START_OBJECT) {
+                        while (p.nextToken() != JsonToken.END_OBJECT) {
+                            String hierarchyName = p.currentName();
+                            p.nextToken();
+                            // Store the raw JSON structure for later processing
+                            hierarchyData.put(hierarchyName, context.readTree(p));
+                        }
+                    }
+                }
+                case "aspects" -> p.skipChildren();
                 default -> p.skipChildren();
             }
         }
@@ -64,6 +79,36 @@ class CatalogDeserializer extends JsonDeserializer<Catalog>
             throw new JsonMappingException(p, "Missing required fields: globalId, species, and def");
         }
 
-        return factory.createCatalog(globalId, species, def, null, strict);
+        // Create the catalog first
+        Catalog catalog = factory.createCatalog(globalId, species, def, upstreamId, strict);
+
+        // Now deserialize and add hierarchies using the registered HierarchyDefs
+        for (Map.Entry<String, JsonNode> entry : hierarchyData.entrySet()) {
+            String hierarchyName = entry.getKey();
+            HierarchyDef hierarchyDef = factory.getHierarchyDef(hierarchyName);
+
+            if (hierarchyDef == null) {
+                throw new JsonMappingException(p, "No HierarchyDef found for hierarchy: " + hierarchyName);
+            }
+
+            // Create a new parser for this hierarchy's data
+            JsonParser hierarchyParser = entry.getValue().traverse(p.getCodec());
+            hierarchyParser.nextToken();
+
+            // Set the hierarchy name in context for the deserializers
+            context.setAttribute("hierarchyName", hierarchyName);
+
+            Hierarchy hierarchy = switch (hierarchyDef.type()) {
+                case ASPECT_MAP -> context.readValue(hierarchyParser, AspectMapHierarchy.class);
+                case ENTITY_DIR -> context.readValue(hierarchyParser, EntityDirectoryHierarchy.class);
+                case ENTITY_LIST -> context.readValue(hierarchyParser, EntityListHierarchy.class);
+                case ENTITY_SET -> context.readValue(hierarchyParser, EntitySetHierarchy.class);
+                case ENTITY_TREE -> context.readValue(hierarchyParser, EntityTreeHierarchy.class);
+            };
+
+            catalog.addHierarchy(hierarchy);
+        }
+
+        return catalog;
     }
 }

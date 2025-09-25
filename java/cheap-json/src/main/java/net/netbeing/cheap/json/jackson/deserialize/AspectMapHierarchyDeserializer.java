@@ -5,7 +5,7 @@ import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.util.TokenBuffer;
+import com.fasterxml.jackson.databind.JsonNode;
 import net.netbeing.cheap.model.*;
 import net.netbeing.cheap.util.CheapFactory;
 import org.jetbrains.annotations.NotNull;
@@ -30,45 +30,49 @@ class AspectMapHierarchyDeserializer extends JsonDeserializer<AspectMapHierarchy
         }
 
         AspectDef aspectDef = null;
-        AspectMapHierarchy hierarchy = null;
-        HierarchyDef def = null;
+        JsonNode aspectsData = null;
 
         while (p.nextToken() != JsonToken.END_OBJECT) {
             String fieldName = p.currentName();
             p.nextToken();
 
             switch (fieldName) {
-                case "def" -> {
-                    def = context.readValue(p, HierarchyDef.class);
-                    if (hierarchy == null && aspectDef != null) {
-                        hierarchy = factory.createAspectMapHierarchy(def, aspectDef);
-                    }
-                }
                 case "aspectDefName" -> {
                     aspectDef = factory.getAspectDef(p.getValueAsString());
                     if (aspectDef == null) {
                         throw new JsonMappingException(p, "AspectDef named '"+p.getValueAsString()+"' not found.");
                     }
-                    if (hierarchy == null && def != null) {
-                        hierarchy = factory.createAspectMapHierarchy(def, aspectDef);
-                    }
                 }
                 case "aspects" -> {
-                    if (hierarchy == null) {
-                        throw new JsonMappingException(p, "Cannot deserialize aspects into a hierarchy without definitions for both the hierarchy and the aspects.");
-                    } else {
-                        deserializeAspects(hierarchy, p, context);
-                    }
+                    // Store aspects data for later processing
+                    aspectsData = context.readTree(p);
                 }
                 default -> p.skipChildren();
             }
         }
 
+        // Get the current hierarchy name from Jackson context (set by CatalogDeserializer)
+        String hierarchyName = (String) context.getAttribute("hierarchyName");
+        if (hierarchyName == null) {
+            throw new JsonMappingException(p, "No hierarchy name provided in context");
+        }
+
+        HierarchyDef def = factory.getHierarchyDef(hierarchyName);
+        if (def == null) {
+            throw new JsonMappingException(p, "No HierarchyDef found for hierarchy: " + hierarchyName);
+        }
+
         if (aspectDef == null) {
             throw new JsonMappingException(p, "Missing required field: aspectDefName");
         }
-        if (def == null) {
-            throw new JsonMappingException(p, "Missing required field: aspectDefName");
+
+        AspectMapHierarchy hierarchy = factory.createAspectMapHierarchy(def, aspectDef);
+
+        // Process aspects data if present
+        if (aspectsData != null) {
+            JsonParser aspectsParser = aspectsData.traverse(p.getCodec());
+            aspectsParser.nextToken();
+            deserializeAspects(hierarchy, aspectsParser, context);
         }
 
         return hierarchy;

@@ -26,9 +26,6 @@
   "aspectDefs" : { },
   "hierarchies" : {
     "person" : {
-      "def" : {
-        "type" : "aspect_map"
-      },
       "aspectDefName" : "person",
       "aspects" : { }
     }

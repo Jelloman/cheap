@@ -13,12 +13,7 @@ class EntityListHierarchySerializer extends JsonSerializer<EntityListHierarchy>
     public void serialize(EntityListHierarchy hierarchy, JsonGenerator gen, SerializerProvider serializers) throws IOException
     {
         gen.writeStartObject();
-        
-        gen.writeFieldName("def");
-        gen.writeStartObject();
-        gen.writeStringField("type", "entity_list");
-        gen.writeEndObject();
-        
+
         gen.writeFieldName("entities");
         gen.writeStartArray();
         for (Entity entity : hierarchy) {
