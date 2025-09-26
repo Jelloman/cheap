@@ -222,7 +222,17 @@ public class CatalogImpl extends LocalEntityOneCatalogImpl implements Catalog
     @Override
     public Hierarchy addHierarchy(@NotNull Hierarchy hierarchy)
     {
+        if (hierarchy.catalog() != this) {
+            throw new IllegalArgumentException("Cannot add a Hierarchy to a Catalog unless the Catalog is already set as the Hierarchy's owner.");
+        }
         String hName = hierarchy.def().name();
+        HierarchyDef existingDef = def.hierarchyDef(hName);
+        if (strict && existingDef  == null) {
+            throw new UnsupportedOperationException("A hierarchy may not be added to a strict Catalog unless it is part of the CatalogDef.");
+        }
+        if (existingDef != null && !existingDef.fullyEquals(hierarchy.def())) {
+            throw new UnsupportedOperationException("A hierarchy may not be added to a strict Catalog unless it is part of the CatalogDef.");
+        }
         Hierarchy existing = hierarchy(hName);
         if (existing instanceof AspectMapHierarchy) {
             throw new UnsupportedOperationException("A hierarchy may not be added to a Catalog with the same name as an existing AspectMapHierarchy.");

@@ -15,7 +15,7 @@ class HierarchyDefSerializer extends JsonSerializer<HierarchyDef>
         gen.writeStartObject();
         
         gen.writeStringField("name", hierarchyDef.name());
-        gen.writeStringField("type", hierarchyDef.type().typeCode().toLowerCase());
+        gen.writeStringField("type", hierarchyDef.type().typeCode());
         gen.writeBooleanField("isModifiable", hierarchyDef.isModifiable());
         
         gen.writeEndObject();

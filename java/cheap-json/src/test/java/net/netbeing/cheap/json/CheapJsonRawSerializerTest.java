@@ -10,14 +10,16 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Unit tests for CheapJsonUtil using actual implementation classes.
  */
+@SuppressWarnings("MismatchedQueryAndUpdateOfCollection")
 public class CheapJsonRawSerializerTest
 {
     private static final UUID CATALOG_ID = UUID.fromString("550e8400-e29b-41d4-a716-444444444444");
@@ -101,8 +103,9 @@ public class CheapJsonRawSerializerTest
         UUID uuid1 = UUID.fromString("550e8400-e29b-41d4-a716-446655440000");
         UUID uuid2 = UUID.fromString("550e8400-e29b-41d4-a716-446655440001");
 
+        Catalog catalog = new CatalogImpl();
         HierarchyDef def = new HierarchyDefImpl("entityList", HierarchyType.ENTITY_LIST, true);
-        EntityListHierarchyImpl hierarchy = new EntityListHierarchyImpl(def);
+        EntityListHierarchyImpl hierarchy = new EntityListHierarchyImpl(catalog, def);
         hierarchy.add(new EntityImpl(uuid1));
         hierarchy.add(new EntityImpl(uuid2));
 
@@ -121,7 +124,7 @@ public class CheapJsonRawSerializerTest
         UUID uuid2 = UUID.fromString("550e8400-e29b-41d4-a716-446655440001");
 
         HierarchyDef def = new HierarchyDefImpl("entitySet", HierarchyType.ENTITY_SET, true);
-        EntitySetHierarchyImpl hierarchy = new EntitySetHierarchyImpl(def);
+        EntitySetHierarchyImpl hierarchy = new EntitySetHierarchyImpl(new CatalogImpl(), def);
         hierarchy.add(new EntityImpl(uuid1));
         hierarchy.add(new EntityImpl(uuid2));
 
@@ -141,7 +144,7 @@ public class CheapJsonRawSerializerTest
         UUID uuid2 = UUID.fromString("550e8400-e29b-41d4-a716-446655440001");
 
         HierarchyDef def = new HierarchyDefImpl("entityDir", HierarchyType.ENTITY_DIR, true);
-        EntityDirectoryHierarchyImpl hierarchy = new EntityDirectoryHierarchyImpl(def);
+        EntityDirectoryHierarchyImpl hierarchy = new EntityDirectoryHierarchyImpl(new CatalogImpl(), def);
         hierarchy.put("first", new EntityImpl(uuid1));
         hierarchy.put("second", new EntityImpl(uuid2));
 
@@ -159,7 +162,7 @@ public class CheapJsonRawSerializerTest
         UUID uuid = UUID.fromString("550e8400-e29b-41d4-a716-446655440000");
         Entity entity = new EntityImpl(uuid);
         HierarchyDef def = new HierarchyDefImpl("entityTree", HierarchyType.ENTITY_TREE, true);
-        EntityTreeHierarchyImpl hierarchy = new EntityTreeHierarchyImpl(def, entity);
+        EntityTreeHierarchyImpl hierarchy = new EntityTreeHierarchyImpl(new CatalogImpl(), def, entity);
 
         StringBuilder sb = new StringBuilder();
         CheapJsonRawSerializer.treeNodeToJson(hierarchy.root(), sb, true, 0);
@@ -178,7 +181,7 @@ public class CheapJsonRawSerializerTest
         Entity childEntity = new EntityImpl(uuid2);
 
         HierarchyDef def = new HierarchyDefImpl("entityTree", HierarchyType.ENTITY_TREE, true);
-        EntityTreeHierarchyImpl hierarchy = new EntityTreeHierarchyImpl(def, parentEntity);
+        EntityTreeHierarchyImpl hierarchy = new EntityTreeHierarchyImpl(new CatalogImpl(), def, parentEntity);
 
         EntityTreeHierarchyImpl.NodeImpl childNode = new EntityTreeHierarchyImpl.NodeImpl(childEntity, hierarchy.root());
         hierarchy.root().put("child", childNode);
@@ -291,10 +294,9 @@ public class CheapJsonRawSerializerTest
         Entity entity2 = new EntityImpl(entityId2);
 
         HierarchyDef entityDirDef = new HierarchyDefImpl("userDirectory", HierarchyType.ENTITY_DIR, true);
-        EntityDirectoryHierarchyImpl entityDirectory = new EntityDirectoryHierarchyImpl(entityDirDef);
+        EntityDirectoryHierarchyImpl entityDirectory = new EntityDirectoryHierarchyImpl(catalog, entityDirDef);
         entityDirectory.put("admin", entity1);
         entityDirectory.put("user1", entity2);
-        catalog.addHierarchy(entityDirectory);
 
         return catalog;
     }
@@ -333,10 +335,9 @@ public class CheapJsonRawSerializerTest
         Entity entity2 = new EntityImpl(entityId2);
 
         HierarchyDef entityListDef = new HierarchyDefImpl("taskQueue", HierarchyType.ENTITY_LIST, true);
-        EntityListHierarchyImpl entityList = new EntityListHierarchyImpl(entityListDef);
+        EntityListHierarchyImpl entityList = new EntityListHierarchyImpl(catalog, entityListDef);
         entityList.add(entity1);
         entityList.add(entity2);
-        catalog.addHierarchy(entityList);
 
         return catalog;
     }
@@ -375,10 +376,9 @@ public class CheapJsonRawSerializerTest
         Entity entity2 = new EntityImpl(entityId2);
 
         HierarchyDef entitySetDef = new HierarchyDefImpl("activeUsers", HierarchyType.ENTITY_SET, true);
-        EntitySetHierarchyImpl entitySet = new EntitySetHierarchyImpl(entitySetDef);
+        EntitySetHierarchyImpl entitySet = new EntitySetHierarchyImpl(catalog, entitySetDef);
         entitySet.add(entity1);
         entitySet.add(entity2);
-        catalog.addHierarchy(entitySet);
 
         return catalog;
     }
@@ -417,10 +417,9 @@ public class CheapJsonRawSerializerTest
         Entity childEntity = new EntityImpl(entityId2);
 
         HierarchyDef entityTreeDef = new HierarchyDefImpl("fileSystem", HierarchyType.ENTITY_TREE, true);
-        EntityTreeHierarchyImpl entityTree = new EntityTreeHierarchyImpl(entityTreeDef, parentEntity);
+        EntityTreeHierarchyImpl entityTree = new EntityTreeHierarchyImpl(catalog, entityTreeDef, parentEntity);
         EntityTreeHierarchyImpl.NodeImpl childNode = new EntityTreeHierarchyImpl.NodeImpl(childEntity, entityTree.root());
         entityTree.root().put("documents", childNode);
-        catalog.addHierarchy(entityTree);
 
         return catalog;
     }
@@ -525,32 +524,29 @@ public class CheapJsonRawSerializerTest
 
         // 1. EntityDirectoryHierarchy
         HierarchyDef entityDirDef = new HierarchyDefImpl("userDirectory", HierarchyType.ENTITY_DIR, true);
-        EntityDirectoryHierarchyImpl entityDirectory = new EntityDirectoryHierarchyImpl(entityDirDef);
+        EntityDirectoryHierarchyImpl entityDirectory = new EntityDirectoryHierarchyImpl(catalog, entityDirDef);
         entityDirectory.put("admin", entity1);
         entityDirectory.put("user1", entity2);
         entityDirectory.put("guest", entity3);
-        catalog.addHierarchy(entityDirectory);
-        
+
         // 2. EntityListHierarchy
         HierarchyDef entityListDef = new HierarchyDefImpl("taskQueue", HierarchyType.ENTITY_LIST, true);
-        EntityListHierarchyImpl entityList = new EntityListHierarchyImpl(entityListDef);
+        EntityListHierarchyImpl entityList = new EntityListHierarchyImpl(catalog, entityListDef);
         entityList.add(entity1);
         entityList.add(entity2);
         entityList.add(entity3);
         entityList.add(entity1); // Allow duplicates in list
-        catalog.addHierarchy(entityList);
-        
+
         // 3. EntitySetHierarchy
         HierarchyDef entitySetDef = new HierarchyDefImpl("activeUsers", HierarchyType.ENTITY_SET, true);
-        EntitySetHierarchyImpl entitySet = new EntitySetHierarchyImpl(entitySetDef);
+        EntitySetHierarchyImpl entitySet = new EntitySetHierarchyImpl(catalog, entitySetDef);
         entitySet.add(entity1);
         entitySet.add(entity2);
         entitySet.add(entity4);
-        catalog.addHierarchy(entitySet);
-        
+
         // 4. EntityTreeHierarchy
         HierarchyDef entityTreeDef = new HierarchyDefImpl("fileSystem", HierarchyType.ENTITY_TREE, true);
-        EntityTreeHierarchyImpl entityTree = new EntityTreeHierarchyImpl(entityTreeDef, entity1); // root entity
+        EntityTreeHierarchyImpl entityTree = new EntityTreeHierarchyImpl(catalog, entityTreeDef, entity1); // root entity
         EntityTreeHierarchyImpl.NodeImpl childNode1 = new EntityTreeHierarchyImpl.NodeImpl(entity2, entityTree.root());
         EntityTreeHierarchyImpl.NodeImpl childNode2 = new EntityTreeHierarchyImpl.NodeImpl(entity3, entityTree.root());
         entityTree.root().put("documents", childNode1);
@@ -558,8 +554,7 @@ public class CheapJsonRawSerializerTest
         // Add nested child
         EntityTreeHierarchyImpl.NodeImpl subChild = new EntityTreeHierarchyImpl.NodeImpl(entity4, childNode1);
         childNode1.put("reports", subChild);
-        catalog.addHierarchy(entityTree);
-        
+
         // 5. First AspectMapHierarchy (person aspects)
         AspectObjectMapImpl personAspect1 = new AspectObjectMapImpl(entity1, personAspectDef);
         personAspect1.unsafeWrite("name", "John Doe");

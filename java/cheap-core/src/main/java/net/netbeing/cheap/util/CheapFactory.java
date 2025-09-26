@@ -1,14 +1,11 @@
 package net.netbeing.cheap.util;
 
-import lombok.SneakyThrows;
 import net.netbeing.cheap.impl.basic.*;
 import net.netbeing.cheap.model.*;
 import org.jetbrains.annotations.NotNull;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 import java.util.UUID;
 
 /**
@@ -33,6 +30,7 @@ public class CheapFactory
     private final Map<String, AspectDef> aspectDefs = new HashMap<>();
     private final Map<String, HierarchyDef> hierarchyDefs = new HashMap<>();
     private final Map<UUID, Entity> entities = new HashMap<>();
+    private Catalog catalog = null;
 
     /**
      * Creates a new CheapFactory with the defaults of LocalEntityType.SINGLE_CATALOG
@@ -89,6 +87,16 @@ public class CheapFactory
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public Catalog getCatalog()
+    {
+        return catalog;
+    }
+
+    public void setCatalog(Catalog catalog)
+    {
+        this.catalog = catalog;
     }
 
     /**
@@ -486,7 +494,19 @@ public class CheapFactory
      */
     public @NotNull EntityDirectoryHierarchy createEntityDirectoryHierarchy(@NotNull HierarchyDef def)
     {
-        return new EntityDirectoryHierarchyImpl(def);
+        return createEntityDirectoryHierarchy(catalog, def);
+    }
+
+    /**
+     * Creates a new entity directory hierarchy.
+     *
+     * @param catalog the owning catalog
+     * @param def the hierarchy definition for this entity directory
+     * @return a new EntityDirectoryHierarchy instance
+     */
+    public @NotNull EntityDirectoryHierarchy createEntityDirectoryHierarchy(@NotNull Catalog catalog, @NotNull HierarchyDef def)
+    {
+        return new EntityDirectoryHierarchyImpl(catalog, def);
     }
 
     /**
@@ -497,7 +517,18 @@ public class CheapFactory
      */
     public @NotNull EntityListHierarchy createEntityListHierarchy(@NotNull HierarchyDef def)
     {
-        return new EntityListHierarchyImpl(def);
+        return new EntityListHierarchyImpl(catalog, def);
+    }
+
+    /**
+     * Creates a new entity list hierarchy.
+     *
+     * @param def the hierarchy definition for this entity list
+     * @return a new EntityListHierarchy instance
+     */
+    public @NotNull EntityListHierarchy createEntityListHierarchy(@NotNull Catalog catalog, @NotNull HierarchyDef def)
+    {
+        return new EntityListHierarchyImpl(catalog, def);
     }
 
     /**
@@ -508,7 +539,18 @@ public class CheapFactory
      */
     public @NotNull EntitySetHierarchy createEntitySetHierarchy(@NotNull HierarchyDef def)
     {
-        return new EntitySetHierarchyImpl(def);
+        return new EntitySetHierarchyImpl(catalog, def);
+    }
+
+    /**
+     * Creates a new entity set hierarchy.
+     *
+     * @param def the hierarchy definition for this entity set
+     * @return a new EntitySetHierarchy instance
+     */
+    public @NotNull EntitySetHierarchy createEntitySetHierarchy(@NotNull Catalog catalog, @NotNull HierarchyDef def)
+    {
+        return new EntitySetHierarchyImpl(catalog, def);
     }
 
     /**
@@ -518,10 +560,22 @@ public class CheapFactory
      * @param rootEntity the entity to use as the root of the tree
      * @return a new EntityTreeHierarchy instance
      */
-    public @NotNull EntityTreeHierarchy createEntityTreeHierarchy(@NotNull HierarchyDef def,
+    public @NotNull EntityTreeHierarchy createEntityTreeHierarchy(@NotNull HierarchyDef def, @NotNull Entity rootEntity)
+    {
+        return new EntityTreeHierarchyImpl(catalog, def, rootEntity);
+    }
+
+    /**
+     * Creates a new entity tree hierarchy.
+     *
+     * @param def the hierarchy definition for this entity tree
+     * @param rootEntity the entity to use as the root of the tree
+     * @return a new EntityTreeHierarchy instance
+     */
+    public @NotNull EntityTreeHierarchy createEntityTreeHierarchy(@NotNull Catalog catalog, @NotNull HierarchyDef def,
                                                                   @NotNull Entity rootEntity)
     {
-        return new EntityTreeHierarchyImpl(def, rootEntity);
+        return new EntityTreeHierarchyImpl(catalog, def, rootEntity);
     }
 
     /**
@@ -534,7 +588,20 @@ public class CheapFactory
     public @NotNull EntityTreeHierarchy createEntityTreeHierarchy(@NotNull HierarchyDef def,
                                                                   @NotNull EntityTreeHierarchy.Node rootNode)
     {
-        return new EntityTreeHierarchyImpl(def, rootNode);
+        return new EntityTreeHierarchyImpl(catalog, def, rootNode);
+    }
+
+    /**
+     * Creates a new entity tree hierarchy.
+     *
+     * @param def the hierarchy definition for this entity tree
+     * @param rootNode the node to use as the root of the tree
+     * @return a new EntityTreeHierarchy instance
+     */
+    public @NotNull EntityTreeHierarchy createEntityTreeHierarchy(@NotNull Catalog catalog, @NotNull HierarchyDef def,
+                                                                  @NotNull EntityTreeHierarchy.Node rootNode)
+    {
+        return new EntityTreeHierarchyImpl(catalog, def, rootNode);
     }
 
     /**
@@ -545,7 +612,18 @@ public class CheapFactory
      */
     public @NotNull AspectMapHierarchy createAspectMapHierarchy(@NotNull AspectDef aspectDef)
     {
-        return new AspectMapHierarchyImpl(aspectDef);
+        return new AspectMapHierarchyImpl(catalog, aspectDef);
+    }
+
+    /**
+     * Creates a new aspect map hierarchy.
+     *
+     * @param aspectDef the aspect definition for aspects in this hierarchy
+     * @return a new AspectMapHierarchy instance
+     */
+    public @NotNull AspectMapHierarchy createAspectMapHierarchy(@NotNull Catalog catalog, @NotNull AspectDef aspectDef)
+    {
+        return new AspectMapHierarchyImpl(catalog, aspectDef);
     }
 
     /**
@@ -555,10 +633,22 @@ public class CheapFactory
      * @param aspectDef the aspect definition for aspects in this hierarchy
      * @return a new AspectMapHierarchy instance
      */
-    public @NotNull AspectMapHierarchy createAspectMapHierarchy(@NotNull HierarchyDef def,
+    public @NotNull AspectMapHierarchy createAspectMapHierarchy(@NotNull HierarchyDef def, @NotNull AspectDef aspectDef)
+    {
+        return new AspectMapHierarchyImpl(catalog, def, aspectDef);
+    }
+
+    /**
+     * Creates a new aspect map hierarchy with custom hierarchy definition.
+     *
+     * @param def the hierarchy definition for this hierarchy
+     * @param aspectDef the aspect definition for aspects in this hierarchy
+     * @return a new AspectMapHierarchy instance
+     */
+    public @NotNull AspectMapHierarchy createAspectMapHierarchy(@NotNull Catalog catalog, @NotNull HierarchyDef def,
                                                                 @NotNull AspectDef aspectDef)
     {
-        return new AspectMapHierarchyImpl(def, aspectDef);
+        return new AspectMapHierarchyImpl(catalog, def, aspectDef);
     }
 
     // ===== Aspect Definition Factory Methods =====

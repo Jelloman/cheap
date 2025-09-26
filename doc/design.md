@@ -81,6 +81,7 @@ ENTITIES
   * Global Entity IDs are UUIDs.
   * Local entity IDs are implementation/language-specific references.
     * Local entities usually can lazily generate a global UUID.
+    * The main reason for Local entity references is performance, thus avoiding UUID generation unless needed.
 
 ASPECTS
 -------
@@ -90,7 +91,7 @@ ASPECTS
 * Each Entity can have at most one Aspect of a given AspectDef.
   * If you need an entity to have multiple aspects of the same type, those aspects should really be entities 
     of their own, and the one-to-many relationship should be an entity-entity relationship, stored either in
-    an entity tree hierarchy or a multivalued UUID property.
+    an entity tree hierarchy or a multivalued UUID or URI property.
 * AspectDefs have a full name which must be globally unique and should use reverse domain name notation.
 * AspectDefs may optionally have a UUID. If they do, they may also optionally have a URI and/or a version number.
   AspectDefs which are intended to be used for inter-catalog data exchange should have all three.
@@ -103,32 +104,38 @@ PROPERTIES
 * Properties are never structured or nested objects; such things should be Aspects or Hierarchies.
 * An individual Property object is always immutable.
   * Multivalued properties are not meant to be modified "in place".
-* 
+* Each Property has:
+  * a "Type", which is one of a limited set of types defined by Cheap; and
+  * an optional "Native Type", which is a string describing another type for an external system.
+    * Cheap allows for registration of type-native-type converters.
+    * Native types allow for total compatibility with arbitrary type formats, e.g., any ISO date format.
 
-| Type Name   | Type Code | Java Class     | Description                                                                 |
-|-------------|-----------|----------------|-----------------------------------------------------------------------------|
-| Integer     | INT       | Long           | 64-bit signed integer values.                                               |
-| Float       | FLT       | Double         | 64-bit floating-point values (double precision).                            |
-| Boolean     | BLN       | Boolean        | Boolean values supporting true, false, or null states.                      |
-| String      | STR       | String         | String values with length limited to 8192 characters, processed atomically. |
-| Text        | TXT       | String         | Text values with unlimited length, processed atomically.                    |
-| BigInteger  | BGI       | BigInteger     | Arbitrary precision integer values with unlimited size.                     |
-| BigDecimal  | BGF       | BigDecimal     | Arbitrary precision floating-point values with unlimited size.              |
-| DateTime    | DAT       | ZonedDateTime  | Date and time values stored as ISO-8601 formatted strings.                  |
-| URI         | URI       | URI            | Uniform Resource Identifier values following RFC 3986 specification.        |
-| UUID        | UID       | UUID           | Universally Unique Identifier values following RFC 4122 specification.      |
-| CLOB        | CLB       | String         | Character Large Object (CLOB) for streaming text data.                      |
-| BLOB        | BLB       | byte[]         | Binary Large Object (BLOB) for streaming binary data.                       |
+### Property Types
+
+| Type Name  | Type Code | Java Class    | Description                                                                 |
+|------------|-----------|---------------|-----------------------------------------------------------------------------|
+| Integer    | INT       | Long          | 64-bit signed integer values.                                               |
+| Float      | FLT       | Double        | 64-bit floating-point values (double precision).                            |
+| Boolean    | BLN       | Boolean       | Boolean values supporting true, false, or null states.                      |
+| String     | STR       | String        | String values with length limited to 8192 characters, processed atomically. |
+| Text       | TXT       | String        | Text values with unlimited length, processed atomically.                    |
+| BigInteger | BGI       | BigInteger    | Arbitrary precision integer values with unlimited size.                     |
+| BigDecimal | BGF       | BigDecimal    | Arbitrary precision floating-point values with unlimited size.              |
+| DateTime   | DAT       | ZonedDateTime | Date and time values, usually stored as ISO-8601 formatted strings.         |
+| URI        | URI       | URI           | Uniform Resource Identifier values following RFC 3986 specification.        |
+| UUID       | UID       | UUID          | Universally Unique Identifier values following RFC 4122 specification.      |
+| CLOB       | CLB       | String        | Character Large Object (CLOB) for streaming text data.                      |
+| BLOB       | BLB       | byte[]        | Binary Large Object (BLOB) for streaming binary data.                       |
 
 
 Serialization and Persistence
 -----------------------------
 * Serialization (S11N) and persistence of Cheap Catalogs has some constraints:
-  * HierarchyDefs may only be contained in a CatalogDef.
+  * HierarchyDefs may only be contained in a CatalogDef or a Hierarchy.
   * PropertyDefs may only be contained in an AspectDef.
   * Aspects may only be contained in an AspectMapHierarchy.
   * AspectDefs must be serialized before any Aspects.
-  * HierarchyDefs must be serialized before any Hierarchies.
+  * HierarchyDefs must be serialized before any Hierarchies; or, when in a Hierarchy, they must be the first element.
 * These constraints do not apply to smaller atoms of persistence, i.e., JSON representing a single Aspect only. 
 
 

@@ -70,7 +70,6 @@ class CatalogDeserializer extends JsonDeserializer<Catalog>
                         }
                     }
                 }
-                case "aspects" -> p.skipChildren();
                 default -> p.skipChildren();
             }
         }
@@ -81,10 +80,26 @@ class CatalogDeserializer extends JsonDeserializer<Catalog>
 
         // Create the catalog first
         Catalog catalog = factory.createCatalog(globalId, species, def, upstreamId, strict);
+        factory.setCatalog(catalog);
 
         // Now deserialize and add hierarchies using the registered HierarchyDefs
         for (Map.Entry<String, JsonNode> entry : hierarchyData.entrySet()) {
             String hierarchyName = entry.getKey();
+            JsonNode hierarchyJson = entry.getValue();
+
+            // For non-strict catalogs, check if hierarchy contains its own def
+            if (!strict && hierarchyJson.has("def")) {
+                JsonNode defNode = hierarchyJson.get("def");
+                JsonParser defParser = defNode.traverse(p.getCodec());
+                defParser.nextToken();
+                HierarchyDef embeddedDef = context.readValue(defParser, HierarchyDef.class);
+
+                // Register the embedded def with the factory if not already present
+                if (factory.getHierarchyDef(hierarchyName) == null) {
+                    factory.registerHierarchyDef(embeddedDef);
+                }
+            }
+
             HierarchyDef hierarchyDef = factory.getHierarchyDef(hierarchyName);
 
             if (hierarchyDef == null) {
@@ -105,8 +120,6 @@ class CatalogDeserializer extends JsonDeserializer<Catalog>
                 case ENTITY_SET -> context.readValue(hierarchyParser, EntitySetHierarchy.class);
                 case ENTITY_TREE -> context.readValue(hierarchyParser, EntityTreeHierarchy.class);
             };
-
-            catalog.addHierarchy(hierarchy);
         }
 
         return catalog;

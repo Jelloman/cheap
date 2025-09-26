@@ -14,7 +14,8 @@
       "Bash(mkdir:*)",
       "Bash(git mv:*)",
       "Bash(git add:*)",
-      "Bash(git checkout:*)"
+      "Bash(git checkout:*)",
+      "Read(//d/src/tmp/**)"
     ],
     "deny": [],
     "ask": []

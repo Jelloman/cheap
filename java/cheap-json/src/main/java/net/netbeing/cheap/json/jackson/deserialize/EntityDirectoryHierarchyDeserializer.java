@@ -39,6 +39,7 @@ class EntityDirectoryHierarchyDeserializer extends JsonDeserializer<EntityDirect
             p.nextToken();
 
             switch (fieldName) {
+                case "def" -> p.skipChildren(); // Skip embedded def (handled by CatalogDeserializer)
                 case "entities" -> {
                     if (p.currentToken() == JsonToken.START_OBJECT) {
                         while (p.nextToken() != JsonToken.END_OBJECT) {

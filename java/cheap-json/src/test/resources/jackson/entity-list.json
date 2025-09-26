@@ -7,7 +7,7 @@
     "aspectDefs" : { },
     "hierarchyDefs" : [ {
       "name" : "taskQueue",
-      "type" : "el",
+      "type" : "EL",
       "isModifiable" : true
     } ]
   },

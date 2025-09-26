@@ -1,5 +1,6 @@
 package net.netbeing.cheap.impl.basic;
 
+import net.netbeing.cheap.model.Catalog;
 import net.netbeing.cheap.model.Entity;
 import net.netbeing.cheap.model.EntityListHierarchy;
 import net.netbeing.cheap.model.HierarchyDef;
@@ -21,6 +22,9 @@ import java.util.ArrayList;
  */
 public class EntityListHierarchyImpl extends ArrayList<Entity> implements EntityListHierarchy
 {
+    /** The catalog containing this hierarchy. */
+    private final Catalog catalog;
+
     /** The hierarchy definition describing this entity list. */
     private final HierarchyDef def;
 
@@ -29,9 +33,11 @@ public class EntityListHierarchyImpl extends ArrayList<Entity> implements Entity
      *
      * @param def the hierarchy definition for this entity list
      */
-    public EntityListHierarchyImpl(HierarchyDef def)
+    public EntityListHierarchyImpl(@NotNull Catalog catalog, @NotNull HierarchyDef def)
     {
+        this.catalog = catalog;
         this.def = def;
+        catalog.addHierarchy(this);
     }
 
     /**
@@ -41,10 +47,23 @@ public class EntityListHierarchyImpl extends ArrayList<Entity> implements Entity
      * @param def the hierarchy definition for this entity list
      * @param initialCapacity initial capacity of list
      */
-    public EntityListHierarchyImpl(HierarchyDef def, int initialCapacity)
+    public EntityListHierarchyImpl(@NotNull Catalog catalog, @NotNull HierarchyDef def, int initialCapacity)
     {
         super(initialCapacity);
+        this.catalog = catalog;
         this.def = def;
+        catalog.addHierarchy(this);
+    }
+
+    /**
+     * Returns the Catalog that owns this hierarchy.
+     *
+     * @return the parent catalog
+     */
+    @Override
+    public @NotNull Catalog catalog()
+    {
+        return catalog;
     }
 
     /**

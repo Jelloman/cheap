@@ -34,6 +34,7 @@ class EntityTreeHierarchyDeserializer extends JsonDeserializer<EntityTreeHierarc
             p.nextToken();
 
             switch (fieldName) {
+                case "def" -> p.skipChildren(); // Skip embedded def (handled by CatalogDeserializer)
                 case "root" -> {
                     root = p.readValueAs(EntityTreeHierarchy.Node.class);
                 }

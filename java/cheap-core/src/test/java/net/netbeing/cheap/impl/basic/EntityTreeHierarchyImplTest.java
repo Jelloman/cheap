@@ -10,6 +10,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class EntityTreeHierarchyImplTest
 {
+    private Catalog catalog;
     private HierarchyDef hierarchyDef;
     private Entity rootEntity;
     private Entity childEntity1;
@@ -20,19 +21,20 @@ class EntityTreeHierarchyImplTest
     @BeforeEach
     void setUp()
     {
+        catalog = new CatalogImpl();
         hierarchyDef = new HierarchyDefImpl("testEntityTree", HierarchyType.ENTITY_TREE);
         rootEntity = new EntityImpl();
         childEntity1 = new EntityImpl();
         childEntity2 = new EntityImpl();
         leafEntity = new EntityImpl();
-        entityTree = new EntityTreeHierarchyImpl(hierarchyDef, rootEntity);
+        entityTree = new EntityTreeHierarchyImpl(catalog, hierarchyDef, rootEntity);
     }
 
     @Test
     void constructor_ValidParameters_CreatesTreeWithRoot()
     {
-        EntityTreeHierarchyImpl tree = new EntityTreeHierarchyImpl(hierarchyDef, rootEntity);
-        
+        EntityTreeHierarchyImpl tree = new EntityTreeHierarchyImpl(catalog, hierarchyDef, rootEntity);
+
         assertSame(hierarchyDef, tree.def());
         assertNotNull(tree.root());
         assertSame(rootEntity, tree.root().value());
@@ -41,21 +43,12 @@ class EntityTreeHierarchyImplTest
         assertTrue(tree.root().isEmpty());
     }
 
-    @Test
-    void constructor_NullHierarchyDef_AcceptsNull()
-    {
-        EntityTreeHierarchyImpl tree = new EntityTreeHierarchyImpl(null, rootEntity);
-        
-        assertNull(tree.def());
-        assertNotNull(tree.root());
-        assertSame(rootEntity, tree.root().value());
-    }
 
     @Test
     void constructor_NullRootEntity_AcceptsNull()
     {
-        EntityTreeHierarchyImpl tree = new EntityTreeHierarchyImpl(hierarchyDef);
-        
+        EntityTreeHierarchyImpl tree = new EntityTreeHierarchyImpl(catalog, hierarchyDef);
+
         assertSame(hierarchyDef, tree.def());
         assertNotNull(tree.root());
         assertNull(tree.root().value());

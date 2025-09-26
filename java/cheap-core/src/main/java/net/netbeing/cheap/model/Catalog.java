@@ -182,8 +182,6 @@ public interface Catalog extends Entity
         if (officialAspectDef != null && !officialAspectDef.fullyEquals(aspectDef)) {
             throw new IllegalArgumentException("A catalog may not be extended with a new AspectDef that is not identical to an existing AspectDef with the same name.");
         }
-        AspectMapHierarchy aspectMap = new AspectMapHierarchyImpl(aspectDef);
-        addHierarchy(aspectMap);
-        return aspectMap;
+        return new AspectMapHierarchyImpl(this, aspectDef);
     }
 }

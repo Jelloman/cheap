@@ -7,7 +7,7 @@
     "aspectDefs" : { },
     "hierarchyDefs" : [ {
       "name" : "activeUsers",
-      "type" : "es",
+      "type" : "ES",
       "isModifiable" : true
     } ]
   },

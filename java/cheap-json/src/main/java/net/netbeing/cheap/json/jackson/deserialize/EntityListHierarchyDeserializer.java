@@ -38,6 +38,7 @@ class EntityListHierarchyDeserializer extends JsonDeserializer<EntityListHierarc
             p.nextToken();
 
             switch (fieldName) {
+                case "def" -> p.skipChildren(); // Skip embedded def (handled by CatalogDeserializer)
                 case "entities" -> {
                     if (p.currentToken() == JsonToken.START_ARRAY) {
                         while (p.nextToken() != JsonToken.END_ARRAY) {

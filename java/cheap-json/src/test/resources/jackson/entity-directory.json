@@ -7,7 +7,7 @@
     "aspectDefs" : { },
     "hierarchyDefs" : [ {
       "name" : "userDirectory",
-      "type" : "ed",
+      "type" : "ED",
       "isModifiable" : true
     } ]
   },

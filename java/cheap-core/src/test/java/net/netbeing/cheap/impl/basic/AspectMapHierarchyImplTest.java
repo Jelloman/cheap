@@ -23,9 +23,10 @@ class AspectMapHierarchyImplTest
     void setUp()
     {
         catalog = new CatalogImpl();
-        hierarchyDef = new HierarchyDefImpl("testHierarchy", HierarchyType.ASPECT_MAP);
-        aspectDef = new MutableAspectDefImpl("testAspect");
-        hierarchy = new AspectMapHierarchyImpl(hierarchyDef, aspectDef);
+        String uniqueName = "test" + System.nanoTime();
+        hierarchyDef = new HierarchyDefImpl(uniqueName, HierarchyType.ASPECT_MAP);
+        aspectDef = new MutableAspectDefImpl(uniqueName);
+        hierarchy = new AspectMapHierarchyImpl(catalog, hierarchyDef, aspectDef);
         
         entity1 = new EntityImpl();
         entity2 = new EntityImpl();
@@ -36,8 +37,6 @@ class AspectMapHierarchyImplTest
     @Test
     void constructor_ValidParameters_CreatesHierarchy()
     {
-        AspectMapHierarchyImpl hierarchy = new AspectMapHierarchyImpl(hierarchyDef, aspectDef);
-        
         assertSame(hierarchyDef, hierarchy.def());
         assertSame(aspectDef, hierarchy.aspectDef());
         assertTrue(hierarchy.isEmpty());

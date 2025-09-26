@@ -19,7 +19,7 @@
     },
     "hierarchyDefs" : [ {
       "name" : "person",
-      "type" : "am",
+      "type" : "AM",
       "isModifiable" : true
     } ]
   },

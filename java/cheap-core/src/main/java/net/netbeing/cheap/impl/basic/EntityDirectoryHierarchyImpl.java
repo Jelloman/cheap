@@ -1,5 +1,6 @@
 package net.netbeing.cheap.impl.basic;
 
+import net.netbeing.cheap.model.Catalog;
 import net.netbeing.cheap.model.Entity;
 import net.netbeing.cheap.model.EntityDirectoryHierarchy;
 import net.netbeing.cheap.model.HierarchyDef;
@@ -21,6 +22,9 @@ import java.util.LinkedHashMap;
  */
 public class EntityDirectoryHierarchyImpl extends LinkedHashMap<String, Entity> implements EntityDirectoryHierarchy
 {
+    /** The catalog containing this hierarchy. */
+    private final Catalog catalog;
+
     /** The hierarchy definition describing this entity directory. */
     private final HierarchyDef def;
 
@@ -29,9 +33,22 @@ public class EntityDirectoryHierarchyImpl extends LinkedHashMap<String, Entity> 
      * 
      * @param def the hierarchy definition for this entity directory
      */
-    public EntityDirectoryHierarchyImpl(HierarchyDef def)
+    public EntityDirectoryHierarchyImpl(@NotNull Catalog catalog, @NotNull HierarchyDef def)
     {
+        this.catalog = catalog;
         this.def = def;
+        catalog.addHierarchy(this);
+    }
+
+    /**
+     * Returns the Catalog that owns this hierarchy.
+     *
+     * @return the parent catalog
+     */
+    @Override
+    public @NotNull Catalog catalog()
+    {
+        return catalog;
     }
 
     /**

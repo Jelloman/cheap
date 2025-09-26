@@ -1,5 +1,6 @@
 package net.netbeing.cheap.json.jackson;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import net.netbeing.cheap.impl.basic.*;
 import net.netbeing.cheap.json.jackson.serialize.CheapJacksonSerializer;
@@ -12,16 +13,18 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
-import java.util.*;
+import java.util.Collection;
+import java.util.Map;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Unit tests for CheapJacksonSerializer using actual implementation classes.
  * Tests the Jackson-based serializer against the raw serializer to ensure
  * equivalent functionality.
  */
+@SuppressWarnings("MismatchedQueryAndUpdateOfCollection")
 public class CheapJacksonSerializerTest
 {
     private static final UUID CATALOG_ID = UUID.fromString("550e8400-e29b-41d4-a716-444444444444");
@@ -107,10 +110,9 @@ public class CheapJacksonSerializerTest
         Entity entity2 = new EntityImpl(entityId2);
 
         HierarchyDef entityDirDef = new HierarchyDefImpl("userDirectory", HierarchyType.ENTITY_DIR, true);
-        EntityDirectoryHierarchyImpl entityDirectory = new EntityDirectoryHierarchyImpl(entityDirDef);
+        EntityDirectoryHierarchyImpl entityDirectory = new EntityDirectoryHierarchyImpl(catalog, entityDirDef);
         entityDirectory.put("admin", entity1);
         entityDirectory.put("user1", entity2);
-        catalog.addHierarchy(entityDirectory);
 
         return catalog;
     }
@@ -149,10 +151,9 @@ public class CheapJacksonSerializerTest
         Entity entity2 = new EntityImpl(entityId2);
 
         HierarchyDef entityListDef = new HierarchyDefImpl("taskQueue", HierarchyType.ENTITY_LIST, true);
-        EntityListHierarchyImpl entityList = new EntityListHierarchyImpl(entityListDef);
+        EntityListHierarchyImpl entityList = new EntityListHierarchyImpl(catalog, entityListDef);
         entityList.add(entity1);
         entityList.add(entity2);
-        catalog.addHierarchy(entityList);
 
         return catalog;
     }
@@ -191,10 +192,9 @@ public class CheapJacksonSerializerTest
         Entity entity2 = new EntityImpl(entityId2);
 
         HierarchyDef entitySetDef = new HierarchyDefImpl("activeUsers", HierarchyType.ENTITY_SET, true);
-        EntitySetHierarchyImpl entitySet = new EntitySetHierarchyImpl(entitySetDef);
+        EntitySetHierarchyImpl entitySet = new EntitySetHierarchyImpl(catalog, entitySetDef);
         entitySet.add(entity1);
         entitySet.add(entity2);
-        catalog.addHierarchy(entitySet);
 
         return catalog;
     }
@@ -233,10 +233,9 @@ public class CheapJacksonSerializerTest
         Entity childEntity = new EntityImpl(entityId2);
 
         HierarchyDef entityTreeDef = new HierarchyDefImpl("fileSystem", HierarchyType.ENTITY_TREE, true);
-        EntityTreeHierarchyImpl entityTree = new EntityTreeHierarchyImpl(entityTreeDef, parentEntity);
+        EntityTreeHierarchyImpl entityTree = new EntityTreeHierarchyImpl(catalog, entityTreeDef, parentEntity);
         EntityTreeHierarchyImpl.NodeImpl childNode = new EntityTreeHierarchyImpl.NodeImpl(childEntity, entityTree.root());
         entityTree.root().put("documents", childNode);
-        catalog.addHierarchy(entityTree);
 
         return catalog;
     }
@@ -310,8 +309,33 @@ public class CheapJacksonSerializerTest
     
     private CatalogImpl setupFullCatalogWithAllHierarchyTypes()
     {
-        // Create a catalog with all hierarchy types and real data
-        CatalogImpl catalog = new CatalogImpl(CATALOG_ID);
+        // Create a custom CatalogDef that doesn't include all hierarchies
+        // This simulates a case where one hierarchy will have its def embedded in JSON
+        PropertyDef nameProp = new PropertyDefImpl("name", PropertyType.String, null, false, true, true, false, false, false);
+        PropertyDef ageProp = new PropertyDefImpl("age", PropertyType.Integer, null, false, true, true, true, false, false);
+        Map<String, PropertyDef> personProps = ImmutableMap.of("age", ageProp, "name", nameProp);
+        AspectDef personAspectDef = new ImmutableAspectDefImpl("person", personProps);
+
+        PropertyDef titleProp = new PropertyDefImpl("title", PropertyType.String, null, false, true, true, false, false, false);
+        PropertyDef descProp = new PropertyDefImpl("description", PropertyType.String, null, false, true, true, true, false, false);
+        Map<String, PropertyDef> docProps = ImmutableMap.of("title", titleProp, "description", descProp);
+        AspectDef docAspectDef = new ImmutableAspectDefImpl("document", docProps);
+
+        // Create HierarchyDefs for most (but not all) hierarchies that will be added
+        HierarchyDef entityDirDef = new HierarchyDefImpl("userDirectory", HierarchyType.ENTITY_DIR, true);
+        HierarchyDef entityListDef = new HierarchyDefImpl("taskQueue", HierarchyType.ENTITY_LIST, true);
+        HierarchyDef entitySetDef = new HierarchyDefImpl("activeUsers", HierarchyType.ENTITY_SET, true);
+        // Intentionally omitting entityTreeDef from CatalogDef to test embedded def scenario
+        HierarchyDef personAspectsDef = new HierarchyDefImpl("person", HierarchyType.ASPECT_MAP, true);
+        HierarchyDef docAspectsDef = new HierarchyDefImpl("document", HierarchyType.ASPECT_MAP, true);
+
+        Collection<AspectDef> aspectDefs = ImmutableList.of(personAspectDef, docAspectDef);
+        Collection<HierarchyDef> hierarchyDefs = ImmutableList.of(entityDirDef, entityListDef, entitySetDef, personAspectsDef, docAspectsDef);
+
+        CatalogDef catalogDef = new CatalogDefImpl(hierarchyDefs, aspectDefs);
+
+        // Create a non-strict catalog with explicit CatalogDef (strict=false allows additional hierarchies)
+        CatalogImpl catalog = new CatalogImpl(CATALOG_ID, CatalogSpecies.SINK, catalogDef, null, false);
 
         // Create some entities to use across hierarchies
         UUID entityId1 = UUID.fromString("10000000-0000-0000-0000-000000000001");
@@ -324,49 +348,35 @@ public class CheapJacksonSerializerTest
         Entity entity3 = new EntityImpl(entityId3);
         Entity entity4 = new EntityImpl(entityId4);
 
-        // Create AspectDefs for AspectMapHierarchies
-        PropertyDef nameProp = new PropertyDefImpl("name", PropertyType.String, null, false, true, true, false, false, false);
-        PropertyDef ageProp = new PropertyDefImpl("age", PropertyType.Integer, null, false, true, true, true, false, false);
-        Map<String, PropertyDef> personProps = ImmutableMap.of("age", ageProp, "name", nameProp);
-        AspectDef personAspectDef = new ImmutableAspectDefImpl("person", personProps);
+        // Create AspectMapHierarchies directly (using the ones from CatalogDef)
+        AspectMapHierarchyImpl personAspects = new AspectMapHierarchyImpl(catalog, personAspectsDef, personAspectDef);
+        AspectMapHierarchyImpl docAspects = new AspectMapHierarchyImpl(catalog, docAspectsDef, docAspectDef);
 
-        PropertyDef titleProp = new PropertyDefImpl("title", PropertyType.String, null, false, true, true, false, false, false);
-        PropertyDef descProp = new PropertyDefImpl("description", PropertyType.String, null, false, true, true, true, false, false);
-        Map<String, PropertyDef> docProps = ImmutableMap.of("title", titleProp, "description", descProp);
-        AspectDef docAspectDef = new ImmutableAspectDefImpl("document", docProps);
-
-        // Add AspectDefs to catalog
-        AspectMapHierarchy personAspects = catalog.extend(personAspectDef);
-        AspectMapHierarchy docAspects = catalog.extend(docAspectDef);
-
-        // 1. EntityDirectoryHierarchy
-        HierarchyDef entityDirDef = new HierarchyDefImpl("userDirectory", HierarchyType.ENTITY_DIR, true);
-        EntityDirectoryHierarchyImpl entityDirectory = new EntityDirectoryHierarchyImpl(entityDirDef);
+        // 1. EntityDirectoryHierarchy (using def from CatalogDef)
+        EntityDirectoryHierarchyImpl entityDirectory = new EntityDirectoryHierarchyImpl(catalog, entityDirDef);
         entityDirectory.put("admin", entity1);
         entityDirectory.put("user1", entity2);
         entityDirectory.put("guest", entity3);
         catalog.addHierarchy(entityDirectory);
 
-        // 2. EntityListHierarchy
-        HierarchyDef entityListDef = new HierarchyDefImpl("taskQueue", HierarchyType.ENTITY_LIST, true);
-        EntityListHierarchyImpl entityList = new EntityListHierarchyImpl(entityListDef);
+        // 2. EntityListHierarchy (using def from CatalogDef)
+        EntityListHierarchyImpl entityList = new EntityListHierarchyImpl(catalog, entityListDef);
         entityList.add(entity1);
         entityList.add(entity2);
         entityList.add(entity3);
         entityList.add(entity1); // Allow duplicates in list
         catalog.addHierarchy(entityList);
 
-        // 3. EntitySetHierarchy
-        HierarchyDef entitySetDef = new HierarchyDefImpl("activeUsers", HierarchyType.ENTITY_SET, true);
-        EntitySetHierarchyImpl entitySet = new EntitySetHierarchyImpl(entitySetDef);
+        // 3. EntitySetHierarchy (using def from CatalogDef)
+        EntitySetHierarchyImpl entitySet = new EntitySetHierarchyImpl(catalog, entitySetDef);
         entitySet.add(entity1);
         entitySet.add(entity2);
         entitySet.add(entity4);
         catalog.addHierarchy(entitySet);
 
-        // 4. EntityTreeHierarchy
+        // 4. EntityTreeHierarchy (NOT in CatalogDef - will have embedded def in JSON)
         HierarchyDef entityTreeDef = new HierarchyDefImpl("fileSystem", HierarchyType.ENTITY_TREE, true);
-        EntityTreeHierarchyImpl entityTree = new EntityTreeHierarchyImpl(entityTreeDef, entity1); // root entity
+        EntityTreeHierarchyImpl entityTree = new EntityTreeHierarchyImpl(catalog, entityTreeDef, entity1); // root entity
         EntityTreeHierarchyImpl.NodeImpl childNode1 = new EntityTreeHierarchyImpl.NodeImpl(entity2, entityTree.root());
         EntityTreeHierarchyImpl.NodeImpl childNode2 = new EntityTreeHierarchyImpl.NodeImpl(entity3, entityTree.root());
         entityTree.root().put("documents", childNode1);

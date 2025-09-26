@@ -195,13 +195,12 @@ public class CheapJacksonDeserializerTest
         for (HierarchyDef hd : catalog.def().hierarchyDefs()) {
             hierarchyDefCount++;
         }
-        assertEquals(6, hierarchyDefCount);
+        assertEquals(5, hierarchyDefCount);
         assertNotNull(catalog.def().hierarchyDef("person"));
         assertNotNull(catalog.def().hierarchyDef("document"));
         assertNotNull(catalog.def().hierarchyDef("userDirectory"));
         assertNotNull(catalog.def().hierarchyDef("taskQueue"));
         assertNotNull(catalog.def().hierarchyDef("activeUsers"));
-        assertNotNull(catalog.def().hierarchyDef("fileSystem"));
 
         // Verify all hierarchies are present
         int hierarchyCount = 0;

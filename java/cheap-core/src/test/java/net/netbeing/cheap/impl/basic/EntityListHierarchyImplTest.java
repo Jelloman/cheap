@@ -13,6 +13,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class EntityListHierarchyImplTest
 {
+    private Catalog catalog;
     private HierarchyDef hierarchyDef;
     private EntityListHierarchyImpl entityList;
     private Entity entity1;
@@ -22,8 +23,9 @@ class EntityListHierarchyImplTest
     @BeforeEach
     void setUp()
     {
+        catalog = new CatalogImpl();
         hierarchyDef = new HierarchyDefImpl("testEntityList", HierarchyType.ENTITY_LIST);
-        entityList = new EntityListHierarchyImpl(hierarchyDef);
+        entityList = new EntityListHierarchyImpl(catalog, hierarchyDef);
         
         entity1 = new EntityImpl();
         entity2 = new EntityImpl();
@@ -33,21 +35,13 @@ class EntityListHierarchyImplTest
     @Test
     void constructor_ValidHierarchyDef_CreatesEmptyList()
     {
-        EntityListHierarchyImpl list = new EntityListHierarchyImpl(hierarchyDef);
+        EntityListHierarchyImpl list = new EntityListHierarchyImpl(catalog, hierarchyDef);
         
         assertSame(hierarchyDef, list.def());
         assertTrue(list.isEmpty());
         assertEquals(0, list.size());
     }
 
-    @Test
-    void constructor_NullHierarchyDef_AcceptsNull()
-    {
-        EntityListHierarchyImpl list = new EntityListHierarchyImpl(null);
-        
-        assertNull(list.def());
-        assertTrue(list.isEmpty());
-    }
 
     @Test
     void def_Always_ReturnsHierarchyDef()

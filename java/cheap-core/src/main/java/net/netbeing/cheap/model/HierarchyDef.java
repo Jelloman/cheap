@@ -37,4 +37,19 @@ public interface HierarchyDef
     {
         return true;
     }
+
+    /**
+     * Tests whether this is equal to another HierarchyDef. This alternate form
+     * allows equality between different HierarchyDef implementations without overriding
+     * Object.equals() in every implementation.
+     *
+     * @param other HierarchyDef to compare to
+     * @return true if this is equivalent to the other HierarchyDef
+     */
+    default boolean fullyEquals(HierarchyDef other)
+    {
+        return other.isModifiable() == isModifiable() &&
+            other.name().equals(name()) &&
+            other.type().equals(type());
+    }
 }

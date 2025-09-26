@@ -2,6 +2,7 @@ package net.netbeing.cheap.json.jackson.serialize;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonSerializer;
+import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import net.netbeing.cheap.model.*;
 

@@ -40,8 +40,8 @@ class HierarchyDeserializer extends JsonDeserializer<Hierarchy>
                         String defField = p.currentName();
                         p.nextToken();
                         if ("type".equals(defField)) {
-                            String typeValue = p.getValueAsString();
-                            type = fromTypeValue(typeValue);
+                            String typeCode = p.getValueAsString().toUpperCase();
+                            type = fromTypeCode(typeCode);
                             break;
                         }
                     }
@@ -79,15 +79,4 @@ class HierarchyDeserializer extends JsonDeserializer<Hierarchy>
         };
     }
 
-    private HierarchyType fromTypeValue(String typeValue) throws JsonMappingException
-    {
-        return switch (typeValue) {
-            case "entity_list" -> HierarchyType.ENTITY_LIST;
-            case "entity_set" -> HierarchyType.ENTITY_SET;
-            case "entity_dir" -> HierarchyType.ENTITY_DIR;
-            case "entity_tree" -> HierarchyType.ENTITY_TREE;
-            case "aspect_map" -> HierarchyType.ASPECT_MAP;
-            default -> throw new JsonMappingException(null, "Unknown hierarchy type value: " + typeValue);
-        };
-    }
 }

@@ -28,12 +28,12 @@
     },
     "canAddProperties": {
       "type": "boolean",
-      "default": true,
+      "default": false,
       "description": "Whether new properties can be dynamically added to aspects of this type"
     },
     "canRemoveProperties": {
       "type": "boolean",
-      "default": true,
+      "default": false,
       "description": "Whether properties can be dynamically removed from aspects of this type"
     }
   },

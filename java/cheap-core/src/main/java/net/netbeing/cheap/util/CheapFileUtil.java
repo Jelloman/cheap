@@ -218,8 +218,7 @@ public class CheapFileUtil
 
                 // Create the hierarchy and root entity the first time through
                 if (walkState.hierarchy == null) {
-                    walkState.hierarchy = new EntityTreeHierarchyImpl(hierarchyDef, nodeEntity);
-                    catalog.addHierarchy(walkState.hierarchy);
+                    walkState.hierarchy = new EntityTreeHierarchyImpl(catalog, hierarchyDef, nodeEntity);
                     walkState.root = walkState.hierarchy.root();
                     walkState.currentNode = walkState.root;
                     walkState.currentFile = newFile;

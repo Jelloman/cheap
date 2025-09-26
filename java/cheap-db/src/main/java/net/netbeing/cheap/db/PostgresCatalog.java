@@ -218,7 +218,7 @@ public class PostgresCatalog extends CatalogImpl
         
         AspectDef aspectDef = getTableDef(tableName);
         HierarchyDef hierarchyDef = new HierarchyDefImpl("postgres:table:" + tableName, HierarchyType.ASPECT_MAP);
-        AspectMapHierarchyImpl hierarchy = new AspectMapHierarchyImpl(hierarchyDef, aspectDef);
+        AspectMapHierarchyImpl hierarchy = new AspectMapHierarchyImpl(this, hierarchyDef, aspectDef);
 
         String query = "SELECT * FROM " + tableName;
         if (maxRows >= 0) {
@@ -254,8 +254,6 @@ public class PostgresCatalog extends CatalogImpl
         } catch (SQLException e) {
             throw new RuntimeException("Failed to load table data for table: " + tableName, e);
         }
-
-        this.addHierarchy(hierarchy);
 
         return hierarchy;
     }

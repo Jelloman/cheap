@@ -7,7 +7,7 @@
     "aspectDefs" : { },
     "hierarchyDefs" : [ {
       "name" : "fileSystem",
-      "type" : "et",
+      "type" : "ET",
       "isModifiable" : true
     } ]
   },

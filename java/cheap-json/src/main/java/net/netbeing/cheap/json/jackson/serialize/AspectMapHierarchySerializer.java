@@ -15,8 +15,14 @@ class AspectMapHierarchySerializer extends JsonSerializer<AspectMapHierarchy>
     {
         gen.writeStartObject();
 
+        // Only write the def as part of the hierarchy if it's not in the CatalogDef
+        if (hierarchy.catalog().def().hierarchyDef(hierarchy.def().name()) == null) {
+            gen.writeFieldName("def");
+            gen.writeObject(hierarchy.def());
+        }
+
         gen.writeStringField("aspectDefName", hierarchy.aspectDef().name());
-        
+
         gen.writeFieldName("aspects");
         gen.writeStartObject();
         for (Map.Entry<Entity, Aspect> entry : hierarchy.entrySet()) {
@@ -24,7 +30,7 @@ class AspectMapHierarchySerializer extends JsonSerializer<AspectMapHierarchy>
             gen.writeObject(entry.getValue());
         }
         gen.writeEndObject();
-        
+
         gen.writeEndObject();
     }
 }

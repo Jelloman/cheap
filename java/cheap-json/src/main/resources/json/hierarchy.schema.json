@@ -11,7 +11,7 @@
     }
   },
   "required": ["def"],
-  "$comment": "This is really 'oneOf', but the type field is a different const in each, so it effectively is.",
+  "$comment": "This is really 'oneOf', but the type field is a different const in each, so it effectively is oneOf.",
   "anyOf": [
     {
       "$ref": "#/$defs/aspectDefDirHierarchy"

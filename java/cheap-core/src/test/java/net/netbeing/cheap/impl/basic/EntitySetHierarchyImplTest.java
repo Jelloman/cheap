@@ -12,6 +12,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class EntitySetHierarchyImplTest
 {
+    private Catalog catalog;
     private HierarchyDef hierarchyDef;
     private EntitySetHierarchyImpl entitySet;
     private Entity entity1;
@@ -21,8 +22,9 @@ class EntitySetHierarchyImplTest
     @BeforeEach
     void setUp()
     {
+        catalog = new CatalogImpl();
         hierarchyDef = new HierarchyDefImpl("testEntitySet", HierarchyType.ENTITY_SET);
-        entitySet = new EntitySetHierarchyImpl(hierarchyDef);
+        entitySet = new EntitySetHierarchyImpl(catalog, hierarchyDef);
         
         entity1 = new EntityImpl();
         entity2 = new EntityImpl();
@@ -32,21 +34,13 @@ class EntitySetHierarchyImplTest
     @Test
     void constructor_ValidHierarchyDef_CreatesEmptySet()
     {
-        EntitySetHierarchyImpl set = new EntitySetHierarchyImpl(hierarchyDef);
-        
+        EntitySetHierarchyImpl set = new EntitySetHierarchyImpl(catalog, hierarchyDef);
+
         assertSame(hierarchyDef, set.def());
         assertTrue(set.isEmpty());
         assertEquals(0, set.size());
     }
 
-    @Test
-    void constructor_NullHierarchyDef_AcceptsNull()
-    {
-        EntitySetHierarchyImpl set = new EntitySetHierarchyImpl(null);
-        
-        assertNull(set.def());
-        assertTrue(set.isEmpty());
-    }
 
     @Test
     void def_Always_ReturnsHierarchyDef()
@@ -315,8 +309,8 @@ class EntitySetHierarchyImplTest
     @Test
     void hashCode_SameEntities_ProducesSameHashCode()
     {
-        EntitySetHierarchyImpl set1 = new EntitySetHierarchyImpl(hierarchyDef);
-        EntitySetHierarchyImpl set2 = new EntitySetHierarchyImpl(hierarchyDef);
+        EntitySetHierarchyImpl set1 = new EntitySetHierarchyImpl(catalog, hierarchyDef);
+        EntitySetHierarchyImpl set2 = new EntitySetHierarchyImpl(catalog, hierarchyDef);
         
         set1.add(entity1);
         set1.add(entity2);
@@ -330,8 +324,8 @@ class EntitySetHierarchyImplTest
     @Test
     void equals_SameEntities_ReturnsTrue()
     {
-        EntitySetHierarchyImpl set1 = new EntitySetHierarchyImpl(hierarchyDef);
-        EntitySetHierarchyImpl set2 = new EntitySetHierarchyImpl(hierarchyDef);
+        EntitySetHierarchyImpl set1 = new EntitySetHierarchyImpl(catalog, hierarchyDef);
+        EntitySetHierarchyImpl set2 = new EntitySetHierarchyImpl(catalog, hierarchyDef);
         
         set1.add(entity1);
         set1.add(entity2);

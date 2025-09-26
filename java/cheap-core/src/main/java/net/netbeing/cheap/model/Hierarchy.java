@@ -20,7 +20,7 @@ public interface Hierarchy
     /**
      * Returns the definition that describes this hierarchy's characteristics,
      * including its type, name, and organizational parameters.
-     * 
+     *
      * <p>The hierarchy definition provides metadata about how this hierarchy
      * organizes entities and what operations are supported.</p>
      *
@@ -28,5 +28,10 @@ public interface Hierarchy
      */
     @NotNull HierarchyDef def();
 
-
+    /**
+     * Returns the Catalog that contains this Hierarchy.
+     *
+     * @return the catalog that owns this hierarchy, never null
+     */
+    @NotNull Catalog catalog();
 }

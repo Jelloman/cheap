@@ -29,28 +29,24 @@
       }
     },
     "hierarchyDefs" : [ {
-      "name" : "person",
-      "type" : "am",
-      "isModifiable" : true
-    }, {
-      "name" : "document",
-      "type" : "am",
-      "isModifiable" : true
-    }, {
       "name" : "userDirectory",
-      "type" : "ed",
+      "type" : "ED",
       "isModifiable" : true
     }, {
       "name" : "taskQueue",
-      "type" : "el",
+      "type" : "EL",
       "isModifiable" : true
     }, {
       "name" : "activeUsers",
-      "type" : "es",
+      "type" : "ES",
       "isModifiable" : true
     }, {
-      "name" : "fileSystem",
-      "type" : "et",
+      "name" : "person",
+      "type" : "AM",
+      "isModifiable" : true
+    }, {
+      "name" : "document",
+      "type" : "AM",
       "isModifiable" : true
     } ]
   },
@@ -96,6 +92,11 @@
       "entities" : [ "10000000-0000-0000-0000-000000000001", "10000000-0000-0000-0000-000000000002", "10000000-0000-0000-0000-000000000004" ]
     },
     "fileSystem" : {
+      "def" : {
+        "name" : "fileSystem",
+        "type" : "ET",
+        "isModifiable" : true
+      },
       "root" : {
         "entityId" : "10000000-0000-0000-0000-000000000001",
         "children" : {

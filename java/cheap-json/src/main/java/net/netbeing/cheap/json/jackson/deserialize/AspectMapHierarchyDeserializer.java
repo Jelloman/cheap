@@ -37,6 +37,7 @@ class AspectMapHierarchyDeserializer extends JsonDeserializer<AspectMapHierarchy
             p.nextToken();
 
             switch (fieldName) {
+                case "def" -> p.skipChildren(); // Skip embedded def (handled by CatalogDeserializer)
                 case "aspectDefName" -> {
                     aspectDef = factory.getAspectDef(p.getValueAsString());
                     if (aspectDef == null) {

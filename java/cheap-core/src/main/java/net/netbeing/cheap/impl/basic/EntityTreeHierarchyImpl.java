@@ -1,5 +1,6 @@
 package net.netbeing.cheap.impl.basic;
 
+import net.netbeing.cheap.model.Catalog;
 import net.netbeing.cheap.model.Entity;
 import net.netbeing.cheap.model.EntityTreeHierarchy;
 import net.netbeing.cheap.model.HierarchyDef;
@@ -168,6 +169,9 @@ public class EntityTreeHierarchyImpl implements EntityTreeHierarchy
         }
     }
 
+    /** The catalog containing this hierarchy. */
+    private final Catalog catalog;
+
     /** The hierarchy definition describing this entity tree. */
     private final HierarchyDef def;
     
@@ -179,9 +183,9 @@ public class EntityTreeHierarchyImpl implements EntityTreeHierarchy
      *
      * @param def the hierarchy definition for this entity tree
      */
-    public EntityTreeHierarchyImpl(HierarchyDef def)
+    public EntityTreeHierarchyImpl(@NotNull Catalog catalog, @NotNull HierarchyDef def)
     {
-        this(def, new NodeImpl(null));
+        this(catalog, def, new NodeImpl(null));
     }
 
     /**
@@ -190,9 +194,9 @@ public class EntityTreeHierarchyImpl implements EntityTreeHierarchy
      * @param def the hierarchy definition for this entity tree
      * @param rootEntity the entity to use as the root of the tree
      */
-    public EntityTreeHierarchyImpl(HierarchyDef def, Entity rootEntity)
+    public EntityTreeHierarchyImpl(@NotNull Catalog catalog, @NotNull HierarchyDef def, Entity rootEntity)
     {
-        this(def, new NodeImpl(rootEntity));
+        this(catalog, def, new NodeImpl(rootEntity));
     }
 
     /**
@@ -201,10 +205,23 @@ public class EntityTreeHierarchyImpl implements EntityTreeHierarchy
      * @param def the hierarchy definition for this entity tree
      * @param rootNode the node to use as the root of the tree
      */
-    public EntityTreeHierarchyImpl(HierarchyDef def, Node rootNode)
+    public EntityTreeHierarchyImpl(@NotNull Catalog catalog, @NotNull HierarchyDef def, Node rootNode)
     {
+        this.catalog = catalog;
         this.def = def;
         this.root = rootNode;
+        catalog.addHierarchy(this);
+    }
+
+    /**
+     * Returns the Catalog that owns this hierarchy.
+     *
+     * @return the parent catalog
+     */
+    @Override
+    public @NotNull Catalog catalog()
+    {
+        return catalog;
     }
 
     /**

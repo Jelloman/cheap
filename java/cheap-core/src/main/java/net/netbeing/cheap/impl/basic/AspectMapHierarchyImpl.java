@@ -17,9 +17,12 @@ import java.util.HashMap;
  */
 public class AspectMapHierarchyImpl extends HashMap<Entity, Aspect> implements AspectMapHierarchy
 {
+    /** The catalog containing this hierarchy. */
+    private final Catalog catalog;
+
     /** The hierarchy definition describing this hierarchy's structure. */
     private final HierarchyDef def;
-    
+
     /** The aspect definition for the aspects stored in this hierarchy. */
     private final AspectDef aspectDef;
 
@@ -29,10 +32,12 @@ public class AspectMapHierarchyImpl extends HashMap<Entity, Aspect> implements A
      *
      * @param aspectDef the aspect definition for aspects in this hierarchy
      */
-    public AspectMapHierarchyImpl(AspectDef aspectDef)
+    public AspectMapHierarchyImpl(@NotNull Catalog catalog, @NotNull AspectDef aspectDef)
     {
+        this.catalog = catalog;
         this.aspectDef = aspectDef;
         this.def = new HierarchyDefImpl(aspectDef.name(), HierarchyType.ASPECT_MAP);
+        catalog.addHierarchy(this);
     }
 
     /**
@@ -41,10 +46,12 @@ public class AspectMapHierarchyImpl extends HashMap<Entity, Aspect> implements A
      * @param def the hierarchy definition for this hierarchy
      * @param aspectDef the aspect definition for aspects in this hierarchy
      */
-    public AspectMapHierarchyImpl(HierarchyDef def, AspectDef aspectDef)
+    public AspectMapHierarchyImpl(@NotNull Catalog catalog, @NotNull HierarchyDef def, @NotNull AspectDef aspectDef)
     {
+        this.catalog = catalog;
         this.def = def;
         this.aspectDef = aspectDef;
+        catalog.addHierarchy(this);
     }
 
     /**
@@ -59,8 +66,19 @@ public class AspectMapHierarchyImpl extends HashMap<Entity, Aspect> implements A
     }
 
     /**
+     * Returns the Catalog that owns this hierarchy.
+     *
+     * @return the parent catalog
+     */
+    @Override
+    public @NotNull Catalog catalog()
+    {
+        return catalog;
+    }
+
+    /**
      * Returns the hierarchy definition for this hierarchy.
-     * 
+     *
      * @return the hierarchy definition
      */
     @Override

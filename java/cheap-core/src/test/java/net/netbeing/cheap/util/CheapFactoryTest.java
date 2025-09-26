@@ -172,26 +172,27 @@ class CheapFactoryTest
     @Test
     void testCreateEntityHierarchies()
     {
+        Catalog catalog = factory.createCatalog();
         HierarchyDef def = factory.createHierarchyDef("testEntityHierarchy", HierarchyType.ENTITY_SET);
-        
+
         // Test entity directory hierarchy
-        EntityDirectoryHierarchy entityDir = factory.createEntityDirectoryHierarchy(def);
+        EntityDirectoryHierarchy entityDir = factory.createEntityDirectoryHierarchy(catalog, def);
         assertNotNull(entityDir);
         assertEquals(def, entityDir.def());
-        
+
         // Test entity list hierarchy
-        EntityListHierarchy entityList = factory.createEntityListHierarchy(def);
+        EntityListHierarchy entityList = factory.createEntityListHierarchy(catalog, def);
         assertNotNull(entityList);
         assertEquals(def, entityList.def());
-        
+
         // Test entity set hierarchy
-        EntitySetHierarchy entitySet = factory.createEntitySetHierarchy(def);
+        EntitySetHierarchy entitySet = factory.createEntitySetHierarchy(catalog, def);
         assertNotNull(entitySet);
         assertEquals(def, entitySet.def());
-        
+
         // Test entity tree hierarchy
         Entity rootEntity = factory.createEntity();
-        EntityTreeHierarchy entityTree = factory.createEntityTreeHierarchy(def, rootEntity);
+        EntityTreeHierarchy entityTree = factory.createEntityTreeHierarchy(catalog, def, rootEntity);
         assertNotNull(entityTree);
         assertEquals(def, entityTree.def());
         assertEquals(rootEntity, entityTree.root().value());
@@ -200,19 +201,21 @@ class CheapFactoryTest
     @Test
     void testCreateAspectMapHierarchy()
     {
+        Catalog catalog = factory.createCatalog();
+
         // Create aspect definition for the hierarchy
         Map<String, PropertyDef> propertyDefs = new LinkedHashMap<>();
         propertyDefs.put("name", factory.createPropertyDef("name", PropertyType.String));
         AspectDef aspectDef = factory.createMutableAspectDef("testAspect", propertyDefs);
-        
+
         // Test aspect map hierarchy with auto-generated hierarchy def
-        AspectMapHierarchy aspectMap = factory.createAspectMapHierarchy(aspectDef);
+        AspectMapHierarchy aspectMap = factory.createAspectMapHierarchy(catalog, aspectDef);
         assertNotNull(aspectMap);
         assertEquals(aspectDef, aspectMap.aspectDef());
-        
+
         // Test aspect map hierarchy with custom hierarchy def
         HierarchyDef customDef = factory.createHierarchyDef("customAspectMap", HierarchyType.ASPECT_MAP);
-        AspectMapHierarchy customAspectMap = factory.createAspectMapHierarchy(customDef, aspectDef);
+        AspectMapHierarchy customAspectMap = factory.createAspectMapHierarchy(catalog, customDef, aspectDef);
         assertNotNull(customAspectMap);
         assertEquals(customDef, customAspectMap.def());
         assertEquals(aspectDef, customAspectMap.aspectDef());
