@@ -235,7 +235,7 @@ public class CheapJacksonDeserializerTest
     void testDeserializeCompactFormats() throws IOException
     {
         // Test that compact formats can be deserialized correctly
-        String compactJson = loadJsonResource("simple-catalog-expected-compact.json");
+        String compactJson = loadJsonResource("simple-catalog-compact.json");
         String prettyJson = loadJsonResource("simple-catalog.json");
 
         Catalog compactCatalog = deserializer.fromJson(compactJson);

@@ -1,0 +1,17 @@
+{
+  "aspectDefs" : {
+    "person" : {
+      "name" : "person",
+      "propertyDefs" : [ {
+        "name" : "name",
+        "type" : "String",
+        "isNullable" : false
+      } ]
+    }
+  },
+  "hierarchyDefs" : [ {
+    "name" : "entities",
+    "type" : "ES",
+    "isModifiable" : true
+  } ]
+}

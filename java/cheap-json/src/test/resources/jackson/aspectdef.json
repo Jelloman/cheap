@@ -1,0 +1,11 @@
+{
+  "name" : "person",
+  "propertyDefs" : [ {
+    "name" : "age",
+    "type" : "Integer"
+  }, {
+    "name" : "name",
+    "type" : "String",
+    "isNullable" : false
+  } ]
+}

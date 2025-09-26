@@ -1,5 +1,6 @@
 package net.netbeing.cheap.json;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import net.netbeing.cheap.impl.basic.*;
 import net.netbeing.cheap.model.*;
@@ -10,6 +11,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -255,8 +257,8 @@ public class CheapJsonRawSerializerTest
 
         String result = CheapJsonRawSerializer.toJson(catalog, false);
 
-        Files.writeString(Paths.get("D:\\src\\tmp\\raw", "simple-catalog-expected-compact.json"), result, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
-        String expected = loadJsonFromFile("simple-catalog-expected-compact.json");
+        Files.writeString(Paths.get("D:\\src\\tmp\\raw", "simple-catalog-compact.json"), result, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+        String expected = loadJsonFromFile("simple-catalog-compact.json");
         assertEquals(expected, result);
     }
 
@@ -279,8 +281,8 @@ public class CheapJsonRawSerializerTest
 
         String result = CheapJsonRawSerializer.toJson(catalog, false);
 
-        Files.writeString(Paths.get("D:\\src\\tmp\\raw", "catalog-with-aspectdef-expected-compact.json"), result, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
-        String expected = loadJsonFromFile("catalog-with-aspectdef-expected-compact.json");
+        Files.writeString(Paths.get("D:\\src\\tmp\\raw", "catalog-with-aspectdef-compact.json"), result, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+        String expected = loadJsonFromFile("catalog-with-aspectdef-compact.json");
         assertEquals(expected, result);
     }
 
@@ -320,8 +322,8 @@ public class CheapJsonRawSerializerTest
 
         String result = CheapJsonRawSerializer.toJson(catalog, false);
 
-        Files.writeString(Paths.get("D:\\src\\tmp\\raw", "entity-directory-expected-compact.json"), result, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
-        String expected = loadJsonFromFile("entity-directory-expected-compact.json");
+        Files.writeString(Paths.get("D:\\src\\tmp\\raw", "entity-directory-compact.json"), result, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+        String expected = loadJsonFromFile("entity-directory-compact.json");
         assertEquals(expected, result);
     }
 
@@ -361,8 +363,8 @@ public class CheapJsonRawSerializerTest
 
         String result = CheapJsonRawSerializer.toJson(catalog, false);
 
-        Files.writeString(Paths.get("D:\\src\\tmp\\raw", "entity-list-expected-compact.json"), result, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
-        String expected = loadJsonFromFile("entity-list-expected-compact.json");
+        Files.writeString(Paths.get("D:\\src\\tmp\\raw", "entity-list-compact.json"), result, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+        String expected = loadJsonFromFile("entity-list-compact.json");
         assertEquals(expected, result);
     }
 
@@ -402,8 +404,8 @@ public class CheapJsonRawSerializerTest
 
         String result = CheapJsonRawSerializer.toJson(catalog, false);
 
-        Files.writeString(Paths.get("D:\\src\\tmp\\raw", "entity-set-expected-compact.json"), result, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
-        String expected = loadJsonFromFile("entity-set-expected-compact.json");
+        Files.writeString(Paths.get("D:\\src\\tmp\\raw", "entity-set-compact.json"), result, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+        String expected = loadJsonFromFile("entity-set-compact.json");
         assertEquals(expected, result);
     }
 
@@ -443,8 +445,8 @@ public class CheapJsonRawSerializerTest
 
         String result = CheapJsonRawSerializer.toJson(catalog, false);
 
-        Files.writeString(Paths.get("D:\\src\\tmp\\raw", "entity-tree-expected-compact.json"), result, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
-        String expected = loadJsonFromFile("entity-tree-expected-compact.json");
+        Files.writeString(Paths.get("D:\\src\\tmp\\raw", "entity-tree-compact.json"), result, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+        String expected = loadJsonFromFile("entity-tree-compact.json");
         assertEquals(expected, result);
     }
 
@@ -486,16 +488,41 @@ public class CheapJsonRawSerializerTest
 
         String result = CheapJsonRawSerializer.toJson(catalog, false);
 
-        Files.writeString(Paths.get("D:\\src\\tmp\\raw", "aspect-map-expected-compact.json"), result, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
-        String expected = loadJsonFromFile("aspect-map-expected-compact.json");
+        Files.writeString(Paths.get("D:\\src\\tmp\\raw", "aspect-map-compact.json"), result, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+        String expected = loadJsonFromFile("aspect-map-compact.json");
         assertEquals(expected, result);
     }
 
     private CatalogImpl setupFullCatalogWithAllHierarchyTypes()
     {
-        // Create a catalog with all hierarchy types and real data
-        CatalogImpl catalog = new CatalogImpl(CATALOG_ID);
-        
+        // Create a custom CatalogDef that doesn't include all hierarchies
+        // This simulates a case where one hierarchy will have its def embedded in JSON
+        PropertyDef nameProp = new PropertyDefImpl("name", PropertyType.String, null, false, true, true, false, false, false);
+        PropertyDef ageProp = new PropertyDefImpl("age", PropertyType.Integer, null, false, true, true, true, false, false);
+        Map<String, PropertyDef> personProps = ImmutableMap.of("age", ageProp, "name", nameProp);
+        AspectDef personAspectDef = new ImmutableAspectDefImpl("person", personProps);
+
+        PropertyDef titleProp = new PropertyDefImpl("title", PropertyType.String, null, false, true, true, false, false, false);
+        PropertyDef descProp = new PropertyDefImpl("description", PropertyType.String, null, false, true, true, true, false, false);
+        Map<String, PropertyDef> docProps = ImmutableMap.of("title", titleProp, "description", descProp);
+        AspectDef docAspectDef = new ImmutableAspectDefImpl("document", docProps);
+
+        // Create HierarchyDefs for most (but not all) hierarchies that will be added
+        HierarchyDef entityDirDef = new HierarchyDefImpl("userDirectory", HierarchyType.ENTITY_DIR, true);
+        HierarchyDef entityListDef = new HierarchyDefImpl("taskQueue", HierarchyType.ENTITY_LIST, true);
+        HierarchyDef entitySetDef = new HierarchyDefImpl("activeUsers", HierarchyType.ENTITY_SET, true);
+        // Intentionally omitting entityTreeDef from CatalogDef to test embedded def scenario
+        HierarchyDef personAspectsDef = new HierarchyDefImpl("person", HierarchyType.ASPECT_MAP, true);
+        HierarchyDef docAspectsDef = new HierarchyDefImpl("document", HierarchyType.ASPECT_MAP, true);
+
+        Collection<AspectDef> aspectDefs = ImmutableList.of(personAspectDef, docAspectDef);
+        Collection<HierarchyDef> hierarchyDefs = ImmutableList.of(entityDirDef, entityListDef, entitySetDef, personAspectsDef, docAspectsDef);
+
+        CatalogDef catalogDef = new CatalogDefImpl(hierarchyDefs, aspectDefs);
+
+        // Create a non-strict catalog with explicit CatalogDef (strict=false allows additional hierarchies)
+        CatalogImpl catalog = new CatalogImpl(CATALOG_ID, CatalogSpecies.SINK, catalogDef, null, false);
+
         // Create some entities to use across hierarchies
         UUID entityId1 = UUID.fromString("10000000-0000-0000-0000-000000000001");
         UUID entityId2 = UUID.fromString("10000000-0000-0000-0000-000000000002");
@@ -507,44 +534,33 @@ public class CheapJsonRawSerializerTest
         Entity entity3 = new EntityImpl(entityId3);
         Entity entity4 = new EntityImpl(entityId4);
 
-        // Create AspectDefs for AspectMapHierarchies
-        PropertyDef nameProp = new PropertyDefImpl("name", PropertyType.String, null, false, true, true, false, false, false);
-        PropertyDef ageProp = new PropertyDefImpl("age", PropertyType.Integer, null, false, true, true, true, false, false);
-        Map<String, PropertyDef> personProps = ImmutableMap.of("name", nameProp, "age", ageProp);
-        AspectDef personAspectDef = new ImmutableAspectDefImpl("person", personProps);
-        
-        PropertyDef titleProp = new PropertyDefImpl("title", PropertyType.String, null, false, true, true, false, false, false);
-        PropertyDef descProp = new PropertyDefImpl("description", PropertyType.String, null, false, true, true, true, false, false);
-        Map<String, PropertyDef> docProps = ImmutableMap.of("title", titleProp, "description", descProp);
-        AspectDef docAspectDef = new ImmutableAspectDefImpl("document", docProps);
-        
-        // Add AspectDefs to catalog
-        AspectMapHierarchy personAspects = catalog.extend(personAspectDef);
-        AspectMapHierarchy docAspects = catalog.extend(docAspectDef);
+        // Create AspectMapHierarchies directly (using the ones from CatalogDef)
+        AspectMapHierarchyImpl personAspects = new AspectMapHierarchyImpl(catalog, personAspectsDef, personAspectDef);
+        AspectMapHierarchyImpl docAspects = new AspectMapHierarchyImpl(catalog, docAspectsDef, docAspectDef);
 
-        // 1. EntityDirectoryHierarchy
-        HierarchyDef entityDirDef = new HierarchyDefImpl("userDirectory", HierarchyType.ENTITY_DIR, true);
+        // 1. EntityDirectoryHierarchy (using def from CatalogDef)
         EntityDirectoryHierarchyImpl entityDirectory = new EntityDirectoryHierarchyImpl(catalog, entityDirDef);
         entityDirectory.put("admin", entity1);
         entityDirectory.put("user1", entity2);
         entityDirectory.put("guest", entity3);
+        catalog.addHierarchy(entityDirectory);
 
-        // 2. EntityListHierarchy
-        HierarchyDef entityListDef = new HierarchyDefImpl("taskQueue", HierarchyType.ENTITY_LIST, true);
+        // 2. EntityListHierarchy (using def from CatalogDef)
         EntityListHierarchyImpl entityList = new EntityListHierarchyImpl(catalog, entityListDef);
         entityList.add(entity1);
         entityList.add(entity2);
         entityList.add(entity3);
         entityList.add(entity1); // Allow duplicates in list
+        catalog.addHierarchy(entityList);
 
-        // 3. EntitySetHierarchy
-        HierarchyDef entitySetDef = new HierarchyDefImpl("activeUsers", HierarchyType.ENTITY_SET, true);
+        // 3. EntitySetHierarchy (using def from CatalogDef)
         EntitySetHierarchyImpl entitySet = new EntitySetHierarchyImpl(catalog, entitySetDef);
         entitySet.add(entity1);
         entitySet.add(entity2);
         entitySet.add(entity4);
+        catalog.addHierarchy(entitySet);
 
-        // 4. EntityTreeHierarchy
+        // 4. EntityTreeHierarchy (NOT in CatalogDef - will have embedded def in JSON)
         HierarchyDef entityTreeDef = new HierarchyDefImpl("fileSystem", HierarchyType.ENTITY_TREE, true);
         EntityTreeHierarchyImpl entityTree = new EntityTreeHierarchyImpl(catalog, entityTreeDef, entity1); // root entity
         EntityTreeHierarchyImpl.NodeImpl childNode1 = new EntityTreeHierarchyImpl.NodeImpl(entity2, entityTree.root());
@@ -554,14 +570,15 @@ public class CheapJsonRawSerializerTest
         // Add nested child
         EntityTreeHierarchyImpl.NodeImpl subChild = new EntityTreeHierarchyImpl.NodeImpl(entity4, childNode1);
         childNode1.put("reports", subChild);
+        catalog.addHierarchy(entityTree);
 
         // 5. First AspectMapHierarchy (person aspects)
         AspectObjectMapImpl personAspect1 = new AspectObjectMapImpl(entity1, personAspectDef);
-        personAspect1.unsafeWrite("name", "John Doe");
         personAspect1.unsafeWrite("age", "30");
+        personAspect1.unsafeWrite("name", "John Doe");
         AspectObjectMapImpl personAspect2 = new AspectObjectMapImpl(entity2, personAspectDef);
-        personAspect2.unsafeWrite("name", "Jane Smith");
         personAspect2.unsafeWrite("age", "25");
+        personAspect2.unsafeWrite("name", "Jane Smith");
         personAspects.put(entity1, personAspect1);
         personAspects.put(entity2, personAspect2);
 
@@ -597,16 +614,15 @@ public class CheapJsonRawSerializerTest
 
         String result = CheapJsonRawSerializer.toJson(catalog, false);
 
-        Files.writeString(Paths.get("D:\\src\\tmp\\raw", "full-catalog-expected-compact.json"), result, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
-        String expected = loadJsonFromFile("full-catalog-expected-compact.json");
+        Files.writeString(Paths.get("D:\\src\\tmp\\raw", "full-catalog-compact.json"), result, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+        String expected = loadJsonFromFile("full-catalog-compact.json");
         assertEquals(expected, result);
     }
 
     private String loadJsonFromFile(String filename) throws IOException
     {
         // Try to use classpath first
-        try {
-            var resource = getClass().getClassLoader().getResourceAsStream("json/" + filename);
+        try (var resource = getClass().getClassLoader().getResourceAsStream("jackson/" + filename)) {
             if (resource != null) {
                 return new String(resource.readAllBytes()).trim();
             }
@@ -615,7 +631,7 @@ public class CheapJsonRawSerializerTest
         }
 
         // Fall back to the original path approach
-        Path path = Paths.get("src/test/resources/json/" + filename);
+        Path path = Paths.get("src/test/resources/jackson/" + filename);
         return Files.readString(path).trim();
     }
 }
