@@ -1,17 +1,16 @@
 package net.netbeing.cheap.db;
 
 import io.zonky.test.db.postgres.embedded.FlywayPreparer;
+import io.zonky.test.db.postgres.junit5.EmbeddedPostgresExtension;
+import io.zonky.test.db.postgres.junit5.PreparedDbExtension;
 import net.netbeing.cheap.model.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
-import io.zonky.test.db.postgres.junit5.*;
 
 import javax.sql.DataSource;
 import java.util.List;
 import java.util.UUID;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 import static org.junit.jupiter.api.Assertions.*;
 
