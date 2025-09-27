@@ -21,6 +21,8 @@
       <w>lseg</w>
       <w>macaddr</w>
       <w>numrange</w>
+      <w>ossp</w>
+      <w>plpgsql</w>
       <w>postgre</w>
       <w>propertydef</w>
       <w>regclass</w>
