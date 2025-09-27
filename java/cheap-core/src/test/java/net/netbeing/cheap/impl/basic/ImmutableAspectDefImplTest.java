@@ -1,5 +1,6 @@
 package net.netbeing.cheap.impl.basic;
 
+import com.google.common.collect.ImmutableMap;
 import net.netbeing.cheap.model.PropertyDef;
 import net.netbeing.cheap.model.PropertyType;
 import org.junit.jupiter.api.BeforeEach;
@@ -9,6 +10,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -252,5 +254,104 @@ class ImmutableAspectDefImplTest
         } catch (UnsupportedOperationException e) {
             assertTrue(e.getMessage().contains(aspectName));
         }
+    }
+
+
+    @Test
+    void fullyEquals_IdenticalInstancesConstructedSeparately_ReturnsTrue()
+    {
+        UUID globalId = UUID.randomUUID();
+        Map<String, PropertyDef> propertyDefs1 = ImmutableMap.of(
+            "prop1", new PropertyDefImpl("prop1", PropertyType.String),
+            "prop2", new PropertyDefImpl("prop2", PropertyType.Integer)
+        );
+        Map<String, PropertyDef> propertyDefs2 = ImmutableMap.of(
+            "prop1", new PropertyDefImpl("prop1", PropertyType.String),
+            "prop2", new PropertyDefImpl("prop2", PropertyType.Integer)
+        );
+
+        ImmutableAspectDefImpl aspectDef1 = new ImmutableAspectDefImpl("testAspect", globalId, propertyDefs1);
+        ImmutableAspectDefImpl aspectDef2 = new ImmutableAspectDefImpl("testAspect", globalId, propertyDefs2);
+
+        assertTrue(aspectDef1.fullyEquals(aspectDef2));
+        assertTrue(aspectDef2.fullyEquals(aspectDef1));
+    }
+
+    @Test
+    void fullyEquals_SameInstance_ReturnsTrue()
+    {
+        Map<String, PropertyDef> propertyDefs = ImmutableMap.of(
+            "prop1", new PropertyDefImpl("prop1", PropertyType.String),
+            "prop2", new PropertyDefImpl("prop2", PropertyType.Integer)
+        );
+
+        ImmutableAspectDefImpl aspectDef = new ImmutableAspectDefImpl("testAspect", propertyDefs);
+
+        assertTrue(aspectDef.fullyEquals(aspectDef));
+    }
+
+    @Test
+    void fullyEquals_DifferentNames_ReturnsFalse()
+    {
+        Map<String, PropertyDef> propertyDefs = ImmutableMap.of(
+            "prop1", new PropertyDefImpl("prop1", PropertyType.String),
+            "prop2", new PropertyDefImpl("prop2", PropertyType.Integer)
+        );
+
+        ImmutableAspectDefImpl aspectDef1 = new ImmutableAspectDefImpl("testAspect1", propertyDefs);
+        ImmutableAspectDefImpl aspectDef2 = new ImmutableAspectDefImpl("testAspect2", propertyDefs);
+
+        assertFalse(aspectDef1.fullyEquals(aspectDef2));
+    }
+
+    @Test
+    void hash_IdenticalInstancesConstructedSeparately_ReturnsSameHash()
+    {
+        UUID globalId = UUID.randomUUID();
+        Map<String, PropertyDef> propertyDefs1 = ImmutableMap.of(
+            "prop1", new PropertyDefImpl("prop1", PropertyType.String),
+            "prop2", new PropertyDefImpl("prop2", PropertyType.Integer)
+        );
+        Map<String, PropertyDef> propertyDefs2 = ImmutableMap.of(
+            "prop1", new PropertyDefImpl("prop1", PropertyType.String),
+            "prop2", new PropertyDefImpl("prop2", PropertyType.Integer)
+        );
+
+        ImmutableAspectDefImpl aspectDef1 = new ImmutableAspectDefImpl("testAspect", globalId, propertyDefs1);
+        ImmutableAspectDefImpl aspectDef2 = new ImmutableAspectDefImpl("testAspect", globalId, propertyDefs2);
+
+        assertEquals(aspectDef1.hash(), aspectDef2.hash());
+    }
+
+    @Test
+    void hash_SameInstance_ReturnsSameHash()
+    {
+        Map<String, PropertyDef> propertyDefs = ImmutableMap.of(
+            "prop1", new PropertyDefImpl("prop1", PropertyType.String),
+            "prop2", new PropertyDefImpl("prop2", PropertyType.Integer)
+        );
+
+        ImmutableAspectDefImpl aspectDef = new ImmutableAspectDefImpl("testAspect", propertyDefs);
+
+        assertEquals(aspectDef.hash(), aspectDef.hash());
+    }
+
+    @Test
+    void hash_DifferentPropertyOrder_ReturnsDifferentHash()
+    {
+        UUID globalId = UUID.randomUUID();
+        Map<String, PropertyDef> propertyDefs1 = new LinkedHashMap<>();
+        propertyDefs1.put("prop1", new PropertyDefImpl("prop1", PropertyType.String));
+        propertyDefs1.put("prop2", new PropertyDefImpl("prop2", PropertyType.Integer));
+
+        Map<String, PropertyDef> propertyDefs2 = new LinkedHashMap<>();
+        propertyDefs2.put("prop2", new PropertyDefImpl("prop2", PropertyType.Integer));
+        propertyDefs2.put("prop1", new PropertyDefImpl("prop1", PropertyType.String));
+
+        ImmutableAspectDefImpl aspectDef1 = new ImmutableAspectDefImpl("testAspect", globalId, propertyDefs1);
+        ImmutableAspectDefImpl aspectDef2 = new ImmutableAspectDefImpl("testAspect", globalId, propertyDefs2);
+
+        // Property order affects hash value, so hashes should be different
+        assertNotEquals(aspectDef1.hash(), aspectDef2.hash());
     }
 }

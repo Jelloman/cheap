@@ -132,7 +132,7 @@ public interface PropertyDef
     default HashCode hash()
     {
         //TODO: replace use of Hasher with language-independent algo
-        return Hashing.sha256().newHasher().putObject(this, FUNNEL).hash();
+        return Hashing.sha256().newHasher().putObject(this, new Funneler()).hash();
     }
 
     @SuppressWarnings("UnstableApiUsage")
@@ -153,8 +153,6 @@ public interface PropertyDef
             into.putString(def.name(), UTF_8);
         }
     }
-
-    Funneler FUNNEL = new Funneler();
 
     /**
      * Validates that a property value is compatible with this property definition.

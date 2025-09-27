@@ -5,6 +5,7 @@ import net.netbeing.cheap.model.PropertyDef;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * Immutable implementation of an AspectDef that prevents modification after creation.
@@ -24,13 +25,25 @@ public class ImmutableAspectDefImpl extends AspectDefBase
     /**
      * Creates a new ImmutableAspectDefImpl with the specified name and property definitions.
      * The property definitions map is copied into an ImmutableMap to prevent modification.
-     * 
+     *
      * @param name the name of this aspect definition
      * @param propertyDefs the map of property names to property definitions
      */
     public ImmutableAspectDefImpl(@NotNull String name, @NotNull Map<String, ? extends PropertyDef> propertyDefs)
     {
-        super(name, ImmutableMap.copyOf(propertyDefs));
+        this(name, UUID.randomUUID(), ImmutableMap.copyOf(propertyDefs));
+    }
+
+    /**
+     * Creates a new ImmutableAspectDefImpl with the specified name and property definitions.
+     * The property definitions map is copied into an ImmutableMap to prevent modification.
+     *
+     * @param name the name of this aspect definition
+     * @param propertyDefs the map of property names to property definitions
+     */
+    public ImmutableAspectDefImpl(@NotNull String name, @NotNull UUID globalId, @NotNull Map<String, ? extends PropertyDef> propertyDefs)
+    {
+        super(name, globalId, ImmutableMap.copyOf(propertyDefs));
         if (propertyDefs.isEmpty()) {
             throw new IllegalArgumentException("An AspectDef must contain at least one property.");
         }

@@ -153,7 +153,7 @@ public interface AspectDef
         hasher.putString(name(), UTF_8);
         hasher.putString(globalId().toString(), UTF_8);
         for (PropertyDef pDef : propertyDefs()) {
-            hasher.putObject(pDef, PropertyDef.FUNNEL);
+            hasher.putObject(pDef, new PropertyDef.Funneler());
         }
         return hasher.hash();
     }
