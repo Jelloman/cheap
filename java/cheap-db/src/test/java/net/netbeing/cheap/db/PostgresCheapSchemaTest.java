@@ -24,35 +24,7 @@ class PostgresCheapSchemaTest {
     public static SingleInstancePostgresExtension postgres = EmbeddedPostgresExtension.singleInstance();
 
     @Test
-    void testMainSchemaExecution() throws SQLException, IOException, URISyntaxException {
-        String mainSchemaPath = "/db/schemas/postgres-cheap.ddl";
-        String ddlContent = loadResourceFile(mainSchemaPath);
-
-        assertNotNull(ddlContent, "Main schema DDL content should not be null");
-        assertFalse(ddlContent.trim().isEmpty(), "Main schema DDL content should not be empty");
-
-        DataSource dataSource = postgres.getEmbeddedPostgres().getPostgresDatabase();
-        try (Connection connection = dataSource.getConnection();
-             Statement statement = connection.createStatement()) {
-
-            // Execute the main schema DDL
-            statement.execute(ddlContent);
-
-            // Verify that key tables were created
-            assertTrue(tableExists(connection, "aspect_def"), "aspect_def table should exist");
-            assertTrue(tableExists(connection, "property_def"), "property_def table should exist");
-            assertTrue(tableExists(connection, "hierarchy_def"), "hierarchy_def table should exist");
-            assertTrue(tableExists(connection, "catalog_def"), "catalog_def table should exist");
-            assertTrue(tableExists(connection, "entity"), "entity table should exist");
-            assertTrue(tableExists(connection, "catalog"), "catalog table should exist");
-            assertTrue(tableExists(connection, "hierarchy"), "hierarchy table should exist");
-            assertTrue(tableExists(connection, "aspect"), "aspect table should exist");
-            assertTrue(tableExists(connection, "property_value"), "property_value table should exist");
-        }
-    }
-
-    @Test
-    void testAuditSchemaExecution() throws SQLException, IOException, URISyntaxException {
+    void testAllSchemaExecution() throws SQLException, IOException, URISyntaxException {
         String mainSchemaPath = "/db/schemas/postgres-cheap.ddl";
         String auditSchemaPath = "/db/schemas/postgres-cheap-audit.ddl";
 
@@ -69,6 +41,17 @@ class PostgresCheapSchemaTest {
             // Execute the main schema DDL first
             statement.execute(mainDdlContent);
 
+            // Verify that key tables were created
+            assertTrue(tableExists(connection, "aspect_def"), "aspect_def table should exist");
+            assertTrue(tableExists(connection, "property_def"), "property_def table should exist");
+            assertTrue(tableExists(connection, "hierarchy_def"), "hierarchy_def table should exist");
+            assertTrue(tableExists(connection, "catalog_def"), "catalog_def table should exist");
+            assertTrue(tableExists(connection, "entity"), "entity table should exist");
+            assertTrue(tableExists(connection, "catalog"), "catalog table should exist");
+            assertTrue(tableExists(connection, "hierarchy"), "hierarchy table should exist");
+            assertTrue(tableExists(connection, "aspect"), "aspect table should exist");
+            assertTrue(tableExists(connection, "property_value"), "property_value table should exist");
+
             // Execute the audit schema DDL
             statement.execute(auditDdlContent);
 
@@ -84,30 +67,34 @@ class PostgresCheapSchemaTest {
 
             // Verify that the update trigger function was created
             assertTrue(functionExists(connection, "update_updated_at_column"), "update_updated_at_column function should exist");
-        }
-    }
 
-    @Test
-    void testBothSchemasExecutionSequentially() throws SQLException, IOException, URISyntaxException {
-        String mainSchemaPath = "/db/schemas/postgres-cheap.ddl";
-        String auditSchemaPath = "/db/schemas/postgres-cheap-audit.ddl";
+            // Load and execute the drop schema DDL
+            String dropSchemaPath = "/db/schemas/postgres-cheap-drop.ddl";
+            String dropDdlContent = loadResourceFile(dropSchemaPath);
+            assertNotNull(dropDdlContent, "Drop schema DDL content should not be null");
 
-        String mainDdlContent = loadResourceFile(mainSchemaPath);
-        String auditDdlContent = loadResourceFile(auditSchemaPath);
+            statement.execute(dropDdlContent);
 
-        DataSource dataSource = postgres.getEmbeddedPostgres().getPostgresDatabase();
-        try (Connection connection = dataSource.getConnection();
-             Statement statement = connection.createStatement()) {
+            // Verify that key tables have been dropped
+            assertFalse(tableExists(connection, "aspect_def"), "aspect_def table should be dropped");
+            assertFalse(tableExists(connection, "property_def"), "property_def table should be dropped");
+            assertFalse(tableExists(connection, "hierarchy_def"), "hierarchy_def table should be dropped");
+            assertFalse(tableExists(connection, "catalog_def"), "catalog_def table should be dropped");
+            assertFalse(tableExists(connection, "entity"), "entity table should be dropped");
+            assertFalse(tableExists(connection, "catalog"), "catalog table should be dropped");
+            assertFalse(tableExists(connection, "hierarchy"), "hierarchy table should be dropped");
+            assertFalse(tableExists(connection, "aspect"), "aspect table should be dropped");
+            assertFalse(tableExists(connection, "property_value"), "property_value table should be dropped");
 
-            // Execute both DDL files in sequence
-            statement.execute(mainDdlContent);
-            statement.execute(auditDdlContent);
+            // Verify that hierarchy content tables have been dropped
+            assertFalse(tableExists(connection, "hierarchy_entity_list"), "hierarchy_entity_list table should be dropped");
+            assertFalse(tableExists(connection, "hierarchy_entity_set"), "hierarchy_entity_set table should be dropped");
+            assertFalse(tableExists(connection, "hierarchy_entity_directory"), "hierarchy_entity_directory table should be dropped");
+            assertFalse(tableExists(connection, "hierarchy_entity_tree_node"), "hierarchy_entity_tree_node table should be dropped");
+            assertFalse(tableExists(connection, "hierarchy_aspect_map"), "hierarchy_aspect_map table should be dropped");
 
-            // Verify that the complete schema is functional
-            assertTrue(tableExists(connection, "aspect_def"), "aspect_def table should exist");
-            assertTrue(columnExists(connection, "aspect_def", "created_at"), "aspect_def should have audit columns");
-            assertTrue(tableExists(connection, "property_value"), "property_value table should exist");
-            assertTrue(columnExists(connection, "property_value", "updated_at"), "property_value should have audit columns");
+            // Verify that the update trigger function was dropped
+            assertFalse(functionExists(connection, "update_updated_at_column"), "update_updated_at_column function should be dropped");
         }
     }
 
