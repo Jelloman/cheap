@@ -1,10 +1,15 @@
 package net.netbeing.cheap.model;
 
+import com.google.common.hash.HashCode;
+import com.google.common.hash.Hasher;
+import com.google.common.hash.Hashing;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
 import java.util.Objects;
 import java.util.UUID;
+
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  * Defines the structure and metadata for an aspect type within the Cheap data model.
@@ -126,4 +131,31 @@ public interface AspectDef
         }
         return true;
     }
+
+    /**
+     * Generate a Cheap-specific SHA-256 hash of this AspectDef.
+     * This hash should be consistent across all Cheap implementations.
+     *
+     * <P>Implementations of this interface should probably cache the result of this
+     * default method for improved performance.</P>
+     *
+     * @return a HashCode
+     */
+    @SuppressWarnings("UnstableApiUsage")
+    default HashCode hash()
+    {
+        //TODO: replace use of Hasher with language-independent algo
+        Hasher hasher = Hashing.sha256().newHasher();
+        hasher.putBoolean(isReadable());
+        hasher.putBoolean(isWritable());
+        hasher.putBoolean(canAddProperties());
+        hasher.putBoolean(canRemoveProperties());
+        hasher.putString(name(), UTF_8);
+        hasher.putString(globalId().toString(), UTF_8);
+        for (PropertyDef pDef : propertyDefs()) {
+            hasher.putObject(pDef, PropertyDef.FUNNEL);
+        }
+        return hasher.hash();
+    }
+
 }

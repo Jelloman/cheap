@@ -1,8 +1,11 @@
 package net.netbeing.cheap.model;
 
+import com.google.common.hash.*;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
+
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  * Defines the metadata and constraints for a property within the Cheap data model.
@@ -115,6 +118,43 @@ public interface PropertyDef
             type().equals(other.type()) &&
             name().equals(other.name());
     }
+
+    /**
+     * Generate a Cheap-specific SHA-256 hash of this PropertyDef.
+     * This hash should be consistent across all Cheap implementations.
+     *
+     * <P>Implementations of this interface should probably cache the result of this
+     * default method for improved performance.</P>
+     *
+     * @return a HashCode
+     */
+    @SuppressWarnings("UnstableApiUsage")
+    default HashCode hash()
+    {
+        //TODO: replace use of Hasher with language-independent algo
+        return Hashing.sha256().newHasher().putObject(this, FUNNEL).hash();
+    }
+
+    @SuppressWarnings("UnstableApiUsage")
+    class Funneler implements Funnel<PropertyDef>
+    {
+        @Override
+        public void funnel(PropertyDef def, PrimitiveSink into)
+        {
+            into.putBoolean(Objects.requireNonNull(def).isReadable());
+            into.putBoolean(def.isWritable());
+            into.putBoolean(def.isNullable());
+            into.putBoolean(def.isRemovable());
+            into.putBoolean(def.hasDefaultValue());
+            if (def.hasDefaultValue() && def.defaultValue() != null) {
+                into.putInt(def.defaultValue().hashCode());
+            }
+            into.putString(def.type().typeCode(), UTF_8);
+            into.putString(def.name(), UTF_8);
+        }
+    }
+
+    Funneler FUNNEL = new Funneler();
 
     /**
      * Validates that a property value is compatible with this property definition.

@@ -1,7 +1,7 @@
 
 [versions]
 commons-math3 = "3.6.1"
-guava = "33.4.8-jre"
+guava = "33.5.0-jre"
 junit-jupiter = "5.13.4"
 jetbrains-annotations = "26.0.2"
 junit-platform-launcher = "1.13.4"
