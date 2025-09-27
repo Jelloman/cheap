@@ -9,11 +9,18 @@ import java.util.UUID;
 /**
  * A CatalogDef defines the structure and properties of a catalog.
  *
- * @see CatalogSpecies
+ * @see AspectDef
  * @see HierarchyDef
  */
 public interface CatalogDef
 {
+    /**
+     * Returns the globally unique identifier for this CatalogDef.
+     *
+     * @return the UUID identifying this CatalogDef globally
+     */
+    @NotNull UUID globalId();
+
     /**
      * Returns a read-only collection of the aspect definitions that are typically found
      * in a catalog with this definition. Catalogs flagged as "strict" will only contain

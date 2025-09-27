@@ -4,6 +4,8 @@ import com.google.common.collect.Iterables;
 import net.netbeing.cheap.model.*;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.UUID;
+
 /**
  * Thin implementation of CatalogDef that merely wraps an existing Catalog.
  *
@@ -21,6 +23,12 @@ public class CatalogDefWrapper implements CatalogDef
     public CatalogDefWrapper(@NotNull Catalog catalog)
     {
         this.catalog = catalog;
+    }
+
+    @Override
+    public @NotNull UUID globalId()
+    {
+        return catalog.globalId();
     }
 
     /**

@@ -17,7 +17,6 @@ The best analogy for understanding Cheap is **git**. Cheap is a git-like mechani
 | P - Property  | Column           | Single attribute or content atom      |
 
 
-
 Cheap does not dictate patterns of network communication or other external resource access.
 Cheap offers utility functions and callback mechanisms to allow applications to use it in conjunction with databases,
 filesystems, etc. but it does not mandate their usage.
@@ -126,6 +125,44 @@ PROPERTIES
 | UUID       | UID       | UUID          | Universally Unique Identifier values following RFC 4122 specification.      |
 | CLOB       | CLB       | String        | Character Large Object (CLOB) for streaming text data.                      |
 | BLOB       | BLB       | byte[]        | Binary Large Object (BLOB) for streaming binary data.                       |
+
+
+
+Identity in Cheap
+-----------------
+
+### Global IDs
+* Catalogs, CatalogDefs and AspectDefs always have a global UUID.
+  * A CatalogDef may have the same UUID as its Catalog.
+* AspectDefs also have a name that should be globally unique and use reverse domain name notation.
+* Entities almost always have a UUID.
+  * Local Entities can be used to lazily generate UUIDs for performance reasons.
+* Catalogs usually have a URL.
+  * All Cheap elements within such Catalogs (4 tiers, 4 Defs) are addressable via URLs.
+* Hierarchies and HierarchyDefs are owned by a single Catalog and do not have a global ID.
+  * They must have a unique name within their catalog.
+* PropertyDefs are owned by a single AspectDef and do not have a global ID.
+  * They must have a unique name within their AspectDef.
+* Properties are owned by an Aspect and do not have a global ID.
+  * They must have a unique name within their Aspect.
+
+### Versions
+* CatalogDefs and AspectDefs have an implicit hash version.
+  * Like a Git commit, based on the entire contents of the Def.
+* Catalogs and Hierarchies have an explicit, monotonically increasing integer version number.
+  * Incrementing this version number is typically restricted to "local access" and is not accessible via API.
+
+| Element      | Global? | Owner     | Unique ID | Version Numbering |
+|--------------|---------|-----------|-----------|-------------------|
+| Catalog      | Yes     | -         | UUID      | Integer (manual)  |
+| CatalogDef   | Yes     | -         | UUID      | Hash (implicit)   |
+| HierarchyDef | No      | Catalog   | Name      | -                 |
+| Hierarchy    | No      | Catalog   | Name      | Integer (manual)  |
+| Entity       | Yes     | -         | UUID      | -                 |
+| AspectDef    | Yes     | -         | UUID      | Hash (implicit)   |
+| Aspect       | No      | Hierarchy | Entity ID | -                 |
+| PropertyDef  | No      | AspectDef | Name      | -                 |
+| Property     | No      | Aspect    | Name      | -                 |
 
 
 Serialization and Persistence

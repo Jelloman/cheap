@@ -4,10 +4,7 @@ import net.netbeing.cheap.model.AspectDef;
 import net.netbeing.cheap.model.PropertyDef;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Collection;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 /**
  * Abstract base class for AspectDef implementations providing common functionality.
@@ -26,40 +23,62 @@ public abstract class AspectDefBase implements AspectDef
 {
     /** The name of this aspect definition. */
     final String name;
-    
+
+    /** The global ID of this aspect definition. */
+    final UUID globalId;
+
     /** Map of property names to property definitions. */
     final Map<String, PropertyDef> propertyDefs;
 
     /**
      * Creates a new AspectDefBase with the specified name and empty property definitions.
-     * 
+     *
      * @param name the name of this aspect definition
      */
     protected AspectDefBase(@NotNull String name)
     {
-        this(name, new LinkedHashMap<>());
+        this(name, UUID.randomUUID(), new LinkedHashMap<>());
+    }
+
+    /**
+     * Creates a new AspectDefBase with the specified name and empty property definitions.
+     *
+     * @param name the name of this aspect definition
+     */
+    protected AspectDefBase(@NotNull String name, @NotNull UUID globalId)
+    {
+        this(name, globalId, new LinkedHashMap<>());
     }
 
     /**
      * Creates a new AspectDefBase with the specified name and property definitions.
-     * 
+     *
      * @param name the name of this aspect definition
      * @param propertyDefs the map of property names to property definitions
      */
     protected AspectDefBase(@NotNull String name, @NotNull Map<String, PropertyDef> propertyDefs)
     {
-        Objects.requireNonNull(name, "AspectDefs must have a non-null name.");
-        Objects.requireNonNull(propertyDefs, "Provided property defs cannot be null.");
+        this(name, UUID.randomUUID(), propertyDefs);
+    }
 
-        this.name = name;
-        this.propertyDefs = propertyDefs;
+    /**
+     * Creates a new AspectDefBase with the specified name and property definitions.
+     *
+     * @param name the name of this aspect definition
+     * @param propertyDefs the map of property names to property definitions
+     */
+    protected AspectDefBase(@NotNull String name, @NotNull UUID globalId, @NotNull Map<String, PropertyDef> propertyDefs)
+    {
+        this.name = Objects.requireNonNull(name, "AspectDefs must have a non-null name.");
+        this.globalId = Objects.requireNonNull(globalId, "AspectDefs must have a non-null name.");
+        this.propertyDefs = Objects.requireNonNull(propertyDefs, "Provided property defs cannot be null.");
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public String name()
+    public @NotNull String name()
     {
         return name;
     }
@@ -68,7 +87,16 @@ public abstract class AspectDefBase implements AspectDef
      * {@inheritDoc}
      */
     @Override
-    public Collection<? extends PropertyDef> propertyDefs()
+    public @NotNull UUID globalId()
+    {
+        return globalId;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public @NotNull Collection<? extends PropertyDef> propertyDefs()
     {
         return propertyDefs.values();
     }

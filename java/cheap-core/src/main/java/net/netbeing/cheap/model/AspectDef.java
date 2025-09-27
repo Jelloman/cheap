@@ -1,7 +1,10 @@
 package net.netbeing.cheap.model;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.util.Collection;
 import java.util.Objects;
+import java.util.UUID;
 
 /**
  * Defines the structure and metadata for an aspect type within the Cheap data model.
@@ -19,7 +22,14 @@ public interface AspectDef
      * 
      * @return the aspect name, never null
      */
-    String name();
+    @NotNull String name();
+
+    /**
+     * Returns the globally unique identifier for this AspectDef.
+     *
+     * @return the UUID identifying this AspectDef globally
+     */
+    @NotNull UUID globalId();
 
     /**
      * Returns all property definitions that belong to this aspect.
@@ -28,7 +38,7 @@ public interface AspectDef
      * 
      * @return a collection of property definitions, never null but may be empty
      */
-    Collection<? extends PropertyDef> propertyDefs();
+    @NotNull Collection<? extends PropertyDef> propertyDefs();
 
     /**
      * Return the number of properties in this AspectDef.
@@ -100,7 +110,8 @@ public interface AspectDef
      */
     default boolean fullyEquals(AspectDef other)
     {
-        if (!(name().equals(other.name())) ||
+        if (!globalId().equals(other.globalId()) ||
+            !name().equals(other.name()) ||
             isReadable() != other.isReadable() ||
             isWritable() != other.isWritable() ||
             canAddProperties() != other.canAddProperties() ||
