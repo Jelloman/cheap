@@ -37,22 +37,14 @@ CREATE TABLE property_def (
     PRIMARY KEY (aspect_def_id, name)
 );
 
--- HierarchyDef: Defines hierarchy structure and metadata
--- No global ID - identified by name within catalog
-CREATE TABLE hierarchy_def (
-    catalog_def_id UUID NOT NULL REFERENCES catalog_def(catalog_def_id) ON DELETE CASCADE,
-    name VARCHAR(255) NOT NULL,
-    hierarchy_type VARCHAR(2) NOT NULL CHECK (hierarchy_type IN ('EL', 'ES', 'ED', 'ET', 'AM')),
-    is_modifiable BOOLEAN NOT NULL DEFAULT true,
-    PRIMARY KEY (catalog_def_id, name)
-);
-
 -- CatalogDef: Defines catalog structure and characteristics
 CREATE TABLE catalog_def (
     catalog_def_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     name VARCHAR(255) NOT NULL UNIQUE,
     hash_version TEXT -- Hash-based version (implicit, based on content)
 );
+
+-- Note: HierarchyDef and owner tables will be created after core tables to avoid dependency issues
 
 -- Link table: CatalogDef to AspectDef (many-to-many)
 CREATE TABLE catalog_def_aspect_def (
@@ -61,15 +53,7 @@ CREATE TABLE catalog_def_aspect_def (
     PRIMARY KEY (catalog_def_id, aspect_def_id)
 );
 
--- Link table: CatalogDef to HierarchyDef (many-to-many)
--- Note: HierarchyDef is now owned by CatalogDef, so this may be redundant
--- but keeping for compatibility with existing design patterns
-CREATE TABLE catalog_def_hierarchy_def (
-    catalog_def_id UUID NOT NULL REFERENCES catalog_def(catalog_def_id) ON DELETE CASCADE,
-    hierarchy_def_name VARCHAR(255) NOT NULL,
-    PRIMARY KEY (catalog_def_id, hierarchy_def_name),
-    FOREIGN KEY (catalog_def_id, hierarchy_def_name) REFERENCES hierarchy_def(catalog_def_id, name) ON DELETE CASCADE
-);
+-- Note: Link table for CatalogDef to HierarchyDef will be created after HierarchyDef tables
 
 -- ========== CORE ENTITY TABLES ==========
 
@@ -101,11 +85,11 @@ CREATE TABLE catalog_aspect_def (
 CREATE TABLE hierarchy (
     catalog_id UUID NOT NULL REFERENCES catalog(catalog_id) ON DELETE CASCADE,
     name VARCHAR(255) NOT NULL,
-    hierarchy_def_catalog_def_id UUID NOT NULL,
-    hierarchy_def_name VARCHAR(255) NOT NULL,
+    hierarchy_def_owner_id UUID, -- Will be made NOT NULL and add FK later
+    hierarchy_def_name VARCHAR(255),  -- Will be made NOT NULL and add FK later
     version_number BIGINT NOT NULL DEFAULT 0, -- Integer version (manual)
-    PRIMARY KEY (catalog_id, name),
-    FOREIGN KEY (hierarchy_def_catalog_def_id, hierarchy_def_name) REFERENCES hierarchy_def(catalog_def_id, name)
+    PRIMARY KEY (catalog_id, name)
+    -- Note: Foreign key to hierarchy_def will be added later
 );
 
 -- Aspect: Aspect instances attached to entities
@@ -149,6 +133,54 @@ CREATE TABLE property_value (
     PRIMARY KEY (entity_id, aspect_def_id, catalog_id, property_name),
     FOREIGN KEY (entity_id, aspect_def_id, catalog_id) REFERENCES aspect(entity_id, aspect_def_id, catalog_id) ON DELETE CASCADE,
     FOREIGN KEY (aspect_def_id, property_name) REFERENCES property_def(aspect_def_id, name)
+);
+
+-- ========== HIERARCHY DEFINITION TABLES ==========
+
+-- HierarchyDefOwnerType: Discriminator table for hierarchy definition ownership
+CREATE TABLE hierarchy_def_owner_type (
+    owner_type_code CHAR(1) PRIMARY KEY, -- 'C' for CatalogDef, 'H' for Hierarchy
+    name VARCHAR(50) NOT NULL
+);
+
+-- Insert the two owner types
+INSERT INTO hierarchy_def_owner_type (owner_type_code, name) VALUES
+    ('C', 'CatalogDef'),
+    ('H', 'Hierarchy');
+
+-- HierarchyDefOwner: Supertype table that can reference either CatalogDef or Hierarchy
+CREATE TABLE hierarchy_def_owner (
+    owner_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    owner_type_code CHAR(1) NOT NULL REFERENCES hierarchy_def_owner_type(owner_type_code),
+    catalog_def_id UUID REFERENCES catalog_def(catalog_def_id) ON DELETE CASCADE,
+    catalog_id UUID REFERENCES catalog(catalog_id) ON DELETE CASCADE,
+    hierarchy_name VARCHAR(255),
+    -- Constraints to ensure only one owner type is set
+    CONSTRAINT chk_catalogdef_owner CHECK (
+        (owner_type_code = 'C' AND catalog_def_id IS NOT NULL AND catalog_id IS NULL AND hierarchy_name IS NULL) OR
+        (owner_type_code = 'H' AND catalog_def_id IS NULL AND catalog_id IS NOT NULL AND hierarchy_name IS NOT NULL)
+    )
+    -- Note: Foreign key to hierarchy will be added later to avoid circular dependency
+);
+
+-- HierarchyDef: Defines hierarchy structure and metadata
+-- No global ID - identified by name within owner
+CREATE TABLE hierarchy_def (
+    owner_id UUID NOT NULL REFERENCES hierarchy_def_owner(owner_id) ON DELETE CASCADE,
+    name VARCHAR(255) NOT NULL,
+    hierarchy_type VARCHAR(2) NOT NULL CHECK (hierarchy_type IN ('EL', 'ES', 'ED', 'ET', 'AM')),
+    is_modifiable BOOLEAN NOT NULL DEFAULT true,
+    PRIMARY KEY (owner_id, name)
+);
+
+-- Link table: CatalogDef to HierarchyDef (many-to-many)
+-- This is now primarily for HierarchyDefs owned by CatalogDefs
+CREATE TABLE catalog_def_hierarchy_def (
+    catalog_def_id UUID NOT NULL REFERENCES catalog_def(catalog_def_id) ON DELETE CASCADE,
+    hierarchy_def_owner_id UUID NOT NULL,
+    hierarchy_def_name VARCHAR(255) NOT NULL,
+    PRIMARY KEY (catalog_def_id, hierarchy_def_owner_id, hierarchy_def_name),
+    FOREIGN KEY (hierarchy_def_owner_id, hierarchy_def_name) REFERENCES hierarchy_def(owner_id, name) ON DELETE CASCADE
 );
 
 -- ========== HIERARCHY CONTENT TABLES ==========
@@ -209,6 +241,18 @@ CREATE TABLE hierarchy_aspect_map (
     FOREIGN KEY (entity_id, aspect_def_id, catalog_id) REFERENCES aspect(entity_id, aspect_def_id, catalog_id) ON DELETE CASCADE
 );
 
+-- ========== ADD DEFERRED FOREIGN KEY CONSTRAINTS ==========
+
+-- Add foreign key constraint from hierarchy_def_owner to hierarchy (deferred to avoid circular dependency)
+ALTER TABLE hierarchy_def_owner
+ADD CONSTRAINT fk_hierarchy_owner FOREIGN KEY (catalog_id, hierarchy_name) REFERENCES hierarchy(catalog_id, name) ON DELETE CASCADE;
+
+-- Add foreign key constraint from hierarchy to hierarchy_def (deferred to avoid circular dependency)
+ALTER TABLE hierarchy
+ALTER COLUMN hierarchy_def_owner_id SET NOT NULL,
+ALTER COLUMN hierarchy_def_name SET NOT NULL,
+ADD CONSTRAINT fk_hierarchy_def FOREIGN KEY (hierarchy_def_owner_id, hierarchy_def_name) REFERENCES hierarchy_def(owner_id, name);
+
 -- ========== INDEXES FOR PERFORMANCE ==========
 
 -- AspectDef indexes
@@ -218,8 +262,13 @@ CREATE INDEX idx_aspect_def_name ON aspect_def(name);
 CREATE INDEX idx_property_def_aspect_def_id ON property_def(aspect_def_id);
 CREATE INDEX idx_property_def_name ON property_def(name);
 
+-- HierarchyDefOwner indexes
+CREATE INDEX idx_hierarchy_def_owner_type ON hierarchy_def_owner(owner_type_code);
+CREATE INDEX idx_hierarchy_def_owner_catalog_def_id ON hierarchy_def_owner(catalog_def_id);
+CREATE INDEX idx_hierarchy_def_owner_catalog_id ON hierarchy_def_owner(catalog_id);
+
 -- HierarchyDef indexes
-CREATE INDEX idx_hierarchy_def_catalog_def_id ON hierarchy_def(catalog_def_id);
+CREATE INDEX idx_hierarchy_def_owner_id ON hierarchy_def(owner_id);
 CREATE INDEX idx_hierarchy_def_name ON hierarchy_def(name);
 CREATE INDEX idx_hierarchy_def_type ON hierarchy_def(hierarchy_type);
 
@@ -233,7 +282,8 @@ CREATE INDEX idx_catalog_upstream ON catalog(upstream_catalog_id);
 
 -- Hierarchy indexes
 CREATE INDEX idx_hierarchy_catalog_id ON hierarchy(catalog_id);
-CREATE INDEX idx_hierarchy_def_name ON hierarchy(hierarchy_def_name);
+CREATE INDEX idx_hierarchy_hierarchy_def_owner_id ON hierarchy(hierarchy_def_owner_id);
+CREATE INDEX idx_hierarchy_hierarchy_def_name ON hierarchy(hierarchy_def_name);
 CREATE INDEX idx_hierarchy_name ON hierarchy(name);
 
 -- Aspect indexes
@@ -279,7 +329,9 @@ CREATE INDEX idx_hierarchy_aspect_map_aspect_def_id ON hierarchy_aspect_map(aspe
 
 COMMENT ON TABLE aspect_def IS 'Defines aspect structure and metadata - first-class entities';
 COMMENT ON TABLE property_def IS 'Defines property structure within AspectDefs';
-COMMENT ON TABLE hierarchy_def IS 'Defines hierarchy structure and metadata';
+COMMENT ON TABLE hierarchy_def_owner_type IS 'Discriminator table for hierarchy definition ownership types';
+COMMENT ON TABLE hierarchy_def_owner IS 'Supertype table that can reference either CatalogDef or Hierarchy as owners';
+COMMENT ON TABLE hierarchy_def IS 'Defines hierarchy structure and metadata - can be owned by CatalogDef or Hierarchy';
 COMMENT ON TABLE catalog_def IS 'Defines catalog structure and characteristics';
 COMMENT ON TABLE entity IS 'Conceptual entities with only global ID';
 COMMENT ON TABLE catalog IS 'Catalog instances extending Entity';

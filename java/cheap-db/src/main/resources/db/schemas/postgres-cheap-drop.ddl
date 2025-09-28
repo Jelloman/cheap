@@ -7,6 +7,7 @@
 -- Drop audit triggers (from postgres-cheap-audit.ddl)
 DROP TRIGGER IF EXISTS update_aspect_def_updated_at ON aspect_def;
 DROP TRIGGER IF EXISTS update_property_def_updated_at ON property_def;
+DROP TRIGGER IF EXISTS update_hierarchy_def_owner_updated_at ON hierarchy_def_owner;
 DROP TRIGGER IF EXISTS update_hierarchy_def_updated_at ON hierarchy_def;
 DROP TRIGGER IF EXISTS update_catalog_def_updated_at ON catalog_def;
 DROP TRIGGER IF EXISTS update_catalog_updated_at ON catalog;
@@ -53,6 +54,8 @@ DROP TABLE IF EXISTS catalog_def_aspect_def CASCADE;
 -- Drop core definition tables (from postgres-cheap.ddl)
 DROP TABLE IF EXISTS catalog_def CASCADE;
 DROP TABLE IF EXISTS hierarchy_def CASCADE;
+DROP TABLE IF EXISTS hierarchy_def_owner CASCADE;
+DROP TABLE IF EXISTS hierarchy_def_owner_type CASCADE;
 DROP TABLE IF EXISTS property_def CASCADE;
 DROP TABLE IF EXISTS aspect_def CASCADE;
 

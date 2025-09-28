@@ -14,6 +14,11 @@ ALTER TABLE property_def
 ADD COLUMN created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
 ADD COLUMN updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP;
 
+-- Add audit columns to hierarchy_def_owner
+ALTER TABLE hierarchy_def_owner
+ADD COLUMN created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+ADD COLUMN updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP;
+
 -- Add audit columns to hierarchy_def
 ALTER TABLE hierarchy_def
 ADD COLUMN created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -111,6 +116,9 @@ CREATE TRIGGER update_aspect_def_updated_at BEFORE UPDATE ON aspect_def
 CREATE TRIGGER update_property_def_updated_at BEFORE UPDATE ON property_def
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+CREATE TRIGGER update_hierarchy_def_owner_updated_at BEFORE UPDATE ON hierarchy_def_owner
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
 CREATE TRIGGER update_hierarchy_def_updated_at BEFORE UPDATE ON hierarchy_def
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
@@ -136,6 +144,9 @@ COMMENT ON COLUMN aspect_def.updated_at IS 'Timestamp when the aspect definition
 
 COMMENT ON COLUMN property_def.created_at IS 'Timestamp when the property definition was created';
 COMMENT ON COLUMN property_def.updated_at IS 'Timestamp when the property definition was last updated';
+
+COMMENT ON COLUMN hierarchy_def_owner.created_at IS 'Timestamp when the hierarchy definition owner was created';
+COMMENT ON COLUMN hierarchy_def_owner.updated_at IS 'Timestamp when the hierarchy definition owner was last updated';
 
 COMMENT ON COLUMN hierarchy_def.created_at IS 'Timestamp when the hierarchy definition was created';
 COMMENT ON COLUMN hierarchy_def.updated_at IS 'Timestamp when the hierarchy definition was last updated';

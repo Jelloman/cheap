@@ -15,7 +15,9 @@
       "Bash(git mv:*)",
       "Bash(git add:*)",
       "Bash(git checkout:*)",
-      "Read(//d/src/tmp/**)"
+      "Read(//d/src/tmp/**)",
+      "WebFetch(domain:dba.stackexchange.com)",
+      "Bash(xargs cat:*)"
     ],
     "deny": [],
     "ask": []

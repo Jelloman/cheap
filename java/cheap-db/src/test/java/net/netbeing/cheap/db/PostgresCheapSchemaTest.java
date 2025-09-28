@@ -2,19 +2,12 @@ package net.netbeing.cheap.db;
 
 import io.zonky.test.db.postgres.junit5.EmbeddedPostgresExtension;
 import io.zonky.test.db.postgres.junit5.SingleInstancePostgresExtension;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import javax.sql.DataSource;
-import java.io.IOException;
-import java.net.URISyntaxException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.sql.Statement;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -24,22 +17,14 @@ class PostgresCheapSchemaTest {
     public static SingleInstancePostgresExtension postgres = EmbeddedPostgresExtension.singleInstance();
 
     @Test
-    void testAllSchemaExecution() throws SQLException, IOException, URISyntaxException {
-        String mainSchemaPath = "/db/schemas/postgres-cheap.ddl";
-        String auditSchemaPath = "/db/schemas/postgres-cheap-audit.ddl";
-
-        String mainDdlContent = loadResourceFile(mainSchemaPath);
-        String auditDdlContent = loadResourceFile(auditSchemaPath);
-
-        assertNotNull(mainDdlContent, "Main schema DDL content should not be null");
-        assertNotNull(auditDdlContent, "Audit schema DDL content should not be null");
-
+    void testAllSchemaExecution() throws SQLException {
         DataSource dataSource = postgres.getEmbeddedPostgres().getPostgresDatabase();
-        try (Connection connection = dataSource.getConnection();
-             Statement statement = connection.createStatement()) {
+        CatalogDao catalogDao = new CatalogDao(dataSource);
 
-            // Execute the main schema DDL first
-            statement.execute(mainDdlContent);
+        // Execute the main schema DDL using CatalogDao
+        catalogDao.executeMainSchemaDdl(dataSource);
+
+        try (Connection connection = dataSource.getConnection()) {
 
             // Verify that key tables were created
             assertTrue(tableExists(connection, "aspect_def"), "aspect_def table should exist");
@@ -52,8 +37,12 @@ class PostgresCheapSchemaTest {
             assertTrue(tableExists(connection, "aspect"), "aspect table should exist");
             assertTrue(tableExists(connection, "property_value"), "property_value table should exist");
 
-            // Execute the audit schema DDL
-            statement.execute(auditDdlContent);
+        }
+
+        // Execute the audit schema DDL using CatalogDao
+        catalogDao.executeAuditSchemaDdl(dataSource);
+
+        try (Connection connection = dataSource.getConnection()) {
 
             // Verify that audit columns were added to key tables
             assertTrue(columnExists(connection, "aspect_def", "created_at"), "aspect_def should have created_at column");
@@ -68,12 +57,12 @@ class PostgresCheapSchemaTest {
             // Verify that the update trigger function was created
             assertTrue(functionExists(connection, "update_updated_at_column"), "update_updated_at_column function should exist");
 
-            // Load and execute the drop schema DDL
-            String dropSchemaPath = "/db/schemas/postgres-cheap-drop.ddl";
-            String dropDdlContent = loadResourceFile(dropSchemaPath);
-            assertNotNull(dropDdlContent, "Drop schema DDL content should not be null");
+        }
 
-            statement.execute(dropDdlContent);
+        // Execute the drop schema DDL using CatalogDao
+        catalogDao.executeDropSchemaDdl(dataSource);
+
+        try (Connection connection = dataSource.getConnection()) {
 
             // Verify that key tables have been dropped
             assertFalse(tableExists(connection, "aspect_def"), "aspect_def table should be dropped");
@@ -96,11 +85,6 @@ class PostgresCheapSchemaTest {
             // Verify that the update trigger function was dropped
             assertFalse(functionExists(connection, "update_updated_at_column"), "update_updated_at_column function should be dropped");
         }
-    }
-
-    private String loadResourceFile(String resourcePath) throws IOException, URISyntaxException {
-        Path path = Paths.get(getClass().getResource(resourcePath).toURI());
-        return Files.readString(path);
     }
 
     private boolean tableExists(Connection connection, String tableName) throws SQLException {
