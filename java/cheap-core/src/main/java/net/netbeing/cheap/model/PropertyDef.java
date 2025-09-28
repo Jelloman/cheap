@@ -132,8 +132,12 @@ public interface PropertyDef
     default HashCode hash()
     {
         //TODO: replace use of Hasher with language-independent algo
-        return Hashing.sha256().newHasher().putObject(this, new Funneler()).hash();
+        Hasher hasher = Hashing.sha256().newHasher();
+        hasher.putObject(this, FUNNEL);
+        return hasher.hash();
     }
+
+    static Funneler FUNNEL = new Funneler();
 
     @SuppressWarnings("UnstableApiUsage")
     class Funneler implements Funnel<PropertyDef>

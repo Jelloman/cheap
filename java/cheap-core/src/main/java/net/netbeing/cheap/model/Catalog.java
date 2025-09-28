@@ -26,11 +26,11 @@ import java.util.UUID;
 public interface Catalog extends Entity
 {
     /**
-     * Returns the catalog definition that describes this catalog's characteristics,
-     * including its type, caching behavior, and relationship to upstream sources.
+     * Returns the catalog definition that describes this catalog's expected content,
+     * as defined by a set of HierarchyDefs and AspectDefs.
      * 
-     * <p>The catalog definition provides metadata about how this catalog operates
-     * and interacts with other catalogs in the system.</p>
+     * <p>If the CatalogDef has the same UUID as this Catalog, that means the Catalog
+     * has no formal definition.</p>
      *
      * @return the catalog definition for this catalog, never null
      */

@@ -46,7 +46,6 @@ DROP TABLE IF EXISTS entity CASCADE;
 -- ========== DROP LINK TABLES ==========
 
 -- Drop link tables (from postgres-cheap.ddl)
-DROP TABLE IF EXISTS catalog_def_hierarchy_def CASCADE;
 DROP TABLE IF EXISTS catalog_def_aspect_def CASCADE;
 
 -- ========== DROP CORE DEFINITION TABLES ==========

@@ -1,8 +1,6 @@
 package net.netbeing.cheap.model;
 
-import com.google.common.hash.HashCode;
-import com.google.common.hash.Hasher;
-import com.google.common.hash.Hashing;
+import com.google.common.hash.*;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
@@ -146,16 +144,28 @@ public interface AspectDef
     {
         //TODO: replace use of Hasher with language-independent algo
         Hasher hasher = Hashing.sha256().newHasher();
-        hasher.putBoolean(isReadable());
-        hasher.putBoolean(isWritable());
-        hasher.putBoolean(canAddProperties());
-        hasher.putBoolean(canRemoveProperties());
-        hasher.putString(name(), UTF_8);
-        hasher.putString(globalId().toString(), UTF_8);
-        for (PropertyDef pDef : propertyDefs()) {
-            hasher.putObject(pDef, new PropertyDef.Funneler());
-        }
+        hasher.putObject(this, FUNNEL);
         return hasher.hash();
+    }
+
+    static Funneler FUNNEL = new Funneler();
+
+    @SuppressWarnings("UnstableApiUsage")
+    class Funneler implements Funnel<AspectDef>
+    {
+        @Override
+        public void funnel(AspectDef def, PrimitiveSink sink)
+        {
+            sink.putBoolean(Objects.requireNonNull(def).isReadable());
+            sink.putBoolean(def.isWritable());
+            sink.putBoolean(def.canAddProperties());
+            sink.putBoolean(def.canRemoveProperties());
+            sink.putString(def.name(), UTF_8);
+            sink.putString(def.globalId().toString(), UTF_8);
+            for (PropertyDef pDef : def.propertyDefs()) {
+                PropertyDef.FUNNEL.funnel(pDef, sink);
+            }
+        }
     }
 
 }

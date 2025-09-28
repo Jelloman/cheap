@@ -35,10 +35,6 @@ ADD COLUMN updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAM
 ALTER TABLE catalog_def_aspect_def
 ADD COLUMN created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP;
 
--- Add audit columns to catalog_def_hierarchy_def
-ALTER TABLE catalog_def_hierarchy_def
-ADD COLUMN created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP;
-
 -- ========== ADD AUDIT COLUMNS TO CORE ENTITY TABLES ==========
 
 -- Add audit columns to entity

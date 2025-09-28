@@ -23,7 +23,7 @@ CREATE TABLE aspect_def (
 CREATE TABLE property_def (
     aspect_def_id UUID NOT NULL REFERENCES aspect_def(aspect_def_id) ON DELETE CASCADE,
     name VARCHAR(255) NOT NULL,
-    property_type VARCHAR(10) NOT NULL CHECK (property_type IN (
+    property_type VARCHAR(3) NOT NULL CHECK (property_type IN (
         'INT', 'FLT', 'BLN', 'STR', 'TXT', 'BGI', 'BGF',
         'DAT', 'URI', 'UID', 'CLB', 'BLB'
     )),
@@ -40,7 +40,6 @@ CREATE TABLE property_def (
 -- CatalogDef: Defines catalog structure and characteristics
 CREATE TABLE catalog_def (
     catalog_def_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    name VARCHAR(255) NOT NULL UNIQUE,
     hash_version TEXT -- Hash-based version (implicit, based on content)
 );
 
@@ -65,10 +64,10 @@ CREATE TABLE entity (
 -- Catalog: Extends Entity, represents catalog instances
 CREATE TABLE catalog (
     catalog_id UUID PRIMARY KEY REFERENCES entity(entity_id) ON DELETE CASCADE,
-    catalog_def_id UUID NOT NULL REFERENCES catalog_def(catalog_def_id),
+    catalog_def_id UUID REFERENCES catalog_def(catalog_def_id),
     species VARCHAR(10) NOT NULL CHECK (species IN ('SOURCE', 'SINK', 'MIRROR', 'CACHE', 'CLONE', 'FORK')),
     uri TEXT,
-    upstream_catalog_id UUID REFERENCES catalog(catalog_id),
+    upstream_catalog_id UUID,
     is_strict BOOLEAN NOT NULL DEFAULT false,
     version_number BIGINT NOT NULL DEFAULT 0 -- Integer version (manual)
 );
@@ -171,16 +170,6 @@ CREATE TABLE hierarchy_def (
     hierarchy_type VARCHAR(2) NOT NULL CHECK (hierarchy_type IN ('EL', 'ES', 'ED', 'ET', 'AM')),
     is_modifiable BOOLEAN NOT NULL DEFAULT true,
     PRIMARY KEY (owner_id, name)
-);
-
--- Link table: CatalogDef to HierarchyDef (many-to-many)
--- This is now primarily for HierarchyDefs owned by CatalogDefs
-CREATE TABLE catalog_def_hierarchy_def (
-    catalog_def_id UUID NOT NULL REFERENCES catalog_def(catalog_def_id) ON DELETE CASCADE,
-    hierarchy_def_owner_id UUID NOT NULL,
-    hierarchy_def_name VARCHAR(255) NOT NULL,
-    PRIMARY KEY (catalog_def_id, hierarchy_def_owner_id, hierarchy_def_name),
-    FOREIGN KEY (hierarchy_def_owner_id, hierarchy_def_name) REFERENCES hierarchy_def(owner_id, name) ON DELETE CASCADE
 );
 
 -- ========== HIERARCHY CONTENT TABLES ==========

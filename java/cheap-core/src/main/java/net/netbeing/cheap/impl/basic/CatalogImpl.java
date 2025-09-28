@@ -82,7 +82,7 @@ public class CatalogImpl extends LocalEntityOneCatalogImpl implements Catalog
      * @param version the version number of this catalog
      * @throws IllegalArgumentException if a SOURCE/SINK catalog has an upstream; or for other species, if it lacks one
      */
-    public CatalogImpl(UUID globalId, CatalogSpecies species, CatalogDef def, UUID upstream, boolean strict, long version)
+    public CatalogImpl(@NotNull UUID globalId, @NotNull CatalogSpecies species, CatalogDef def, UUID upstream, boolean strict, long version)
     {
         super(globalId, null);
         this.catalog = this;

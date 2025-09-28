@@ -203,7 +203,7 @@ public class CheapFactory
      * @return a new Catalog instance
      */
     public @NotNull Catalog createCatalog(@NotNull UUID globalId, @NotNull CatalogSpecies species,
-                                                CatalogDef def, UUID upstream, boolean strict)
+                                          CatalogDef def, UUID upstream, boolean strict)
     {
         return new CatalogImpl(globalId, species, def, upstream, strict, 0L);
     }
@@ -220,7 +220,7 @@ public class CheapFactory
      * @return a new Catalog instance
      */
     public @NotNull Catalog createCatalog(@NotNull UUID globalId, @NotNull CatalogSpecies species,
-                                                CatalogDef def, UUID upstream, boolean strict, long version)
+                                          CatalogDef def, UUID upstream, boolean strict, long version)
     {
         return new CatalogImpl(globalId, species, def, upstream, strict, version);
     }
@@ -254,7 +254,7 @@ public class CheapFactory
      * @return a new CatalogDef instance
      */
     public @NotNull CatalogDef createCatalogDef(Iterable<HierarchyDef> hierarchyDefs, 
-                                                      Iterable<AspectDef> aspectDefs)
+                                                Iterable<AspectDef> aspectDefs)
     {
         return new CatalogDefImpl(hierarchyDefs, aspectDefs);
     }

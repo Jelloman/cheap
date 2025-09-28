@@ -25,11 +25,27 @@ public interface AspectMapHierarchy extends Hierarchy, Map<Entity,Aspect>
      * Convenience method to add an aspect to this hierarchy.
      * This method extracts the entity from the aspect and uses it as the key
      * in the underlying map.
-     * 
+     *
      * @param a the aspect to add
      * @return the previous aspect associated with the same entity, or null if none existed
      */
-    default Aspect add(Aspect a) {
+    default Aspect add(Aspect a)
+    {
+        if (!a.def().equals(aspectDef())) {
+            throw new IllegalArgumentException("Cannot add Aspect of type '"+a.def().name()+"' to hierarchy '"+ def().name()+"'.");
+        }
+        return unsafeAdd(a);
+    }
+
+    /**
+     * Convenience method to add an aspect to this hierarchy.
+     * This method extracts the entity from the aspect and uses it as the key
+     * in the underlying map.
+     *
+     * @param a the aspect to add
+     * @return the previous aspect associated with the same entity, or null if none existed
+     */
+    default Aspect unsafeAdd(Aspect a) {
         return put(a.entity(), a);
     }
 }
