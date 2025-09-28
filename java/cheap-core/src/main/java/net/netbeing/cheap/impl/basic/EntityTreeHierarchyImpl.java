@@ -174,7 +174,10 @@ public class EntityTreeHierarchyImpl implements EntityTreeHierarchy
 
     /** The hierarchy definition describing this entity tree. */
     private final HierarchyDef def;
-    
+
+    /** The version number of this hierarchy. */
+    private final long version;
+
     /** The root node of this tree hierarchy. */
     private Node root;
 
@@ -185,7 +188,7 @@ public class EntityTreeHierarchyImpl implements EntityTreeHierarchy
      */
     public EntityTreeHierarchyImpl(@NotNull Catalog catalog, @NotNull HierarchyDef def)
     {
-        this(catalog, def, new NodeImpl(null));
+        this(catalog, def, new NodeImpl(null), 0L);
     }
 
     /**
@@ -196,7 +199,7 @@ public class EntityTreeHierarchyImpl implements EntityTreeHierarchy
      */
     public EntityTreeHierarchyImpl(@NotNull Catalog catalog, @NotNull HierarchyDef def, Entity rootEntity)
     {
-        this(catalog, def, new NodeImpl(rootEntity));
+        this(catalog, def, new NodeImpl(rootEntity), 0L);
     }
 
     /**
@@ -207,8 +210,22 @@ public class EntityTreeHierarchyImpl implements EntityTreeHierarchy
      */
     public EntityTreeHierarchyImpl(@NotNull Catalog catalog, @NotNull HierarchyDef def, Node rootNode)
     {
+        this(catalog, def, rootNode, 0L);
+    }
+
+    /**
+     * Creates a new EntityTreeHierarchyImpl with the specified hierarchy definition, root node, and version.
+     *
+     * @param catalog the catalog containing this hierarchy
+     * @param def the hierarchy definition for this entity tree
+     * @param rootNode the node to use as the root of the tree
+     * @param version the version number of this hierarchy
+     */
+    public EntityTreeHierarchyImpl(@NotNull Catalog catalog, @NotNull HierarchyDef def, Node rootNode, long version)
+    {
         this.catalog = catalog;
         this.def = def;
+        this.version = version;
         this.root = rootNode;
         catalog.addHierarchy(this);
     }
@@ -244,6 +261,17 @@ public class EntityTreeHierarchyImpl implements EntityTreeHierarchy
     public @NotNull Node root()
     {
         return root;
+    }
+
+    /**
+     * Returns the version number of this hierarchy.
+     *
+     * @return the version number
+     */
+    @Override
+    public long version()
+    {
+        return version;
     }
 
     /**

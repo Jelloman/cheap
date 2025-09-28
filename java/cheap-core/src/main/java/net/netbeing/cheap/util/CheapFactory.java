@@ -202,10 +202,27 @@ public class CheapFactory
      * @param strict whether the catalog is strict
      * @return a new Catalog instance
      */
-    public @NotNull Catalog createCatalog(@NotNull UUID globalId, @NotNull CatalogSpecies species, 
+    public @NotNull Catalog createCatalog(@NotNull UUID globalId, @NotNull CatalogSpecies species,
                                                 CatalogDef def, UUID upstream, boolean strict)
     {
-        return new CatalogImpl(globalId, species, def, upstream, strict);
+        return new CatalogImpl(globalId, species, def, upstream, strict, 0L);
+    }
+
+    /**
+     * Creates a new catalog with full configuration including version.
+     *
+     * @param globalId the global identifier for the catalog
+     * @param species the catalog species
+     * @param def the catalog definition, or null to auto-create
+     * @param upstream the upstream catalog, or null for SOURCE/SINK catalogs
+     * @param strict whether the catalog is strict
+     * @param version the version number of this catalog
+     * @return a new Catalog instance
+     */
+    public @NotNull Catalog createCatalog(@NotNull UUID globalId, @NotNull CatalogSpecies species,
+                                                CatalogDef def, UUID upstream, boolean strict, long version)
+    {
+        return new CatalogImpl(globalId, species, def, upstream, strict, version);
     }
 
     /**
@@ -510,6 +527,19 @@ public class CheapFactory
     }
 
     /**
+     * Creates a new entity directory hierarchy with version.
+     *
+     * @param catalog the owning catalog
+     * @param def the hierarchy definition for this entity directory
+     * @param version the version number of this hierarchy
+     * @return a new EntityDirectoryHierarchy instance
+     */
+    public @NotNull EntityDirectoryHierarchy createEntityDirectoryHierarchy(@NotNull Catalog catalog, @NotNull HierarchyDef def, long version)
+    {
+        return new EntityDirectoryHierarchyImpl(catalog, def, version);
+    }
+
+    /**
      * Creates a new entity list hierarchy.
      *
      * @param def the hierarchy definition for this entity list
@@ -532,6 +562,33 @@ public class CheapFactory
     }
 
     /**
+     * Creates a new entity list hierarchy with version.
+     *
+     * @param catalog the owning catalog
+     * @param def the hierarchy definition for this entity list
+     * @param version the version number of this hierarchy
+     * @return a new EntityListHierarchy instance
+     */
+    public @NotNull EntityListHierarchy createEntityListHierarchy(@NotNull Catalog catalog, @NotNull HierarchyDef def, long version)
+    {
+        return new EntityListHierarchyImpl(catalog, def, version);
+    }
+
+    /**
+     * Creates a new entity list hierarchy with initial capacity and version.
+     *
+     * @param catalog the owning catalog
+     * @param def the hierarchy definition for this entity list
+     * @param initialCapacity the initial capacity for the list
+     * @param version the version number of this hierarchy
+     * @return a new EntityListHierarchy instance
+     */
+    public @NotNull EntityListHierarchy createEntityListHierarchy(@NotNull Catalog catalog, @NotNull HierarchyDef def, int initialCapacity, long version)
+    {
+        return new EntityListHierarchyImpl(catalog, def, initialCapacity, version);
+    }
+
+    /**
      * Creates a new entity set hierarchy.
      *
      * @param def the hierarchy definition for this entity set
@@ -551,6 +608,33 @@ public class CheapFactory
     public @NotNull EntitySetHierarchy createEntitySetHierarchy(@NotNull Catalog catalog, @NotNull HierarchyDef def)
     {
         return new EntitySetHierarchyImpl(catalog, def);
+    }
+
+    /**
+     * Creates a new entity set hierarchy with version.
+     *
+     * @param catalog the owning catalog
+     * @param def the hierarchy definition for this entity set
+     * @param version the version number of this hierarchy
+     * @return a new EntitySetHierarchy instance
+     */
+    public @NotNull EntitySetHierarchy createEntitySetHierarchy(@NotNull Catalog catalog, @NotNull HierarchyDef def, long version)
+    {
+        return new EntitySetHierarchyImpl(catalog, def, version);
+    }
+
+    /**
+     * Creates a new entity set hierarchy with initial capacity and version.
+     *
+     * @param catalog the owning catalog
+     * @param def the hierarchy definition for this entity set
+     * @param initialCapacity the initial capacity for the set
+     * @param version the version number of this hierarchy
+     * @return a new EntitySetHierarchy instance
+     */
+    public @NotNull EntitySetHierarchy createEntitySetHierarchy(@NotNull Catalog catalog, @NotNull HierarchyDef def, int initialCapacity, long version)
+    {
+        return new EntitySetHierarchyImpl(catalog, def, initialCapacity, version);
     }
 
     /**
@@ -605,6 +689,21 @@ public class CheapFactory
     }
 
     /**
+     * Creates a new entity tree hierarchy with version.
+     *
+     * @param catalog the owning catalog
+     * @param def the hierarchy definition for this entity tree
+     * @param rootNode the node to use as the root of the tree
+     * @param version the version number of this hierarchy
+     * @return a new EntityTreeHierarchy instance
+     */
+    public @NotNull EntityTreeHierarchy createEntityTreeHierarchy(@NotNull Catalog catalog, @NotNull HierarchyDef def,
+                                                                  @NotNull EntityTreeHierarchy.Node rootNode, long version)
+    {
+        return new EntityTreeHierarchyImpl(catalog, def, rootNode, version);
+    }
+
+    /**
      * Creates a new aspect map hierarchy.
      *
      * @param aspectDef the aspect definition for aspects in this hierarchy
@@ -649,6 +748,34 @@ public class CheapFactory
                                                                 @NotNull AspectDef aspectDef)
     {
         return new AspectMapHierarchyImpl(catalog, def, aspectDef);
+    }
+
+    /**
+     * Creates a new aspect map hierarchy with version.
+     *
+     * @param catalog the owning catalog
+     * @param aspectDef the aspect definition for aspects in this hierarchy
+     * @param version the version number of this hierarchy
+     * @return a new AspectMapHierarchy instance
+     */
+    public @NotNull AspectMapHierarchy createAspectMapHierarchy(@NotNull Catalog catalog, @NotNull AspectDef aspectDef, long version)
+    {
+        return new AspectMapHierarchyImpl(catalog, aspectDef, version);
+    }
+
+    /**
+     * Creates a new aspect map hierarchy with custom hierarchy definition and version.
+     *
+     * @param catalog the owning catalog
+     * @param def the hierarchy definition for this hierarchy
+     * @param aspectDef the aspect definition for aspects in this hierarchy
+     * @param version the version number of this hierarchy
+     * @return a new AspectMapHierarchy instance
+     */
+    public @NotNull AspectMapHierarchy createAspectMapHierarchy(@NotNull Catalog catalog, @NotNull HierarchyDef def,
+                                                                @NotNull AspectDef aspectDef, long version)
+    {
+        return new AspectMapHierarchyImpl(catalog, def, aspectDef, version);
     }
 
     // ===== Aspect Definition Factory Methods =====

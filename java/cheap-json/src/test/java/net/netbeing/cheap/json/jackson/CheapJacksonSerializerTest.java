@@ -335,7 +335,7 @@ public class CheapJacksonSerializerTest
         CatalogDef catalogDef = new CatalogDefImpl(hierarchyDefs, aspectDefs);
 
         // Create a non-strict catalog with explicit CatalogDef (strict=false allows additional hierarchies)
-        CatalogImpl catalog = new CatalogImpl(CATALOG_ID, CatalogSpecies.SINK, catalogDef, null, false);
+        CatalogImpl catalog = new CatalogImpl(CATALOG_ID, CatalogSpecies.SINK, catalogDef, null, false, 0L);
 
         // Create some entities to use across hierarchies
         UUID entityId1 = UUID.fromString("10000000-0000-0000-0000-000000000001");

@@ -34,4 +34,15 @@ public interface Hierarchy
      * @return the catalog that owns this hierarchy, never null
      */
     @NotNull Catalog catalog();
+
+    /**
+     * Returns the version number of this hierarchy.
+     * Version numbers allow tracking changes and evolution of hierarchy contents over time.
+     *
+     * @return the version number of this hierarchy, defaults to 0
+     */
+    default long version()
+    {
+        return 0L;
+    }
 }

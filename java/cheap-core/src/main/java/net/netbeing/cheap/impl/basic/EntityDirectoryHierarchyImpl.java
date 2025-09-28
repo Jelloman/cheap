@@ -28,15 +28,31 @@ public class EntityDirectoryHierarchyImpl extends LinkedHashMap<String, Entity> 
     /** The hierarchy definition describing this entity directory. */
     private final HierarchyDef def;
 
+    /** The version number of this hierarchy. */
+    private final long version;
+
     /**
      * Creates a new EntityDirectoryHierarchyImpl with the specified hierarchy definition.
-     * 
+     *
      * @param def the hierarchy definition for this entity directory
      */
     public EntityDirectoryHierarchyImpl(@NotNull Catalog catalog, @NotNull HierarchyDef def)
     {
+        this(catalog, def, 0L);
+    }
+
+    /**
+     * Creates a new EntityDirectoryHierarchyImpl with the specified hierarchy definition and version.
+     *
+     * @param catalog the catalog containing this hierarchy
+     * @param def the hierarchy definition for this entity directory
+     * @param version the version number of this hierarchy
+     */
+    public EntityDirectoryHierarchyImpl(@NotNull Catalog catalog, @NotNull HierarchyDef def, long version)
+    {
         this.catalog = catalog;
         this.def = def;
+        this.version = version;
         catalog.addHierarchy(this);
     }
 
@@ -53,12 +69,23 @@ public class EntityDirectoryHierarchyImpl extends LinkedHashMap<String, Entity> 
 
     /**
      * Returns the hierarchy definition for this entity directory.
-     * 
+     *
      * @return the hierarchy definition describing this entity directory's structure
      */
     @Override
     public @NotNull HierarchyDef def()
     {
         return def;
+    }
+
+    /**
+     * Returns the version number of this hierarchy.
+     *
+     * @return the version number
+     */
+    @Override
+    public long version()
+    {
+        return version;
     }
 }

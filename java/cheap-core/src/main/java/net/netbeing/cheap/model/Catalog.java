@@ -154,6 +154,17 @@ public interface Catalog extends Entity
     }
 
     /**
+     * Returns the version number of this catalog.
+     * Version numbers allow tracking changes and evolution of catalog contents over time.
+     *
+     * @return the version number of this catalog, defaults to 0
+     */
+    default long version()
+    {
+        return 0L;
+    }
+
+    /**
      * Extend the catalog with a new type of Aspects to store. If the AspectDef is
      * already included in this catalog, this is a no-op. If it's not part of the
      * CatalogDef and this catalog is flagged as strict, an exception will be

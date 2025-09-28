@@ -28,16 +28,17 @@ public class EntitySetHierarchyImpl extends LinkedHashSet<Entity> implements Ent
     /** The hierarchy definition describing this entity set. */
     private final HierarchyDef def;
 
+    /** The version number of this hierarchy. */
+    private final long version;
+
     /**
      * Creates a new EntitySetHierarchyImpl with the specified hierarchy definition.
-     * 
+     *
      * @param def the hierarchy definition for this entity set
      */
     public EntitySetHierarchyImpl(@NotNull Catalog catalog, @NotNull HierarchyDef def)
     {
-        this.catalog = catalog;
-        this.def = def;
-        catalog.addHierarchy(this);
+        this(catalog, def, 0L);
     }
 
     /**
@@ -49,9 +50,39 @@ public class EntitySetHierarchyImpl extends LinkedHashSet<Entity> implements Ent
      */
     public EntitySetHierarchyImpl(@NotNull Catalog catalog, @NotNull HierarchyDef def, int initialCapacity)
     {
+        this(catalog, def, initialCapacity, 0L);
+    }
+
+    /**
+     * Creates a new EntitySetHierarchyImpl with the specified hierarchy definition and version.
+     *
+     * @param catalog the catalog containing this hierarchy
+     * @param def the hierarchy definition for this entity set
+     * @param version the version number of this hierarchy
+     */
+    public EntitySetHierarchyImpl(@NotNull Catalog catalog, @NotNull HierarchyDef def, long version)
+    {
+        this.catalog = catalog;
+        this.def = def;
+        this.version = version;
+        catalog.addHierarchy(this);
+    }
+
+    /**
+     * Creates a new EntitySetHierarchyImpl with the specified hierarchy definition,
+     * initial capacity, and version.
+     *
+     * @param catalog the catalog containing this hierarchy
+     * @param def the hierarchy definition for this entity set
+     * @param initialCapacity initial capacity of set
+     * @param version the version number of this hierarchy
+     */
+    public EntitySetHierarchyImpl(@NotNull Catalog catalog, @NotNull HierarchyDef def, int initialCapacity, long version)
+    {
         super(initialCapacity);
         this.catalog = catalog;
         this.def = def;
+        this.version = version;
         catalog.addHierarchy(this);
     }
 
@@ -68,12 +99,23 @@ public class EntitySetHierarchyImpl extends LinkedHashSet<Entity> implements Ent
 
     /**
      * Returns the hierarchy definition for this entity set.
-     * 
+     *
      * @return the hierarchy definition describing this entity set's structure
      */
     @Override
     public @NotNull HierarchyDef def()
     {
         return def;
+    }
+
+    /**
+     * Returns the version number of this hierarchy.
+     *
+     * @return the version number
+     */
+    @Override
+    public long version()
+    {
+        return version;
     }
 }

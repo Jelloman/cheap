@@ -35,10 +35,13 @@ public class CatalogImpl extends LocalEntityOneCatalogImpl implements Catalog
 
     /** The upstream catalog this catalog mirrors, or null for root catalogs. */
     private final UUID upstream;
-    
+
+    /** The version number of this catalog. */
+    private final long version;
+
     /** Directory of hierarchies contained in this catalog. */
     private final Map<String, Hierarchy> hierarchies;
-    
+
     /** Directory of aspect definitions available in this catalog. */
     private final Map<String, AspectDef> aspectage;
 
@@ -48,7 +51,7 @@ public class CatalogImpl extends LocalEntityOneCatalogImpl implements Catalog
      */
     public CatalogImpl()
     {
-        this(UUID.randomUUID(), CatalogSpecies.SINK, null, null, false);
+        this(UUID.randomUUID(), CatalogSpecies.SINK, null, null, false, 0L);
     }
 
     /**
@@ -57,7 +60,7 @@ public class CatalogImpl extends LocalEntityOneCatalogImpl implements Catalog
      */
     public CatalogImpl(UUID globalId)
     {
-        this(globalId, CatalogSpecies.SINK, null, null, false);
+        this(globalId, CatalogSpecies.SINK, null, null, false, 0L);
     }
 
     /**
@@ -68,7 +71,7 @@ public class CatalogImpl extends LocalEntityOneCatalogImpl implements Catalog
      */
     public CatalogImpl(CatalogSpecies species, UUID upstream)
     {
-        this(UUID.randomUUID(), species, null, upstream, false);
+        this(UUID.randomUUID(), species, null, upstream, false, 0L);
     }
 
     /**
@@ -76,9 +79,10 @@ public class CatalogImpl extends LocalEntityOneCatalogImpl implements Catalog
      *
      * @param def the catalog definition describing this catalog
      * @param upstream the upstream catalog to mirror, or null for root catalogs
+     * @param version the version number of this catalog
      * @throws IllegalArgumentException if a SOURCE/SINK catalog has an upstream; or for other species, if it lacks one
      */
-    public CatalogImpl(UUID globalId, CatalogSpecies species, CatalogDef def, UUID upstream, boolean strict)
+    public CatalogImpl(UUID globalId, CatalogSpecies species, CatalogDef def, UUID upstream, boolean strict, long version)
     {
         super(globalId, null);
         this.catalog = this;
@@ -103,6 +107,7 @@ public class CatalogImpl extends LocalEntityOneCatalogImpl implements Catalog
         this.species = species;
         this.upstream = upstream;
         this.strict = strict;
+        this.version = version;
 
         this.hierarchies = new LinkedHashMap<>();
         this.aspectage = new LinkedHashMap<>();
@@ -251,5 +256,16 @@ public class CatalogImpl extends LocalEntityOneCatalogImpl implements Catalog
             return true; //!aMap.isEmpty();
         }
         return false;
+    }
+
+    /**
+     * Returns the version number of this catalog.
+     *
+     * @return the version number
+     */
+    @Override
+    public long version()
+    {
+        return version;
     }
 }

@@ -26,6 +26,9 @@ public class AspectMapHierarchyImpl extends HashMap<Entity, Aspect> implements A
     /** The aspect definition for the aspects stored in this hierarchy. */
     private final AspectDef aspectDef;
 
+    /** The version number of this hierarchy. */
+    private final long version;
+
     /**
      * Creates a new AspectMapHierarchyImpl to contain the given AspectDef.
      * AA new HierarchyDef will be constructed.
@@ -34,10 +37,7 @@ public class AspectMapHierarchyImpl extends HashMap<Entity, Aspect> implements A
      */
     public AspectMapHierarchyImpl(@NotNull Catalog catalog, @NotNull AspectDef aspectDef)
     {
-        this.catalog = catalog;
-        this.aspectDef = aspectDef;
-        this.def = new HierarchyDefImpl(aspectDef.name(), HierarchyType.ASPECT_MAP);
-        catalog.addHierarchy(this);
+        this(catalog, aspectDef, 0L);
     }
 
     /**
@@ -48,9 +48,40 @@ public class AspectMapHierarchyImpl extends HashMap<Entity, Aspect> implements A
      */
     public AspectMapHierarchyImpl(@NotNull Catalog catalog, @NotNull HierarchyDef def, @NotNull AspectDef aspectDef)
     {
+        this(catalog, def, aspectDef, 0L);
+    }
+
+    /**
+     * Creates a new AspectMapHierarchyImpl to contain the given AspectDef with version.
+     * A new HierarchyDef will be constructed.
+     *
+     * @param catalog the catalog containing this hierarchy
+     * @param aspectDef the aspect definition for aspects in this hierarchy
+     * @param version the version number of this hierarchy
+     */
+    public AspectMapHierarchyImpl(@NotNull Catalog catalog, @NotNull AspectDef aspectDef, long version)
+    {
+        this.catalog = catalog;
+        this.aspectDef = aspectDef;
+        this.version = version;
+        this.def = new HierarchyDefImpl(aspectDef.name(), HierarchyType.ASPECT_MAP);
+        catalog.addHierarchy(this);
+    }
+
+    /**
+     * Creates a new AspectMapHierarchyImpl with the given definitions and version.
+     *
+     * @param catalog the catalog containing this hierarchy
+     * @param def the hierarchy definition for this hierarchy
+     * @param aspectDef the aspect definition for aspects in this hierarchy
+     * @param version the version number of this hierarchy
+     */
+    public AspectMapHierarchyImpl(@NotNull Catalog catalog, @NotNull HierarchyDef def, @NotNull AspectDef aspectDef, long version)
+    {
         this.catalog = catalog;
         this.def = def;
         this.aspectDef = aspectDef;
+        this.version = version;
         catalog.addHierarchy(this);
     }
 
@@ -85,5 +116,16 @@ public class AspectMapHierarchyImpl extends HashMap<Entity, Aspect> implements A
     public @NotNull HierarchyDef def()
     {
         return def;
+    }
+
+    /**
+     * Returns the version number of this hierarchy.
+     *
+     * @return the version number
+     */
+    @Override
+    public long version()
+    {
+        return version;
     }
 }

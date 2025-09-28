@@ -28,6 +28,9 @@ public class EntityListHierarchyImpl extends ArrayList<Entity> implements Entity
     /** The hierarchy definition describing this entity list. */
     private final HierarchyDef def;
 
+    /** The version number of this hierarchy. */
+    private final long version;
+
     /**
      * Creates a new EntityListHierarchyImpl with the specified hierarchy definition.
      *
@@ -35,9 +38,7 @@ public class EntityListHierarchyImpl extends ArrayList<Entity> implements Entity
      */
     public EntityListHierarchyImpl(@NotNull Catalog catalog, @NotNull HierarchyDef def)
     {
-        this.catalog = catalog;
-        this.def = def;
-        catalog.addHierarchy(this);
+        this(catalog, def, 0L);
     }
 
     /**
@@ -49,9 +50,39 @@ public class EntityListHierarchyImpl extends ArrayList<Entity> implements Entity
      */
     public EntityListHierarchyImpl(@NotNull Catalog catalog, @NotNull HierarchyDef def, int initialCapacity)
     {
+        this(catalog, def, initialCapacity, 0L);
+    }
+
+    /**
+     * Creates a new EntityListHierarchyImpl with the specified hierarchy definition and version.
+     *
+     * @param catalog the catalog containing this hierarchy
+     * @param def the hierarchy definition for this entity list
+     * @param version the version number of this hierarchy
+     */
+    public EntityListHierarchyImpl(@NotNull Catalog catalog, @NotNull HierarchyDef def, long version)
+    {
+        this.catalog = catalog;
+        this.def = def;
+        this.version = version;
+        catalog.addHierarchy(this);
+    }
+
+    /**
+     * Creates a new EntityListHierarchyImpl with the specified hierarchy definition,
+     * initial capacity, and version.
+     *
+     * @param catalog the catalog containing this hierarchy
+     * @param def the hierarchy definition for this entity list
+     * @param initialCapacity initial capacity of list
+     * @param version the version number of this hierarchy
+     */
+    public EntityListHierarchyImpl(@NotNull Catalog catalog, @NotNull HierarchyDef def, int initialCapacity, long version)
+    {
         super(initialCapacity);
         this.catalog = catalog;
         this.def = def;
+        this.version = version;
         catalog.addHierarchy(this);
     }
 
@@ -68,12 +99,23 @@ public class EntityListHierarchyImpl extends ArrayList<Entity> implements Entity
 
     /**
      * Returns the hierarchy definition for this entity list.
-     * 
+     *
      * @return the hierarchy definition describing this entity list's structure
      */
     @Override
     public @NotNull HierarchyDef def()
     {
         return def;
+    }
+
+    /**
+     * Returns the version number of this hierarchy.
+     *
+     * @return the version number
+     */
+    @Override
+    public long version()
+    {
+        return version;
     }
 }
