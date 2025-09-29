@@ -3,14 +3,20 @@
 -- This schema supports both definitions (metadata) and elements (data instances)
 
 -- Enable UUID extension
+-- TODO: PG18!
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
--- ========== CORE DEFINITION TABLES ==========
+-- ========== CORE CHEAP ELEMENT TABLES ==========
+
+-- Entity: Represents entities with only global ID (conceptual objects)
+CREATE TABLE entity (
+    entity_id UUID PRIMARY KEY DEFAULT uuid_generate_v4()
+);
 
 -- AspectDef: First-class entity defining aspect structure and metadata
 CREATE TABLE aspect_def (
     aspect_def_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    name VARCHAR(255) NOT NULL UNIQUE,
+    name TEXT NOT NULL UNIQUE,
     hash_version TEXT, -- Hash-based version (implicit, based on content)
     is_readable BOOLEAN NOT NULL DEFAULT true,
     is_writable BOOLEAN NOT NULL DEFAULT true,
@@ -22,8 +28,8 @@ CREATE TABLE aspect_def (
 -- No global ID - identified by name within AspectDef
 CREATE TABLE property_def (
     aspect_def_id UUID NOT NULL REFERENCES aspect_def(aspect_def_id) ON DELETE CASCADE,
-    name VARCHAR(255) NOT NULL,
-    property_type VARCHAR(3) NOT NULL CHECK (property_type IN (
+    name TEXT NOT NULL,
+    property_type TEXT NOT NULL CHECK (property_type IN (
         'INT', 'FLT', 'BLN', 'STR', 'TXT', 'BGI', 'BGF',
         'DAT', 'URI', 'UID', 'CLB', 'BLB'
     )),
@@ -54,18 +60,11 @@ CREATE TABLE catalog_def_aspect_def (
 
 -- Note: Link table for CatalogDef to HierarchyDef will be created after HierarchyDef tables
 
--- ========== CORE ENTITY TABLES ==========
-
--- Entity: Represents entities with only global ID (conceptual objects)
-CREATE TABLE entity (
-    entity_id UUID PRIMARY KEY DEFAULT uuid_generate_v4()
-);
-
 -- Catalog: Extends Entity, represents catalog instances
 CREATE TABLE catalog (
-    catalog_id UUID PRIMARY KEY REFERENCES entity(entity_id) ON DELETE CASCADE,
-    catalog_def_id UUID REFERENCES catalog_def(catalog_def_id),
-    species VARCHAR(10) NOT NULL CHECK (species IN ('SOURCE', 'SINK', 'MIRROR', 'CACHE', 'CLONE', 'FORK')),
+    catalog_id UUID PRIMARY KEY DEFAULT uuid_generate_v4()
+    catalog_def_id UUID REFERENCES catalog_def(catalog_def_id), -- NB: can be null
+    species TEXT NOT NULL CHECK (species IN ('SOURCE', 'SINK', 'MIRROR', 'CACHE', 'CLONE', 'FORK')),
     uri TEXT,
     upstream_catalog_id UUID,
     is_strict BOOLEAN NOT NULL DEFAULT false,
@@ -81,11 +80,11 @@ CREATE TABLE catalog_aspect_def (
 
 -- Hierarchy: Hierarchy instances within catalogs
 -- No global ID - identified by name within catalog
+-- Note that a Hierarchy's name must always match its HierarchyDef's name.
 CREATE TABLE hierarchy (
     catalog_id UUID NOT NULL REFERENCES catalog(catalog_id) ON DELETE CASCADE,
-    name VARCHAR(255) NOT NULL,
     hierarchy_def_owner_id UUID, -- Will be made NOT NULL and add FK later
-    hierarchy_def_name VARCHAR(255),  -- Will be made NOT NULL and add FK later
+    hierarchy_def_name TEXT,  -- Will be made NOT NULL and add FK later
     version_number BIGINT NOT NULL DEFAULT 0, -- Integer version (manual)
     PRIMARY KEY (catalog_id, name)
     -- Note: Foreign key to hierarchy_def will be added later
@@ -98,7 +97,7 @@ CREATE TABLE aspect (
     aspect_def_id UUID NOT NULL REFERENCES aspect_def(aspect_def_id),
     catalog_id UUID NOT NULL REFERENCES catalog(catalog_id) ON DELETE CASCADE,
     hierarchy_catalog_id UUID NOT NULL,
-    hierarchy_name VARCHAR(255) NOT NULL,
+    hierarchy_name TEXT NOT NULL,
     is_transferable BOOLEAN NOT NULL DEFAULT false,
     PRIMARY KEY (entity_id, aspect_def_id, catalog_id),
     FOREIGN KEY (hierarchy_catalog_id, hierarchy_name) REFERENCES hierarchy(catalog_id, name) ON DELETE CASCADE
@@ -112,7 +111,7 @@ CREATE TABLE property_value (
     entity_id UUID NOT NULL,
     aspect_def_id UUID NOT NULL,
     catalog_id UUID NOT NULL,
-    property_name VARCHAR(255) NOT NULL,
+    property_name TEXT NOT NULL,
 
     -- Value storage columns for different types
     value_text TEXT,
@@ -123,7 +122,7 @@ CREATE TABLE property_value (
     value_binary BYTEA,
 
     -- Metadata
-    value_type VARCHAR(10) NOT NULL CHECK (value_type IN (
+    value_type TEXT NOT NULL CHECK (value_type IN (
         'INT', 'FLT', 'BLN', 'STR', 'TXT', 'BGI', 'BGF',
         'DAT', 'URI', 'UID', 'CLB', 'BLB'
     )),
@@ -139,7 +138,7 @@ CREATE TABLE property_value (
 -- HierarchyDefOwnerType: Discriminator table for hierarchy definition ownership
 CREATE TABLE hierarchy_def_owner_type (
     owner_type_code CHAR(1) PRIMARY KEY, -- 'C' for CatalogDef, 'H' for Hierarchy
-    name VARCHAR(50) NOT NULL
+    name TEXT NOT NULL
 );
 
 -- Insert the two owner types
@@ -153,7 +152,7 @@ CREATE TABLE hierarchy_def_owner (
     owner_type_code CHAR(1) NOT NULL REFERENCES hierarchy_def_owner_type(owner_type_code),
     catalog_def_id UUID REFERENCES catalog_def(catalog_def_id) ON DELETE CASCADE,
     catalog_id UUID REFERENCES catalog(catalog_id) ON DELETE CASCADE,
-    hierarchy_name VARCHAR(255),
+    hierarchy_name TEXT,
     -- Constraints to ensure only one owner type is set
     CONSTRAINT chk_catalogdef_owner CHECK (
         (owner_type_code = 'C' AND catalog_def_id IS NOT NULL AND catalog_id IS NULL AND hierarchy_name IS NULL) OR
@@ -166,8 +165,8 @@ CREATE TABLE hierarchy_def_owner (
 -- No global ID - identified by name within owner
 CREATE TABLE hierarchy_def (
     owner_id UUID NOT NULL REFERENCES hierarchy_def_owner(owner_id) ON DELETE CASCADE,
-    name VARCHAR(255) NOT NULL,
-    hierarchy_type VARCHAR(2) NOT NULL CHECK (hierarchy_type IN ('EL', 'ES', 'ED', 'ET', 'AM')),
+    name TEXT NOT NULL,
+    hierarchy_type TEXT NOT NULL CHECK (hierarchy_type IN ('EL', 'ES', 'ED', 'ET', 'AM')),
     is_modifiable BOOLEAN NOT NULL DEFAULT true,
     PRIMARY KEY (owner_id, name)
 );
@@ -177,7 +176,7 @@ CREATE TABLE hierarchy_def (
 -- Entity List Hierarchy: Ordered list with possible duplicates
 CREATE TABLE hierarchy_entity_list (
     hierarchy_catalog_id UUID NOT NULL,
-    hierarchy_name VARCHAR(255) NOT NULL,
+    hierarchy_name TEXT NOT NULL,
     entity_id UUID NOT NULL REFERENCES entity(entity_id) ON DELETE CASCADE,
     list_order INTEGER NOT NULL,
     PRIMARY KEY (hierarchy_catalog_id, hierarchy_name, list_order),
@@ -187,7 +186,7 @@ CREATE TABLE hierarchy_entity_list (
 -- Entity Set Hierarchy: Unique entities (possibly ordered)
 CREATE TABLE hierarchy_entity_set (
     hierarchy_catalog_id UUID NOT NULL,
-    hierarchy_name VARCHAR(255) NOT NULL,
+    hierarchy_name TEXT NOT NULL,
     entity_id UUID NOT NULL REFERENCES entity(entity_id) ON DELETE CASCADE,
     set_order INTEGER,
     PRIMARY KEY (hierarchy_catalog_id, hierarchy_name, entity_id),
@@ -197,8 +196,8 @@ CREATE TABLE hierarchy_entity_set (
 -- Entity Directory Hierarchy: String-to-entity mapping
 CREATE TABLE hierarchy_entity_directory (
     hierarchy_catalog_id UUID NOT NULL,
-    hierarchy_name VARCHAR(255) NOT NULL,
-    entity_key VARCHAR(1000) NOT NULL,
+    hierarchy_name TEXT NOT NULL,
+    entity_key TEXT NOT NULL,
     entity_id UUID NOT NULL REFERENCES entity(entity_id) ON DELETE CASCADE,
     PRIMARY KEY (hierarchy_catalog_id, hierarchy_name, entity_key),
     FOREIGN KEY (hierarchy_catalog_id, hierarchy_name) REFERENCES hierarchy(catalog_id, name) ON DELETE CASCADE
@@ -208,9 +207,9 @@ CREATE TABLE hierarchy_entity_directory (
 CREATE TABLE hierarchy_entity_tree_node (
     node_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     hierarchy_catalog_id UUID NOT NULL,
-    hierarchy_name VARCHAR(255) NOT NULL,
+    hierarchy_name TEXT NOT NULL,
     parent_node_id UUID REFERENCES hierarchy_entity_tree_node(node_id) ON DELETE CASCADE,
-    node_key VARCHAR(1000),
+    node_key TEXT,
     entity_id UUID REFERENCES entity(entity_id) ON DELETE CASCADE,
     node_path TEXT, -- Computed path for efficient queries
     FOREIGN KEY (hierarchy_catalog_id, hierarchy_name) REFERENCES hierarchy(catalog_id, name) ON DELETE CASCADE,
@@ -220,7 +219,7 @@ CREATE TABLE hierarchy_entity_tree_node (
 -- Aspect Map Hierarchy: Entity-to-aspect mapping for single aspect type
 CREATE TABLE hierarchy_aspect_map (
     hierarchy_catalog_id UUID NOT NULL,
-    hierarchy_name VARCHAR(255) NOT NULL,
+    hierarchy_name TEXT NOT NULL,
     entity_id UUID NOT NULL REFERENCES entity(entity_id) ON DELETE CASCADE,
     aspect_def_id UUID NOT NULL REFERENCES aspect_def(aspect_def_id),
     catalog_id UUID NOT NULL,

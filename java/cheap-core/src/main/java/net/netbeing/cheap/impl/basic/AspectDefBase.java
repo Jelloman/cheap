@@ -19,13 +19,10 @@ import java.util.*;
  * @see MutableAspectDefImpl
  * @see PropertyDef
  */
-public abstract class AspectDefBase implements AspectDef
+public abstract class AspectDefBase extends EntityImpl implements AspectDef
 {
     /** The name of this aspect definition. */
     final String name;
-
-    /** The global ID of this aspect definition. */
-    final UUID globalId;
 
     /** Map of property names to property definitions. */
     final Map<String, PropertyDef> propertyDefs;
@@ -69,8 +66,8 @@ public abstract class AspectDefBase implements AspectDef
      */
     protected AspectDefBase(@NotNull String name, @NotNull UUID globalId, @NotNull Map<String, PropertyDef> propertyDefs)
     {
+        super(globalId);
         this.name = Objects.requireNonNull(name, "AspectDefs must have a non-null name.");
-        this.globalId = Objects.requireNonNull(globalId, "AspectDefs must have a non-null name.");
         this.propertyDefs = Objects.requireNonNull(propertyDefs, "Provided property defs cannot be null.");
     }
 
@@ -81,15 +78,6 @@ public abstract class AspectDefBase implements AspectDef
     public @NotNull String name()
     {
         return name;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public @NotNull UUID globalId()
-    {
-        return globalId;
     }
 
     /**

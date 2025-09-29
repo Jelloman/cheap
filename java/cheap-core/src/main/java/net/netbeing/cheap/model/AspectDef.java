@@ -18,7 +18,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
  * attached to entities, similar to rows in a database table or attributes of a file.
  * The AspectDef serves as the schema definition for these aspects.</p>
  */
-public interface AspectDef
+public interface AspectDef extends Entity
 {
     /**
      * Returns the unique name identifier for this aspect definition.
@@ -26,13 +26,6 @@ public interface AspectDef
      * @return the aspect name, never null
      */
     @NotNull String name();
-
-    /**
-     * Returns the globally unique identifier for this AspectDef.
-     *
-     * @return the UUID identifying this AspectDef globally
-     */
-    @NotNull UUID globalId();
 
     /**
      * Returns all property definitions that belong to this aspect.

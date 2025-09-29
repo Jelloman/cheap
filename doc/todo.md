@@ -2,19 +2,14 @@
 ***
 
 ## TODAY
-* Convert docs to MD
-* Flesh out design doc
-  * S11N/Persistence section
-    * AspectDefs 2nd
-    * All defs can have UUID and possibly URI (if URI there must be a UUID)
-  * List of modules
-    * core
-      * includes FS and SQLite support
-    * db
-      * PG
-      * MySQL/Maria
-    * json
-    * net
+* Simplify core model
+  * Sever CatalogDef and HierarchyDef
+    * Make them purely informational.
+    * Remove from DB schema
+    * Make them separate top-level elements in JSON
+    
+
+## IN PROGRESS
 
 
 ## GLOBAL
@@ -56,6 +51,19 @@ Look into Arkalos - https://arkalos.com/
 ## Archive
 
 ### 9/24
+* Convert docs to MD
+* Flesh out design doc
+  * S11N/Persistence section
+    * AspectDefs 2nd
+    * All defs can have UUID and possibly URI (if URI there must be a UUID)
+  * List of modules
+    * core
+      * includes FS and SQLite support
+    * db
+      * PG
+      * MySQL/Maria
+    * json
+    * net
 
 
 ### Thru 9/23 unordered
