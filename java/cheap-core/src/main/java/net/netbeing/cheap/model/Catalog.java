@@ -26,15 +26,11 @@ import java.util.UUID;
 public interface Catalog extends Entity
 {
     /**
-     * Returns the catalog definition that describes this catalog's expected content,
-     * as defined by a set of HierarchyDefs and AspectDefs.
-     * 
-     * <p>If the CatalogDef has the same UUID as this Catalog, that means the Catalog
-     * has no formal definition.</p>
+     * Returns the globally unique identifier for this catalog.
      *
-     * @return the catalog definition for this catalog, never null
+     * @return the UUID identifying this catalog globally
      */
-    @NotNull CatalogDef def();
+    @NotNull UUID globalId();
 
     /**
      * Returns the species of this catalog.
@@ -42,13 +38,6 @@ public interface Catalog extends Entity
      * @return the catalog species
      */
     @NotNull CatalogSpecies species();
-
-    /**
-     * Returns the globally unique identifier for this catalog.
-     *
-     * @return the UUID identifying this catalog globally
-     */
-    @NotNull UUID globalId();
 
     /**
      * The URI of this catalog. Usually a URL, but need not be.
@@ -66,15 +55,6 @@ public interface Catalog extends Entity
      * @return the upstream catalog, or null if this is a source or sink
      */
     UUID upstream();
-
-    /**
-     * Flags whether this catalog is strict, which means it only contains the
-     * AspectDefs and Hierarchies list in its CatalogDef. Non-strict catalogs
-     * may contain additional Hierarchies and types of Aspects.
-     *
-     * @return whether this catalog is strict
-     */
-    boolean isStrict();
 
     /**
      * Returns the collection of hierarchies contained within this catalog.
@@ -128,7 +108,7 @@ public interface Catalog extends Entity
      */
     default AspectMapHierarchy aspects(@NotNull AspectDef aspectDef)
     {
-        return aspects(aspectDef.name());
+        return (AspectMapHierarchy) hierarchy(aspectDef.name());
     }
 
     /**
@@ -142,15 +122,7 @@ public interface Catalog extends Entity
      */
     default AspectMapHierarchy aspects(@NotNull String name)
     {
-        AspectMapHierarchy aspectMap = (AspectMapHierarchy) hierarchy(name);
-        if (aspectMap == null) {
-            // If it's in our CatalogDef, create it upon demand
-            AspectDef aspectDef = def().aspectDef(name);
-            if (aspectDef != null) {
-                aspectMap = extend(aspectDef);
-            }
-        }
-        return aspectMap;
+        return (AspectMapHierarchy) hierarchy(name);
     }
 
     /**
@@ -182,16 +154,6 @@ public interface Catalog extends Entity
                 throw new IllegalArgumentException("A catalog may not be extended with a new AspectDef that is not identical to an existing AspectDef with the same name.");
             }
             return aMap;
-        }
-        AspectDef officialAspectDef = def().aspectDef(aspectDef.name());
-        if (isStrict()) {
-            if (officialAspectDef == null) {
-                throw new UnsupportedOperationException("A strict catalog may not be extended with a new AspectDef.");
-            }
-            // Otherwise, this is a valid aspect type and we continue
-        }
-        if (officialAspectDef != null && !officialAspectDef.fullyEquals(aspectDef)) {
-            throw new IllegalArgumentException("A catalog may not be extended with a new AspectDef that is not identical to an existing AspectDef with the same name.");
         }
         return new AspectMapHierarchyImpl(this, aspectDef);
     }

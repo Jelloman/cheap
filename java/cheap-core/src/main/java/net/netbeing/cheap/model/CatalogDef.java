@@ -12,22 +12,13 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  * A CatalogDef defines the structure and properties of a catalog.
+ * This is a purely informational class.
  *
  * @see AspectDef
  * @see HierarchyDef
  */
 public interface CatalogDef
 {
-    /**
-     * Returns the globally unique identifier for this CatalogDef.
-     * This may be the same as the Catalog UUID, which means that this
-     * CatalogDef is a thin wrapper around the Catalog, returning exactly
-     * the set of AspectDefs and HierarchyDefs in that Catalog at all times.
-     *
-     * @return the UUID identifying this CatalogDef globally
-     */
-    @NotNull UUID globalId();
-
     /**
      * Returns a read-only collection of the aspect definitions that are typically found
      * in a catalog with this definition. Catalogs flagged as "strict" will only contain
@@ -86,10 +77,9 @@ public interface CatalogDef
     class Funneler implements Funnel<CatalogDef>
     {
         @Override
-        public void funnel(CatalogDef def, PrimitiveSink sink)
+        public void funnel(CatalogDef def, @NotNull PrimitiveSink sink)
         {
-            sink.putString(Objects.requireNonNull(def).globalId().toString(), UTF_8);
-            for (AspectDef aDef : def.aspectDefs()) {
+            for (AspectDef aDef : Objects.requireNonNull(def).aspectDefs()) {
                 AspectDef.FUNNEL.funnel(aDef, sink);
             }
             for (HierarchyDef hDef : def.hierarchyDefs()) {

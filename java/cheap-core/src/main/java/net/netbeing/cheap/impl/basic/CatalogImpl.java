@@ -21,17 +21,11 @@ import java.util.UUID;
  */
 public class CatalogImpl extends LocalEntityOneCatalogImpl implements Catalog
 {
-    /** The catalog definition describing this catalog's properties. */
-    private final CatalogDef def;
-
     /** The immutable species of this Catalog. */
     private final CatalogSpecies species;
 
     /** The mutable uri of this Catalog. */
     private URI uri;
-
-    /** Whether this catalog is strict. */
-    private final boolean strict;
 
     /** The upstream catalog this catalog mirrors, or null for root catalogs. */
     private final UUID upstream;
@@ -51,7 +45,7 @@ public class CatalogImpl extends LocalEntityOneCatalogImpl implements Catalog
      */
     public CatalogImpl()
     {
-        this(UUID.randomUUID(), CatalogSpecies.SINK, null, null, false, 0L);
+        this(UUID.randomUUID(), CatalogSpecies.SINK, null, 0L);
     }
 
     /**
@@ -60,7 +54,7 @@ public class CatalogImpl extends LocalEntityOneCatalogImpl implements Catalog
      */
     public CatalogImpl(UUID globalId)
     {
-        this(globalId, CatalogSpecies.SINK, null, null, false, 0L);
+        this(globalId, CatalogSpecies.SINK, null, 0L);
     }
 
     /**
@@ -71,25 +65,20 @@ public class CatalogImpl extends LocalEntityOneCatalogImpl implements Catalog
      */
     public CatalogImpl(CatalogSpecies species, UUID upstream)
     {
-        this(UUID.randomUUID(), species, null, upstream, false, 0L);
+        this(UUID.randomUUID(), species, upstream, 0L);
     }
 
     /**
      * Creates a new catalog with the specified definition and upstream catalog.
      *
-     * @param def the catalog definition describing this catalog
      * @param upstream the upstream catalog to mirror, or null for root catalogs
      * @param version the version number of this catalog
      * @throws IllegalArgumentException if a SOURCE/SINK catalog has an upstream; or for other species, if it lacks one
      */
-    public CatalogImpl(@NotNull UUID globalId, @NotNull CatalogSpecies species, CatalogDef def, UUID upstream, boolean strict, long version)
+    public CatalogImpl(@NotNull UUID globalId, @NotNull CatalogSpecies species, UUID upstream, long version)
     {
         super(globalId, null);
         this.catalog = this;
-
-        if (strict && def == null) {
-            throw new IllegalArgumentException("A strict catalog may not be constructed without a CatalogDef.");
-        }
 
         switch (species) {
             case SOURCE, SINK -> {
@@ -106,24 +95,10 @@ public class CatalogImpl extends LocalEntityOneCatalogImpl implements Catalog
 
         this.species = species;
         this.upstream = upstream;
-        this.strict = strict;
         this.version = version;
 
         this.hierarchies = new LinkedHashMap<>();
         this.aspectage = new LinkedHashMap<>();
-
-        this.def = def != null ? def : new CatalogDefWrapper(this);
-    }
-
-    /**
-     * Returns the catalog definition for this catalog.
-     * 
-     * @return the catalog definition describing this catalog's properties
-     */
-    @Override
-    public @NotNull CatalogDef def()
-    {
-        return def;
     }
 
     /**
@@ -168,19 +143,6 @@ public class CatalogImpl extends LocalEntityOneCatalogImpl implements Catalog
     public UUID upstream()
     {
         return upstream;
-    }
-
-    /**
-     * Flags whether this catalog is strict, which means it only contains the
-     * AspectDefs and Hierarchies list in its CatalogDef. Non-strict catalogs
-     * may contain additional Hierarchies and types of Aspects.
-     *
-     * @return whether this catalog is strict
-     */
-    @Override
-    public boolean isStrict()
-    {
-        return strict;
     }
 
     /**
@@ -230,14 +192,7 @@ public class CatalogImpl extends LocalEntityOneCatalogImpl implements Catalog
         if (hierarchy.catalog() != this) {
             throw new IllegalArgumentException("Cannot add a Hierarchy to a Catalog unless the Catalog is already set as the Hierarchy's owner.");
         }
-        String hName = hierarchy.def().name();
-        HierarchyDef existingDef = def.hierarchyDef(hName);
-        if (strict && existingDef  == null) {
-            throw new UnsupportedOperationException("A hierarchy may not be added to a strict Catalog unless it is part of the CatalogDef.");
-        }
-        if (existingDef != null && !existingDef.fullyEquals(hierarchy.def())) {
-            throw new UnsupportedOperationException("A hierarchy may not be added to a strict Catalog unless it is part of the CatalogDef.");
-        }
+        String hName = hierarchy.name();
         Hierarchy existing = hierarchy(hName);
         if (existing instanceof AspectMapHierarchy) {
             throw new UnsupportedOperationException("A hierarchy may not be added to a Catalog with the same name as an existing AspectMapHierarchy.");

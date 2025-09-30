@@ -34,32 +34,6 @@ public interface HierarchyDef
     HierarchyType type();
 
     /**
-     * Determines whether hierarchies of this type can be modified after creation.
-     * A modifiable hierarchy allows addition, removal, and modification of its contents.
-     * 
-     * @return true if the hierarchy can be modified, false otherwise; defaults to true
-     */
-    default boolean isModifiable()
-    {
-        return true;
-    }
-
-    /**
-     * Tests whether this is equal to another HierarchyDef. This alternate form
-     * allows equality between different HierarchyDef implementations without overriding
-     * Object.equals() in every implementation.
-     *
-     * @param other HierarchyDef to compare to
-     * @return true if this is equivalent to the other HierarchyDef
-     */
-    default boolean fullyEquals(HierarchyDef other)
-    {
-        return other.isModifiable() == isModifiable() &&
-            other.name().equals(name()) &&
-            other.type().equals(type());
-    }
-
-    /**
      * Generate a Cheap-specific SHA-256 hash of this HierarchyDef.
      * This hash should be consistent across all Cheap implementations.
      *
@@ -85,8 +59,7 @@ public interface HierarchyDef
         @Override
         public void funnel(HierarchyDef def, PrimitiveSink sink)
         {
-            sink.putBoolean(Objects.requireNonNull(def).isModifiable());
-            sink.putString(def.name(), UTF_8);
+            sink.putString(Objects.requireNonNull(def).name(), UTF_8);
             sink.putString(def.type().typeCode(), UTF_8);
         }
     }

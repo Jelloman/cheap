@@ -1,9 +1,6 @@
 package net.netbeing.cheap.impl.basic;
 
-import net.netbeing.cheap.model.Catalog;
-import net.netbeing.cheap.model.Entity;
-import net.netbeing.cheap.model.EntitySetHierarchy;
-import net.netbeing.cheap.model.HierarchyDef;
+import net.netbeing.cheap.model.*;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.LinkedHashSet;
@@ -25,8 +22,8 @@ public class EntitySetHierarchyImpl extends LinkedHashSet<Entity> implements Ent
     /** The catalog containing this hierarchy. */
     private final Catalog catalog;
 
-    /** The hierarchy definition describing this entity set. */
-    private final HierarchyDef def;
+    /** The name of this hierarchy in the catalog. */
+    private final String name;
 
     /** The version number of this hierarchy. */
     private final long version;
@@ -34,36 +31,38 @@ public class EntitySetHierarchyImpl extends LinkedHashSet<Entity> implements Ent
     /**
      * Creates a new EntitySetHierarchyImpl with the specified hierarchy definition.
      *
-     * @param def the hierarchy definition for this entity set
+     * @param catalog the catalog containing this hierarchy
+     * @param name the name of this hierarchy in the catalog
      */
-    public EntitySetHierarchyImpl(@NotNull Catalog catalog, @NotNull HierarchyDef def)
+    public EntitySetHierarchyImpl(@NotNull Catalog catalog, @NotNull String name)
     {
-        this(catalog, def, 0L);
+        this(catalog, name, 0L);
     }
 
     /**
      * Creates a new EntitySetHierarchyImpl with the specified hierarchy definition and
      * initial capacity.
      *
-     * @param def the hierarchy definition for this entity set
+     * @param catalog the catalog containing this hierarchy
+     * @param name the name of this hierarchy in the catalog
      * @param initialCapacity initial capacity of set
      */
-    public EntitySetHierarchyImpl(@NotNull Catalog catalog, @NotNull HierarchyDef def, int initialCapacity)
+    public EntitySetHierarchyImpl(@NotNull Catalog catalog, @NotNull String name, int initialCapacity)
     {
-        this(catalog, def, initialCapacity, 0L);
+        this(catalog, name, initialCapacity, 0L);
     }
 
     /**
      * Creates a new EntitySetHierarchyImpl with the specified hierarchy definition and version.
      *
      * @param catalog the catalog containing this hierarchy
-     * @param def the hierarchy definition for this entity set
+     * @param name the name of this hierarchy in the catalog
      * @param version the version number of this hierarchy
      */
-    public EntitySetHierarchyImpl(@NotNull Catalog catalog, @NotNull HierarchyDef def, long version)
+    public EntitySetHierarchyImpl(@NotNull Catalog catalog, @NotNull String name, long version)
     {
         this.catalog = catalog;
-        this.def = def;
+        this.name = name;
         this.version = version;
         catalog.addHierarchy(this);
     }
@@ -73,15 +72,15 @@ public class EntitySetHierarchyImpl extends LinkedHashSet<Entity> implements Ent
      * initial capacity, and version.
      *
      * @param catalog the catalog containing this hierarchy
-     * @param def the hierarchy definition for this entity set
+     * @param name the name of this hierarchy in the catalog
      * @param initialCapacity initial capacity of set
      * @param version the version number of this hierarchy
      */
-    public EntitySetHierarchyImpl(@NotNull Catalog catalog, @NotNull HierarchyDef def, int initialCapacity, long version)
+    public EntitySetHierarchyImpl(@NotNull Catalog catalog, @NotNull String name, int initialCapacity, long version)
     {
         super(initialCapacity);
         this.catalog = catalog;
-        this.def = def;
+        this.name = name;
         this.version = version;
         catalog.addHierarchy(this);
     }
@@ -98,14 +97,23 @@ public class EntitySetHierarchyImpl extends LinkedHashSet<Entity> implements Ent
     }
 
     /**
-     * Returns the hierarchy definition for this entity set.
+     * Returns the name of this hierarchy in the catalog.
      *
-     * @return the hierarchy definition describing this entity set's structure
+     * @return the name of the hierarchy
      */
     @Override
-    public @NotNull HierarchyDef def()
+    public @NotNull String name()
     {
-        return def;
+        return name;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public @NotNull HierarchyType type()
+    {
+        return HierarchyType.ENTITY_SET;
     }
 
     /**

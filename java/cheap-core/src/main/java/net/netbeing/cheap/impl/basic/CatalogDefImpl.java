@@ -20,9 +20,6 @@ import java.util.*;
  */
 public class CatalogDefImpl implements CatalogDef
 {
-    /** The global ID of this aspect definition. */
-    final UUID globalId;
-
     /** Map of hierarchy names to their definitions. */
     private final Map<String,HierarchyDef> hierarchyDefs = new LinkedHashMap<>();
 
@@ -34,7 +31,6 @@ public class CatalogDefImpl implements CatalogDef
      */
     public CatalogDefImpl()
     {
-        this.globalId = UUID.randomUUID();
     }
 
     /**
@@ -44,18 +40,7 @@ public class CatalogDefImpl implements CatalogDef
      */
     public CatalogDefImpl(@NotNull CatalogDef other)
     {
-        this(UUID.randomUUID(), other.hierarchyDefs(), other.aspectDefs());
-    }
-
-    /**
-     * Creates a new CatalogDefImpl as a copy of another CatalogDef.
-     *
-     * @param globalId the UUID to assign this catalog def
-     * @param other a CatalogDef
-     */
-    public CatalogDefImpl(@NotNull UUID globalId, @NotNull CatalogDef other)
-    {
-        this(globalId, other.hierarchyDefs(), other.aspectDefs());
+        this(other.hierarchyDefs(), other.aspectDefs());
     }
 
     /**
@@ -67,19 +52,6 @@ public class CatalogDefImpl implements CatalogDef
      */
     public CatalogDefImpl(Iterable<HierarchyDef> hierarchyDefs, Iterable<AspectDef> aspectDefs)
     {
-        this(UUID.randomUUID(), hierarchyDefs, aspectDefs);
-    }
-
-    /**
-     * Creates a new CatalogDefImpl with copies of the provided hierarchy defs and/or aspect defs.
-     * If the default hierarchies are not included, they will also be added.
-     *
-     * @param hierarchyDefs the hierarchyDefs to copy
-     * @param aspectDefs the aspectDefs to copy
-     */
-    public CatalogDefImpl(@NotNull UUID globalId, Iterable<HierarchyDef> hierarchyDefs, Iterable<AspectDef> aspectDefs)
-    {
-        this.globalId = Objects.requireNonNull(globalId, "CatalogDefs must have a global ID.");
         if (hierarchyDefs != null) {
             for (HierarchyDef hDef : hierarchyDefs) {
                 this.hierarchyDefs.put(hDef.name(), hDef);
@@ -90,15 +62,6 @@ public class CatalogDefImpl implements CatalogDef
                 this.aspectDefs.put(aDef.name(), aDef);
             }
         }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public @NotNull UUID globalId()
-    {
-        return globalId;
     }
 
     /**

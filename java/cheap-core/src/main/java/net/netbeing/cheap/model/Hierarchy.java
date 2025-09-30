@@ -18,22 +18,28 @@ import org.jetbrains.annotations.NotNull;
 public interface Hierarchy
 {
     /**
-     * Returns the definition that describes this hierarchy's characteristics,
-     * including its type, name, and organizational parameters.
-     *
-     * <p>The hierarchy definition provides metadata about how this hierarchy
-     * organizes entities and what operations are supported.</p>
-     *
-     * @return the hierarchy definition for this hierarchy, never null
-     */
-    @NotNull HierarchyDef def();
-
-    /**
      * Returns the Catalog that contains this Hierarchy.
      *
      * @return the catalog that owns this hierarchy, never null
      */
     @NotNull Catalog catalog();
+
+    /**
+     * Returns the name identifier for this hierarchy definition, which is unique
+     * within its catalog.
+     *
+     * @return the hierarchy name, never null
+     */
+    @NotNull String name();
+
+    /**
+     * Returns the type of hierarchy this definition describes.
+     * The type determines the structure and behavior of hierarchy instances
+     * created from this definition.
+     *
+     * @return the hierarchy type, never null
+     */
+    @NotNull HierarchyType type();
 
     /**
      * Returns the version number of this hierarchy.

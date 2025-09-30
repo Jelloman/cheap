@@ -1,9 +1,6 @@
 package net.netbeing.cheap.impl.basic;
 
-import net.netbeing.cheap.model.Catalog;
-import net.netbeing.cheap.model.Entity;
-import net.netbeing.cheap.model.EntityDirectoryHierarchy;
-import net.netbeing.cheap.model.HierarchyDef;
+import net.netbeing.cheap.model.*;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.LinkedHashMap;
@@ -25,8 +22,8 @@ public class EntityDirectoryHierarchyImpl extends LinkedHashMap<String, Entity> 
     /** The catalog containing this hierarchy. */
     private final Catalog catalog;
 
-    /** The hierarchy definition describing this entity directory. */
-    private final HierarchyDef def;
+    /** The name of this hierarchy in the catalog. */
+    private final String name;
 
     /** The version number of this hierarchy. */
     private final long version;
@@ -34,24 +31,25 @@ public class EntityDirectoryHierarchyImpl extends LinkedHashMap<String, Entity> 
     /**
      * Creates a new EntityDirectoryHierarchyImpl with the specified hierarchy definition.
      *
-     * @param def the hierarchy definition for this entity directory
+     * @param catalog the owning catalog
+     * @param name the name of this hierarchy in the catalog
      */
-    public EntityDirectoryHierarchyImpl(@NotNull Catalog catalog, @NotNull HierarchyDef def)
+    public EntityDirectoryHierarchyImpl(@NotNull Catalog catalog, @NotNull String name)
     {
-        this(catalog, def, 0L);
+        this(catalog, name, 0L);
     }
 
     /**
      * Creates a new EntityDirectoryHierarchyImpl with the specified hierarchy definition and version.
      *
      * @param catalog the catalog containing this hierarchy
-     * @param def the hierarchy definition for this entity directory
+     * @param name the name of this hierarchy in the catalog
      * @param version the version number of this hierarchy
      */
-    public EntityDirectoryHierarchyImpl(@NotNull Catalog catalog, @NotNull HierarchyDef def, long version)
+    public EntityDirectoryHierarchyImpl(@NotNull Catalog catalog, @NotNull String name, long version)
     {
         this.catalog = catalog;
-        this.def = def;
+        this.name = name;
         this.version = version;
         catalog.addHierarchy(this);
     }
@@ -68,14 +66,23 @@ public class EntityDirectoryHierarchyImpl extends LinkedHashMap<String, Entity> 
     }
 
     /**
-     * Returns the hierarchy definition for this entity directory.
+     * Returns the name of this hierarchy in the catalog.
      *
-     * @return the hierarchy definition describing this entity directory's structure
+     * @return the name of the hierarchy
      */
     @Override
-    public @NotNull HierarchyDef def()
+    public @NotNull String name()
     {
-        return def;
+        return name;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public @NotNull HierarchyType type()
+    {
+        return HierarchyType.ENTITY_DIR;
     }
 
     /**

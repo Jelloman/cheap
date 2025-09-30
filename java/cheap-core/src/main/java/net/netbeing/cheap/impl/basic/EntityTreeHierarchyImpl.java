@@ -1,9 +1,6 @@
 package net.netbeing.cheap.impl.basic;
 
-import net.netbeing.cheap.model.Catalog;
-import net.netbeing.cheap.model.Entity;
-import net.netbeing.cheap.model.EntityTreeHierarchy;
-import net.netbeing.cheap.model.HierarchyDef;
+import net.netbeing.cheap.model.*;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
@@ -172,8 +169,8 @@ public class EntityTreeHierarchyImpl implements EntityTreeHierarchy
     /** The catalog containing this hierarchy. */
     private final Catalog catalog;
 
-    /** The hierarchy definition describing this entity tree. */
-    private final HierarchyDef def;
+    /** The name of this hierarchy in the catalog. */
+    private final String name;
 
     /** The version number of this hierarchy. */
     private final long version;
@@ -184,47 +181,50 @@ public class EntityTreeHierarchyImpl implements EntityTreeHierarchy
     /**
      * Creates a new EntityTreeHierarchyImpl with the specified hierarchy definition and a root with a null entity.
      *
-     * @param def the hierarchy definition for this entity tree
+     * @param catalog the catalog containing this hierarchy
+     * @param name the name of this hierarchy in the catalog
      */
-    public EntityTreeHierarchyImpl(@NotNull Catalog catalog, @NotNull HierarchyDef def)
+    public EntityTreeHierarchyImpl(@NotNull Catalog catalog, @NotNull String name)
     {
-        this(catalog, def, new NodeImpl(null), 0L);
+        this(catalog, name, new NodeImpl(null), 0L);
     }
 
     /**
      * Creates a new EntityTreeHierarchyImpl with the specified hierarchy definition and root entity.
      *
-     * @param def the hierarchy definition for this entity tree
+     * @param catalog the catalog containing this hierarchy
+     * @param name the name of this hierarchy in the catalog
      * @param rootEntity the entity to use as the root of the tree
      */
-    public EntityTreeHierarchyImpl(@NotNull Catalog catalog, @NotNull HierarchyDef def, Entity rootEntity)
+    public EntityTreeHierarchyImpl(@NotNull Catalog catalog, @NotNull String name, Entity rootEntity)
     {
-        this(catalog, def, new NodeImpl(rootEntity), 0L);
+        this(catalog, name, new NodeImpl(rootEntity), 0L);
     }
 
     /**
      * Creates a new EntityTreeHierarchyImpl with the specified hierarchy definition and root node.
      *
-     * @param def the hierarchy definition for this entity tree
+     * @param catalog the catalog containing this hierarchy
+     * @param name the name of this hierarchy in the catalog
      * @param rootNode the node to use as the root of the tree
      */
-    public EntityTreeHierarchyImpl(@NotNull Catalog catalog, @NotNull HierarchyDef def, Node rootNode)
+    public EntityTreeHierarchyImpl(@NotNull Catalog catalog, @NotNull String name, Node rootNode)
     {
-        this(catalog, def, rootNode, 0L);
+        this(catalog, name, rootNode, 0L);
     }
 
     /**
      * Creates a new EntityTreeHierarchyImpl with the specified hierarchy definition, root node, and version.
      *
      * @param catalog the catalog containing this hierarchy
-     * @param def the hierarchy definition for this entity tree
+     * @param name the name of this hierarchy in the catalog
      * @param rootNode the node to use as the root of the tree
      * @param version the version number of this hierarchy
      */
-    public EntityTreeHierarchyImpl(@NotNull Catalog catalog, @NotNull HierarchyDef def, Node rootNode, long version)
+    public EntityTreeHierarchyImpl(@NotNull Catalog catalog, @NotNull String name, Node rootNode, long version)
     {
         this.catalog = catalog;
-        this.def = def;
+        this.name = name;
         this.version = version;
         this.root = rootNode;
         catalog.addHierarchy(this);
@@ -242,14 +242,23 @@ public class EntityTreeHierarchyImpl implements EntityTreeHierarchy
     }
 
     /**
-     * Returns the hierarchy definition for this entity tree.
-     * 
-     * @return the hierarchy definition describing this entity tree's structure
+     * Returns the name of this hierarchy in the catalog.
+     *
+     * @return the name of the hierarchy
      */
     @Override
-    public @NotNull HierarchyDef def()
+    public @NotNull String name()
     {
-        return def;
+        return name;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public @NotNull HierarchyType type()
+    {
+        return HierarchyType.ENTITY_TREE;
     }
 
     /**
