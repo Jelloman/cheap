@@ -29,6 +29,7 @@ dependencies {
     testImplementation(libs.embedded.postgres)
     testImplementation(libs.flyway)
     testImplementation(libs.flyway.pg)
+    testImplementation(project(":cheap-json"))
 }
 
 // Apply a specific Java toolchain to ease working on different environments.

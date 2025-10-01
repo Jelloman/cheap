@@ -710,7 +710,7 @@ public class CatalogDao implements CatalogPersistence
                         }
 
                         Property property = factory.createProperty(propDef, value);
-                        // Note: Would need to add property to aspect - depends on aspect implementation
+                        aspect.put(property);
                     }
                 }
             }

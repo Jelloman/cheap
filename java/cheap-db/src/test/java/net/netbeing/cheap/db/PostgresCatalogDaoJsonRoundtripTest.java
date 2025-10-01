@@ -1,0 +1,120 @@
+package net.netbeing.cheap.db;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.zonky.test.db.postgres.embedded.FlywayPreparer;
+import io.zonky.test.db.postgres.junit5.EmbeddedPostgresExtension;
+import io.zonky.test.db.postgres.junit5.PreparedDbExtension;
+import net.netbeing.cheap.json.jackson.deserialize.CheapJacksonDeserializer;
+import net.netbeing.cheap.json.jackson.serialize.CheapJacksonSerializer;
+import net.netbeing.cheap.model.Catalog;
+import net.netbeing.cheap.util.CheapFactory;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
+
+import javax.sql.DataSource;
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.Statement;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+class PostgresCatalogDaoJsonRoundtripTest
+{
+    @RegisterExtension
+    public static PreparedDbExtension flywayDB = EmbeddedPostgresExtension.preparedDatabase(FlywayPreparer.forClasspathLocation("db/pg"));
+
+    static volatile DataSource dataSource;
+    static volatile boolean schemaInitialized = false;
+
+    CatalogDao catalogDao;
+    CheapFactory factory;
+    ObjectMapper objectMapper;
+    CheapJacksonDeserializer deserializer;
+
+    void setUp() throws SQLException, IOException, URISyntaxException
+    {
+        // Get the datasource (will be initialized by JUnit extension)
+        dataSource = flywayDB.getTestDatabase();
+
+        // Initialize database schema once for all tests
+        if (!schemaInitialized) {
+            initializeSchema();
+            schemaInitialized = true;
+        }
+
+        factory = new CheapFactory();
+        catalogDao = new CatalogDao(dataSource, factory);
+        objectMapper = new ObjectMapper();
+        deserializer = new CheapJacksonDeserializer(factory);
+
+        // Clean up all tables before each test
+        truncateAllTables();
+    }
+
+    private static void initializeSchema() throws SQLException, IOException, URISyntaxException
+    {
+        String mainSchemaPath = "/db/schemas/postgres-cheap.sql";
+        String auditSchemaPath = "/db/schemas/postgres-cheap-audit.sql";
+
+        String mainDdl = loadResourceFile(mainSchemaPath);
+        String auditDdl = loadResourceFile(auditSchemaPath);
+
+        try (Connection connection = dataSource.getConnection();
+             Statement statement = connection.createStatement()) {
+            statement.execute(mainDdl);
+            statement.execute(auditDdl);
+        }
+    }
+
+    @SuppressWarnings("DataFlowIssue")
+    private static String loadResourceFile(String resourcePath) throws IOException, URISyntaxException
+    {
+        Path path = Paths.get(PostgresCatalogDaoJsonRoundtripTest.class.getResource(resourcePath).toURI());
+        return Files.readString(path);
+    }
+
+    private void truncateAllTables() throws SQLException, IOException, URISyntaxException
+    {
+        String truncateSql = loadResourceFile("/db/schemas/postgres-cheap-truncate.sql");
+
+        try (Connection connection = dataSource.getConnection();
+             Statement statement = connection.createStatement()) {
+            statement.execute(truncateSql);
+        }
+    }
+
+    @Test
+    void testFullCatalogJsonRoundtrip() throws SQLException, IOException, URISyntaxException
+    {
+        setUp();
+
+        // Load the original JSON
+        String originalJson = loadResourceFile("/jackson/full-catalog.json");
+        JsonNode originalJsonNode = objectMapper.readTree(originalJson);
+
+        // Deserialize to Catalog
+        Catalog catalog = deserializer.fromJson(originalJson);
+        assertNotNull(catalog);
+
+        // Save to database
+        catalogDao.saveCatalog(catalog);
+
+        // Load back from database
+        Catalog loadedCatalog = catalogDao.loadCatalog(catalog.globalId());
+        assertNotNull(loadedCatalog);
+
+        // Serialize loaded catalog to JSON
+        String serializedJson = CheapJacksonSerializer.toJson(loadedCatalog);
+        JsonNode serializedJsonNode = objectMapper.readTree(serializedJson);
+
+        // Compare the two JSON nodes
+        assertEquals(originalJsonNode, serializedJsonNode,
+            "Serialized JSON should match original JSON after database round-trip");
+    }
+}
