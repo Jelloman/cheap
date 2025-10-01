@@ -20,7 +20,9 @@
       "Bash(xargs cat:*)",
       "Bash(perl:*)",
       "Bash(export:*)",
-      "Bash(python:*)"
+      "Bash(python:*)",
+      "Bash(tee:*)",
+      "Bash(time:*)"
     ],
     "deny": [],
     "ask": []

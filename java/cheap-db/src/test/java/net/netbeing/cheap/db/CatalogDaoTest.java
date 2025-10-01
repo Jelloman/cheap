@@ -4,8 +4,7 @@ import io.zonky.test.db.postgres.junit5.EmbeddedPostgresExtension;
 import io.zonky.test.db.postgres.junit5.SingleInstancePostgresExtension;
 import net.netbeing.cheap.model.*;
 import net.netbeing.cheap.util.CheapFactory;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import javax.sql.DataSource;
@@ -25,23 +24,36 @@ class CatalogDaoTest
 {
 
     @RegisterExtension
-    public static SingleInstancePostgresExtension postgres = EmbeddedPostgresExtension.singleInstance();
+    static SingleInstancePostgresExtension postgres = EmbeddedPostgresExtension.singleInstance();
 
-    private CatalogDao catalogDao;
-    private CheapFactory factory;
-    private DataSource dataSource;
+    static DataSource dataSource;
+    static boolean schemaInitialized = false;
 
-    private void setUp() throws SQLException, IOException, URISyntaxException
+    CatalogDao catalogDao;
+    CheapFactory factory;
+
+    @BeforeEach
+    void setUp() throws SQLException, IOException, URISyntaxException
     {
-        dataSource = postgres.getEmbeddedPostgres().getPostgresDatabase();
+        // Get the datasource (will be initialized by JUnit extension)
+        if (dataSource == null) {
+            dataSource = postgres.getEmbeddedPostgres().getPostgresDatabase();
+        }
+
+        // Initialize database schema once for all tests
+        if (!schemaInitialized) {
+            initializeSchema();
+            schemaInitialized = true;
+        }
+
         factory = new CheapFactory();
         catalogDao = new CatalogDao(dataSource, factory);
 
-        // Initialize database schema
-        initializeSchema();
+        // Clean up all tables before each test
+        truncateAllTables();
     }
 
-    private void initializeSchema() throws SQLException, IOException, URISyntaxException
+    private static void initializeSchema() throws SQLException, IOException, URISyntaxException
     {
         String mainSchemaPath = "/db/schemas/postgres-cheap.sql";
         String auditSchemaPath = "/db/schemas/postgres-cheap-audit.sql";
@@ -56,20 +68,28 @@ class CatalogDaoTest
         }
     }
 
-    private String loadResourceFile(String resourcePath) throws IOException, URISyntaxException
+    private static String loadResourceFile(String resourcePath) throws IOException, URISyntaxException
     {
-        Path path = Paths.get(getClass().getResource(resourcePath).toURI());
+        Path path = Paths.get(CatalogDaoTest.class.getResource(resourcePath).toURI());
         return Files.readString(path);
     }
 
-    @Test
-    void testSaveAndLoadSimpleCatalog() throws SQLException, IOException, URISyntaxException
+    private void truncateAllTables() throws SQLException, IOException, URISyntaxException
     {
-        setUp();
+        String truncateSql = loadResourceFile("/db/schemas/postgres-cheap-truncate.sql");
 
+        try (Connection connection = dataSource.getConnection();
+             Statement statement = connection.createStatement()) {
+            statement.execute(truncateSql);
+        }
+    }
+
+    @Test
+    void testSaveAndLoadSimpleCatalog() throws SQLException
+    {
         // Create a simple catalog
         UUID catalogId = UUID.randomUUID();
-        Catalog originalCatalog = factory.createCatalog(catalogId, CatalogSpecies.SINK, null);
+        Catalog originalCatalog = factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
 
         // Save the catalog
         catalogDao.saveCatalog(originalCatalog);
@@ -89,7 +109,7 @@ class CatalogDaoTest
     {
         // Create catalog with URI
         UUID catalogId = UUID.randomUUID();
-        Catalog originalCatalog = factory.createCatalog(catalogId, CatalogSpecies.SOURCE, null);
+        Catalog originalCatalog = factory.createCatalog(catalogId, CatalogSpecies.SOURCE, null, null, 0L);
 
         // Note: Would need a way to set URI - this depends on catalog implementation
         // For now, test without URI
@@ -106,12 +126,12 @@ class CatalogDaoTest
     {
         // Create upstream catalog first
         UUID upstreamId = UUID.randomUUID();
-        Catalog upstreamCatalog = factory.createCatalog(upstreamId, CatalogSpecies.SOURCE, null);
+        Catalog upstreamCatalog = factory.createCatalog(upstreamId, CatalogSpecies.SOURCE, null, null, 0L);
         catalogDao.saveCatalog(upstreamCatalog);
 
         // Create derived catalog
         UUID catalogId = UUID.randomUUID();
-        Catalog originalCatalog = factory.createCatalog(catalogId, CatalogSpecies.MIRROR, upstreamId);
+        Catalog originalCatalog = factory.createCatalog(catalogId, CatalogSpecies.MIRROR, null, upstreamId, 0L);
 
         catalogDao.saveCatalog(originalCatalog);
         Catalog loadedCatalog = catalogDao.loadCatalog(catalogId);
@@ -133,7 +153,7 @@ class CatalogDaoTest
 
         // Create catalog
         UUID catalogId = UUID.randomUUID();
-        Catalog originalCatalog = factory.createCatalog(catalogId, CatalogSpecies.SINK, null);
+        Catalog originalCatalog = factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
 
         // Extend catalog with aspect def
         originalCatalog.extend(personAspectDef);
@@ -160,7 +180,7 @@ class CatalogDaoTest
     {
         // Create catalog
         UUID catalogId = UUID.randomUUID();
-        Catalog originalCatalog = factory.createCatalog(catalogId, CatalogSpecies.SINK, null);
+        Catalog originalCatalog = factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
 
         // Create hierarchy definition
         HierarchyDef hierarchyDef = factory.createHierarchyDef("entities", HierarchyType.ENTITY_SET);
@@ -206,7 +226,7 @@ class CatalogDaoTest
     {
         // Create catalog
         UUID catalogId = UUID.randomUUID();
-        Catalog originalCatalog = factory.createCatalog(catalogId, CatalogSpecies.SINK, null);
+        Catalog originalCatalog = factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
 
         // Create hierarchy definition
         HierarchyDef hierarchyDef = factory.createHierarchyDef("directory", HierarchyType.ENTITY_DIR);
@@ -249,7 +269,7 @@ class CatalogDaoTest
 
         // Create catalog
         UUID catalogId = UUID.randomUUID();
-        Catalog originalCatalog = factory.createCatalog(catalogId, CatalogSpecies.SINK, null);
+        Catalog originalCatalog = factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
 
         // Create aspect map hierarchy
         AspectMapHierarchy hierarchy = factory.createAspectMapHierarchy(originalCatalog, personAspectDef);
@@ -299,13 +319,11 @@ class CatalogDaoTest
     }
 
     @Test
-    void testDeleteCatalog() throws SQLException, IOException, URISyntaxException
+    void testDeleteCatalog() throws SQLException
     {
-        setUp();
-
         // Create and save catalog
         UUID catalogId = UUID.randomUUID();
-        Catalog catalog = factory.createCatalog(catalogId, CatalogSpecies.SINK, null);
+        Catalog catalog = factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
         catalogDao.saveCatalog(catalog);
 
         // Verify it exists
@@ -321,10 +339,8 @@ class CatalogDaoTest
     }
 
     @Test
-    void testDeleteNonExistentCatalog() throws SQLException, IOException, URISyntaxException
+    void testDeleteNonExistentCatalog() throws SQLException
     {
-        setUp();
-
         UUID nonExistentId = UUID.randomUUID();
 
         // Delete non-existent catalog
@@ -333,17 +349,15 @@ class CatalogDaoTest
     }
 
     @Test
-    void testCatalogExists() throws SQLException, IOException, URISyntaxException
+    void testCatalogExists() throws SQLException
     {
-        setUp();
-
         UUID catalogId = UUID.randomUUID();
 
         // Should not exist initially
         assertFalse(catalogDao.catalogExists(catalogId));
 
         // Create and save catalog
-        Catalog catalog = factory.createCatalog(catalogId, CatalogSpecies.SINK, null);
+        Catalog catalog = factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
         catalogDao.saveCatalog(catalog);
 
         // Should exist now
@@ -351,20 +365,16 @@ class CatalogDaoTest
     }
 
     @Test
-    void testLoadNonExistentCatalog() throws SQLException, IOException, URISyntaxException
+    void testLoadNonExistentCatalog() throws SQLException
     {
-        setUp();
-
         UUID nonExistentId = UUID.randomUUID();
         Catalog catalog = catalogDao.loadCatalog(nonExistentId);
         assertNull(catalog);
     }
 
     @Test
-    void testSaveNullCatalogThrowsException() throws SQLException, IOException, URISyntaxException
+    void testSaveNullCatalogThrowsException() throws SQLException
     {
-        setUp();
-
         assertThrows(IllegalArgumentException.class, () -> {
             catalogDao.saveCatalog(null);
         });
@@ -378,7 +388,7 @@ class CatalogDaoTest
         // this is left as a placeholder for more advanced testing
 
         UUID catalogId = UUID.randomUUID();
-        Catalog catalog = factory.createCatalog(catalogId, CatalogSpecies.SINK, null);
+        Catalog catalog = factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
 
         // Save should succeed
         assertDoesNotThrow(() -> catalogDao.saveCatalog(catalog));
@@ -390,7 +400,7 @@ class CatalogDaoTest
     {
         // Create a complex catalog with multiple hierarchy types
         UUID catalogId = UUID.randomUUID();
-        Catalog originalCatalog = factory.createCatalog(catalogId, CatalogSpecies.SINK, null);
+        Catalog originalCatalog = factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
 
         // Create multiple aspect definitions
         AspectDef personAspect = factory.createMutableAspectDef("person");
