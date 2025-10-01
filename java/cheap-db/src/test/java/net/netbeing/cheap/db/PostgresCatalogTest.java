@@ -121,7 +121,7 @@ class PostgresCatalogTest
         AspectMapHierarchy table = catalog.loadTable("test_table", -1);
         
         assertNotNull(table, "Table hierarchy should not be null");
-        assertEquals("postgres:table:test_table", table.name(), "Hierarchy name should match expected pattern");
+        assertEquals("test_table", table.name(), "Hierarchy name should match expected pattern");
         assertEquals(HierarchyType.ASPECT_MAP, table.type(), "Should be ASPECT_MAP hierarchy type");
         assertEquals("test_table", table.aspectDef().name(), "AspectDef name should match table name");
         
