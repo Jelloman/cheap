@@ -141,6 +141,7 @@ CREATE TABLE hierarchy_entity_directory (
     hierarchy_name TEXT NOT NULL,
     entity_key TEXT NOT NULL,
     entity_id UUID NOT NULL REFERENCES entity(entity_id) ON DELETE CASCADE,
+    dir_order INTEGER NOT NULL,
     PRIMARY KEY (catalog_id, hierarchy_name, entity_key),
     FOREIGN KEY (catalog_id, hierarchy_name) REFERENCES hierarchy(catalog_id, name) ON DELETE CASCADE
 );
@@ -154,6 +155,7 @@ CREATE TABLE hierarchy_entity_tree_node (
     node_key TEXT,
     entity_id UUID REFERENCES entity(entity_id) ON DELETE CASCADE,
     node_path TEXT, -- Computed path for efficient queries
+    tree_order INTEGER NOT NULL,
     FOREIGN KEY (catalog_id, hierarchy_name) REFERENCES hierarchy(catalog_id, name) ON DELETE CASCADE,
     UNIQUE(catalog_id, hierarchy_name, parent_node_id, node_key)
 );
@@ -164,6 +166,7 @@ CREATE TABLE hierarchy_aspect_map (
     hierarchy_name TEXT NOT NULL,
     entity_id UUID NOT NULL REFERENCES entity(entity_id) ON DELETE CASCADE,
     aspect_def_id UUID NOT NULL REFERENCES aspect_def(aspect_def_id),
+    map_order INTEGER NOT NULL,
     PRIMARY KEY (catalog_id, hierarchy_name, entity_id),
     FOREIGN KEY (catalog_id, hierarchy_name) REFERENCES hierarchy(catalog_id, name) ON DELETE CASCADE,
     FOREIGN KEY (entity_id, aspect_def_id, catalog_id) REFERENCES aspect(entity_id, aspect_def_id, catalog_id) ON DELETE CASCADE

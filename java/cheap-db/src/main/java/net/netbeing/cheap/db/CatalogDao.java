@@ -242,8 +242,9 @@ public class CatalogDao implements CatalogPersistence
 
     private void saveEntityDirectoryContent(Connection conn, UUID catalogId, String hierarchyName, EntityDirectoryHierarchy hierarchy) throws SQLException
     {
-        String sql = "INSERT INTO hierarchy_entity_directory (catalog_id, hierarchy_name, entity_key, entity_id) VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO hierarchy_entity_directory (catalog_id, hierarchy_name, entity_key, entity_id, dir_order) VALUES (?, ?, ?, ?, ?)";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            int order = 0;
             for (String key : hierarchy.keySet()) {
                 Entity entity = hierarchy.get(key);
                 if (entity != null) {
@@ -252,6 +253,7 @@ public class CatalogDao implements CatalogPersistence
                     stmt.setString(2, hierarchyName);
                     stmt.setString(3, key);
                     stmt.setObject(4, entity.globalId());
+                    stmt.setInt(5, order++);
                     stmt.addBatch();
                 }
             }
@@ -262,18 +264,18 @@ public class CatalogDao implements CatalogPersistence
     private void saveEntityTreeContent(Connection conn, UUID catalogId, String hierarchyName, EntityTreeHierarchy hierarchy) throws SQLException
     {
         // Save tree nodes recursively
-        saveTreeNode(conn, catalogId, hierarchyName, hierarchy.root(), "", "", null);
+        saveTreeNode(conn, catalogId, hierarchyName, hierarchy.root(), "", "", null, 0);
     }
 
     private void saveTreeNode(Connection conn, UUID catalogId, String hierarchyName, EntityTreeHierarchy.Node node,
-                              String nodeKey, String nodePath, UUID parentNodeId) throws SQLException
+                              String nodeKey, String nodePath, UUID parentNodeId, int order) throws SQLException
     {
         UUID nodeId = UUID.randomUUID();
         UUID entityId = node.value() == null ? null : node.value().globalId();
 
         String sql = "INSERT INTO hierarchy_entity_tree_node " +
-            "(node_id, catalog_id, hierarchy_name, parent_node_id, node_key, entity_id, node_path) " +
-            "VALUES (?, ?, ?, ?, ?, ?, ?)";
+            "(node_id, catalog_id, hierarchy_name, parent_node_id, node_key, entity_id, node_path, tree_order) " +
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setObject(1, nodeId);
             stmt.setObject(2, catalogId);
@@ -282,17 +284,19 @@ public class CatalogDao implements CatalogPersistence
             stmt.setString(5, nodeKey);
             stmt.setObject(6, entityId);
             stmt.setString(7, nodePath); // node.path() - method needs checking
+            stmt.setInt(8, order);
             stmt.executeUpdate();
         }
 
         // Recursively save children
         if (!node.isLeaf()) {
+            int childOrder = 0;
             for (var entry : node.entrySet()) {
                 String name = entry.getKey();
                 String childPath = nodePath + '/' + name;
                 EntityTreeHierarchy.Node child = entry.getValue();
                 if (child != null) {
-                    saveTreeNode(conn, catalogId, hierarchyName, child, name, childPath, nodeId);
+                    saveTreeNode(conn, catalogId, hierarchyName, child, name, childPath, nodeId, childOrder++);
                 }
             }
         }
@@ -302,11 +306,12 @@ public class CatalogDao implements CatalogPersistence
     {
         String aspectSql = "INSERT INTO aspect (entity_id, aspect_def_id, catalog_id, hierarchy_name) " +
             "VALUES (?, ?, ?, ?)";
-        String hierarchyMapSql = "INSERT INTO hierarchy_aspect_map (catalog_id, hierarchy_name, entity_id, aspect_def_id) " +
-            "VALUES (?, ?, ?, ?)";
+        String hierarchyMapSql = "INSERT INTO hierarchy_aspect_map (catalog_id, hierarchy_name, entity_id, aspect_def_id, map_order) " +
+            "VALUES (?, ?, ?, ?, ?)";
 
         UUID aspectDefId = getAspectDefId(conn, hierarchy.aspectDef().name());
 
+        int order = 0;
         for (Entity entity : hierarchy.keySet()) {
             saveEntity(conn, entity);
 
@@ -327,6 +332,7 @@ public class CatalogDao implements CatalogPersistence
                     mapStmt.setString(2, hierarchyName);
                     mapStmt.setObject(3, entity.globalId());
                     mapStmt.setObject(4, aspectDefId);
+                    mapStmt.setInt(5, order++);
                     mapStmt.executeUpdate();
                 }
 
@@ -581,7 +587,7 @@ public class CatalogDao implements CatalogPersistence
 
     private void loadEntityDirectoryContent(Connection conn, UUID catalogId, String hierarchyName, EntityDirectoryHierarchy hierarchy) throws SQLException
     {
-        String sql = "SELECT entity_key, entity_id FROM hierarchy_entity_directory WHERE catalog_id = ? AND hierarchy_name = ?";
+        String sql = "SELECT entity_key, entity_id FROM hierarchy_entity_directory WHERE catalog_id = ? AND hierarchy_name = ? ORDER BY dir_order";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setObject(1, catalogId);
             stmt.setString(2, hierarchyName);
@@ -605,7 +611,7 @@ public class CatalogDao implements CatalogPersistence
         String sql = "SELECT node_id, parent_node_id, node_key, entity_id " +
             "FROM hierarchy_entity_tree_node " +
             "WHERE catalog_id = ? AND hierarchy_name = ? " +
-            "ORDER BY node_path";
+            "ORDER BY node_path, tree_order";
 
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setObject(1, catalogId);
@@ -666,7 +672,7 @@ public class CatalogDao implements CatalogPersistence
 
     private void loadAspectMapContent(Connection conn, UUID catalogId, String hierarchyName, AspectMapHierarchy hierarchy) throws SQLException
     {
-        String sql = "SELECT entity_id FROM hierarchy_aspect_map WHERE catalog_id = ? AND hierarchy_name = ?";
+        String sql = "SELECT entity_id FROM hierarchy_aspect_map WHERE catalog_id = ? AND hierarchy_name = ? ORDER BY map_order";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setObject(1, catalogId);
             stmt.setString(2, hierarchyName);
