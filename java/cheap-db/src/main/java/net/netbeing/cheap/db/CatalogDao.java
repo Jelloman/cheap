@@ -207,7 +207,7 @@ public class CatalogDao implements CatalogPersistence
 
     private void saveEntityListContent(Connection conn, UUID catalogId, String hierarchyName, EntityListHierarchy hierarchy) throws SQLException
     {
-        String sql = "INSERT INTO hierarchy_entity_list (hierarchy_catalog_id, hierarchy_name, entity_id, list_order) VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO hierarchy_entity_list (catalog_id, hierarchy_name, entity_id, list_order) VALUES (?, ?, ?, ?)";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             int order = 0;
             for (Entity entity : hierarchy) {
@@ -224,7 +224,7 @@ public class CatalogDao implements CatalogPersistence
 
     private void saveEntitySetContent(Connection conn, UUID catalogId, String hierarchyName, EntitySetHierarchy hierarchy) throws SQLException
     {
-        String sql = "INSERT INTO hierarchy_entity_set (hierarchy_catalog_id, hierarchy_name, entity_id, set_order) VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO hierarchy_entity_set (catalog_id, hierarchy_name, entity_id, set_order) VALUES (?, ?, ?, ?)";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             int order = 0;
             for (Entity entity : hierarchy) {
@@ -241,7 +241,7 @@ public class CatalogDao implements CatalogPersistence
 
     private void saveEntityDirectoryContent(Connection conn, UUID catalogId, String hierarchyName, EntityDirectoryHierarchy hierarchy) throws SQLException
     {
-        String sql = "INSERT INTO hierarchy_entity_directory (hierarchy_catalog_id, hierarchy_name, entity_key, entity_id) VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO hierarchy_entity_directory (catalog_id, hierarchy_name, entity_key, entity_id) VALUES (?, ?, ?, ?)";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             for (String key : hierarchy.keySet()) {
                 Entity entity = hierarchy.get(key);
@@ -271,7 +271,7 @@ public class CatalogDao implements CatalogPersistence
         UUID entityId = node.value() == null ? null : node.value().globalId();
 
         String sql = "INSERT INTO hierarchy_entity_tree_node " +
-            "(node_id, hierarchy_catalog_id, hierarchy_name, parent_node_id, node_key, entity_id, node_path) " +
+            "(node_id, catalog_id, hierarchy_name, parent_node_id, node_key, entity_id, node_path) " +
             "VALUES (?, ?, ?, ?, ?, ?, ?)";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setObject(1, nodeId);
@@ -299,46 +299,39 @@ public class CatalogDao implements CatalogPersistence
 
     private void saveAspectMapContent(Connection conn, UUID catalogId, String hierarchyName, AspectMapHierarchy hierarchy) throws SQLException
     {
-        String aspectSql = "INSERT INTO aspect (entity_id, aspect_def_id, catalog_id, hierarchy_catalog_id, hierarchy_name) " +
-            "VALUES (?, ?, ?, ?, ?, ?)";
-        String hierarchyMapSql = "INSERT INTO hierarchy_aspect_map (hierarchy_catalog_id, hierarchy_name, entity_id, aspect_def_id, catalog_id, map_order) " +
+        String aspectSql = "INSERT INTO aspect (entity_id, aspect_def_id, catalog_id, hierarchy_name) " +
+            "VALUES (?, ?, ?, ?, ?)";
+        String hierarchyMapSql = "INSERT INTO hierarchy_aspect_map (catalog_id, hierarchy_name, entity_id, aspect_def_id) " +
             "VALUES (?, ?, ?, ?, ?, ?)";
 
         UUID aspectDefId = getAspectDefId(conn, hierarchy.aspectDef().name());
 
-        try (PreparedStatement aspectStmt = conn.prepareStatement(aspectSql);
-             PreparedStatement mapStmt = conn.prepareStatement(hierarchyMapSql))
-        {
-            int order = 0;
-            for (Entity entity : hierarchy.keySet()) {
-                saveEntity(conn, entity);
+        for (Entity entity : hierarchy.keySet()) {
+            saveEntity(conn, entity);
 
-                Aspect aspect = hierarchy.get(entity);
-                if (aspect != null) {
-                    // Save aspect
+            Aspect aspect = hierarchy.get(entity);
+            if (aspect != null) {
+                // Save aspect
+                try (PreparedStatement aspectStmt = conn.prepareStatement(aspectSql)) {
                     aspectStmt.setObject(1, entity.globalId());
                     aspectStmt.setObject(2, aspectDefId);
                     aspectStmt.setObject(3, catalogId);
-                    aspectStmt.setObject(4, catalogId);
                     aspectStmt.setString(5, hierarchyName);
-                    aspectStmt.addBatch();
+                    aspectStmt.executeUpdate();
+                }
 
-                    // Save hierarchy mapping
+                // Save hierarchy mapping
+                try (PreparedStatement mapStmt = conn.prepareStatement(hierarchyMapSql)) {
                     mapStmt.setObject(1, catalogId);
                     mapStmt.setString(2, hierarchyName);
                     mapStmt.setObject(3, entity.globalId());
                     mapStmt.setObject(4, aspectDefId);
-                    mapStmt.setObject(5, catalogId);
-                    mapStmt.setInt(6, order++);
-                    mapStmt.addBatch();
-
-                    // Save properties
-                    saveAspectProperties(conn, entity.globalId(), aspectDefId, catalogId, aspect);
+                    mapStmt.executeUpdate();
                 }
-            }
 
-            aspectStmt.executeBatch();
-            mapStmt.executeBatch();
+                // Save properties
+                saveAspectProperties(conn, entity.globalId(), aspectDefId, catalogId, aspect);
+            }
         }
     }
 
@@ -348,9 +341,68 @@ public class CatalogDao implements CatalogPersistence
             "value_text, value_integer, value_float, value_boolean, value_datetime, value_binary, " +
             "value_type, is_null) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
+        AspectDef aspectDef = aspect.def();
+
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-            // Property saving is simplified for now - would need full aspect interface implementation
-            // This is a placeholder that saves no properties
+            for (PropertyDef propDef : aspectDef.propertyDefs()) {
+                String propName = propDef.name();
+                Object value = aspect.unsafeReadObj(propName);
+
+                stmt.setObject(1, entityId);
+                stmt.setObject(2, aspectDefId);
+                stmt.setObject(3, catalogId);
+                stmt.setString(4, propName);
+
+                // Set all value columns to null initially
+                stmt.setString(5, null);  // value_text
+                stmt.setLong(6, 0);       // value_integer
+                stmt.setDouble(7, 0.0);   // value_float
+                stmt.setBoolean(8, false); // value_boolean
+                stmt.setTimestamp(9, null); // value_datetime
+                stmt.setBytes(10, null);    // value_binary
+
+                boolean isNull = (value == null);
+                stmt.setBoolean(12, isNull);
+
+                if (!isNull) {
+                    PropertyType type = propDef.type();
+                    stmt.setString(11, mapPropertyTypeToDbType(type));
+
+                    switch (type) {
+                        case Integer -> {
+                            stmt.setLong(6, ((Number) value).longValue());
+                        }
+                        case Float -> {
+                            stmt.setDouble(7, ((Number) value).doubleValue());
+                        }
+                        case Boolean -> {
+                            stmt.setBoolean(8, (Boolean) value);
+                        }
+                        case DateTime -> {
+                            if (value instanceof java.sql.Timestamp) {
+                                stmt.setTimestamp(9, (java.sql.Timestamp) value);
+                            } else if (value instanceof java.util.Date) {
+                                stmt.setTimestamp(9, new java.sql.Timestamp(((java.util.Date) value).getTime()));
+                            } else if (value instanceof java.time.Instant) {
+                                stmt.setTimestamp(9, java.sql.Timestamp.from((java.time.Instant) value));
+                            }
+                        }
+                        case BLOB -> {
+                            stmt.setBytes(10, (byte[]) value);
+                        }
+                        default -> {
+                            // All other types stored as text
+                            stmt.setString(5, value.toString());
+                        }
+                    }
+                } else {
+                    stmt.setString(11, mapPropertyTypeToDbType(propDef.type()));
+                }
+
+                stmt.addBatch();
+            }
+
+            stmt.executeBatch();
         }
     }
 
@@ -454,7 +506,7 @@ public class CatalogDao implements CatalogPersistence
 
     private void loadEntityListContent(Connection conn, UUID catalogId, String hierarchyName, EntityListHierarchy hierarchy) throws SQLException
     {
-        String sql = "SELECT entity_id, list_order FROM hierarchy_entity_list WHERE hierarchy_catalog_id = ? AND hierarchy_name = ? ORDER BY list_order";
+        String sql = "SELECT entity_id, list_order FROM hierarchy_entity_list WHERE catalog_id = ? AND hierarchy_name = ? ORDER BY list_order";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setObject(1, catalogId);
             stmt.setString(2, hierarchyName);
@@ -470,7 +522,7 @@ public class CatalogDao implements CatalogPersistence
 
     private void loadEntitySetContent(Connection conn, UUID catalogId, String hierarchyName, EntitySetHierarchy hierarchy) throws SQLException
     {
-        String sql = "SELECT entity_id FROM hierarchy_entity_set WHERE hierarchy_catalog_id = ? AND hierarchy_name = ? ORDER BY set_order";
+        String sql = "SELECT entity_id FROM hierarchy_entity_set WHERE catalog_id = ? AND hierarchy_name = ? ORDER BY set_order";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setObject(1, catalogId);
             stmt.setString(2, hierarchyName);
@@ -486,7 +538,7 @@ public class CatalogDao implements CatalogPersistence
 
     private void loadEntityDirectoryContent(Connection conn, UUID catalogId, String hierarchyName, EntityDirectoryHierarchy hierarchy) throws SQLException
     {
-        String sql = "SELECT entity_key, entity_id FROM hierarchy_entity_directory WHERE hierarchy_catalog_id = ? AND hierarchy_name = ?";
+        String sql = "SELECT entity_key, entity_id FROM hierarchy_entity_directory WHERE catalog_id = ? AND hierarchy_name = ?";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setObject(1, catalogId);
             stmt.setString(2, hierarchyName);
@@ -509,7 +561,7 @@ public class CatalogDao implements CatalogPersistence
 
         String sql = "SELECT node_id, parent_node_id, node_key, entity_id " +
             "FROM hierarchy_entity_tree_node " +
-            "WHERE hierarchy_catalog_id = ? AND hierarchy_name = ? " +
+            "WHERE catalog_id = ? AND hierarchy_name = ? " +
             "ORDER BY node_path";
 
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -571,7 +623,7 @@ public class CatalogDao implements CatalogPersistence
 
     private void loadAspectMapContent(Connection conn, UUID catalogId, String hierarchyName, AspectMapHierarchy hierarchy) throws SQLException
     {
-        String sql = "SELECT entity_id FROM hierarchy_aspect_map WHERE hierarchy_catalog_id = ? AND hierarchy_name = ? ORDER BY map_order";
+        String sql = "SELECT entity_id FROM hierarchy_aspect_map WHERE catalog_id = ? AND hierarchy_name = ? ORDER BY map_order";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setObject(1, catalogId);
             stmt.setString(2, hierarchyName);
@@ -629,7 +681,7 @@ public class CatalogDao implements CatalogPersistence
     {
         String sql = "SELECT ad.name FROM hierarchy_aspect_map ham " +
             "JOIN aspect_def ad ON ham.aspect_def_id = ad.aspect_def_id " +
-            "WHERE ham.hierarchy_catalog_id = ? AND ham.hierarchy_name = ? LIMIT 1";
+            "WHERE ham.catalog_id = ? AND ham.hierarchy_name = ? LIMIT 1";
 
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setObject(1, catalogId);

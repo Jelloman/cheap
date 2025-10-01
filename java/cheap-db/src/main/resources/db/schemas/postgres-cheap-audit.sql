@@ -1,6 +1,6 @@
 -- PostgreSQL Audit DDL for Cheap Data Model
 -- Adds audit columns (created_at, updated_at) and triggers to track data changes
--- This file assumes postgres-cheap.ddl has been executed first
+-- This file assumes postgres-cheap.sql has been executed first
 
 -- ========== ADD AUDIT COLUMNS TO DEFINITION TABLES ==========
 
@@ -14,25 +14,10 @@ ALTER TABLE property_def
 ADD COLUMN created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
 ADD COLUMN updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP;
 
--- Add audit columns to hierarchy_def_owner
-ALTER TABLE hierarchy_def_owner
-ADD COLUMN created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-ADD COLUMN updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP;
-
--- Add audit columns to hierarchy_def
-ALTER TABLE hierarchy_def
-ADD COLUMN created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-ADD COLUMN updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP;
-
--- Add audit columns to catalog_def
-ALTER TABLE catalog_def
-ADD COLUMN created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-ADD COLUMN updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP;
-
 -- ========== ADD AUDIT COLUMNS TO LINK TABLES ==========
 
--- Add audit columns to catalog_def_aspect_def
-ALTER TABLE catalog_def_aspect_def
+-- Add audit columns to catalog_aspect_def
+ALTER TABLE catalog_aspect_def
 ADD COLUMN created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP;
 
 -- ========== ADD AUDIT COLUMNS TO CORE ENTITY TABLES ==========
@@ -45,10 +30,6 @@ ADD COLUMN created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAM
 ALTER TABLE catalog
 ADD COLUMN created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
 ADD COLUMN updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP;
-
--- Add audit columns to catalog_aspect_def
-ALTER TABLE catalog_aspect_def
-ADD COLUMN created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP;
 
 -- Add audit columns to hierarchy
 ALTER TABLE hierarchy
@@ -91,7 +72,7 @@ ADD COLUMN created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAM
 
 -- ========== CREATE AUDIT INDEXES ==========
 
--- Entity index on created_at (moved from main DDL)
+-- Entity index on created_at
 CREATE INDEX idx_entity_created_at ON entity(created_at);
 
 -- ========== TRIGGERS FOR AUTOMATIC UPDATES ==========
@@ -110,15 +91,6 @@ CREATE TRIGGER update_aspect_def_updated_at BEFORE UPDATE ON aspect_def
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 CREATE TRIGGER update_property_def_updated_at BEFORE UPDATE ON property_def
-    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-
-CREATE TRIGGER update_hierarchy_def_owner_updated_at BEFORE UPDATE ON hierarchy_def_owner
-    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-
-CREATE TRIGGER update_hierarchy_def_updated_at BEFORE UPDATE ON hierarchy_def
-    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-
-CREATE TRIGGER update_catalog_def_updated_at BEFORE UPDATE ON catalog_def
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 CREATE TRIGGER update_catalog_updated_at BEFORE UPDATE ON catalog
@@ -140,15 +112,6 @@ COMMENT ON COLUMN aspect_def.updated_at IS 'Timestamp when the aspect definition
 
 COMMENT ON COLUMN property_def.created_at IS 'Timestamp when the property definition was created';
 COMMENT ON COLUMN property_def.updated_at IS 'Timestamp when the property definition was last updated';
-
-COMMENT ON COLUMN hierarchy_def_owner.created_at IS 'Timestamp when the hierarchy definition owner was created';
-COMMENT ON COLUMN hierarchy_def_owner.updated_at IS 'Timestamp when the hierarchy definition owner was last updated';
-
-COMMENT ON COLUMN hierarchy_def.created_at IS 'Timestamp when the hierarchy definition was created';
-COMMENT ON COLUMN hierarchy_def.updated_at IS 'Timestamp when the hierarchy definition was last updated';
-
-COMMENT ON COLUMN catalog_def.created_at IS 'Timestamp when the catalog definition was created';
-COMMENT ON COLUMN catalog_def.updated_at IS 'Timestamp when the catalog definition was last updated';
 
 COMMENT ON COLUMN entity.created_at IS 'Timestamp when the entity was created';
 

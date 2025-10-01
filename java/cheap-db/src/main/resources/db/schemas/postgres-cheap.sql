@@ -164,8 +164,6 @@ CREATE TABLE hierarchy_aspect_map (
     hierarchy_name TEXT NOT NULL,
     entity_id UUID NOT NULL REFERENCES entity(entity_id) ON DELETE CASCADE,
     aspect_def_id UUID NOT NULL REFERENCES aspect_def(aspect_def_id),
-    catalog_id UUID NOT NULL,
-    map_order INTEGER,
     PRIMARY KEY (catalog_id, hierarchy_name, entity_id),
     FOREIGN KEY (catalog_id, hierarchy_name) REFERENCES hierarchy(catalog_id, name) ON DELETE CASCADE,
     FOREIGN KEY (entity_id, aspect_def_id, catalog_id) REFERENCES aspect(entity_id, aspect_def_id, catalog_id) ON DELETE CASCADE
