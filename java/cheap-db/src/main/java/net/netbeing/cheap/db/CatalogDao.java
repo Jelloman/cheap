@@ -9,6 +9,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.sql.*;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
 
@@ -752,13 +753,13 @@ public class CatalogDao implements CatalogPersistence
             }
         }
 
-        MutableAspectDef aspectDef = factory.createMutableAspectDef(aspectDefName);
-
-        // Load property definitions
+        // Load property definitions first
         String propSql = "SELECT pd.name, pd.property_type, pd.default_value, pd.has_default_value, " +
             "pd.is_readable, pd.is_writable, pd.is_nullable, pd.is_removable, pd.is_multivalued " +
             "FROM property_def pd JOIN aspect_def ad ON pd.aspect_def_id = ad.aspect_def_id " +
             "WHERE ad.name = ?";
+
+        Map<String, PropertyDef> propertyDefMap = new LinkedHashMap<>();
 
         try (PreparedStatement stmt = conn.prepareStatement(propSql)) {
             stmt.setString(1, aspectDefName);
@@ -777,9 +778,23 @@ public class CatalogDao implements CatalogPersistence
                     PropertyDef propDef = factory.createPropertyDef(propName, type, defaultValue, hasDefaultValue,
                         propReadable, propWritable, isNullable, isRemovable, isMultivalued);
 
-                    aspectDef.add(propDef);
+                    propertyDefMap.put(propName, propDef);
                 }
             }
+        }
+
+        // Choose the appropriate AspectDef implementation based on the flags
+        AspectDef aspectDef;
+        if (canAddProperties && canRemoveProperties) {
+            // Fully mutable - use MutableAspectDefImpl
+            aspectDef = factory.createMutableAspectDef(aspectDefName, propertyDefMap);
+        } else if (!canAddProperties && !canRemoveProperties) {
+            // Fully immutable - use ImmutableAspectDefImpl
+            aspectDef = factory.createImmutableAspectDef(aspectDefName, propertyDefMap);
+        } else {
+            // Mixed mutability - use FullAspectDefImpl
+            aspectDef = factory.createFullAspectDef(aspectDefName, java.util.UUID.randomUUID(), propertyDefMap,
+                isReadable, isWritable, canAddProperties, canRemoveProperties);
         }
 
         return aspectDef;

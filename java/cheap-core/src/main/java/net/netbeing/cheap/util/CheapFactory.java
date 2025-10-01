@@ -774,6 +774,30 @@ public class CheapFactory
         return new ImmutableAspectDefImpl(name, propertyDefs);
     }
 
+    /**
+     * Creates a new full aspect definition with explicit control over all boolean flags.
+     *
+     * @param name the name of this aspect definition
+     * @param globalId the global ID for this aspect definition
+     * @param propertyDefs the map of property names to property definitions
+     * @param isReadable whether this aspect definition is readable
+     * @param isWritable whether this aspect definition is writable
+     * @param canAddProperties whether properties can be added
+     * @param canRemoveProperties whether properties can be removed
+     * @return a new full AspectDef instance
+     */
+    public @NotNull MutableAspectDef createFullAspectDef(@NotNull String name,
+                                                          @NotNull UUID globalId,
+                                                          @NotNull Map<String, PropertyDef> propertyDefs,
+                                                          boolean isReadable,
+                                                          boolean isWritable,
+                                                          boolean canAddProperties,
+                                                          boolean canRemoveProperties)
+    {
+        return new FullAspectDefImpl(name, globalId, propertyDefs, isReadable, isWritable,
+            canAddProperties, canRemoveProperties);
+    }
+
     // ===== Property Factory Methods =====
 
     /**

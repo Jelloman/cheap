@@ -76,12 +76,18 @@ class AspectDefDeserializer extends JsonDeserializer<AspectDef>
             propertyDefMap.put(propertyDef.name(), propertyDef);
         }
 
-        // TODO: add factory method with all fields
-        AspectDef def = null;
-        if (flags.isWritable && flags.canAddProperties && flags.canRemoveProperties) {
+        // Choose the appropriate AspectDef implementation based on the flags
+        AspectDef def;
+        if (flags.canAddProperties && flags.canRemoveProperties) {
+            // Fully mutable - use MutableAspectDefImpl
             def = factory.createMutableAspectDef(name, propertyDefMap);
-        } else {
+        } else if (!flags.canAddProperties && !flags.canRemoveProperties) {
+            // Fully immutable - use ImmutableAspectDefImpl
             def = factory.createImmutableAspectDef(name, propertyDefMap);
+        } else {
+            // Mixed mutability - use FullAspectDefImpl
+            def = factory.createFullAspectDef(name, java.util.UUID.randomUUID(), propertyDefMap,
+                flags.isReadable, flags.isWritable, flags.canAddProperties, flags.canRemoveProperties);
         }
         AspectDef existingDef = factory.getAspectDef(name);
         if (existingDef != null) {
