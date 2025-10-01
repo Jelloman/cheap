@@ -230,11 +230,11 @@ class CatalogDaoTest
         assertTrue(loadedEntitySet.contains(entity3));
     }
 
-    /*
-
     @Test
-    void testSaveAndLoadCatalogWithEntityDirectoryHierarchy() throws SQLException
+    void testSaveAndLoadCatalogWithEntityDirectoryHierarchy() throws SQLException, IOException, URISyntaxException
     {
+        setUp();
+
         // Create catalog
         UUID catalogId = UUID.randomUUID();
         Catalog originalCatalog = factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
@@ -271,6 +271,8 @@ class CatalogDaoTest
         assertEquals(entity1.globalId(), loadedDirectory.get("key1").globalId());
         assertEquals(entity2.globalId(), loadedDirectory.get("key2").globalId());
     }
+
+    /*
 
     @Test
     void testSaveAndLoadCatalogWithAspectMapHierarchy() throws SQLException
