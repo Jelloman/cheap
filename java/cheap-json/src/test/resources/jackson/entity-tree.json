@@ -2,19 +2,12 @@
   "globalId" : "550e8400-e29b-41d4-a716-444444444444",
   "uri" : null,
   "species" : "sink",
-  "strict" : false,
-  "def" : {
-    "aspectDefs" : { },
-    "hierarchyDefs" : [ {
-      "name" : "fileSystem",
-      "type" : "ET",
-      "isModifiable" : true
-    } ]
-  },
   "aspectDefs" : { },
   "hierarchies" : {
     "fileSystem" : {
-      "root" : {
+      "type" : "ET",
+      "name" : "fileSystem",
+      "contents" : {
         "entityId" : "550e8400-e29b-41d4-a716-446655440000",
         "children" : {
           "documents" : {

@@ -2,59 +2,35 @@
   "globalId" : "550e8400-e29b-41d4-a716-444444444444",
   "uri" : null,
   "species" : "sink",
-  "strict" : false,
-  "def" : {
-    "aspectDefs" : {
-      "person" : {
-        "name" : "person",
-        "propertyDefs" : [ {
-          "name" : "age",
-          "type" : "Integer"
-        }, {
-          "name" : "name",
-          "type" : "String",
-          "isNullable" : false
-        } ]
-      },
-      "document" : {
-        "name" : "document",
-        "propertyDefs" : [ {
-          "name" : "title",
-          "type" : "String",
-          "isNullable" : false
-        }, {
-          "name" : "description",
-          "type" : "String"
-        } ]
-      }
-    },
-    "hierarchyDefs" : [ {
-      "name" : "userDirectory",
-      "type" : "ED",
-      "isModifiable" : true
-    }, {
-      "name" : "taskQueue",
-      "type" : "EL",
-      "isModifiable" : true
-    }, {
-      "name" : "activeUsers",
-      "type" : "ES",
-      "isModifiable" : true
-    }, {
+  "aspectDefs" : {
+    "person" : {
       "name" : "person",
-      "type" : "AM",
-      "isModifiable" : true
-    }, {
+      "propertyDefs" : [ {
+        "name" : "age",
+        "type" : "Integer"
+      }, {
+        "name" : "name",
+        "type" : "String",
+        "isNullable" : false
+      } ]
+    },
+    "document" : {
       "name" : "document",
-      "type" : "AM",
-      "isModifiable" : true
-    } ]
+      "propertyDefs" : [ {
+        "name" : "title",
+        "type" : "String",
+        "isNullable" : false
+      }, {
+        "name" : "description",
+        "type" : "String"
+      } ]
+    }
   },
-  "aspectDefs" : { },
   "hierarchies" : {
     "person" : {
-      "aspectDefName" : "person",
-      "aspects" : {
+      "type" : "AM",
+      "name" : "person",
+      "contents" : {
         "10000000-0000-0000-0000-000000000001" : {
           "age" : "30",
           "name" : "John Doe"
@@ -66,8 +42,9 @@
       }
     },
     "document" : {
-      "aspectDefName" : "document",
-      "aspects" : {
+      "type" : "AM",
+      "name" : "document",
+      "contents" : {
         "10000000-0000-0000-0000-000000000003" : {
           "title" : "User Manual",
           "description" : "Complete user guide"
@@ -79,25 +56,28 @@
       }
     },
     "userDirectory" : {
-      "entities" : {
+      "type" : "ED",
+      "name" : "userDirectory",
+      "contents" : {
         "admin" : "10000000-0000-0000-0000-000000000001",
         "user1" : "10000000-0000-0000-0000-000000000002",
         "guest" : "10000000-0000-0000-0000-000000000003"
       }
     },
     "taskQueue" : {
-      "entities" : [ "10000000-0000-0000-0000-000000000001", "10000000-0000-0000-0000-000000000002", "10000000-0000-0000-0000-000000000003", "10000000-0000-0000-0000-000000000001" ]
+      "type" : "EL",
+      "name" : "taskQueue",
+      "contents" : [ "10000000-0000-0000-0000-000000000001", "10000000-0000-0000-0000-000000000002", "10000000-0000-0000-0000-000000000003", "10000000-0000-0000-0000-000000000001" ]
     },
     "activeUsers" : {
-      "entities" : [ "10000000-0000-0000-0000-000000000001", "10000000-0000-0000-0000-000000000002", "10000000-0000-0000-0000-000000000004" ]
+      "type" : "ES",
+      "name" : "activeUsers",
+      "contents" : [ "10000000-0000-0000-0000-000000000001", "10000000-0000-0000-0000-000000000002", "10000000-0000-0000-0000-000000000004" ]
     },
     "fileSystem" : {
-      "def" : {
-        "name" : "fileSystem",
-        "type" : "ET",
-        "isModifiable" : true
-      },
-      "root" : {
+      "type" : "ET",
+      "name" : "fileSystem",
+      "contents" : {
         "entityId" : "10000000-0000-0000-0000-000000000001",
         "children" : {
           "documents" : {

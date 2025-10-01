@@ -5,6 +5,8 @@ import net.netbeing.cheap.util.CheapFactory;
 import org.jetbrains.annotations.NotNull;
 
 import javax.sql.DataSource;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.sql.*;
 import java.util.UUID;
 
@@ -417,6 +419,12 @@ public class CatalogDao implements CatalogPersistence
 
                 CatalogSpecies species = CatalogSpecies.valueOf(rs.getString("species"));
                 String uriStr = rs.getString("uri");
+                URI uri = null;
+                try {
+                    uri = new URI(uriStr);
+                } catch (URISyntaxException e) {
+                    throw new SQLException(e);
+                }
                 UUID upstream = rs.getObject("upstream_catalog_id", UUID.class);
                 boolean isStrict = rs.getBoolean("is_strict"); // Read but ignore for now
                 long version = rs.getLong("version_number");
@@ -430,7 +438,7 @@ public class CatalogDao implements CatalogPersistence
 
                 // Create catalog with version
                 // Create catalog with version - new signature: (UUID, CatalogSpecies, UUID upstream, long version)
-                Catalog catalog = factory.createCatalog(catalogId, species, upstream, version);
+                Catalog catalog = factory.createCatalog(catalogId, species, uri, upstream, version);
 
                 // Load and add all hierarchies
                 loadHierarchies(conn, catalog);

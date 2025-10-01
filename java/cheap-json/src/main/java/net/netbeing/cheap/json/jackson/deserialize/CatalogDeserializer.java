@@ -12,9 +12,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.net.URI;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 class CatalogDeserializer extends JsonDeserializer<Catalog>
 {
@@ -37,7 +35,7 @@ class CatalogDeserializer extends JsonDeserializer<Catalog>
         CatalogSpecies species = null;
         UUID upstreamId = null;
         long version = 0L;
-        Map<String, JsonNode> hierarchyData = new HashMap<>();
+        List<JsonNode> hierarchyData = new LinkedList<>();
 
         while (p.nextToken() != JsonToken.END_OBJECT) {
             String fieldName = p.currentName();
@@ -61,7 +59,7 @@ class CatalogDeserializer extends JsonDeserializer<Catalog>
                     // Register all aspect defs with the factory
                     if (p.currentToken() == JsonToken.START_OBJECT) {
                         while (p.nextToken() != JsonToken.END_OBJECT) {
-                            String aspectDefName = p.currentName();
+                            //String aspectDefName = p.currentName();
                             p.nextToken();
                             AspectDef aspectDef = p.readValueAs(AspectDef.class);
                             factory.registerAspectDef(aspectDef);
@@ -71,10 +69,10 @@ class CatalogDeserializer extends JsonDeserializer<Catalog>
                 case "hierarchies" -> {
                     if (p.currentToken() == JsonToken.START_OBJECT) {
                         while (p.nextToken() != JsonToken.END_OBJECT) {
-                            String hierarchyName = p.currentName();
+                            //String hierarchyName = p.currentName();
                             p.nextToken();
                             // Store the raw JSON structure for later processing
-                            hierarchyData.put(hierarchyName, context.readTree(p));
+                            hierarchyData.add(context.readTree(p));
                         }
                     }
                 }
@@ -87,44 +85,17 @@ class CatalogDeserializer extends JsonDeserializer<Catalog>
         }
 
         // Create the catalog first
-        Catalog catalog = factory.createCatalog(globalId, species, upstreamId, version);
+        Catalog catalog = factory.createCatalog(globalId, species, uri, upstreamId, version);
         factory.setCatalog(catalog);
 
         // Now deserialize and add hierarchies
-        for (Map.Entry<String, JsonNode> entry : hierarchyData.entrySet()) {
-            String hierarchyName = entry.getKey();
-            JsonNode hierarchyJson = entry.getValue();
-
+        for (JsonNode node : hierarchyData) {
             // Create a new parser for this hierarchy's data
-            JsonParser hierarchyParser = entry.getValue().traverse(p.getCodec());
+            JsonParser hierarchyParser = node.traverse(p.getCodec());
             hierarchyParser.nextToken();
 
-            // Set the hierarchy name in context for the deserializers
-            context.setAttribute("hierarchyName", hierarchyName);
-
-            // The hierarchy deserializers will determine the type from the JSON
-            // We'll need to check the "def" field to determine the type
-            if (hierarchyJson.has("def") && hierarchyJson.get("def").has("type")) {
-                String typeCode = hierarchyJson.get("def").get("type").asText().toUpperCase();
-                HierarchyType hierarchyType = switch (typeCode) {
-                    case "EL" -> HierarchyType.ENTITY_LIST;
-                    case "ES" -> HierarchyType.ENTITY_SET;
-                    case "ED" -> HierarchyType.ENTITY_DIR;
-                    case "ET" -> HierarchyType.ENTITY_TREE;
-                    case "AM" -> HierarchyType.ASPECT_MAP;
-                    default -> throw new JsonMappingException(p, "Unknown hierarchy type: " + typeCode);
-                };
-
-                Hierarchy hierarchy = switch (hierarchyType) {
-                    case ASPECT_MAP -> context.readValue(hierarchyParser, AspectMapHierarchy.class);
-                    case ENTITY_DIR -> context.readValue(hierarchyParser, EntityDirectoryHierarchy.class);
-                    case ENTITY_LIST -> context.readValue(hierarchyParser, EntityListHierarchy.class);
-                    case ENTITY_SET -> context.readValue(hierarchyParser, EntitySetHierarchy.class);
-                    case ENTITY_TREE -> context.readValue(hierarchyParser, EntityTreeHierarchy.class);
-                };
-            } else {
-                throw new JsonMappingException(p, "Hierarchy missing type information: " + hierarchyName);
-            }
+            Hierarchy hierarchy = context.readValue(hierarchyParser, Hierarchy.class);
+            catalog.addHierarchy(hierarchy);
         }
 
         return catalog;

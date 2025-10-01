@@ -23,18 +23,18 @@ class HierarchySerializer extends JsonSerializer<Hierarchy>
         gen.writeFieldName("contents");
 
         switch (hierarchy) {
-            case AspectMapHierarchy aMap -> serializeContent(aMap, gen, serializers);
-            case EntityDirectoryHierarchy eDir -> serializeContent(eDir, gen, serializers);
-            case EntityListHierarchy eList -> serializeContent(eList, gen, serializers);
-            case EntitySetHierarchy eSet -> serializeContent(eSet, gen, serializers);
-            case EntityTreeHierarchy eTree -> serializeContent(eTree, gen, serializers);
+            case AspectMapHierarchy aMap -> serializeContent(aMap, gen);
+            case EntityDirectoryHierarchy eDir -> serializeContent(eDir, gen);
+            case EntityListHierarchy eList -> serializeContent(eList, gen);
+            case EntitySetHierarchy eSet -> serializeContent(eSet, gen);
+            case EntityTreeHierarchy eTree -> serializeContent(eTree, gen);
             default -> throw new IllegalArgumentException("Unknown hierarchy class: " + hierarchy.getClass());
         }
 
         gen.writeEndObject();
     }
 
-    protected void serializeContent(AspectMapHierarchy hierarchy, JsonGenerator gen, SerializerProvider serializers) throws IOException
+    protected void serializeContent(AspectMapHierarchy hierarchy, JsonGenerator gen) throws IOException
     {
         gen.writeStartObject();
         for (Map.Entry<Entity, Aspect> entry : hierarchy.entrySet()) {
@@ -44,7 +44,7 @@ class HierarchySerializer extends JsonSerializer<Hierarchy>
         gen.writeEndObject();
     }
 
-    protected void serializeContent(EntityDirectoryHierarchy hierarchy, JsonGenerator gen, SerializerProvider serializers) throws IOException
+    protected void serializeContent(EntityDirectoryHierarchy hierarchy, JsonGenerator gen) throws IOException
     {
         gen.writeStartObject();
         for (Map.Entry<String, Entity> entry : hierarchy.entrySet()) {
@@ -53,7 +53,7 @@ class HierarchySerializer extends JsonSerializer<Hierarchy>
         gen.writeEndObject();
     }
 
-    protected void serializeContent(EntityListHierarchy hierarchy, JsonGenerator gen, SerializerProvider serializers) throws IOException
+    protected void serializeContent(EntityListHierarchy hierarchy, JsonGenerator gen) throws IOException
     {
         gen.writeStartArray();
         for (Entity entity : hierarchy) {
@@ -62,7 +62,7 @@ class HierarchySerializer extends JsonSerializer<Hierarchy>
         gen.writeEndArray();
     }
 
-    protected void serializeContent(EntitySetHierarchy hierarchy, JsonGenerator gen, SerializerProvider serializers) throws IOException
+    protected void serializeContent(EntitySetHierarchy hierarchy, JsonGenerator gen) throws IOException
     {
         gen.writeStartArray();
         for (Entity entity : hierarchy) {
@@ -71,8 +71,29 @@ class HierarchySerializer extends JsonSerializer<Hierarchy>
         gen.writeEndArray();
     }
 
-    protected void serializeContent(EntityTreeHierarchy hierarchy, JsonGenerator gen, SerializerProvider serializers) throws IOException
+    protected void serializeContent(EntityTreeHierarchy hierarchy, JsonGenerator gen) throws IOException
     {
-        gen.writeObject(hierarchy.root());
+        serializeNode(hierarchy.root(), gen);
+    }
+
+    protected void serializeNode(EntityTreeHierarchy.Node node, JsonGenerator gen) throws IOException
+    {
+        gen.writeStartObject();
+
+        if (node.value() != null) {
+            gen.writeStringField("entityId", node.value().globalId().toString());
+        }
+
+        if (!node.isEmpty()) {
+            gen.writeFieldName("children");
+            gen.writeStartObject();
+            for (Map.Entry<String, EntityTreeHierarchy.Node> entry : node.entrySet()) {
+                gen.writeFieldName(entry.getKey());
+                serializeNode(entry.getValue(), gen);
+            }
+            gen.writeEndObject();
+        }
+
+        gen.writeEndObject();
     }
 }

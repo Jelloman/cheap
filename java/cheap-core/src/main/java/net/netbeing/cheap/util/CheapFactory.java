@@ -4,6 +4,7 @@ import net.netbeing.cheap.impl.basic.*;
 import net.netbeing.cheap.model.*;
 import org.jetbrains.annotations.NotNull;
 
+import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -216,9 +217,11 @@ public class CheapFactory
      * @return a new Catalog instance
      */
     public @NotNull Catalog createCatalog(@NotNull UUID globalId, @NotNull CatalogSpecies species,
-                                          UUID upstream, long version)
+                                          URI uri, UUID upstream, long version)
     {
-        return new CatalogImpl(globalId, species, upstream, version);
+        CatalogImpl cat = new CatalogImpl(globalId, species, upstream, version);
+        cat.uri(uri);
+        return cat;
     }
 
     /**

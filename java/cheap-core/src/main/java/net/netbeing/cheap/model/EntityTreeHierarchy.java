@@ -55,13 +55,22 @@ public interface EntityTreeHierarchy extends Hierarchy
          * Returns the entity associated with this node. Not all nodes are required to
          * have an associated entity - some nodes may exist purely as containers for
          * organizing child nodes.
-         * 
+         *
          * <p>When present, the entity provides access to the data and aspects stored
          * at this location in the tree hierarchy.</p>
          *
          * @return the entity associated with this node, or null if no entity is attached
          */
         Entity value();
+
+        /**
+         * Sets the entity associated with this node. Not all nodes are required to
+         * have an associated entity - some nodes may exist purely as containers for
+         * organizing child nodes.
+         *
+         * @param entity the entity associated with this node, or null if no entity is attached
+         */
+        void setValue(Entity entity);
     }
 
     /**

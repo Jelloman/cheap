@@ -1,6 +1,0 @@
-{
-  "name" : "testProp",
-  "type" : "Integer",
-  "hasDefaultValue" : true,
-  "defaultValue" : "42"
-}

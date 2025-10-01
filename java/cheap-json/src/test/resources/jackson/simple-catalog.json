@@ -2,11 +2,6 @@
   "globalId" : "550e8400-e29b-41d4-a716-444444444444",
   "uri" : null,
   "species" : "sink",
-  "strict" : false,
-  "def" : {
-    "aspectDefs" : { },
-    "hierarchyDefs" : [ ]
-  },
   "aspectDefs" : { },
   "hierarchies" : { }
 }

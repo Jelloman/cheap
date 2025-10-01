@@ -26,7 +26,7 @@ public class EntityTreeHierarchyImpl implements EntityTreeHierarchy
     public static class NodeImpl extends LinkedHashMap<String, Node> implements Node
     {
         /** The entity value stored at this node. */
-        private final Entity value;
+        private Entity value;
         
         /** The parent node, or null for root nodes. */
         private final Node parent;
@@ -85,6 +85,15 @@ public class EntityTreeHierarchyImpl implements EntityTreeHierarchy
         {
             return value;
         }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void setValue(Entity entity)
+        {
+            value = entity;
+        }
     }
 
     /**
@@ -94,7 +103,7 @@ public class EntityTreeHierarchyImpl implements EntityTreeHierarchy
     public static class LeafNodeImpl extends AbstractMap<String, Node> implements Node
     {
         /** The entity value stored at this leaf node. */
-        private final Entity value;
+        private Entity value;
         
         /** The parent node, or null for root leaf nodes. */
         private final Node parent;
@@ -152,6 +161,16 @@ public class EntityTreeHierarchyImpl implements EntityTreeHierarchy
         public Entity value()
         {
             return value;
+        }
+
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void setValue(Entity entity)
+        {
+            value = entity;
         }
 
         /**
