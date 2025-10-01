@@ -1,5 +1,6 @@
 package net.netbeing.cheap.impl.basic;
 
+import net.netbeing.cheap.model.MutableAspectDef;
 import net.netbeing.cheap.model.PropertyDef;
 import org.jetbrains.annotations.NotNull;
 
@@ -18,7 +19,7 @@ import java.util.UUID;
  * @see ImmutableAspectDefImpl
  * @see PropertyDef
  */
-public class MutableAspectDefImpl extends AspectDefBase
+public class MutableAspectDefImpl extends AspectDefBase implements MutableAspectDef
 {
     /**
      * Creates a new MutableAspectDefImpl with the specified name and empty property definitions.

@@ -743,7 +743,7 @@ public class CheapFactory
      * @param name the name of this aspect definition
      * @return a new mutable AspectDef instance
      */
-    public @NotNull AspectDef createMutableAspectDef(@NotNull String name)
+    public @NotNull MutableAspectDef createMutableAspectDef(@NotNull String name)
     {
         return new MutableAspectDefImpl(name);
     }
@@ -755,7 +755,7 @@ public class CheapFactory
      * @param propertyDefs the map of property names to property definitions
      * @return a new mutable AspectDef instance
      */
-    public @NotNull AspectDef createMutableAspectDef(@NotNull String name, 
+    public @NotNull MutableAspectDef createMutableAspectDef(@NotNull String name,
                                                            @NotNull Map<String, PropertyDef> propertyDefs)
     {
         return new MutableAspectDefImpl(name, propertyDefs);
