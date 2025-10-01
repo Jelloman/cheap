@@ -1,14 +1,11 @@
 package net.netbeing.cheap.db;
 
 import io.zonky.test.db.postgres.embedded.FlywayPreparer;
-import io.zonky.test.db.postgres.junit.EmbeddedPostgresRules;
-import io.zonky.test.db.postgres.junit.SingleInstancePostgresRule;
 import io.zonky.test.db.postgres.junit5.EmbeddedPostgresExtension;
 import io.zonky.test.db.postgres.junit5.PreparedDbExtension;
-import io.zonky.test.db.postgres.junit5.SingleInstancePostgresExtension;
 import net.netbeing.cheap.model.*;
 import net.netbeing.cheap.util.CheapFactory;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import javax.sql.DataSource;
@@ -56,6 +53,7 @@ class CatalogDaoTest
         truncateAllTables();
     }
 
+    @SuppressWarnings("SameParameterValue")
     private boolean tableExists(Connection connection, String tableName) throws SQLException {
         try (var rs = connection.getMetaData().getTables(null, null, tableName, null)) {
             return rs.next();
@@ -77,6 +75,7 @@ class CatalogDaoTest
         }
     }
 
+    @SuppressWarnings("DataFlowIssue")
     private static String loadResourceFile(String resourcePath) throws IOException, URISyntaxException
     {
         Path path = Paths.get(CatalogDaoTest.class.getResource(resourcePath).toURI());
@@ -402,6 +401,7 @@ class CatalogDaoTest
         assertNull(catalog);
     }
 
+    @SuppressWarnings("DataFlowIssue")
     @Test
     void testSaveNullCatalogThrowsException() throws SQLException, IOException, URISyntaxException
     {
