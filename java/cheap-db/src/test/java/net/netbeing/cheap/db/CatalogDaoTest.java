@@ -330,11 +330,11 @@ class CatalogDaoTest
         assertTrue(foundPerson2, "Person2 should be found in loaded hierarchy");
     }
 
-    /*
-
     @Test
-    void testDeleteCatalog() throws SQLException
+    void testDeleteCatalog() throws SQLException, IOException, URISyntaxException
     {
+        setUp();
+
         // Create and save catalog
         UUID catalogId = UUID.randomUUID();
         Catalog catalog = factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
@@ -353,8 +353,10 @@ class CatalogDaoTest
     }
 
     @Test
-    void testDeleteNonExistentCatalog() throws SQLException
+    void testDeleteNonExistentCatalog() throws SQLException, IOException, URISyntaxException
     {
+        setUp();
+
         UUID nonExistentId = UUID.randomUUID();
 
         // Delete non-existent catalog
@@ -363,8 +365,10 @@ class CatalogDaoTest
     }
 
     @Test
-    void testCatalogExists() throws SQLException
+    void testCatalogExists() throws SQLException, IOException, URISyntaxException
     {
+        setUp();
+
         UUID catalogId = UUID.randomUUID();
 
         // Should not exist initially
@@ -379,24 +383,30 @@ class CatalogDaoTest
     }
 
     @Test
-    void testLoadNonExistentCatalog() throws SQLException
+    void testLoadNonExistentCatalog() throws SQLException, IOException, URISyntaxException
     {
+        setUp();
+
         UUID nonExistentId = UUID.randomUUID();
         Catalog catalog = catalogDao.loadCatalog(nonExistentId);
         assertNull(catalog);
     }
 
     @Test
-    void testSaveNullCatalogThrowsException() throws SQLException
+    void testSaveNullCatalogThrowsException() throws SQLException, IOException, URISyntaxException
     {
+        setUp();
+
         assertThrows(IllegalArgumentException.class, () -> {
             catalogDao.saveCatalog(null);
         });
     }
 
     @Test
-    void testTransactionRollbackOnError() throws SQLException
+    void testTransactionRollbackOnError() throws SQLException, IOException, URISyntaxException
     {
+        setUp();
+
         // This test would verify that failed saves don't leave partial data
         // Due to the complexity of creating a controlled failure scenario,
         // this is left as a placeholder for more advanced testing
@@ -410,8 +420,10 @@ class CatalogDaoTest
     }
 
     @Test
-    void testComplexCatalogRoundTrip() throws SQLException
+    void testComplexCatalogRoundTrip() throws SQLException, IOException, URISyntaxException
     {
+        setUp();
+
         // Create a complex catalog with multiple hierarchy types
         UUID catalogId = UUID.randomUUID();
         Catalog originalCatalog = factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
@@ -449,10 +461,9 @@ class CatalogDaoTest
         addressMap.put(entity1, address1Aspect);
 
         // Add all hierarchies to catalog
+        // Note: AspectMapHierarchies are automatically added to catalog when created
         originalCatalog.addHierarchy(entitySet);
         originalCatalog.addHierarchy(directory);
-        originalCatalog.addHierarchy(personMap);
-        originalCatalog.addHierarchy(addressMap);
 
         // Save and load
         catalogDao.saveCatalog(originalCatalog);
@@ -487,5 +498,4 @@ class CatalogDaoTest
         AspectMapHierarchy loadedAddressMap = (AspectMapHierarchy) loadedCatalog.hierarchy("address");
         assertEquals(1, loadedAddressMap.size());
     }
-    */
 }
