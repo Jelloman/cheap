@@ -8,6 +8,7 @@ import javax.sql.DataSource;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.sql.*;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
@@ -502,9 +503,71 @@ public class CatalogDao implements CatalogPersistence
 
     private void loadEntityTreeContent(Connection conn, UUID catalogId, String hierarchyName, EntityTreeHierarchy hierarchy) throws SQLException
     {
-        // Load tree structure - simplified implementation
-        // In a full implementation, would need to reconstruct the tree structure
+        // Load all tree nodes into a map for efficient parent-child relationship building
+        Map<UUID, NodeRecord> nodeMap = new HashMap<>();
+        UUID rootNodeId = null;
+
+        String sql = "SELECT node_id, parent_node_id, node_key, entity_id " +
+            "FROM hierarchy_entity_tree_node " +
+            "WHERE hierarchy_catalog_id = ? AND hierarchy_name = ? " +
+            "ORDER BY node_path";
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setObject(1, catalogId);
+            stmt.setString(2, hierarchyName);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    UUID nodeId = rs.getObject("node_id", UUID.class);
+                    UUID parentNodeId = rs.getObject("parent_node_id", UUID.class);
+                    String nodeKey = rs.getString("node_key");
+                    UUID entityId = rs.getObject("entity_id", UUID.class);
+
+                    Entity entity = entityId != null ? factory.getOrRegisterNewEntity(entityId) : null;
+                    EntityTreeHierarchy.Node node = factory.createTreeNode(entity);
+
+                    NodeRecord record = new NodeRecord(nodeId, parentNodeId, nodeKey, node);
+                    nodeMap.put(nodeId, record);
+
+                    // Root node has no parent
+                    if (parentNodeId == null) {
+                        rootNodeId = nodeId;
+                    }
+                }
+            }
+        }
+
+        // Build the tree structure by adding children to their parents
+        for (NodeRecord record : nodeMap.values()) {
+            if (record.parentNodeId != null) {
+                NodeRecord parentRecord = nodeMap.get(record.parentNodeId);
+                if (parentRecord != null) {
+                    parentRecord.node.put(record.nodeKey, record.node);
+                }
+            }
+        }
+
+        // Populate the root node of the hierarchy
+        if (rootNodeId != null) {
+            NodeRecord rootRecord = nodeMap.get(rootNodeId);
+            if (rootRecord != null) {
+                EntityTreeHierarchy.Node hierarchyRoot = hierarchy.root();
+                // Copy all children from loaded root to hierarchy root
+                hierarchyRoot.putAll(rootRecord.node);
+                // Set the entity value if present
+                if (rootRecord.node.value() != null) {
+                    hierarchyRoot.setValue(rootRecord.node.value());
+                }
+            }
+        }
     }
+
+    // Helper class to hold node information during tree reconstruction
+    private record NodeRecord(
+        UUID nodeId,
+        UUID parentNodeId,
+        String nodeKey,
+        EntityTreeHierarchy.Node node
+    ) {}
 
     private void loadAspectMapContent(Connection conn, UUID catalogId, String hierarchyName, AspectMapHierarchy hierarchy) throws SQLException
     {
