@@ -105,10 +105,11 @@ class CatalogDaoTest
         assertEquals(originalCatalog.upstream(), loadedCatalog.upstream());
     }
 
-    /*
     @Test
-    void testSaveAndLoadCatalogWithUri() throws SQLException
+    void testSaveAndLoadCatalogWithUri() throws SQLException, IOException, URISyntaxException
     {
+        setUp();
+
         // Create catalog with URI
         UUID catalogId = UUID.randomUUID();
         Catalog originalCatalog = factory.createCatalog(catalogId, CatalogSpecies.SOURCE, null, null, 0L);
@@ -124,8 +125,10 @@ class CatalogDaoTest
     }
 
     @Test
-    void testSaveAndLoadCatalogWithUpstream() throws SQLException
+    void testSaveAndLoadCatalogWithUpstream() throws SQLException, IOException, URISyntaxException
     {
+        setUp();
+
         // Create upstream catalog first
         UUID upstreamId = UUID.randomUUID();
         Catalog upstreamCatalog = factory.createCatalog(upstreamId, CatalogSpecies.SOURCE, null, null, 0L);
@@ -145,8 +148,10 @@ class CatalogDaoTest
     }
 
     @Test
-    void testSaveAndLoadCatalogWithAspectDefs() throws SQLException
+    void testSaveAndLoadCatalogWithAspectDefs() throws SQLException, IOException, URISyntaxException
     {
+        setUp();
+
         // Create AspectDef
         AspectDef personAspectDef = factory.createMutableAspectDef("person");
 
@@ -176,6 +181,8 @@ class CatalogDaoTest
         }
         assertTrue(foundPersonAspect, "Person aspect definition should be loaded");
     }
+
+    /*
 
     @Test
     void testSaveAndLoadCatalogWithEntitySetHierarchy() throws SQLException

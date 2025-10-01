@@ -78,15 +78,15 @@ public class CatalogDao implements CatalogPersistence
         // Save the Catalog entity itself first and foremost
         saveEntity(conn, catalog);
 
+        // Save the Catalog table record (must be before linking aspect defs due to FK constraint)
+        saveCatalogRecord(conn, catalog);
+
         // Save AspectDefs
         for (AspectDef aspectDef : catalog.aspectDefs()) {
             saveAspectDef(conn, aspectDef);
             // Link the AspectDef to this Catalog
             linkCatalogToAspectDef(conn, catalog.globalId(), aspectDef);
         }
-
-        // Save the Catalog table record
-        saveCatalogRecord(conn, catalog);
 
         // Save all entities, aspects, and properties from hierarchies
         for (Hierarchy hierarchy : catalog.hierarchies()) {
@@ -442,10 +442,31 @@ public class CatalogDao implements CatalogPersistence
                 // Create catalog with version
                 Catalog catalog = factory.createCatalog(catalogId, species, uri, upstream, version);
 
+                // Load and extend catalog with AspectDefs
+                loadAndExtendAspectDefs(conn, catalog);
+
                 // Load and add all hierarchies
                 loadHierarchies(conn, catalog);
 
                 return catalog;
+            }
+        }
+    }
+
+    private void loadAndExtendAspectDefs(Connection conn, Catalog catalog) throws SQLException
+    {
+        String sql = "SELECT ad.name FROM catalog_aspect_def cad " +
+            "JOIN aspect_def ad ON cad.aspect_def_id = ad.aspect_def_id " +
+            "WHERE cad.catalog_id = ?";
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setObject(1, catalog.globalId());
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    String aspectDefName = rs.getString("name");
+                    AspectDef aspectDef = loadAspectDef(conn, aspectDefName);
+                    catalog.extend(aspectDef);
+                }
             }
         }
     }
@@ -463,10 +484,31 @@ public class CatalogDao implements CatalogPersistence
                     long version = rs.getLong("version_number");
                     HierarchyType type = mapDbTypeToHierarchyType(typeStr);
 
-                    Hierarchy hierarchy = createAndLoadHierarchy(conn, catalog, type, name, version);
-                    catalog.addHierarchy(hierarchy);
+                    // Check if hierarchy already exists (it may have been created by extend())
+                    Hierarchy existingHierarchy = catalog.hierarchy(name);
+                    if (existingHierarchy != null) {
+                        // Hierarchy already exists, load content into it based on type
+                        loadExistingHierarchyContent(conn, catalog.globalId(), existingHierarchy, type);
+                    } else {
+                        // Create and load new hierarchy
+                        Hierarchy hierarchy = createAndLoadHierarchy(conn, catalog, type, name, version);
+                        catalog.addHierarchy(hierarchy);
+                    }
                 }
             }
+        }
+    }
+
+    private void loadExistingHierarchyContent(Connection conn, UUID catalogId, Hierarchy hierarchy, HierarchyType type) throws SQLException
+    {
+        String hierarchyName = hierarchy.name();
+        switch (type) {
+            case ENTITY_LIST -> loadEntityListContent(conn, catalogId, hierarchyName, (EntityListHierarchy) hierarchy);
+            case ENTITY_SET -> loadEntitySetContent(conn, catalogId, hierarchyName, (EntitySetHierarchy) hierarchy);
+            case ENTITY_DIR -> loadEntityDirectoryContent(conn, catalogId, hierarchyName, (EntityDirectoryHierarchy) hierarchy);
+            case ENTITY_TREE -> loadEntityTreeContent(conn, catalogId, hierarchyName, (EntityTreeHierarchy) hierarchy);
+            case ASPECT_MAP -> loadAspectMapContent(conn, catalogId, hierarchyName, (AspectMapHierarchy) hierarchy);
+            default -> throw new IllegalArgumentException("Unknown hierarchy type: " + type);
         }
     }
 
@@ -623,7 +665,7 @@ public class CatalogDao implements CatalogPersistence
 
     private void loadAspectMapContent(Connection conn, UUID catalogId, String hierarchyName, AspectMapHierarchy hierarchy) throws SQLException
     {
-        String sql = "SELECT entity_id FROM hierarchy_aspect_map WHERE catalog_id = ? AND hierarchy_name = ? ORDER BY map_order";
+        String sql = "SELECT entity_id FROM hierarchy_aspect_map WHERE catalog_id = ? AND hierarchy_name = ?";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setObject(1, catalogId);
             stmt.setString(2, hierarchyName);
@@ -679,22 +721,13 @@ public class CatalogDao implements CatalogPersistence
 
     private AspectDef loadAspectDefForHierarchy(Connection conn, UUID catalogId, String hierarchyName) throws SQLException
     {
-        String sql = "SELECT ad.name FROM hierarchy_aspect_map ham " +
-            "JOIN aspect_def ad ON ham.aspect_def_id = ad.aspect_def_id " +
-            "WHERE ham.catalog_id = ? AND ham.hierarchy_name = ? LIMIT 1";
-
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setObject(1, catalogId);
-            stmt.setString(2, hierarchyName);
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    String aspectDefName = rs.getString("name");
-                    return loadAspectDef(conn, aspectDefName);
-                }
-            }
+        // For AspectMap hierarchies, the hierarchy name matches the AspectDef name
+        // Try to load the AspectDef directly by name
+        try {
+            return loadAspectDef(conn, hierarchyName);
+        } catch (SQLException e) {
+            throw new SQLException("Could not find AspectDef for hierarchy: " + hierarchyName + " in catalog " + catalogId, e);
         }
-
-        throw new SQLException("Could not find AspectDef for hierarchy: " + hierarchyName + " in catalog " + catalogId);
     }
 
     private AspectDef loadAspectDef(Connection conn, String aspectDefName) throws SQLException
