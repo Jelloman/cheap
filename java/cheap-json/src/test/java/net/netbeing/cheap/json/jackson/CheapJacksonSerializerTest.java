@@ -388,10 +388,10 @@ public class CheapJacksonSerializerTest
 
         // 5. First AspectMapHierarchy (person aspects)
         AspectObjectMapImpl personAspect1 = new AspectObjectMapImpl(entity1, personAspectDef);
-        personAspect1.unsafeWrite("age", "30");
+        personAspect1.unsafeWrite("age", 30);
         personAspect1.unsafeWrite("name", "John Doe");
         AspectObjectMapImpl personAspect2 = new AspectObjectMapImpl(entity2, personAspectDef);
-        personAspect2.unsafeWrite("age", "25");
+        personAspect2.unsafeWrite("age", 25);
         personAspect2.unsafeWrite("name", "Jane Smith");
         personAspects.put(entity1, personAspect1);
         personAspects.put(entity2, personAspect2);

@@ -34,6 +34,7 @@
       <w>regproc</w>
       <w>regprocedure</w>
       <w>regtype</w>
+      <w>roundtrip</w>
       <w>smallserial</w>
       <w>timestamptz</w>
       <w>tsquery</w>
