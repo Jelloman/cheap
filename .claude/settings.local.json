@@ -17,7 +17,10 @@
       "Bash(git checkout:*)",
       "Read(//d/src/tmp/**)",
       "WebFetch(domain:dba.stackexchange.com)",
-      "Bash(xargs cat:*)"
+      "Bash(xargs cat:*)",
+      "Bash(perl:*)",
+      "Bash(export:*)",
+      "Bash(python:*)"
     ],
     "deny": [],
     "ask": []

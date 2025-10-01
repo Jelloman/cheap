@@ -32,10 +32,9 @@ public class CheapJacksonDeserializerTest
         assertEquals(UUID.fromString("550e8400-e29b-41d4-a716-444444444444"), catalog.globalId());
         assertNull(catalog.uri());
         assertEquals(CatalogSpecies.SINK, catalog.species());
-        assertFalse(catalog.isStrict());
-        assertNotNull(catalog.def());
-        assertFalse(catalog.def().aspectDefs().iterator().hasNext());
-        assertFalse(catalog.def().hierarchyDefs().iterator().hasNext());
+        // isStrict() removed from model
+        assertFalse(catalog.aspectDefs().iterator().hasNext());
+        assertFalse(catalog.hierarchies().iterator().hasNext());
     }
 
     @Test
@@ -45,8 +44,15 @@ public class CheapJacksonDeserializerTest
         Catalog catalog = deserializer.fromJson(json);
 
         assertEquals(UUID.fromString("550e8400-e29b-41d4-a716-444444444444"), catalog.globalId());
-        assertTrue(catalog.def().aspectDefs().iterator().hasNext());
-        AspectDef personAspectDef = catalog.def().aspectDef("person");
+        assertTrue(catalog.aspectDefs().iterator().hasNext());
+        // Find person aspectDef
+        AspectDef personAspectDef = null;
+        for (AspectDef ad : catalog.aspectDefs()) {
+            if ("person".equals(ad.name())) {
+                personAspectDef = ad;
+                break;
+            }
+        }
         assertNotNull(personAspectDef);
         assertEquals("person", personAspectDef.name());
         PropertyDef nameProp = personAspectDef.propertyDef("name");
@@ -73,8 +79,7 @@ public class CheapJacksonDeserializerTest
         assertInstanceOf(EntityDirectoryHierarchy.class, hierarchy);
 
         EntityDirectoryHierarchy entityDir = (EntityDirectoryHierarchy) hierarchy;
-        assertEquals(HierarchyType.ENTITY_DIR, entityDir.def().type());
-        assertTrue(entityDir.def().isModifiable());
+        assertEquals(HierarchyType.ENTITY_DIR, entityDir.type());
 
         assertTrue(entityDir.containsKey("admin"));
         assertTrue(entityDir.containsKey("user1"));
@@ -95,7 +100,7 @@ public class CheapJacksonDeserializerTest
         assertInstanceOf(EntityListHierarchy.class, hierarchy);
 
         EntityListHierarchy entityList = (EntityListHierarchy) hierarchy;
-        assertEquals(HierarchyType.ENTITY_LIST, entityList.def().type());
+        assertEquals(HierarchyType.ENTITY_LIST, entityList.type());
         assertEquals(2, entityList.size());
 
         Entity firstEntity = entityList.get(0);
@@ -113,7 +118,7 @@ public class CheapJacksonDeserializerTest
         assertInstanceOf(EntitySetHierarchy.class, hierarchy);
 
         EntitySetHierarchy entitySet = (EntitySetHierarchy) hierarchy;
-        assertEquals(HierarchyType.ENTITY_SET, entitySet.def().type());
+        assertEquals(HierarchyType.ENTITY_SET, entitySet.type());
         assertEquals(2, entitySet.size());
 
         assertTrue(entitySet.contains(deserializer.getFactory().getEntity(UUID.fromString("550e8400-e29b-41d4-a716-446655440000"))));
@@ -130,7 +135,7 @@ public class CheapJacksonDeserializerTest
         assertInstanceOf(EntityTreeHierarchy.class, hierarchy);
 
         EntityTreeHierarchy entityTree = (EntityTreeHierarchy) hierarchy;
-        assertEquals(HierarchyType.ENTITY_TREE, entityTree.def().type());
+        assertEquals(HierarchyType.ENTITY_TREE, entityTree.type());
 
         EntityTreeHierarchy.Node root = entityTree.root();
         assertNotNull(root);
@@ -157,7 +162,7 @@ public class CheapJacksonDeserializerTest
         assertInstanceOf(AspectMapHierarchy.class, hierarchy);
 
         AspectMapHierarchy aspectMap = (AspectMapHierarchy) hierarchy;
-        assertEquals(HierarchyType.ASPECT_MAP, aspectMap.def().type());
+        assertEquals(HierarchyType.ASPECT_MAP, aspectMap.type());
         assertEquals("person", aspectMap.aspectDef().name());
 
         assertFalse(aspectMap.isEmpty());
@@ -183,24 +188,20 @@ public class CheapJacksonDeserializerTest
 
         // Verify AspectDefs
         int aspectDefCount = 0;
-        for (AspectDef ad : catalog.def().aspectDefs()) {
+        for (AspectDef ad : catalog.aspectDefs()) {
             aspectDefCount++;
         }
         assertEquals(2, aspectDefCount);
-        assertNotNull(catalog.def().aspectDef("person"));
-        assertNotNull(catalog.def().aspectDef("document"));
 
-        // Verify HierarchyDefs
-        int hierarchyDefCount = 0;
-        for (HierarchyDef hd : catalog.def().hierarchyDefs()) {
-            hierarchyDefCount++;
+        // Find person and document AspectDefs
+        AspectDef personDef = null;
+        AspectDef documentDef = null;
+        for (AspectDef ad : catalog.aspectDefs()) {
+            if ("person".equals(ad.name())) personDef = ad;
+            if ("document".equals(ad.name())) documentDef = ad;
         }
-        assertEquals(5, hierarchyDefCount);
-        assertNotNull(catalog.def().hierarchyDef("person"));
-        assertNotNull(catalog.def().hierarchyDef("document"));
-        assertNotNull(catalog.def().hierarchyDef("userDirectory"));
-        assertNotNull(catalog.def().hierarchyDef("taskQueue"));
-        assertNotNull(catalog.def().hierarchyDef("activeUsers"));
+        assertNotNull(personDef);
+        assertNotNull(documentDef);
 
         // Verify all hierarchies are present
         int hierarchyCount = 0;
@@ -243,7 +244,7 @@ public class CheapJacksonDeserializerTest
 
         assertEquals(compactCatalog.globalId(), prettyCatalog.globalId());
         assertEquals(compactCatalog.species(), prettyCatalog.species());
-        assertEquals(compactCatalog.isStrict(), prettyCatalog.isStrict());
+        // isStrict() removed from model
     }
 
     @Test

@@ -48,16 +48,11 @@ class EntityTreeHierarchyDeserializer extends JsonDeserializer<EntityTreeHierarc
             throw new JsonMappingException(p, "No hierarchy name provided in context");
         }
 
-        HierarchyDef def = factory.getHierarchyDef(hierarchyName);
-        if (def == null) {
-            throw new JsonMappingException(p, "No HierarchyDef found for hierarchy: " + hierarchyName);
-        }
-
         if (root == null) {
             throw new JsonMappingException(p, "Missing required field: root");
         }
 
-        EntityTreeHierarchy hierarchy = factory.createEntityTreeHierarchy(def, root);
+        EntityTreeHierarchy hierarchy = factory.createEntityTreeHierarchy(hierarchyName, root);
 
         return hierarchy;
     }

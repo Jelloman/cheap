@@ -58,16 +58,11 @@ class AspectMapHierarchyDeserializer extends JsonDeserializer<AspectMapHierarchy
             throw new JsonMappingException(p, "No hierarchy name provided in context");
         }
 
-        HierarchyDef def = factory.getHierarchyDef(hierarchyName);
-        if (def == null) {
-            throw new JsonMappingException(p, "No HierarchyDef found for hierarchy: " + hierarchyName);
-        }
-
         if (aspectDef == null) {
             throw new JsonMappingException(p, "Missing required field: aspectDefName");
         }
 
-        AspectMapHierarchy hierarchy = factory.createAspectMapHierarchy(def, aspectDef);
+        AspectMapHierarchy hierarchy = factory.createAspectMapHierarchy(hierarchyName, aspectDef);
 
         // Process aspects data if present
         if (aspectsData != null) {

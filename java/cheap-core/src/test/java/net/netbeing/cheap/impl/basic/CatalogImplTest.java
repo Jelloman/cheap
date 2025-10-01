@@ -13,12 +13,10 @@ class CatalogImplTest
     void def_CreateCatalogNoDef_ThenSink()
     {
         Catalog c = new CatalogImpl();
-        CatalogDef def = c.def();
 
-        assertNotNull(def);
         assertNotNull(c.globalId());
         assertNull(c.upstream());
-        assertFalse(c.isStrict());
+
         assertEquals(CatalogSpecies.SINK, c.species());
     }
 

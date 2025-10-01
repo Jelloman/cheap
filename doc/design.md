@@ -49,11 +49,10 @@ CATALOGS
     * A "clone" - a write-back working copy of another catalog with manual writes; or
     * A "fork" - a transient copy of another catalog, intended to diverge.
 * A fork is intended to be used as a short-lived transition from a mirror, cache or clone into a sink, AKA "Save As...".
-* Each Catalog has a Catalog Def that defines the structure and types of data it contains.
-  * The CatalogDef includes a set of AspectDefs and HierarchyDefs.
-  * Each Catalog has a "strict" flag. Strict catalogs can only contain Aspects and Hierarchies defined by their CatalogDef.
 * Mirror catalogs always have the same def as the upstream; clones and forks usually do, but can diverge.
 * Each Catalog has an Aspectage, which is a directory of ALL AspectDefs in the catalog.
+* A CatalogDef is purely informational, defining the types of data a catalog contains.
+    * The CatalogDef includes a set of AspectDefs and HierarchyDefs.
 
 
 HIERARCHIES
@@ -132,14 +131,13 @@ Identity in Cheap
 -----------------
 
 ### Global IDs
-* Catalogs, CatalogDefs and AspectDefs always have a global UUID.
-  * A CatalogDef may have the same UUID as its Catalog.
+* Catalogs and AspectDefs always have a global UUID.
 * AspectDefs also have a name that should be globally unique and use reverse domain name notation.
 * Entities almost always have a UUID.
   * Local Entities can be used to lazily generate UUIDs for performance reasons.
 * Catalogs usually have a URL.
   * All Cheap elements within such Catalogs (4 tiers, 4 Defs) are addressable via URLs.
-* Hierarchies and HierarchyDefs are owned by a single Catalog and do not have a global ID.
+* Hierarchies are owned by a single Catalog and do not have a global ID.
   * They must have a unique name within their catalog.
 * PropertyDefs are owned by a single AspectDef and do not have a global ID.
   * They must have a unique name within their AspectDef.
@@ -147,7 +145,7 @@ Identity in Cheap
   * They must have a unique name within their Aspect.
 
 ### Versions
-* CatalogDefs and AspectDefs have an implicit hash version.
+* CatalogDefs, HierarchyDefs and AspectDefs have an implicit hash version.
   * Like a Git commit, based on the entire contents of the Def.
 * Catalogs and Hierarchies have an explicit, monotonically increasing integer version number.
   * Incrementing this version number is typically restricted to "local access" and is not accessible via API.
@@ -155,7 +153,7 @@ Identity in Cheap
 | Element      | Global? | Owner     | Unique ID | Version Numbering |
 |--------------|---------|-----------|-----------|-------------------|
 | Catalog      | Yes     | -         | UUID      | Integer (manual)  |
-| CatalogDef   | Yes     | -         | UUID      | Hash (implicit)   |
+| CatalogDef   | No      | -         | -         | Hash (implicit)   |
 | HierarchyDef | No      | Catalog   | Name      | -                 |
 | Hierarchy    | No      | Catalog   | Name      | Integer (manual)  |
 | Entity       | Yes     | -         | UUID      | -                 |
@@ -168,11 +166,12 @@ Identity in Cheap
 Serialization and Persistence
 -----------------------------
 * Serialization (S11N) and persistence of Cheap Catalogs has some constraints:
-  * HierarchyDefs may only be contained in a CatalogDef or a Hierarchy.
   * PropertyDefs may only be contained in an AspectDef.
   * Aspects may only be contained in an AspectMapHierarchy.
   * AspectDefs must be serialized before any Aspects.
-  * HierarchyDefs must be serialized before any Hierarchies; or, when in a Hierarchy, they must be the first element.
-* These constraints do not apply to smaller atoms of persistence, i.e., JSON representing a single Aspect only. 
+* These constraints do not apply to smaller atoms of persistence, i.e., JSON representing a single Aspect only.
+* HierarchyDefs may only be contained in a CatalogDef.
+  * Both types of elements are purely informational and do not reside in Catalogs.
+
 
 

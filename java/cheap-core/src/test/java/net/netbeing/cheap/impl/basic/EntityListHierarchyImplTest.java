@@ -25,8 +25,8 @@ class EntityListHierarchyImplTest
     {
         catalog = new CatalogImpl();
         hierarchyDef = new HierarchyDefImpl("testEntityList", HierarchyType.ENTITY_LIST);
-        entityList = new EntityListHierarchyImpl(catalog, hierarchyDef);
-        
+        entityList = new EntityListHierarchyImpl(catalog, "testEntityList");
+
         entity1 = new EntityImpl();
         entity2 = new EntityImpl();
         entity3 = new EntityImpl();
@@ -35,18 +35,19 @@ class EntityListHierarchyImplTest
     @Test
     void constructor_ValidHierarchyDef_CreatesEmptyList()
     {
-        EntityListHierarchyImpl list = new EntityListHierarchyImpl(catalog, hierarchyDef);
-        
-        assertSame(hierarchyDef, list.def());
+        EntityListHierarchyImpl list = new EntityListHierarchyImpl(catalog, "testEntityList");
+
+        assertEquals("testEntityList", list.name());
+        assertEquals(HierarchyType.ENTITY_LIST, list.type());
         assertTrue(list.isEmpty());
         assertEquals(0, list.size());
     }
 
 
     @Test
-    void def_Always_ReturnsHierarchyDef()
+    void name_Always_ReturnsHierarchyName()
     {
-        assertSame(hierarchyDef, entityList.def());
+        assertEquals("testEntityList", entityList.name());
     }
 
     @Test

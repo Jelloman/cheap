@@ -57,4 +57,24 @@ public enum HierarchyType
     {
         return typeCode;
     }
+
+    /**
+     * Convert a type code string to a TypeCode.
+     *
+     * @param typeCode a 2-letter string code
+     * @return the corresponding TypeCode
+     * @throws IllegalArgumentException if the code is not recognized
+     */
+    public static HierarchyType fromTypeCode(String typeCode)
+    {
+        return switch (typeCode.toUpperCase()) {
+            case "EL" -> HierarchyType.ENTITY_LIST;
+            case "ES" -> HierarchyType.ENTITY_SET;
+            case "ED" -> HierarchyType.ENTITY_DIR;
+            case "ET" -> HierarchyType.ENTITY_TREE;
+            case "AM" -> HierarchyType.ASPECT_MAP;
+            default -> throw new IllegalArgumentException("Unknown hierarchy type code: " + typeCode);
+        };
+    }
+
 }

@@ -32,7 +32,7 @@ public interface AspectMapHierarchy extends Hierarchy, Map<Entity,Aspect>
     default Aspect add(Aspect a)
     {
         if (!a.def().equals(aspectDef())) {
-            throw new IllegalArgumentException("Cannot add Aspect of type '"+a.def().name()+"' to hierarchy '"+ def().name()+"'.");
+            throw new IllegalArgumentException("Cannot add Aspect of type '"+a.def().name()+"' to hierarchy '"+ name()+"'.");
         }
         return unsafeAdd(a);
     }

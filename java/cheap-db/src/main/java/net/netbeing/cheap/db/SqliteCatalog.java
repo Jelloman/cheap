@@ -147,8 +147,7 @@ public class SqliteCatalog extends CatalogImpl
         }
         
         AspectDef aspectDef = getTableDef(tableName);
-        HierarchyDef hierarchyDef = new HierarchyDefImpl("sqlite:table:" + tableName, HierarchyType.ASPECT_MAP);
-        AspectMapHierarchyImpl hierarchy = new AspectMapHierarchyImpl(this, hierarchyDef, aspectDef);
+        AspectMapHierarchyImpl hierarchy = new AspectMapHierarchyImpl(this, aspectDef);
 
         String query = "SELECT * FROM " + tableName;
         if (maxRows >= 0) {

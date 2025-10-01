@@ -29,7 +29,6 @@ class HierarchyDefDeserializer extends JsonDeserializer<HierarchyDef>
 
         String name = null;
         HierarchyType type = null;
-        boolean isModifiable = true;
 
         while (p.nextToken() != JsonToken.END_OBJECT) {
             String fieldName = p.currentName();
@@ -41,7 +40,7 @@ class HierarchyDefDeserializer extends JsonDeserializer<HierarchyDef>
                     String typeCode = p.getValueAsString().toUpperCase();
                     type = fromTypeCode(typeCode);
                 }
-                case "isModifiable" -> isModifiable = p.getBooleanValue();
+                case "isModifiable" -> p.skipChildren(); // isModifiable no longer exists
                 default -> p.skipChildren(); // Skip unknown fields
             }
         }
@@ -50,7 +49,7 @@ class HierarchyDefDeserializer extends JsonDeserializer<HierarchyDef>
             throw new JsonMappingException(p, "Missing required fields: name and type");
         }
 
-        return factory.createHierarchyDef(name, type, isModifiable);
+        return factory.createHierarchyDef(name, type);
     }
 
     private HierarchyType fromTypeCode(String typeCode) throws JsonMappingException

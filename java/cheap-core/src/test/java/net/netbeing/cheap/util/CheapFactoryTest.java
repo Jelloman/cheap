@@ -26,7 +26,7 @@ class CheapFactoryTest
         assertNotNull(catalog);
         assertEquals(CatalogSpecies.SINK, catalog.species());
         assertNull(catalog.upstream());
-        assertFalse(catalog.isStrict());
+
         
         // Test catalog with species and upstream
         UUID upstreamCatalog = UUID.randomUUID();
@@ -38,13 +38,12 @@ class CheapFactoryTest
         // Test full catalog configuration
         UUID catalogId = UUID.randomUUID();
         CatalogDef catalogDef = factory.createCatalogDef();
-        Catalog fullCatalog = factory.createCatalog(catalogId, CatalogSpecies.CACHE, catalogDef, upstreamCatalog, true);
+        Catalog fullCatalog = factory.createCatalog(catalogId, CatalogSpecies.CACHE, upstreamCatalog);
         assertNotNull(fullCatalog);
         assertEquals(catalogId, fullCatalog.globalId());
         assertEquals(CatalogSpecies.CACHE, fullCatalog.species());
-        assertEquals(catalogDef, fullCatalog.def());
         assertEquals(upstreamCatalog, fullCatalog.upstream());
-        assertTrue(fullCatalog.isStrict());
+
     }
 
     @Test
@@ -154,47 +153,50 @@ class CheapFactoryTest
     @Test
     void testCreateHierarchyDef()
     {
-        // Test hierarchy definition with all parameters
-        HierarchyDef hierarchyDef = factory.createHierarchyDef("testHierarchy", HierarchyType.ENTITY_SET, true);
+        // Test hierarchy definition
+        HierarchyDef hierarchyDef = factory.createHierarchyDef("testHierarchy", HierarchyType.ENTITY_SET);
         assertNotNull(hierarchyDef);
         assertEquals("testHierarchy", hierarchyDef.name());
         assertEquals(HierarchyType.ENTITY_SET, hierarchyDef.type());
-        assertTrue(hierarchyDef.isModifiable());
-        
-        // Test hierarchy definition with default modifiable=true
+
+
+        // Test hierarchy definition with different type
         HierarchyDef defaultModifiableDef = factory.createHierarchyDef("testHierarchy2", HierarchyType.ENTITY_LIST);
         assertNotNull(defaultModifiableDef);
         assertEquals("testHierarchy2", defaultModifiableDef.name());
         assertEquals(HierarchyType.ENTITY_LIST, defaultModifiableDef.type());
-        assertTrue(defaultModifiableDef.isModifiable());
+
     }
 
     @Test
     void testCreateEntityHierarchies()
     {
         Catalog catalog = factory.createCatalog();
-        HierarchyDef def = factory.createHierarchyDef("testEntityHierarchy", HierarchyType.ENTITY_SET);
 
         // Test entity directory hierarchy
-        EntityDirectoryHierarchy entityDir = factory.createEntityDirectoryHierarchy(catalog, def);
+        EntityDirectoryHierarchy entityDir = factory.createEntityDirectoryHierarchy(catalog, "testEntityDir");
         assertNotNull(entityDir);
-        assertEquals(def, entityDir.def());
+        assertEquals("testEntityDir", entityDir.name());
+        assertEquals(HierarchyType.ENTITY_DIR, entityDir.type());
 
         // Test entity list hierarchy
-        EntityListHierarchy entityList = factory.createEntityListHierarchy(catalog, def);
+        EntityListHierarchy entityList = factory.createEntityListHierarchy(catalog, "testEntityList");
         assertNotNull(entityList);
-        assertEquals(def, entityList.def());
+        assertEquals("testEntityList", entityList.name());
+        assertEquals(HierarchyType.ENTITY_LIST, entityList.type());
 
         // Test entity set hierarchy
-        EntitySetHierarchy entitySet = factory.createEntitySetHierarchy(catalog, def);
+        EntitySetHierarchy entitySet = factory.createEntitySetHierarchy(catalog, "testEntitySet");
         assertNotNull(entitySet);
-        assertEquals(def, entitySet.def());
+        assertEquals("testEntitySet", entitySet.name());
+        assertEquals(HierarchyType.ENTITY_SET, entitySet.type());
 
         // Test entity tree hierarchy
         Entity rootEntity = factory.createEntity();
-        EntityTreeHierarchy entityTree = factory.createEntityTreeHierarchy(catalog, def, rootEntity);
+        EntityTreeHierarchy entityTree = factory.createEntityTreeHierarchy(catalog, "testEntityTree", rootEntity);
         assertNotNull(entityTree);
-        assertEquals(def, entityTree.def());
+        assertEquals("testEntityTree", entityTree.name());
+        assertEquals(HierarchyType.ENTITY_TREE, entityTree.type());
         assertEquals(rootEntity, entityTree.root().value());
     }
 
@@ -211,14 +213,9 @@ class CheapFactoryTest
         // Test aspect map hierarchy with auto-generated hierarchy def
         AspectMapHierarchy aspectMap = factory.createAspectMapHierarchy(catalog, aspectDef);
         assertNotNull(aspectMap);
+        assertEquals(aspectDef.name(), aspectMap.name());
+        assertEquals(HierarchyType.ASPECT_MAP, aspectMap.type());
         assertEquals(aspectDef, aspectMap.aspectDef());
-
-        // Test aspect map hierarchy with custom hierarchy def
-        HierarchyDef customDef = factory.createHierarchyDef("customAspectMap", HierarchyType.ASPECT_MAP);
-        AspectMapHierarchy customAspectMap = factory.createAspectMapHierarchy(catalog, customDef, aspectDef);
-        assertNotNull(customAspectMap);
-        assertEquals(customDef, customAspectMap.def());
-        assertEquals(aspectDef, customAspectMap.aspectDef());
     }
 
     @Test

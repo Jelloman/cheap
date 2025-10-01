@@ -24,8 +24,8 @@ class EntitySetHierarchyImplTest
     {
         catalog = new CatalogImpl();
         hierarchyDef = new HierarchyDefImpl("testEntitySet", HierarchyType.ENTITY_SET);
-        entitySet = new EntitySetHierarchyImpl(catalog, hierarchyDef);
-        
+        entitySet = new EntitySetHierarchyImpl(catalog, "testEntitySet");
+
         entity1 = new EntityImpl();
         entity2 = new EntityImpl();
         entity3 = new EntityImpl();
@@ -34,18 +34,19 @@ class EntitySetHierarchyImplTest
     @Test
     void constructor_ValidHierarchyDef_CreatesEmptySet()
     {
-        EntitySetHierarchyImpl set = new EntitySetHierarchyImpl(catalog, hierarchyDef);
+        EntitySetHierarchyImpl set = new EntitySetHierarchyImpl(catalog, "testEntitySet");
 
-        assertSame(hierarchyDef, set.def());
+        assertEquals("testEntitySet", set.name());
+        assertEquals(HierarchyType.ENTITY_SET, set.type());
         assertTrue(set.isEmpty());
         assertEquals(0, set.size());
     }
 
 
     @Test
-    void def_Always_ReturnsHierarchyDef()
+    void name_Always_ReturnsHierarchyName()
     {
-        assertSame(hierarchyDef, entitySet.def());
+        assertEquals("testEntitySet", entitySet.name());
     }
 
     @Test
@@ -309,30 +310,30 @@ class EntitySetHierarchyImplTest
     @Test
     void hashCode_SameEntities_ProducesSameHashCode()
     {
-        EntitySetHierarchyImpl set1 = new EntitySetHierarchyImpl(catalog, hierarchyDef);
-        EntitySetHierarchyImpl set2 = new EntitySetHierarchyImpl(catalog, hierarchyDef);
-        
+        EntitySetHierarchyImpl set1 = new EntitySetHierarchyImpl(catalog, "testEntitySet");
+        EntitySetHierarchyImpl set2 = new EntitySetHierarchyImpl(catalog, "testEntitySet");
+
         set1.add(entity1);
         set1.add(entity2);
-        
+
         set2.add(entity2);
         set2.add(entity1); // Different order
-        
+
         assertEquals(set1.hashCode(), set2.hashCode());
     }
 
     @Test
     void equals_SameEntities_ReturnsTrue()
     {
-        EntitySetHierarchyImpl set1 = new EntitySetHierarchyImpl(catalog, hierarchyDef);
-        EntitySetHierarchyImpl set2 = new EntitySetHierarchyImpl(catalog, hierarchyDef);
-        
+        EntitySetHierarchyImpl set1 = new EntitySetHierarchyImpl(catalog, "testEntitySet");
+        EntitySetHierarchyImpl set2 = new EntitySetHierarchyImpl(catalog, "testEntitySet");
+
         set1.add(entity1);
         set1.add(entity2);
-        
+
         set2.add(entity2);
         set2.add(entity1); // Different order
-        
+
         assertEquals(set1, set2);
     }
 

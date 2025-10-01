@@ -27,15 +27,16 @@ class EntityTreeHierarchyImplTest
         childEntity1 = new EntityImpl();
         childEntity2 = new EntityImpl();
         leafEntity = new EntityImpl();
-        entityTree = new EntityTreeHierarchyImpl(catalog, hierarchyDef, rootEntity);
+        entityTree = new EntityTreeHierarchyImpl(catalog, "testEntityTree", rootEntity);
     }
 
     @Test
     void constructor_ValidParameters_CreatesTreeWithRoot()
     {
-        EntityTreeHierarchyImpl tree = new EntityTreeHierarchyImpl(catalog, hierarchyDef, rootEntity);
+        EntityTreeHierarchyImpl tree = new EntityTreeHierarchyImpl(catalog, "testEntityTree", rootEntity);
 
-        assertSame(hierarchyDef, tree.def());
+        assertEquals("testEntityTree", tree.name());
+        assertEquals(HierarchyType.ENTITY_TREE, tree.type());
         assertNotNull(tree.root());
         assertSame(rootEntity, tree.root().value());
         assertNull(tree.root().getParent());
@@ -47,9 +48,10 @@ class EntityTreeHierarchyImplTest
     @Test
     void constructor_NullRootEntity_AcceptsNull()
     {
-        EntityTreeHierarchyImpl tree = new EntityTreeHierarchyImpl(catalog, hierarchyDef);
+        EntityTreeHierarchyImpl tree = new EntityTreeHierarchyImpl(catalog, "testEntityTree");
 
-        assertSame(hierarchyDef, tree.def());
+        assertEquals("testEntityTree", tree.name());
+        assertEquals(HierarchyType.ENTITY_TREE, tree.type());
         assertNotNull(tree.root());
         assertNull(tree.root().value());
     }
@@ -57,7 +59,8 @@ class EntityTreeHierarchyImplTest
     @Test
     void def_Always_ReturnsHierarchyDef()
     {
-        assertSame(hierarchyDef, entityTree.def());
+        assertEquals("testEntityTree", entityTree.name());
+        assertEquals(HierarchyType.ENTITY_TREE, entityTree.type());
     }
 
     @Test

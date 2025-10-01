@@ -16,13 +16,8 @@ import java.util.Map;
  * structure for all Cheap model components including Catalogs, Hierarchies, Entities,
  * Aspects, and Properties.</p>
  */
-public class CheapJsonRawSerializer
+public final class CheapJsonRawSerializer
 {
-    private CheapJsonRawSerializer()
-    {
-        // Utility class - prevent instantiation
-    }
-    
     /**
      * Main entry point - converts a Catalog to JSON string.
      * 
@@ -85,43 +80,31 @@ public class CheapJsonRawSerializer
         appendNewlineAndIndent(sb, prettyPrint, indent + 1);
         sb.append("\"species\""); appendColon(sb, prettyPrint); sb.append("\"").append(catalog.species().name().toLowerCase()).append("\",");
         appendNewlineAndIndent(sb, prettyPrint, indent + 1);
-        sb.append("\"strict\""); appendColon(sb, prettyPrint); sb.append(catalog.isStrict()).append(",");
-
         if (catalog.upstream() != null) {
             appendNewlineAndIndent(sb, prettyPrint, indent + 1);
             sb.append("\"upstream\""); appendColon(sb, prettyPrint); sb.append("\"").append(escapeJson(catalog.upstream().toString())).append("\",");
         }
 
-        appendNewlineAndIndent(sb, prettyPrint, indent + 1);
-        sb.append("\"def\""); appendColon(sb, prettyPrint);
-        catalogDefToJson(catalog.def(), sb, prettyPrint, indent + 1);
-        sb.append(",");
-        
+        // Serialize all AspectDefs directly
         boolean first = true;
-
-        if (!catalog.isStrict()) {
-            appendNewlineAndIndent(sb, prettyPrint, indent + 1);
-            sb.append("\"aspectDefs\"");
+        appendNewlineAndIndent(sb, prettyPrint, indent + 1);
+        sb.append("\"aspectDefs\"");
+        appendColon(sb, prettyPrint);
+        sb.append("{");
+        for (AspectDef aspectDef : catalog.aspectDefs()) {
+            if (!first) sb.append(",");
+            appendNewlineAndIndent(sb, prettyPrint, indent + 2);
+            sb.append("\"").append(escapeJson(aspectDef.name())).append("\"");
             appendColon(sb, prettyPrint);
-            sb.append("{");
-            for (AspectDef aspectDef : catalog.aspectDefs()) {
-                // Elide those AspectDefs that are in the CatalogDef
-                if (catalog.def().aspectDef(aspectDef.name()) == null) {
-                    if (!first) sb.append(",");
-                    appendNewlineAndIndent(sb, prettyPrint, indent + 2);
-                    sb.append("\"").append(escapeJson(aspectDef.name())).append("\"");
-                    appendColon(sb, prettyPrint);
-                    aspectDefToJson(aspectDef, sb, prettyPrint, indent + 2);
-                    first = false;
-                }
-            }
-            if (!first) {
-                appendNewlineAndIndent(sb, prettyPrint, indent + 1);
-            } else if (prettyPrint) {
-                sb.append(" ");
-            }
-            sb.append("},");
+            aspectDefToJson(aspectDef, sb, prettyPrint, indent + 2);
+            first = false;
         }
+        if (!first) {
+            appendNewlineAndIndent(sb, prettyPrint, indent + 1);
+        } else if (prettyPrint) {
+            sb.append(" ");
+        }
+        sb.append("},");
 
         appendNewlineAndIndent(sb, prettyPrint, indent + 1);
         sb.append("\"hierarchies\""); appendColon(sb, prettyPrint); sb.append("{");
@@ -129,10 +112,9 @@ public class CheapJsonRawSerializer
         for (Hierarchy hierarchy : catalog.hierarchies()) {
             if (!first) sb.append(",");
             appendNewlineAndIndent(sb, prettyPrint, indent + 2);
-            sb.append("\"").append(escapeJson(hierarchy.def().name())).append("\""); appendColon(sb, prettyPrint);
-            // Check if this hierarchy def is in the catalog def
-            boolean isInCatalogDef = catalog.def().hierarchyDef(hierarchy.def().name()) != null;
-            hierarchyToJson(hierarchy, sb, prettyPrint, indent + 2, !isInCatalogDef);
+            sb.append("\"").append(escapeJson(hierarchy.name())).append("\""); appendColon(sb, prettyPrint);
+            // Always include embedded def since CatalogDef is no longer used
+            hierarchyToJson(hierarchy, sb, prettyPrint, indent + 2, true);
             first = false;
         }
         if (!first) {
@@ -367,9 +349,7 @@ public class CheapJsonRawSerializer
         appendNewlineAndIndent(sb, prettyPrint, indent + 1);
         sb.append("\"name\""); appendColon(sb, prettyPrint); sb.append("\"").append(escapeJson(hierarchyDef.name())).append("\",");
         appendNewlineAndIndent(sb, prettyPrint, indent + 1);
-        sb.append("\"type\""); appendColon(sb, prettyPrint); sb.append("\"").append(hierarchyDef.type().typeCode()).append("\",");
-        appendNewlineAndIndent(sb, prettyPrint, indent + 1);
-        sb.append("\"isModifiable\""); appendColon(sb, prettyPrint); sb.append(hierarchyDef.isModifiable());
+        sb.append("\"type\""); appendColon(sb, prettyPrint); sb.append("\"").append(hierarchyDef.type().typeCode()).append("\"");
         appendNewlineAndIndent(sb, prettyPrint, indent);
         sb.append("}");
     }
@@ -405,7 +385,7 @@ public class CheapJsonRawSerializer
      */
     public static void hierarchyToJson(Hierarchy hierarchy, StringBuilder sb, boolean prettyPrint, int indent, boolean includeEmbeddedDef)
     {
-        HierarchyType type = hierarchy.def().type();
+        HierarchyType type = hierarchy.type();
 
         switch (type) {
             case ASPECT_MAP -> aspectMapHierarchyToJson((AspectMapHierarchy) hierarchy, sb, prettyPrint, indent, includeEmbeddedDef);
@@ -750,9 +730,7 @@ public class CheapJsonRawSerializer
 
         if (includeEmbeddedDef) {
             appendNewlineAndIndent(sb, prettyPrint, indent + 1);
-            sb.append("\"def\""); appendColon(sb, prettyPrint);
-            hierarchyDefToJson(hierarchy.def(), sb, prettyPrint, indent + 1);
-            sb.append(",");
+            sb.append("\"def\""); appendColon(sb, prettyPrint); sb.append("{\"type\""); appendColon(sb, prettyPrint); sb.append("\"ET\"},");
         }
 
         appendNewlineAndIndent(sb, prettyPrint, indent + 1);
@@ -901,4 +879,10 @@ public class CheapJsonRawSerializer
             sb.append(":");
         }
     }
+
+    private CheapJsonRawSerializer()
+    {
+        // Utility class - prevent instantiation
+    }
+
 }

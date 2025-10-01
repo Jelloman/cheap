@@ -57,12 +57,7 @@ class EntitySetHierarchyDeserializer extends JsonDeserializer<EntitySetHierarchy
             throw new JsonMappingException(p, "No hierarchy name provided in context");
         }
 
-        HierarchyDef def = factory.getHierarchyDef(hierarchyName);
-        if (def == null) {
-            throw new JsonMappingException(p, "No HierarchyDef found for hierarchy: " + hierarchyName);
-        }
-
-        EntitySetHierarchy hierarchy = factory.createEntitySetHierarchy(def);
+        EntitySetHierarchy hierarchy = factory.createEntitySetHierarchy(hierarchyName);
         hierarchy.addAll(entities);
 
         return hierarchy;

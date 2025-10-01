@@ -73,32 +73,15 @@ public class CatalogDao implements CatalogPersistence
         // Save the Catalog entity itself first and foremost
         saveEntity(conn, catalog);
 
-        // Save the CatalogDef IF necessary. If the UUIDs of the Catalog and Def match,
-        // that means the Def is just a wrapper and should not be persisted.
-        CatalogDef catalogDef = catalog.def();
-        boolean distinctCatalogDef = !catalogDef.globalId().equals(catalog.globalId());
-        if (distinctCatalogDef) {
-            saveCatalogDef(conn, catalogDef);
-        }
+        // TODO: Catalog.def() and Hierarchy.def() have been removed.
+        // This persistence layer needs to be updated to work with the new model.
+        // For now, just save AspectDefs directly from the catalog.
 
         // Save AspectDefs
         for (AspectDef aspectDef : catalog.aspectDefs()) {
-            // Save an AspectDef only if not saved as part of the CatalogDef
-            if (!distinctCatalogDef || catalogDef.aspectDef(aspectDef.name()) == null) {
-                saveAspectDef(conn, aspectDef);
-                // Link the AspectDef to this Catalog
-                // TODO: populate the catalog_aspect_def table
-            }
-        }
-
-        // Save HierarchyDefs and link them to CatalogDef
-        for (Hierarchy hierarchy : catalog.hierarchies()) {
-            // Save an AspectDef only if not saved as part of the CatalogDef
-            if (!distinctCatalogDef || catalogDef.aspectDef(aspectDef.name()) == null) {
-                saveAspectDef(conn, aspectDef);
-            }
-            saveHierarchyDef(conn, hierarchy.def());
-            linkCatalogDefToHierarchyDef(conn, catalogDef, hierarchy.def());
+            saveAspectDef(conn, aspectDef);
+            // Link the AspectDef to this Catalog
+            // TODO: populate the catalog_aspect_def table
         }
 
         // Save the Catalog table record
@@ -111,6 +94,9 @@ public class CatalogDao implements CatalogPersistence
         }
     }
 
+    // TODO: CatalogDef no longer has globalId() - CatalogDef is now informational only
+    // This method is commented out until the model is updated
+    /*
     private void saveCatalogDef(Connection conn, CatalogDef catalogDef) throws SQLException
     {
         String sql = "INSERT INTO catalog_def (catalog_def_id, name, hash_version) " +
@@ -122,6 +108,7 @@ public class CatalogDao implements CatalogPersistence
             stmt.executeUpdate();
         }
     }
+    */
 
     private void saveAspectDef(Connection conn, AspectDef aspectDef) throws SQLException
     {
@@ -169,6 +156,9 @@ public class CatalogDao implements CatalogPersistence
         }
     }
 
+    // TODO: HierarchyDef no longer has isModifiable() - HierarchyDef is now informational only
+    // This method is commented out until the model is updated
+    /*
     private void saveHierarchyDef(Connection conn, HierarchyDef hierarchyDef) throws SQLException
     {
         String sql = "INSERT INTO hierarchy_def (hierarchy_def_id, name, hierarchy_type, is_modifiable) "
@@ -181,6 +171,7 @@ public class CatalogDao implements CatalogPersistence
             stmt.executeUpdate();
         }
     }
+    */
 
     private void linkCatalogDefToHierarchyDef(Connection conn, CatalogDef catalogDef, HierarchyDef hierarchyDef) throws SQLException
     {
@@ -199,7 +190,9 @@ public class CatalogDao implements CatalogPersistence
 
     private void saveCatalogRecord(Connection conn, Catalog catalog) throws SQLException
     {
-        UUID catalogDefId = catalog.def().globalId();
+        // TODO: Catalog.def() and Catalog.isStrict() no longer exist in the model
+        // CatalogDef persistence is disabled for now
+        UUID catalogDefId = null; // Was: catalog.def().globalId()
         if (catalogDefId.equals(catalog.globalId())) {
             // If the UUIDs of the Catalog and Def match, that means the Def is just a wrapper
             // and should not be persisted.
@@ -214,7 +207,7 @@ public class CatalogDao implements CatalogPersistence
             stmt.setString(3, catalog.species().name());
             stmt.setString(4, catalog.uri() != null ? catalog.uri().toString() : null);
             stmt.setObject(5, catalog.upstream());
-            stmt.setBoolean(6, catalog.isStrict());
+            stmt.setBoolean(6, false); // Was: catalog.isStrict() - now defaults to false
             stmt.setLong(7, catalog.version());
             stmt.executeUpdate();
         }
@@ -223,15 +216,16 @@ public class CatalogDao implements CatalogPersistence
     private void saveHierarchy(Connection conn, Hierarchy hierarchy) throws SQLException
     {
         UUID catalogId = hierarchy.catalog().globalId();
-        UUID hierarchyDefOwnerId = getHierarchyDefOwnerId(conn, hierarchy.def());
+        // TODO: Hierarchy.def() no longer exists - use hierarchy.name() directly
+        UUID hierarchyDefOwnerId = getHierarchyDefOwnerId(conn, hierarchy.name());
 
         String sql = "INSERT INTO hierarchy (catalog_id, name, hierarchy_def_owner_id, hierarchy_def_name, version_number) " +
             "VALUES (?, ?, ?, ?, ?) ON CONFLICT (catalog_id, name) DO NOTHING";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setObject(1, catalogId);
-            stmt.setString(2, hierarchy.def().name());
+            stmt.setString(2, hierarchy.name()); // Was: hierarchy.def().name()
             stmt.setObject(3, hierarchyDefOwnerId);
-            stmt.setString(4, hierarchy.def().name());
+            stmt.setString(4, hierarchy.name()); // Was: hierarchy.def().name()
             stmt.setLong(5, hierarchy.version());
             stmt.executeUpdate();
         }
@@ -240,9 +234,10 @@ public class CatalogDao implements CatalogPersistence
     private void saveHierarchyContent(Connection conn, Hierarchy hierarchy) throws SQLException
     {
         UUID catalogId = hierarchy.catalog().globalId();
-        String hierarchyName = hierarchy.def().name();
+        // TODO: Hierarchy.def() no longer exists - use hierarchy.name() and hierarchy.type() directly
+        String hierarchyName = hierarchy.name(); // Was: hierarchy.def().name()
 
-        switch (hierarchy.def().type()) {
+        switch (hierarchy.type()) { // Was: hierarchy.def().type()
             case ENTITY_LIST -> saveEntityListContent(conn, catalogId, hierarchyName, (EntityListHierarchy) hierarchy);
             case ENTITY_SET -> saveEntitySetContent(conn, catalogId, hierarchyName, (EntitySetHierarchy) hierarchy);
             case ENTITY_DIR -> saveEntityDirectoryContent(conn, catalogId, hierarchyName, (EntityDirectoryHierarchy) hierarchy);
@@ -423,7 +418,7 @@ public class CatalogDao implements CatalogPersistence
                 CatalogSpecies species = CatalogSpecies.valueOf(rs.getString("species"));
                 String uriStr = rs.getString("uri");
                 UUID upstream = rs.getObject("upstream_catalog_id", UUID.class);
-                boolean isStrict = rs.getBoolean("is_strict");
+                boolean isStrict = rs.getBoolean("is_strict"); // Read but ignore for now
                 long version = rs.getLong("version_number");
                 String catalogDefName = rs.getString("catalog_def_name");
 
@@ -434,7 +429,8 @@ public class CatalogDao implements CatalogPersistence
                 }
 
                 // Create catalog with version
-                Catalog catalog = factory.createCatalog(catalogId, species, catalogDef, upstream, isStrict, version);
+                // Create catalog with version - new signature: (UUID, CatalogSpecies, UUID upstream, long version)
+                Catalog catalog = factory.createCatalog(catalogId, species, upstream, version);
 
                 // Load and add all hierarchies
                 loadHierarchies(conn, catalog);
@@ -479,30 +475,36 @@ public class CatalogDao implements CatalogPersistence
     {
         switch (def.type()) {
             case ENTITY_LIST -> {
-                EntityListHierarchy hierarchy = factory.createEntityListHierarchy(catalog, def, version);
+                // New signature: (Catalog, String name, long version)
+                EntityListHierarchy hierarchy = factory.createEntityListHierarchy(catalog, hierarchyName, version);
                 loadEntityListContent(conn, catalog.globalId(), hierarchyName, hierarchy);
                 return hierarchy;
             }
             case ENTITY_SET -> {
-                EntitySetHierarchy hierarchy = factory.createEntitySetHierarchy(catalog, def, version);
+                // New signature: (Catalog, String name, long version)
+                EntitySetHierarchy hierarchy = factory.createEntitySetHierarchy(catalog, hierarchyName, version);
                 loadEntitySetContent(conn, catalog.globalId(), hierarchyName, hierarchy);
                 return hierarchy;
             }
             case ENTITY_DIR -> {
-                EntityDirectoryHierarchy hierarchy = factory.createEntityDirectoryHierarchy(catalog, def, version);
+                // New signature: (Catalog, String name, long version)
+                EntityDirectoryHierarchy hierarchy = factory.createEntityDirectoryHierarchy(catalog, hierarchyName, version);
                 loadEntityDirectoryContent(conn, catalog.globalId(), hierarchyName, hierarchy);
                 return hierarchy;
             }
             case ENTITY_TREE -> {
                 Entity rootEntity = factory.createEntity();
-                EntityTreeHierarchy hierarchy = factory.createEntityTreeHierarchy(catalog, def, rootEntity);
+                // New signature: (Catalog, String name, Entity rootEntity)
+                // Note: No version parameter for tree hierarchy in current factory
+                EntityTreeHierarchy hierarchy = factory.createEntityTreeHierarchy(catalog, hierarchyName, rootEntity);
                 loadEntityTreeContent(conn, catalog.globalId(), hierarchyName, hierarchy);
                 return hierarchy;
             }
             case ASPECT_MAP -> {
                 // Need to get AspectDef for this hierarchy
                 AspectDef aspectDef = loadAspectDefForHierarchy(conn, catalog.globalId(), hierarchyName);
-                AspectMapHierarchy hierarchy = factory.createAspectMapHierarchy(catalog, def, aspectDef, version);
+                // New signature: (Catalog, AspectDef, long version)
+                AspectMapHierarchy hierarchy = factory.createAspectMapHierarchy(catalog, aspectDef, version);
                 loadAspectMapContent(conn, catalog.globalId(), hierarchyName, hierarchy);
                 return hierarchy;
             }
@@ -771,7 +773,8 @@ public class CatalogDao implements CatalogPersistence
         throw new SQLException("HierarchyDef not found: " + name);
     }
 
-    private UUID getHierarchyDefOwnerId(Connection conn, HierarchyDef hierarchyDef) throws SQLException
+    // TODO: HierarchyDef no longer passed - use hierarchy name instead
+    private UUID getHierarchyDefOwnerId(Connection conn, String hierarchyName) throws SQLException
     {
         // For now, create a simple catalog-def-owned hierarchy definition owner
         // This is a simplified implementation - in a full implementation would need to handle both catalog and hierarchy ownership
@@ -783,7 +786,7 @@ public class CatalogDao implements CatalogPersistence
                 }
             }
         }
-        throw new SQLException("Failed to create hierarchy definition owner for: " + hierarchyDef.name());
+        throw new SQLException("Failed to create hierarchy definition owner for: " + hierarchyName);
     }
 
     private UUID getPropertyDefId(Connection conn, String aspectDefName, String propertyName) throws SQLException

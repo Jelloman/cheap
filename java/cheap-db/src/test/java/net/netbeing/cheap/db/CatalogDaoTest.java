@@ -69,7 +69,7 @@ class CatalogDaoTest
 
         // Create a simple catalog
         UUID catalogId = UUID.randomUUID();
-        Catalog originalCatalog = factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, false);
+        Catalog originalCatalog = factory.createCatalog(catalogId, CatalogSpecies.SINK, null);
 
         // Save the catalog
         catalogDao.saveCatalog(originalCatalog);
@@ -81,7 +81,6 @@ class CatalogDaoTest
         assertNotNull(loadedCatalog);
         assertEquals(originalCatalog.globalId(), loadedCatalog.globalId());
         assertEquals(originalCatalog.species(), loadedCatalog.species());
-        assertEquals(originalCatalog.isStrict(), loadedCatalog.isStrict());
         assertEquals(originalCatalog.upstream(), loadedCatalog.upstream());
     }
 
@@ -90,7 +89,7 @@ class CatalogDaoTest
     {
         // Create catalog with URI
         UUID catalogId = UUID.randomUUID();
-        Catalog originalCatalog = factory.createCatalog(catalogId, CatalogSpecies.SOURCE, null, null, false);
+        Catalog originalCatalog = factory.createCatalog(catalogId, CatalogSpecies.SOURCE, null);
 
         // Note: Would need a way to set URI - this depends on catalog implementation
         // For now, test without URI
@@ -107,12 +106,12 @@ class CatalogDaoTest
     {
         // Create upstream catalog first
         UUID upstreamId = UUID.randomUUID();
-        Catalog upstreamCatalog = factory.createCatalog(upstreamId, CatalogSpecies.SOURCE, null, null, false);
+        Catalog upstreamCatalog = factory.createCatalog(upstreamId, CatalogSpecies.SOURCE, null);
         catalogDao.saveCatalog(upstreamCatalog);
 
         // Create derived catalog
         UUID catalogId = UUID.randomUUID();
-        Catalog originalCatalog = factory.createCatalog(catalogId, CatalogSpecies.MIRROR, null, upstreamId, false);
+        Catalog originalCatalog = factory.createCatalog(catalogId, CatalogSpecies.MIRROR, upstreamId);
 
         catalogDao.saveCatalog(originalCatalog);
         Catalog loadedCatalog = catalogDao.loadCatalog(catalogId);
@@ -134,7 +133,7 @@ class CatalogDaoTest
 
         // Create catalog
         UUID catalogId = UUID.randomUUID();
-        Catalog originalCatalog = factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, false);
+        Catalog originalCatalog = factory.createCatalog(catalogId, CatalogSpecies.SINK, null);
 
         // Extend catalog with aspect def
         originalCatalog.extend(personAspectDef);
@@ -161,13 +160,13 @@ class CatalogDaoTest
     {
         // Create catalog
         UUID catalogId = UUID.randomUUID();
-        Catalog originalCatalog = factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, false);
+        Catalog originalCatalog = factory.createCatalog(catalogId, CatalogSpecies.SINK, null);
 
         // Create hierarchy definition
         HierarchyDef hierarchyDef = factory.createHierarchyDef("entities", HierarchyType.ENTITY_SET);
 
         // Create hierarchy
-        EntitySetHierarchy hierarchy = factory.createEntitySetHierarchy(originalCatalog, hierarchyDef);
+        EntitySetHierarchy hierarchy = factory.createEntitySetHierarchy(originalCatalog, "entities");
 
         // Add some entities
         Entity entity1 = factory.createEntity(UUID.randomUUID());
@@ -190,7 +189,7 @@ class CatalogDaoTest
         // Verify hierarchy exists
         Hierarchy loadedHierarchy = loadedCatalog.hierarchy("entities");
         assertNotNull(loadedHierarchy);
-        assertEquals(HierarchyType.ENTITY_SET, loadedHierarchy.def().type());
+        assertEquals(HierarchyType.ENTITY_SET, loadedHierarchy.type());
 
         // Verify entities are loaded
         EntitySetHierarchy loadedEntitySet = (EntitySetHierarchy) loadedHierarchy;
@@ -207,13 +206,13 @@ class CatalogDaoTest
     {
         // Create catalog
         UUID catalogId = UUID.randomUUID();
-        Catalog originalCatalog = factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, false);
+        Catalog originalCatalog = factory.createCatalog(catalogId, CatalogSpecies.SINK, null);
 
         // Create hierarchy definition
         HierarchyDef hierarchyDef = factory.createHierarchyDef("directory", HierarchyType.ENTITY_DIR);
 
         // Create hierarchy
-        EntityDirectoryHierarchy hierarchy = factory.createEntityDirectoryHierarchy(originalCatalog, hierarchyDef);
+        EntityDirectoryHierarchy hierarchy = factory.createEntityDirectoryHierarchy(originalCatalog, "directory");
 
         // Add some entities with keys
         Entity entity1 = factory.createEntity(UUID.randomUUID());
@@ -234,7 +233,7 @@ class CatalogDaoTest
         // Verify hierarchy exists
         Hierarchy loadedHierarchy = loadedCatalog.hierarchy("directory");
         assertNotNull(loadedHierarchy);
-        assertEquals(HierarchyType.ENTITY_DIR, loadedHierarchy.def().type());
+        assertEquals(HierarchyType.ENTITY_DIR, loadedHierarchy.type());
 
         // Verify entities are loaded with correct keys
         EntityDirectoryHierarchy loadedDirectory = (EntityDirectoryHierarchy) loadedHierarchy;
@@ -250,7 +249,7 @@ class CatalogDaoTest
 
         // Create catalog
         UUID catalogId = UUID.randomUUID();
-        Catalog originalCatalog = factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, false);
+        Catalog originalCatalog = factory.createCatalog(catalogId, CatalogSpecies.SINK, null);
 
         // Create aspect map hierarchy
         AspectMapHierarchy hierarchy = factory.createAspectMapHierarchy(originalCatalog, personAspectDef);
@@ -278,7 +277,7 @@ class CatalogDaoTest
         // Verify hierarchy exists
         Hierarchy loadedHierarchy = loadedCatalog.hierarchy("person");
         assertNotNull(loadedHierarchy);
-        assertEquals(HierarchyType.ASPECT_MAP, loadedHierarchy.def().type());
+        assertEquals(HierarchyType.ASPECT_MAP, loadedHierarchy.type());
 
         // Verify aspects are loaded
         AspectMapHierarchy loadedAspectMap = (AspectMapHierarchy) loadedHierarchy;
@@ -306,7 +305,7 @@ class CatalogDaoTest
 
         // Create and save catalog
         UUID catalogId = UUID.randomUUID();
-        Catalog catalog = factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, false);
+        Catalog catalog = factory.createCatalog(catalogId, CatalogSpecies.SINK, null);
         catalogDao.saveCatalog(catalog);
 
         // Verify it exists
@@ -344,7 +343,7 @@ class CatalogDaoTest
         assertFalse(catalogDao.catalogExists(catalogId));
 
         // Create and save catalog
-        Catalog catalog = factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, false);
+        Catalog catalog = factory.createCatalog(catalogId, CatalogSpecies.SINK, null);
         catalogDao.saveCatalog(catalog);
 
         // Should exist now
@@ -379,7 +378,7 @@ class CatalogDaoTest
         // this is left as a placeholder for more advanced testing
 
         UUID catalogId = UUID.randomUUID();
-        Catalog catalog = factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, false);
+        Catalog catalog = factory.createCatalog(catalogId, CatalogSpecies.SINK, null);
 
         // Save should succeed
         assertDoesNotThrow(() -> catalogDao.saveCatalog(catalog));
@@ -391,7 +390,7 @@ class CatalogDaoTest
     {
         // Create a complex catalog with multiple hierarchy types
         UUID catalogId = UUID.randomUUID();
-        Catalog originalCatalog = factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, false);
+        Catalog originalCatalog = factory.createCatalog(catalogId, CatalogSpecies.SINK, null);
 
         // Create multiple aspect definitions
         AspectDef personAspect = factory.createMutableAspectDef("person");
@@ -402,14 +401,14 @@ class CatalogDaoTest
         HierarchyDef directoryHierarchy = factory.createHierarchyDef("directory", HierarchyType.ENTITY_DIR);
 
         // Create entity set hierarchy
-        EntitySetHierarchy entitySet = factory.createEntitySetHierarchy(originalCatalog, entitiesHierarchy);
+        EntitySetHierarchy entitySet = factory.createEntitySetHierarchy(originalCatalog, "entities");
         Entity entity1 = factory.createEntity(UUID.randomUUID());
         Entity entity2 = factory.createEntity(UUID.randomUUID());
         entitySet.add(entity1);
         entitySet.add(entity2);
 
         // Create directory hierarchy
-        EntityDirectoryHierarchy directory = factory.createEntityDirectoryHierarchy(originalCatalog, directoryHierarchy);
+        EntityDirectoryHierarchy directory = factory.createEntityDirectoryHierarchy(originalCatalog, "directory");
         directory.put("first", entity1);
         directory.put("second", entity2);
 
@@ -446,10 +445,10 @@ class CatalogDaoTest
         assertNotNull(loadedCatalog.hierarchy("address"));
 
         // Verify hierarchy types
-        assertEquals(HierarchyType.ENTITY_SET, loadedCatalog.hierarchy("entities").def().type());
-        assertEquals(HierarchyType.ENTITY_DIR, loadedCatalog.hierarchy("directory").def().type());
-        assertEquals(HierarchyType.ASPECT_MAP, loadedCatalog.hierarchy("person").def().type());
-        assertEquals(HierarchyType.ASPECT_MAP, loadedCatalog.hierarchy("address").def().type());
+        assertEquals(HierarchyType.ENTITY_SET, loadedCatalog.hierarchy("entities").type());
+        assertEquals(HierarchyType.ENTITY_DIR, loadedCatalog.hierarchy("directory").type());
+        assertEquals(HierarchyType.ASPECT_MAP, loadedCatalog.hierarchy("person").type());
+        assertEquals(HierarchyType.ASPECT_MAP, loadedCatalog.hierarchy("address").type());
 
         // Verify entity counts
         EntitySetHierarchy loadedEntitySet = (EntitySetHierarchy) loadedCatalog.hierarchy("entities");

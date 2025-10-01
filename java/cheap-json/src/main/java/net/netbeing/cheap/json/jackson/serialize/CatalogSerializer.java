@@ -25,32 +25,22 @@ class CatalogSerializer extends JsonSerializer<Catalog>
         }
         
         gen.writeStringField("species", catalog.species().name().toLowerCase());
-        gen.writeBooleanField("strict", catalog.isStrict());
-
         if (catalog.upstream() != null) {
             gen.writeStringField("upstream", catalog.upstream().toString());
         }
 
-        gen.writeFieldName("def");
-        gen.writeObject(catalog.def());
-        
-        if (!catalog.isStrict()) {
-            gen.writeFieldName("aspectDefs");
-            gen.writeStartObject();
-            for (AspectDef aspectDef : catalog.aspectDefs()) {
-                // Elide those AspectDefs that are in the CatalogDef
-                if (catalog.def().aspectDef(aspectDef.name()) == null) {
-                    gen.writeFieldName(aspectDef.name());
-                    gen.writeObject(aspectDef);
-                }
-            }
-            gen.writeEndObject();
+        gen.writeFieldName("aspectDefs");
+        gen.writeStartObject();
+        for (AspectDef aspectDef : catalog.aspectDefs()) {
+            gen.writeFieldName(aspectDef.name());
+            gen.writeObject(aspectDef);
         }
+        gen.writeEndObject();
 
         gen.writeFieldName("hierarchies");
         gen.writeStartObject();
         for (Hierarchy h : catalog.hierarchies()) {
-            gen.writeFieldName(h.def().name());
+            gen.writeFieldName(h.name());
             gen.writeObject(h);
         }
         gen.writeEndObject();

@@ -314,7 +314,8 @@ public class CheapFileUtilTest
         // Verify hierarchy was added to catalog
         EntityTreeHierarchy hierarchy = (EntityTreeHierarchy) catalog.hierarchy("fileTree");
         assertNotNull(hierarchy);
-        assertEquals(treeHierarchyDef, hierarchy.def());
+        assertEquals(treeHierarchyDef.name(), hierarchy.name());
+        assertEquals(treeHierarchyDef.type(), hierarchy.type());
         
         // Verify root node
         Node root = hierarchy.root();
@@ -523,7 +524,8 @@ public class CheapFileUtilTest
         Hierarchy hierarchy = catalog.hierarchy("myFileTree");
         assertNotNull(hierarchy);
         assertInstanceOf(EntityTreeHierarchy.class, hierarchy);
-        assertEquals(treeHierarchyDef, hierarchy.def());
+        assertEquals(treeHierarchyDef.name(), hierarchy.name());
+        assertEquals(treeHierarchyDef.type(), hierarchy.type());
     }
 
     @Test
@@ -541,7 +543,7 @@ public class CheapFileUtilTest
         EntityTreeHierarchy hierarchy2 = (EntityTreeHierarchy) catalog.hierarchy("fileTree");
         
         assertNotEquals(hierarchy1, hierarchy2); // Should be different instances
-        assertEquals("fileTree", hierarchy2.def().name());
+        assertEquals("fileTree", hierarchy2.name());
         
         // The second hierarchy should have fewer nodes due to depth limit
         AspectMapHierarchy aspects = catalog.aspects(fileRecAspectDef);

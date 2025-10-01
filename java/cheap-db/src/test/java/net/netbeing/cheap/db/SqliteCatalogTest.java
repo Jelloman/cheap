@@ -127,8 +127,8 @@ class SqliteCatalogTest {
         AspectMapHierarchy table = catalog.loadTable("test_data", -1);
         
         assertNotNull(table, "Table hierarchy should not be null");
-        assertEquals("sqlite:table:test_data", table.def().name(), "Hierarchy name should match expected pattern");
-        assertEquals(HierarchyType.ASPECT_MAP, table.def().type(), "Should be ASPECT_MAP hierarchy type");
+        assertEquals("sqlite:table:test_data", table.name(), "Hierarchy name should match expected pattern");
+        assertEquals(HierarchyType.ASPECT_MAP, table.type(), "Should be ASPECT_MAP hierarchy type");
         assertEquals("test_data", table.aspectDef().name(), "AspectDef name should match table name");
         
         // Check that we loaded all rows (should be 2)

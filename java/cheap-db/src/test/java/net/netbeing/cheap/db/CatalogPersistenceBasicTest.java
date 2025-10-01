@@ -26,7 +26,7 @@ class CatalogPersistenceBasicTest {
         assertNotNull(catalog);
         assertNotNull(catalog.globalId());
         assertEquals(CatalogSpecies.SINK, catalog.species());
-        assertFalse(catalog.isStrict());
+        // catalog.isStrict() removed from model
     }
 
     @Test
@@ -35,11 +35,11 @@ class CatalogPersistenceBasicTest {
         UUID catalogId = UUID.randomUUID();
 
         // Test creating catalog with parameters
-        Catalog catalog = factory.createCatalog(catalogId, CatalogSpecies.SOURCE, null, null, false);
+        Catalog catalog = factory.createCatalog(catalogId, CatalogSpecies.SOURCE, null);
         assertNotNull(catalog);
         assertEquals(catalogId, catalog.globalId());
         assertEquals(CatalogSpecies.SOURCE, catalog.species());
-        assertFalse(catalog.isStrict());
+        // catalog.isStrict() removed from model
         assertNull(catalog.upstream());
     }
 
@@ -50,16 +50,16 @@ class CatalogPersistenceBasicTest {
 
         // Test creating different hierarchy types
         HierarchyDef entitySetDef = factory.createHierarchyDef("entities", HierarchyType.ENTITY_SET);
-        EntitySetHierarchy entitySet = factory.createEntitySetHierarchy(catalog, entitySetDef);
+        EntitySetHierarchy entitySet = factory.createEntitySetHierarchy(catalog, entitySetDef.name());
         assertNotNull(entitySet);
-        assertEquals("entities", entitySet.def().name());
-        assertEquals(HierarchyType.ENTITY_SET, entitySet.def().type());
+        assertEquals("entities", entitySet.name());
+        assertEquals(HierarchyType.ENTITY_SET, entitySet.type());
 
         HierarchyDef directoryDef = factory.createHierarchyDef("directory", HierarchyType.ENTITY_DIR);
-        EntityDirectoryHierarchy directory = factory.createEntityDirectoryHierarchy(catalog, directoryDef);
+        EntityDirectoryHierarchy directory = factory.createEntityDirectoryHierarchy(catalog, directoryDef.name());
         assertNotNull(directory);
-        assertEquals("directory", directory.def().name());
-        assertEquals(HierarchyType.ENTITY_DIR, directory.def().type());
+        assertEquals("directory", directory.name());
+        assertEquals(HierarchyType.ENTITY_DIR, directory.type());
     }
 
     @Test
@@ -108,7 +108,7 @@ class CatalogPersistenceBasicTest {
 
         // Create and add hierarchy
         HierarchyDef hierarchyDef = factory.createHierarchyDef("test", HierarchyType.ENTITY_SET);
-        EntitySetHierarchy hierarchy = factory.createEntitySetHierarchy(catalog, hierarchyDef);
+        EntitySetHierarchy hierarchy = factory.createEntitySetHierarchy(catalog, hierarchyDef.name());
 
         catalog.addHierarchy(hierarchy);
 
@@ -119,7 +119,7 @@ class CatalogPersistenceBasicTest {
         // Verify hierarchies collection includes our hierarchy
         boolean found = false;
         for (Hierarchy h : catalog.hierarchies()) {
-            if ("test".equals(h.def().name())) {
+            if ("test".equals(h.name())) {
                 found = true;
                 break;
             }
