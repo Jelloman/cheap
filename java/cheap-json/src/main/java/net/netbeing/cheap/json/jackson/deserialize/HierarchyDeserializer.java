@@ -35,7 +35,9 @@ class HierarchyDeserializer extends JsonDeserializer<Hierarchy>
 
         // Need to peek ahead to determine type
         while (p.nextToken() != JsonToken.END_OBJECT) {
-            switch (p.currentName()) {
+            String field = p.currentName();
+            p.nextToken();
+            switch (field) {
                 case "type" -> {
                     try {
                         type = HierarchyType.fromTypeCode(p.getValueAsString().toUpperCase());
@@ -44,11 +46,10 @@ class HierarchyDeserializer extends JsonDeserializer<Hierarchy>
                     }
                 }
                 case "name" -> name = p.getValueAsString();
-                case "content" -> {
+                case "contents" -> {
                     if (type == null || name == null) {
                         throw new JsonMappingException(p, "Expected type and name as first two fields of hierarchy element.");
                     }
-                    p.nextToken();
                     switch (type) {
                         case ASPECT_MAP -> { return readAspectMapHierarchy(name, p, context); }
                         case ENTITY_DIR -> { return readEntityDirectoryHierarchy(name, p); }
@@ -59,6 +60,7 @@ class HierarchyDeserializer extends JsonDeserializer<Hierarchy>
                     }
 
                 }
+                default -> throw new JsonMappingException(p, "Unrecognized hierarchy field '"+field+"'.");
             }
         }
         throw new JsonMappingException(p, "Badly formed hierarchy JSON.");

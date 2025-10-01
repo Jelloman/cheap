@@ -95,7 +95,9 @@ class CatalogDeserializer extends JsonDeserializer<Catalog>
             hierarchyParser.nextToken();
 
             Hierarchy hierarchy = context.readValue(hierarchyParser, Hierarchy.class);
-            catalog.addHierarchy(hierarchy);
+            if (catalog.hierarchy(hierarchy.name()) != hierarchy) {
+                throw new JsonMappingException(p, "Error adding deserialized hierarchy '"+hierarchy.name()+"' to catalog.");
+            }
         }
 
         return catalog;
