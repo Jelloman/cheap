@@ -29,10 +29,9 @@ class PostgresCheapSchemaTest {
             // Verify that key tables were created
             assertTrue(tableExists(connection, "aspect_def"), "aspect_def table should exist");
             assertTrue(tableExists(connection, "property_def"), "property_def table should exist");
-            assertTrue(tableExists(connection, "hierarchy_def"), "hierarchy_def table should exist");
-            assertTrue(tableExists(connection, "catalog_def"), "catalog_def table should exist");
             assertTrue(tableExists(connection, "entity"), "entity table should exist");
             assertTrue(tableExists(connection, "catalog"), "catalog table should exist");
+            assertTrue(tableExists(connection, "catalog_aspect_def"), "catalog_aspect_def table should exist");
             assertTrue(tableExists(connection, "hierarchy"), "hierarchy table should exist");
             assertTrue(tableExists(connection, "aspect"), "aspect table should exist");
             assertTrue(tableExists(connection, "property_value"), "property_value table should exist");
@@ -67,10 +66,9 @@ class PostgresCheapSchemaTest {
             // Verify that key tables have been dropped
             assertFalse(tableExists(connection, "aspect_def"), "aspect_def table should be dropped");
             assertFalse(tableExists(connection, "property_def"), "property_def table should be dropped");
-            assertFalse(tableExists(connection, "hierarchy_def"), "hierarchy_def table should be dropped");
-            assertFalse(tableExists(connection, "catalog_def"), "catalog_def table should be dropped");
             assertFalse(tableExists(connection, "entity"), "entity table should be dropped");
             assertFalse(tableExists(connection, "catalog"), "catalog table should be dropped");
+            assertFalse(tableExists(connection, "catalog_aspect_def"), "catalog_aspect_def table should be dropped");
             assertFalse(tableExists(connection, "hierarchy"), "hierarchy table should be dropped");
             assertFalse(tableExists(connection, "aspect"), "aspect table should be dropped");
             assertFalse(tableExists(connection, "property_value"), "property_value table should be dropped");

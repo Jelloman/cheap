@@ -43,8 +43,8 @@ class CatalogDaoTest
 
     private void initializeSchema() throws SQLException, IOException, URISyntaxException
     {
-        String mainSchemaPath = "/db/schemas/postgres-cheap.ddl";
-        String auditSchemaPath = "/db/schemas/postgres-cheap-audit.ddl";
+        String mainSchemaPath = "/db/schemas/postgres-cheap.sql";
+        String auditSchemaPath = "/db/schemas/postgres-cheap-audit.sql";
 
         String mainDdl = loadResourceFile(mainSchemaPath);
         String auditDdl = loadResourceFile(auditSchemaPath);
