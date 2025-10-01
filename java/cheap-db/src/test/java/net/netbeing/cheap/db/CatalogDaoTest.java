@@ -272,11 +272,11 @@ class CatalogDaoTest
         assertEquals(entity2.globalId(), loadedDirectory.get("key2").globalId());
     }
 
-    /*
-
     @Test
-    void testSaveAndLoadCatalogWithAspectMapHierarchy() throws SQLException
+    void testSaveAndLoadCatalogWithAspectMapHierarchy() throws SQLException, IOException, URISyntaxException
     {
+        setUp();
+
         // Create AspectDef with properties
         AspectDef personAspectDef = factory.createMutableAspectDef("person");
 
@@ -298,8 +298,7 @@ class CatalogDaoTest
         hierarchy.put(person1, aspect1);
         hierarchy.put(person2, aspect2);
 
-        // Add hierarchy to catalog
-        originalCatalog.addHierarchy(hierarchy);
+        // Note: AspectMapHierarchy is automatically added to catalog when created
 
         // Save and load
         catalogDao.saveCatalog(originalCatalog);
@@ -330,6 +329,8 @@ class CatalogDaoTest
         assertTrue(foundPerson1, "Person1 should be found in loaded hierarchy");
         assertTrue(foundPerson2, "Person2 should be found in loaded hierarchy");
     }
+
+    /*
 
     @Test
     void testDeleteCatalog() throws SQLException

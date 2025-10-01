@@ -300,9 +300,9 @@ public class CatalogDao implements CatalogPersistence
     private void saveAspectMapContent(Connection conn, UUID catalogId, String hierarchyName, AspectMapHierarchy hierarchy) throws SQLException
     {
         String aspectSql = "INSERT INTO aspect (entity_id, aspect_def_id, catalog_id, hierarchy_name) " +
-            "VALUES (?, ?, ?, ?, ?)";
+            "VALUES (?, ?, ?, ?)";
         String hierarchyMapSql = "INSERT INTO hierarchy_aspect_map (catalog_id, hierarchy_name, entity_id, aspect_def_id) " +
-            "VALUES (?, ?, ?, ?, ?, ?)";
+            "VALUES (?, ?, ?, ?)";
 
         UUID aspectDefId = getAspectDefId(conn, hierarchy.aspectDef().name());
 
@@ -316,7 +316,7 @@ public class CatalogDao implements CatalogPersistence
                     aspectStmt.setObject(1, entity.globalId());
                     aspectStmt.setObject(2, aspectDefId);
                     aspectStmt.setObject(3, catalogId);
-                    aspectStmt.setString(5, hierarchyName);
+                    aspectStmt.setString(4, hierarchyName);
                     aspectStmt.executeUpdate();
                 }
 
