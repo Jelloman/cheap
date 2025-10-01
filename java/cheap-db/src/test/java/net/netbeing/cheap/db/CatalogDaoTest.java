@@ -1,6 +1,10 @@
 package net.netbeing.cheap.db;
 
+import io.zonky.test.db.postgres.embedded.FlywayPreparer;
+import io.zonky.test.db.postgres.junit.EmbeddedPostgresRules;
+import io.zonky.test.db.postgres.junit.SingleInstancePostgresRule;
 import io.zonky.test.db.postgres.junit5.EmbeddedPostgresExtension;
+import io.zonky.test.db.postgres.junit5.PreparedDbExtension;
 import io.zonky.test.db.postgres.junit5.SingleInstancePostgresExtension;
 import net.netbeing.cheap.model.*;
 import net.netbeing.cheap.util.CheapFactory;
@@ -22,12 +26,11 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class CatalogDaoTest
 {
-
     @RegisterExtension
-    static SingleInstancePostgresExtension postgres = EmbeddedPostgresExtension.singleInstance();
+    public static PreparedDbExtension flywayDB = EmbeddedPostgresExtension.preparedDatabase(FlywayPreparer.forClasspathLocation("db/pg"));
 
-    static DataSource dataSource;
-    static boolean schemaInitialized = false;
+    static volatile DataSource dataSource;
+    static volatile boolean schemaInitialized = false;
 
     CatalogDao catalogDao;
     CheapFactory factory;
@@ -35,14 +38,15 @@ class CatalogDaoTest
     void setUp() throws SQLException, IOException, URISyntaxException
     {
         // Get the datasource (will be initialized by JUnit extension)
-        if (dataSource == null) {
-            dataSource = postgres.getEmbeddedPostgres().getPostgresDatabase();
-        }
+        dataSource = flywayDB.getTestDatabase();
 
         // Initialize database schema once for all tests
         if (!schemaInitialized) {
             initializeSchema();
             schemaInitialized = true;
+        }
+        try (Connection connection = dataSource.getConnection()) {
+            assertTrue(tableExists(connection, "catalog"), "catalog table should exist");
         }
 
         factory = new CheapFactory();
@@ -50,6 +54,12 @@ class CatalogDaoTest
 
         // Clean up all tables before each test
         truncateAllTables();
+    }
+
+    private boolean tableExists(Connection connection, String tableName) throws SQLException {
+        try (var rs = connection.getMetaData().getTables(null, null, tableName, null)) {
+            return rs.next();
+        }
     }
 
     private static void initializeSchema() throws SQLException, IOException, URISyntaxException
