@@ -182,11 +182,11 @@ class CatalogDaoTest
         assertTrue(foundPersonAspect, "Person aspect definition should be loaded");
     }
 
-    /*
-
     @Test
-    void testSaveAndLoadCatalogWithEntitySetHierarchy() throws SQLException
+    void testSaveAndLoadCatalogWithEntitySetHierarchy() throws SQLException, IOException, URISyntaxException
     {
+        setUp();
+
         // Create catalog
         UUID catalogId = UUID.randomUUID();
         Catalog originalCatalog = factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
@@ -229,6 +229,8 @@ class CatalogDaoTest
         assertTrue(loadedEntitySet.contains(entity2));
         assertTrue(loadedEntitySet.contains(entity3));
     }
+
+    /*
 
     @Test
     void testSaveAndLoadCatalogWithEntityDirectoryHierarchy() throws SQLException

@@ -1,28 +1,7 @@
 {
   "permissions": {
     "allow": [
-      "Bash(./gradlew test:*)",
-      "Bash(./gradlew:*)",
-      "Bash(javap:*)",
-      "Bash(tree:*)",
-      "Bash(sqlite3:*)",
-      "Bash(grep:*)",
-      "Bash(find:*)",
-      "Bash(java:*)",
-      "Bash(cd:*)",
-      "Bash(ls:*)",
-      "Bash(mkdir:*)",
-      "Bash(git mv:*)",
-      "Bash(git add:*)",
-      "Bash(git checkout:*)",
-      "Read(//d/src/tmp/**)",
-      "WebFetch(domain:dba.stackexchange.com)",
-      "Bash(xargs cat:*)",
-      "Bash(perl:*)",
-      "Bash(export:*)",
-      "Bash(python:*)",
-      "Bash(tee:*)",
-      "Bash(time:*)"
+      "Bash(git commit -m \"$(cat <<''EOF''\nAdd setUp() call to testSaveAndLoadCatalogWithEntitySetHierarchy\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")"
     ],
     "deny": [],
     "ask": []
