@@ -58,6 +58,58 @@ public class CatalogDao implements CatalogPersistence
         return aspectTableMappings.get(aspectDefName);
     }
 
+    /**
+     * Creates a database table for storing aspects based on an AspectDef.
+     * The table will have an entity_id column as the primary key, plus columns
+     * for each property in the AspectDef.
+     *
+     * @param aspectDef the AspectDef defining the table structure
+     * @param tableName the name of the table to create
+     * @throws SQLException if table creation fails
+     */
+    public void createAspectTable(@NotNull AspectDef aspectDef, @NotNull String tableName) throws SQLException
+    {
+        StringBuilder sql = new StringBuilder();
+        sql.append("CREATE TABLE ").append(tableName).append(" (\n");
+        sql.append("    entity_id UUID NOT NULL PRIMARY KEY");
+
+        for (PropertyDef propDef : aspectDef.propertyDefs()) {
+            sql.append(",\n    ");
+            sql.append(propDef.name()).append(" ");
+            sql.append(mapPropertyTypeToSqlType(propDef.type()));
+            if (!propDef.isNullable()) {
+                sql.append(" NOT NULL");
+            }
+        }
+
+        sql.append("\n)");
+
+        try (Connection conn = dataSource.getConnection(); Statement stmt = conn.createStatement()) {
+            stmt.execute(sql.toString());
+        }
+    }
+
+    /**
+     * Maps a PropertyType to the corresponding PostgreSQL column type.
+     */
+    private String mapPropertyTypeToSqlType(PropertyType type)
+    {
+        return switch (type) {
+            case Integer -> "BIGINT";
+            case Float -> "DOUBLE PRECISION";
+            case Boolean -> "BOOLEAN";
+            case String -> "TEXT";
+            case Text -> "TEXT";
+            case BigInteger -> "TEXT";
+            case BigDecimal -> "TEXT";
+            case DateTime -> "TIMESTAMP WITH TIME ZONE";
+            case URI -> "TEXT";
+            case UUID -> "UUID";
+            case CLOB -> "TEXT";
+            case BLOB -> "BYTEA";
+        };
+    }
+
     private static String loadDdlResource(String resourcePath) throws SQLException
     {
         try (var inputStream = CatalogDao.class.getResourceAsStream(resourcePath)) {
@@ -429,18 +481,19 @@ public class CatalogDao implements CatalogPersistence
             placeholders.append(", ?");
         }
 
-        String sql = "INSERT INTO " + mapping.tableName() + " (" + columns + ") VALUES (" + placeholders + ") " +
-            "ON CONFLICT (entity_id) DO UPDATE SET ";
+        StringBuilder sql = new StringBuilder("INSERT INTO " + mapping.tableName()
+            + " (" + columns + ") VALUES (" + placeholders + ") " +
+            "ON CONFLICT (entity_id) DO UPDATE SET ");
 
         // Build UPDATE clause
         boolean first = true;
         for (Map.Entry<String, String> entry : mapping.propertyToColumnMap().entrySet()) {
-            if (!first) sql += ", ";
-            sql += entry.getValue() + " = EXCLUDED." + entry.getValue();
+            if (!first) sql.append(", ");
+            sql.append(entry.getValue()).append(" = EXCLUDED.").append(entry.getValue());
             first = false;
         }
 
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
             for (Entity entity : hierarchy.keySet()) {
                 saveEntity(conn, entity);
 
@@ -1110,7 +1163,19 @@ public class CatalogDao implements CatalogPersistence
             case Integer -> stmt.setLong(paramIndex, ((Number) value).longValue());
             case Float -> stmt.setDouble(paramIndex, ((Number) value).doubleValue());
             case Boolean -> stmt.setBoolean(paramIndex, (Boolean) value);
-            case DateTime -> stmt.setTimestamp(paramIndex, value instanceof Timestamp ? (Timestamp) value : Timestamp.valueOf(value.toString()));
+            case DateTime -> {
+                if (value instanceof Timestamp) {
+                    stmt.setTimestamp(paramIndex, (Timestamp) value);
+                } else if (value instanceof java.time.ZonedDateTime) {
+                    stmt.setTimestamp(paramIndex, Timestamp.from(((java.time.ZonedDateTime) value).toInstant()));
+                } else if (value instanceof java.time.Instant) {
+                    stmt.setTimestamp(paramIndex, Timestamp.from((java.time.Instant) value));
+                } else if (value instanceof java.util.Date) {
+                    stmt.setTimestamp(paramIndex, new Timestamp(((java.util.Date) value).getTime()));
+                } else {
+                    stmt.setTimestamp(paramIndex, Timestamp.valueOf(value.toString()));
+                }
+            }
             case UUID -> stmt.setObject(paramIndex, value instanceof java.util.UUID ? value : java.util.UUID.fromString(value.toString()));
             case BLOB -> stmt.setBytes(paramIndex, (byte[]) value);
             default -> stmt.setString(paramIndex, value.toString());
