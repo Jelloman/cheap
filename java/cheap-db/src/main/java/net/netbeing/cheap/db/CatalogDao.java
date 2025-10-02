@@ -341,6 +341,21 @@ public class CatalogDao implements CatalogPersistence
 
     private void saveAspectMapContent(Connection conn, UUID catalogId, String hierarchyName, AspectMapHierarchy hierarchy) throws SQLException
     {
+        // Check if this AspectDef has a table mapping
+        AspectTableMapping mapping = null;
+        if (hierarchy.catalog() instanceof PostgresCatalog) {
+            mapping = ((PostgresCatalog) hierarchy.catalog()).getAspectTableMapping(hierarchy.aspectDef().name());
+        }
+
+        if (mapping != null) {
+            saveAspectMapContentToMappedTable(conn, catalogId, hierarchyName, hierarchy, mapping);
+        } else {
+            saveAspectMapContentToDefaultTables(conn, catalogId, hierarchyName, hierarchy);
+        }
+    }
+
+    private void saveAspectMapContentToDefaultTables(Connection conn, UUID catalogId, String hierarchyName, AspectMapHierarchy hierarchy) throws SQLException
+    {
         String aspectSql = "INSERT INTO aspect (entity_id, aspect_def_id, catalog_id, hierarchy_name) " +
             "VALUES (?, ?, ?, ?) " +
             "ON CONFLICT (entity_id, aspect_def_id, catalog_id) DO UPDATE SET " +
@@ -380,6 +395,55 @@ public class CatalogDao implements CatalogPersistence
 
                 // Save properties
                 saveAspectProperties(conn, entity.globalId(), aspectDefId, catalogId, aspect);
+            }
+        }
+    }
+
+    private void saveAspectMapContentToMappedTable(Connection conn, UUID catalogId, String hierarchyName, AspectMapHierarchy hierarchy, AspectTableMapping mapping) throws SQLException
+    {
+        // Build column list and placeholders for INSERT
+        StringBuilder columns = new StringBuilder("entity_id");
+        StringBuilder placeholders = new StringBuilder("?");
+
+        for (Map.Entry<String, String> entry : mapping.propertyToColumnMap().entrySet()) {
+            columns.append(", ").append(entry.getValue());
+            placeholders.append(", ?");
+        }
+
+        String sql = "INSERT INTO " + mapping.tableName() + " (" + columns + ") VALUES (" + placeholders + ") " +
+            "ON CONFLICT (entity_id) DO UPDATE SET ";
+
+        // Build UPDATE clause
+        boolean first = true;
+        for (Map.Entry<String, String> entry : mapping.propertyToColumnMap().entrySet()) {
+            if (!first) sql += ", ";
+            sql += entry.getValue() + " = EXCLUDED." + entry.getValue();
+            first = false;
+        }
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            for (Entity entity : hierarchy.keySet()) {
+                saveEntity(conn, entity);
+
+                Aspect aspect = hierarchy.get(entity);
+                if (aspect != null) {
+                    int paramIndex = 1;
+                    stmt.setObject(paramIndex++, entity.globalId());
+
+                    for (Map.Entry<String, String> entry : mapping.propertyToColumnMap().entrySet()) {
+                        String propName = entry.getKey();
+                        Object value = aspect.unsafeReadObj(propName);
+
+                        PropertyDef propDef = aspect.def().propertyDef(propName);
+                        if (propDef != null) {
+                            setPropertyValue(stmt, paramIndex++, value, propDef.type());
+                        } else {
+                            stmt.setObject(paramIndex++, value);
+                        }
+                    }
+
+                    stmt.executeUpdate();
+                }
             }
         }
     }
@@ -723,6 +787,21 @@ public class CatalogDao implements CatalogPersistence
 
     private void loadAspectMapContent(Connection conn, UUID catalogId, String hierarchyName, AspectMapHierarchy hierarchy) throws SQLException
     {
+        // Check if this AspectDef has a table mapping
+        AspectTableMapping mapping = null;
+        if (hierarchy.catalog() instanceof PostgresCatalog) {
+            mapping = ((PostgresCatalog) hierarchy.catalog()).getAspectTableMapping(hierarchy.aspectDef().name());
+        }
+
+        if (mapping != null) {
+            loadAspectMapContentFromMappedTable(conn, catalogId, hierarchyName, hierarchy, mapping);
+        } else {
+            loadAspectMapContentFromDefaultTables(conn, catalogId, hierarchyName, hierarchy);
+        }
+    }
+
+    private void loadAspectMapContentFromDefaultTables(Connection conn, UUID catalogId, String hierarchyName, AspectMapHierarchy hierarchy) throws SQLException
+    {
         String sql = "SELECT entity_id FROM hierarchy_aspect_map WHERE catalog_id = ? AND hierarchy_name = ? ORDER BY map_order";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setObject(1, catalogId);
@@ -735,6 +814,43 @@ public class CatalogDao implements CatalogPersistence
                     Aspect aspect = loadAspect(conn, entity, hierarchy.aspectDef(), catalogId);
                     hierarchy.put(entity, aspect);
                 }
+            }
+        }
+    }
+
+    private void loadAspectMapContentFromMappedTable(Connection conn, UUID catalogId, String hierarchyName, AspectMapHierarchy hierarchy, AspectTableMapping mapping) throws SQLException
+    {
+        // Build column list for SELECT
+        StringBuilder columns = new StringBuilder("entity_id");
+        for (String columnName : mapping.propertyToColumnMap().values()) {
+            columns.append(", ").append(columnName);
+        }
+
+        String sql = "SELECT " + columns + " FROM " + mapping.tableName();
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+
+            while (rs.next()) {
+                UUID entityId = rs.getObject("entity_id", UUID.class);
+                Entity entity = factory.getOrRegisterNewEntity(entityId);
+
+                Aspect aspect = factory.createPropertyMapAspect(entity, hierarchy.aspectDef());
+
+                // Load properties from mapped columns
+                for (Map.Entry<String, String> entry : mapping.propertyToColumnMap().entrySet()) {
+                    String propName = entry.getKey();
+                    String columnName = entry.getValue();
+
+                    PropertyDef propDef = hierarchy.aspectDef().propertyDef(propName);
+                    if (propDef != null) {
+                        Object value = rs.getObject(columnName);
+                        Property property = factory.createProperty(propDef, value);
+                        aspect.put(property);
+                    }
+                }
+
+                hierarchy.put(entity, aspect);
             }
         }
     }
@@ -965,6 +1081,24 @@ public class CatalogDao implements CatalogPersistence
             case "AM" -> HierarchyType.ASPECT_MAP;
             default -> throw new IllegalArgumentException("Unknown hierarchy type: " + dbType);
         };
+    }
+
+    private void setPropertyValue(PreparedStatement stmt, int paramIndex, Object value, PropertyType type) throws SQLException
+    {
+        if (value == null) {
+            stmt.setObject(paramIndex, null);
+            return;
+        }
+
+        switch (type) {
+            case Integer -> stmt.setLong(paramIndex, ((Number) value).longValue());
+            case Float -> stmt.setDouble(paramIndex, ((Number) value).doubleValue());
+            case Boolean -> stmt.setBoolean(paramIndex, (Boolean) value);
+            case DateTime -> stmt.setTimestamp(paramIndex, value instanceof Timestamp ? (Timestamp) value : Timestamp.valueOf(value.toString()));
+            case UUID -> stmt.setObject(paramIndex, value instanceof java.util.UUID ? value : java.util.UUID.fromString(value.toString()));
+            case BLOB -> stmt.setBytes(paramIndex, (byte[]) value);
+            default -> stmt.setString(paramIndex, value.toString());
+        }
     }
 
     private Object extractValueFromResultSet(ResultSet rs, PropertyType type) throws SQLException

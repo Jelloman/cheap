@@ -16,6 +16,7 @@ public class PostgresCatalog extends CatalogImpl
 {
     protected final List<String> tables = new LinkedList<>();
     protected final Map<String, AspectDef> tableAspects = new LinkedHashMap<>();
+    protected final Map<String, AspectTableMapping> aspectTableMappings = new LinkedHashMap<>();
     protected DataSource dataSource;
     
     public PostgresCatalog(@NotNull DataSource dataSource) {
@@ -318,5 +319,26 @@ public class PostgresCatalog extends CatalogImpl
     public DataSource getDataSource()
     {
         return dataSource;
+    }
+
+    /**
+     * Adds an AspectTableMapping to enable aspects to be saved/loaded from a custom table.
+     *
+     * @param mapping the AspectTableMapping to add
+     */
+    public void addAspectTableMapping(@NotNull AspectTableMapping mapping)
+    {
+        aspectTableMappings.put(mapping.aspectDefName(), mapping);
+    }
+
+    /**
+     * Gets the AspectTableMapping for the given AspectDef name, if one exists.
+     *
+     * @param aspectDefName the AspectDef name
+     * @return the AspectTableMapping, or null if not mapped
+     */
+    public AspectTableMapping getAspectTableMapping(@NotNull String aspectDefName)
+    {
+        return aspectTableMappings.get(aspectDefName);
     }
 }
