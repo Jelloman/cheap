@@ -23,6 +23,7 @@ public class CatalogDao implements CatalogPersistence
 
     private final DataSource dataSource;
     private final CheapFactory factory;
+    private final Map<String, AspectTableMapping> aspectTableMappings = new LinkedHashMap<>();
 
     public CatalogDao(@NotNull DataSource dataSource)
     {
@@ -34,6 +35,27 @@ public class CatalogDao implements CatalogPersistence
     {
         this.dataSource = dataSource;
         this.factory = factory;
+    }
+
+    /**
+     * Adds an AspectTableMapping to enable aspects to be saved/loaded from a custom table.
+     *
+     * @param mapping the AspectTableMapping to add
+     */
+    public void addAspectTableMapping(@NotNull AspectTableMapping mapping)
+    {
+        aspectTableMappings.put(mapping.aspectDefName(), mapping);
+    }
+
+    /**
+     * Gets the AspectTableMapping for the given AspectDef name, if one exists.
+     *
+     * @param aspectDefName the AspectDef name
+     * @return the AspectTableMapping, or null if not mapped
+     */
+    public AspectTableMapping getAspectTableMapping(@NotNull String aspectDefName)
+    {
+        return aspectTableMappings.get(aspectDefName);
     }
 
     private static String loadDdlResource(String resourcePath) throws SQLException
@@ -342,10 +364,7 @@ public class CatalogDao implements CatalogPersistence
     private void saveAspectMapContent(Connection conn, UUID catalogId, String hierarchyName, AspectMapHierarchy hierarchy) throws SQLException
     {
         // Check if this AspectDef has a table mapping
-        AspectTableMapping mapping = null;
-        if (hierarchy.catalog() instanceof PostgresCatalog) {
-            mapping = ((PostgresCatalog) hierarchy.catalog()).getAspectTableMapping(hierarchy.aspectDef().name());
-        }
+        AspectTableMapping mapping = getAspectTableMapping(hierarchy.aspectDef().name());
 
         if (mapping != null) {
             saveAspectMapContentToMappedTable(conn, catalogId, hierarchyName, hierarchy, mapping);
@@ -788,10 +807,7 @@ public class CatalogDao implements CatalogPersistence
     private void loadAspectMapContent(Connection conn, UUID catalogId, String hierarchyName, AspectMapHierarchy hierarchy) throws SQLException
     {
         // Check if this AspectDef has a table mapping
-        AspectTableMapping mapping = null;
-        if (hierarchy.catalog() instanceof PostgresCatalog) {
-            mapping = ((PostgresCatalog) hierarchy.catalog()).getAspectTableMapping(hierarchy.aspectDef().name());
-        }
+        AspectTableMapping mapping = getAspectTableMapping(hierarchy.aspectDef().name());
 
         if (mapping != null) {
             loadAspectMapContentFromMappedTable(conn, catalogId, hierarchyName, hierarchy, mapping);
