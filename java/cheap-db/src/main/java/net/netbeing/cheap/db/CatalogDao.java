@@ -112,7 +112,13 @@ public class CatalogDao implements CatalogPersistence
     {
         String sql =
             "INSERT INTO aspect_def (aspect_def_id, name, hash_version, is_readable, is_writable, can_add_properties, can_remove_properties) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?) ON CONFLICT (name) DO NOTHING";
+                "VALUES (?, ?, ?, ?, ?, ?, ?) " +
+                "ON CONFLICT (name) DO UPDATE SET " +
+                "hash_version = EXCLUDED.hash_version, " +
+                "is_readable = EXCLUDED.is_readable, " +
+                "is_writable = EXCLUDED.is_writable, " +
+                "can_add_properties = EXCLUDED.can_add_properties, " +
+                "can_remove_properties = EXCLUDED.can_remove_properties";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setObject(1, UUID.randomUUID());
             stmt.setString(2, aspectDef.name());
@@ -137,7 +143,16 @@ public class CatalogDao implements CatalogPersistence
 
         String sql = "INSERT INTO property_def (aspect_def_id, name, property_type, default_value, " +
             "has_default_value, is_readable, is_writable, is_nullable, is_removable, is_multivalued) " +
-            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (aspect_def_id, name) DO NOTHING";
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) " +
+            "ON CONFLICT (aspect_def_id, name) DO UPDATE SET " +
+            "property_type = EXCLUDED.property_type, " +
+            "default_value = EXCLUDED.default_value, " +
+            "has_default_value = EXCLUDED.has_default_value, " +
+            "is_readable = EXCLUDED.is_readable, " +
+            "is_writable = EXCLUDED.is_writable, " +
+            "is_nullable = EXCLUDED.is_nullable, " +
+            "is_removable = EXCLUDED.is_removable, " +
+            "is_multivalued = EXCLUDED.is_multivalued";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setObject(1, aspectDefId);
             stmt.setString(2, propDef.name());
@@ -166,7 +181,12 @@ public class CatalogDao implements CatalogPersistence
     private void saveCatalogRecord(Connection conn, Catalog catalog) throws SQLException
     {
         String sql = "INSERT INTO catalog (catalog_id, species, uri, upstream_catalog_id, version_number) "
-            + "VALUES (?, ?, ?, ?, ?) ON CONFLICT (catalog_id) DO NOTHING";
+            + "VALUES (?, ?, ?, ?, ?) " +
+            "ON CONFLICT (catalog_id) DO UPDATE SET " +
+            "species = EXCLUDED.species, " +
+            "uri = EXCLUDED.uri, " +
+            "upstream_catalog_id = EXCLUDED.upstream_catalog_id, " +
+            "version_number = EXCLUDED.version_number";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setObject(1, catalog.globalId());
             stmt.setString(2, catalog.species().name());
@@ -182,7 +202,10 @@ public class CatalogDao implements CatalogPersistence
         UUID catalogId = hierarchy.catalog().globalId();
 
         String sql = "INSERT INTO hierarchy (catalog_id, name, hierarchy_type, version_number) " +
-            "VALUES (?, ?, ?, ?) ON CONFLICT (catalog_id, name) DO NOTHING";
+            "VALUES (?, ?, ?, ?) " +
+            "ON CONFLICT (catalog_id, name) DO UPDATE SET " +
+            "hierarchy_type = EXCLUDED.hierarchy_type, " +
+            "version_number = EXCLUDED.version_number";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setObject(1, catalogId);
             stmt.setString(2, hierarchy.name());
@@ -208,7 +231,10 @@ public class CatalogDao implements CatalogPersistence
 
     private void saveEntityListContent(Connection conn, UUID catalogId, String hierarchyName, EntityListHierarchy hierarchy) throws SQLException
     {
-        String sql = "INSERT INTO hierarchy_entity_list (catalog_id, hierarchy_name, entity_id, list_order) VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO hierarchy_entity_list (catalog_id, hierarchy_name, entity_id, list_order) " +
+            "VALUES (?, ?, ?, ?) " +
+            "ON CONFLICT (catalog_id, hierarchy_name, list_order) DO UPDATE SET " +
+            "entity_id = EXCLUDED.entity_id";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             int order = 0;
             for (Entity entity : hierarchy) {
@@ -225,7 +251,10 @@ public class CatalogDao implements CatalogPersistence
 
     private void saveEntitySetContent(Connection conn, UUID catalogId, String hierarchyName, EntitySetHierarchy hierarchy) throws SQLException
     {
-        String sql = "INSERT INTO hierarchy_entity_set (catalog_id, hierarchy_name, entity_id, set_order) VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO hierarchy_entity_set (catalog_id, hierarchy_name, entity_id, set_order) " +
+            "VALUES (?, ?, ?, ?) " +
+            "ON CONFLICT (catalog_id, hierarchy_name, entity_id) DO UPDATE SET " +
+            "set_order = EXCLUDED.set_order";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             int order = 0;
             for (Entity entity : hierarchy) {
@@ -242,7 +271,11 @@ public class CatalogDao implements CatalogPersistence
 
     private void saveEntityDirectoryContent(Connection conn, UUID catalogId, String hierarchyName, EntityDirectoryHierarchy hierarchy) throws SQLException
     {
-        String sql = "INSERT INTO hierarchy_entity_directory (catalog_id, hierarchy_name, entity_key, entity_id, dir_order) VALUES (?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO hierarchy_entity_directory (catalog_id, hierarchy_name, entity_key, entity_id, dir_order) " +
+            "VALUES (?, ?, ?, ?, ?) " +
+            "ON CONFLICT (catalog_id, hierarchy_name, entity_key) DO UPDATE SET " +
+            "entity_id = EXCLUDED.entity_id, " +
+            "dir_order = EXCLUDED.dir_order";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             int order = 0;
             for (String key : hierarchy.keySet()) {
@@ -275,7 +308,11 @@ public class CatalogDao implements CatalogPersistence
 
         String sql = "INSERT INTO hierarchy_entity_tree_node " +
             "(node_id, catalog_id, hierarchy_name, parent_node_id, node_key, entity_id, node_path, tree_order) " +
-            "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?) " +
+            "ON CONFLICT (catalog_id, hierarchy_name, parent_node_id, node_key) DO UPDATE SET " +
+            "entity_id = EXCLUDED.entity_id, " +
+            "node_path = EXCLUDED.node_path, " +
+            "tree_order = EXCLUDED.tree_order";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setObject(1, nodeId);
             stmt.setObject(2, catalogId);
@@ -305,9 +342,14 @@ public class CatalogDao implements CatalogPersistence
     private void saveAspectMapContent(Connection conn, UUID catalogId, String hierarchyName, AspectMapHierarchy hierarchy) throws SQLException
     {
         String aspectSql = "INSERT INTO aspect (entity_id, aspect_def_id, catalog_id, hierarchy_name) " +
-            "VALUES (?, ?, ?, ?)";
+            "VALUES (?, ?, ?, ?) " +
+            "ON CONFLICT (entity_id, aspect_def_id, catalog_id) DO UPDATE SET " +
+            "hierarchy_name = EXCLUDED.hierarchy_name";
         String hierarchyMapSql = "INSERT INTO hierarchy_aspect_map (catalog_id, hierarchy_name, entity_id, aspect_def_id, map_order) " +
-            "VALUES (?, ?, ?, ?, ?)";
+            "VALUES (?, ?, ?, ?, ?) " +
+            "ON CONFLICT (catalog_id, hierarchy_name, entity_id) DO UPDATE SET " +
+            "aspect_def_id = EXCLUDED.aspect_def_id, " +
+            "map_order = EXCLUDED.map_order";
 
         UUID aspectDefId = getAspectDefId(conn, hierarchy.aspectDef().name());
 
@@ -346,7 +388,16 @@ public class CatalogDao implements CatalogPersistence
     {
         String sql = "INSERT INTO property_value (entity_id, aspect_def_id, catalog_id, property_name, " +
             "value_text, value_integer, value_float, value_boolean, value_datetime, value_binary, " +
-            "value_type, is_null) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            "value_type, is_null) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) " +
+            "ON CONFLICT (entity_id, aspect_def_id, catalog_id, property_name) DO UPDATE SET " +
+            "value_text = EXCLUDED.value_text, " +
+            "value_integer = EXCLUDED.value_integer, " +
+            "value_float = EXCLUDED.value_float, " +
+            "value_boolean = EXCLUDED.value_boolean, " +
+            "value_datetime = EXCLUDED.value_datetime, " +
+            "value_binary = EXCLUDED.value_binary, " +
+            "value_type = EXCLUDED.value_type, " +
+            "is_null = EXCLUDED.is_null";
 
         AspectDef aspectDef = aspect.def();
 
