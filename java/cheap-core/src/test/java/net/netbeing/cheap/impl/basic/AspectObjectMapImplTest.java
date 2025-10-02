@@ -12,7 +12,7 @@ class AspectObjectMapImplTest
 {
     private Catalog catalog;
     private Entity entity;
-    private AspectDef aspectDef;
+    private MutableAspectDef aspectDef;
     private PropertyDef propDef1;
     private PropertyDef propDef2;
     private Property property1;
@@ -74,45 +74,49 @@ class AspectObjectMapImplTest
     @Test
     void contains_PropertyPresent_ReturnsTrue()
     {
-        aspect.unsafeAdd(property1);
+        aspect.put(property1);
         
         assertTrue(aspect.contains("prop1"));
     }
 
     @Test
-    void unsafeReadObj_PropertyNotPresent_ReturnsNull()
+    void readObj_PropertyNotPresent_ReturnsNull()
     {
         assertNull(aspect.unsafeReadObj("nonexistent"));
     }
 
     @Test
-    void unsafeReadObj_PropertyPresent_ReturnsPropertyObject()
+    void readObj_PropertyPresent_ReturnsPropertyObject()
     {
-        aspect.unsafeAdd(property1);
+        aspectDef.add(propDef1);
+        aspect.put(property1);
         
-        Object result = aspect.unsafeReadObj("prop1");
+        Object result = aspect.readObj("prop1");
         assertSame(property1.unsafeRead(), result);
     }
 
     @Test
-    void unsafeAdd_NewProperty_AddsProperty()
+    void put_NewProperty_AddsProperty()
     {
-        aspect.unsafeAdd(property1);
+        aspectDef.add(propDef1);
+        aspect.put(property1);
         
         assertTrue(aspect.contains("prop1"));
-        assertSame(property1.unsafeRead(), aspect.unsafeReadObj("prop1"));
+        assertSame(property1.read(), aspect.readObj("prop1"));
     }
 
     @Test
-    void unsafeAdd_MultipleProperties_AddsAllProperties()
+    void put_MultipleProperties_AddsAllProperties()
     {
-        aspect.unsafeAdd(property1);
-        aspect.unsafeAdd(property2);
+        aspectDef.add(propDef1);
+        aspectDef.add(propDef2);
+        aspect.put(property1);
+        aspect.put(property2);
         
         assertTrue(aspect.contains("prop1"));
         assertTrue(aspect.contains("prop2"));
-        assertSame(property1.unsafeRead(), aspect.unsafeReadObj("prop1"));
-        assertSame(property2.unsafeRead(), aspect.unsafeReadObj("prop2"));
+        assertSame(property1.read(), aspect.readObj("prop1"));
+        assertSame(property2.read(), aspect.readObj("prop2"));
     }
 
     @Test
@@ -135,7 +139,7 @@ class AspectObjectMapImplTest
         
         aspect.unsafeWrite("prop1", "new-value");
         
-        Object result = aspect.unsafeReadObj("prop1");
+        Object result = aspect.readObj("prop1");
         assertInstanceOf(String.class, result);
         assertEquals("new-value", result);
     }
@@ -156,7 +160,7 @@ class AspectObjectMapImplTest
     @Test
     void unsafeRemove_PropertyPresent_RemovesProperty()
     {
-        aspect.unsafeAdd(property1);
+        aspect.put(property1);
         assertTrue(aspect.contains("prop1"));
         
         aspect.unsafeRemove("prop1");

@@ -113,8 +113,8 @@ class AspectObjectMapBuilderTest
         assertInstanceOf(AspectObjectMapImpl.class, result);
         assertSame(entity, result.entity());
         assertSame(aspectDef, result.def());
-        assertEquals("test-value", result.unsafeReadObj("prop1"));
-        assertEquals(42, result.unsafeReadObj("prop2"));
+        assertEquals("test-value", result.readObj("prop1"));
+        assertEquals(42, result.readObj("prop2"));
     }
 
     @Test
@@ -129,8 +129,8 @@ class AspectObjectMapBuilderTest
 
         assertNotNull(result);
         assertInstanceOf(AspectObjectMapImpl.class, result);
-        assertEquals("test-value", result.unsafeReadObj("prop1"));
-        assertEquals(42, result.unsafeReadObj("prop2"));
+        assertEquals("test-value", result.readObj("prop1"));
+        assertEquals(42, result.readObj("prop2"));
     }
 
     @Test
@@ -187,8 +187,8 @@ class AspectObjectMapBuilderTest
             .build();
 
         assertNotSame(aspect1, aspect2);
-        assertEquals("value1", aspect1.unsafeReadObj("prop1"));
-        assertEquals("value2", aspect2.unsafeReadObj("prop1"));
+        assertEquals("value1", aspect1.readObj("prop1"));
+        assertEquals("value2", aspect2.readObj("prop1"));
         assertNotSame(aspect1.entity(), aspect2.entity());
     }
 
@@ -203,7 +203,7 @@ class AspectObjectMapBuilderTest
             .build();
 
         assertNotNull(result);
-        assertEquals("test-value", result.unsafeReadObj("prop1"));
-        assertEquals(42, result.unsafeReadObj("prop2"));
+        assertEquals("test-value", result.readObj("prop1"));
+        assertEquals(42, result.readObj("prop2"));
     }
 }

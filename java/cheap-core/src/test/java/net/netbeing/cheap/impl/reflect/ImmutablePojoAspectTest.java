@@ -260,12 +260,12 @@ public class ImmutablePojoAspectTest
         TestClass pojoWithNull = new TestClass(1, 'a', true, (byte) 10, (short) 100, 1000L, 10.5f, 100.25, null, null, null, null, null, null);
         immutablePojoAspect = new ImmutablePojoAspect<>(testEntity, def, pojoWithNull);
         
-        assertNull(immutablePojoAspect.unsafeReadObj("string"));
-        assertNull(immutablePojoAspect.unsafeReadObj("integer"));
-        assertNull(immutablePojoAspect.unsafeReadObj("character"));
-        assertNull(immutablePojoAspect.unsafeReadObj("uuid"));
-        assertNull(immutablePojoAspect.unsafeReadObj("uri"));
-        assertNull(immutablePojoAspect.unsafeReadObj("localDateTime"));
+        assertNull(immutablePojoAspect.readObj("string"));
+        assertNull(immutablePojoAspect.readObj("integer"));
+        assertNull(immutablePojoAspect.readObj("character"));
+        assertNull(immutablePojoAspect.readObj("uuid"));
+        assertNull(immutablePojoAspect.readObj("uri"));
+        assertNull(immutablePojoAspect.readObj("localDateTime"));
         
         // Test that contains() returns false for null values
         assertFalse(immutablePojoAspect.contains("string"));

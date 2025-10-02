@@ -155,7 +155,7 @@ public class AspectPropertyMapBuilder implements AspectBuilder
             throw new IllegalArgumentException("Property definition for '" + propName + "' does not match the definition in AspectDef '" + aspectDef.name() + "'");
         }
         // Validate value, throwing exceptions on failure
-        property.def().validatePropertyValue(property.unsafeRead(), true);
+        property.def().validatePropertyValue(property.read(), true);
     }
 
     /**
@@ -182,6 +182,7 @@ public class AspectPropertyMapBuilder implements AspectBuilder
 
         // Add all configured properties to the aspect
         for (Property property : properties.values()) {
+            // Use unsafe because validation was performed when the property was added to this builder
             aspect.unsafeAdd(property);
         }
 

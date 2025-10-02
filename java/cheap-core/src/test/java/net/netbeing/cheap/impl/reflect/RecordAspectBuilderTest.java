@@ -163,10 +163,10 @@ class RecordAspectBuilderTest
         assertSame(entity, result.entity());
 
         // Verify property values
-        assertEquals("John Doe", result.unsafeReadObj("name"));
-        assertEquals(30, result.unsafeReadObj("age"));
-        assertEquals(true, result.unsafeReadObj("active"));
-        assertEquals(50000.0, result.unsafeReadObj("salary"));
+        assertEquals("John Doe", result.readObj("name"));
+        assertEquals(30, result.readObj("age"));
+        assertEquals(true, result.readObj("active"));
+        assertEquals(50000.0, result.readObj("salary"));
     }
 
     @Test
@@ -185,8 +185,8 @@ class RecordAspectBuilderTest
 
         assertNotNull(result);
         assertInstanceOf(RecordAspect.class, result);
-        assertEquals("Jane Smith", result.unsafeReadObj("name"));
-        assertEquals(25, result.unsafeReadObj("age"));
+        assertEquals("Jane Smith", result.readObj("name"));
+        assertEquals(25, result.readObj("age"));
     }
 
     @Test
@@ -210,10 +210,10 @@ class RecordAspectBuilderTest
 
         assertNotNull(result);
         assertInstanceOf(RecordAspect.class, result);
-        assertEquals("Partial", result.unsafeReadObj("name"));
-        assertEquals(0, result.unsafeReadObj("age")); // int default
-        assertEquals(true, result.unsafeReadObj("active"));
-        assertNull(result.unsafeReadObj("salary")); // Double default
+        assertEquals("Partial", result.readObj("name"));
+        assertEquals(0, result.readObj("age")); // int default
+        assertEquals(true, result.readObj("active"));
+        assertNull(result.readObj("salary")); // Double default
     }
 
     @Test
@@ -227,10 +227,10 @@ class RecordAspectBuilderTest
             .build();
 
         assertNotNull(result);
-        assertEquals(42, result.unsafeReadObj("intValue"));
-        assertEquals(false, result.unsafeReadObj("boolValue")); // boolean default
-        assertEquals(0.0, result.unsafeReadObj("doubleValue")); // double default
-        assertEquals('\0', result.unsafeReadObj("charValue")); // char default
+        assertEquals(42, result.readObj("intValue"));
+        assertEquals(false, result.readObj("boolValue")); // boolean default
+        assertEquals(0.0, result.readObj("doubleValue")); // double default
+        assertEquals('\0', result.readObj("charValue")); // char default
     }
 
     @Test
@@ -248,16 +248,16 @@ class RecordAspectBuilderTest
         assertInstanceOf(RecordAspect.class, result);
 
         // Verify initial values
-        assertEquals("Test", result.unsafeReadObj("name"));
-        assertEquals(35, result.unsafeReadObj("age"));
+        assertEquals("Test", result.readObj("name"));
+        assertEquals(35, result.readObj("age"));
 
         // Verify immutability - writes should throw UnsupportedOperationException
         assertThrows(UnsupportedOperationException.class, () -> result.unsafeWrite("name", "Modified"));
         assertThrows(UnsupportedOperationException.class, () -> result.unsafeWrite("age", 40));
 
         // Values should remain unchanged
-        assertEquals("Test", result.unsafeReadObj("name"));
-        assertEquals(35, result.unsafeReadObj("age"));
+        assertEquals("Test", result.readObj("name"));
+        assertEquals(35, result.readObj("age"));
     }
 
     @Test
@@ -272,7 +272,7 @@ class RecordAspectBuilderTest
 
         assertNotNull(result);
         assertInstanceOf(RecordAspect.class, result);
-        assertEquals("Simple Test", result.unsafeReadObj("value"));
+        assertEquals("Simple Test", result.readObj("value"));
     }
 
     @Test
@@ -301,9 +301,9 @@ class RecordAspectBuilderTest
 
         assertNotNull(result);
         assertInstanceOf(RecordAspect.class, result);
-        assertEquals("Complex Test", result.unsafeReadObj("name"));
-        assertEquals(testTags, result.unsafeReadObj("tags"));
-        assertEquals(testId, result.unsafeReadObj("id"));
+        assertEquals("Complex Test", result.readObj("name"));
+        assertEquals(testTags, result.readObj("tags"));
+        assertEquals(testId, result.readObj("id"));
     }
 
     @Test
@@ -345,10 +345,10 @@ class RecordAspectBuilderTest
             .build();
 
         assertNotSame(aspect1, aspect2);
-        assertEquals("John", aspect1.unsafeReadObj("name"));
-        assertEquals("Jane", aspect2.unsafeReadObj("name"));
-        assertEquals(25, aspect1.unsafeReadObj("age"));
-        assertEquals(30, aspect2.unsafeReadObj("age"));
+        assertEquals("John", aspect1.readObj("name"));
+        assertEquals("Jane", aspect2.readObj("name"));
+        assertEquals(25, aspect1.readObj("age"));
+        assertEquals(30, aspect2.readObj("age"));
         assertNotSame(aspect1.entity(), aspect2.entity());
     }
 
@@ -368,10 +368,10 @@ class RecordAspectBuilderTest
             .build();
 
         assertNotNull(result);
-        assertEquals("prop-value", result.unsafeReadObj("name")); // Should be the value from the property object
-        assertEquals(40, result.unsafeReadObj("age"));
-        assertEquals(true, result.unsafeReadObj("active"));
-        assertEquals(70000.0, result.unsafeReadObj("salary"));
+        assertEquals("prop-value", result.readObj("name")); // Should be the value from the property object
+        assertEquals(40, result.readObj("age"));
+        assertEquals(true, result.readObj("active"));
+        assertEquals(70000.0, result.readObj("salary"));
     }
 
     @Test
@@ -389,7 +389,7 @@ class RecordAspectBuilderTest
             .build();
 
         assertNotNull(result);
-        assertEquals("Custom Def Test", result.unsafeReadObj("name"));
+        assertEquals("Custom Def Test", result.readObj("name"));
         // Verify the custom definition is being used
         assertSame(customDef, result.def());
     }
@@ -410,7 +410,7 @@ class RecordAspectBuilderTest
             .build();
 
         assertNotNull(result);
-        assertEquals("Fallback Test", result.unsafeReadObj("name"));
+        assertEquals("Fallback Test", result.readObj("name"));
         // Should have fallen back to creating a new definition for TestRecord.class
         assertNotSame(genericDef, result.def());
         assertTrue(result.def() instanceof RecordAspectDef);
@@ -467,7 +467,7 @@ class RecordAspectBuilderTest
         assertThrows(UnsupportedOperationException.class, () -> result.unsafeWrite("name", "Modified"));
 
         // The record values should remain unchanged
-        assertEquals("Initial", result.unsafeReadObj("name"));
+        assertEquals("Initial", result.readObj("name"));
         assertEquals("Initial", record.name());
         assertEquals(25, record.age());
     }
@@ -485,9 +485,9 @@ class RecordAspectBuilderTest
             .property("charValue", 'A')
             .build();
 
-        assertEquals(123, result.unsafeReadObj("intValue"));
-        assertEquals(true, result.unsafeReadObj("boolValue"));
-        assertEquals(45.67, result.unsafeReadObj("doubleValue"));
-        assertEquals('A', result.unsafeReadObj("charValue"));
+        assertEquals(123, result.readObj("intValue"));
+        assertEquals(true, result.readObj("boolValue"));
+        assertEquals(45.67, result.readObj("doubleValue"));
+        assertEquals('A', result.readObj("charValue"));
     }
 }

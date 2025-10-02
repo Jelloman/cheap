@@ -173,58 +173,58 @@ class PostgresCatalogTest
             Property idProp = aspect.get("id");
             assertNotNull(idProp, "id property should exist");
             
-            Long idValue = (Long) idProp.unsafeRead();
+            Long idValue = (Long) idProp.read();
             if (idValue == 1) {
                 foundRow1 = true;
                 
                 Property stringProp = aspect.get("string_col");
-                assertEquals("string1", stringProp.unsafeRead(), "string_col should be 'string1'");
+                assertEquals("string1", stringProp.read(), "string_col should be 'string1'");
                 
                 Property integerProp = aspect.get("integer_col");
-                assertEquals(1, (Long) integerProp.unsafeRead(), "integer_col should be 1");
+                assertEquals(1, (Long) integerProp.read(), "integer_col should be 1");
                 
                 Property floatProp = aspect.get("float_col");
-                assertEquals(1.5, ((Double) floatProp.unsafeRead()), "float_col should be 1.5");
+                assertEquals(1.5, ((Double) floatProp.read()), "float_col should be 1.5");
                 
                 Property dateProp = aspect.get("date_col");
-                assertEquals("2025-01-01", dateProp.unsafeRead(), "date_col should be 2025-01-01");
+                assertEquals("2025-01-01", dateProp.read(), "date_col should be 2025-01-01");
                 
                 Property timestampProp = aspect.get("timestamp_col");
                 //String expectedTime = LocalDateTime.of(2025, 1, 11, 18, 18, 18, 18000000).toInstant()
-                assertEquals("2025-01-12T02:18:18.018Z", timestampProp.unsafeRead(), "timestamp_col should match expected timestamp");
+                assertEquals("2025-01-12T02:18:18.018Z", timestampProp.read(), "timestamp_col should match expected timestamp");
                 
                 Property booleanProp = aspect.get("boolean_col");
-                assertEquals(true, (Boolean) booleanProp.unsafeRead(), "boolean_col should be true");
+                assertEquals(true, (Boolean) booleanProp.read(), "boolean_col should be true");
                 
                 Property uuidProp = aspect.get("uuid_col");
-                assertEquals(UUID.fromString("4186bfb6-b135-48af-9236-95cacdb20327"), uuidProp.unsafeRead(), "uuid_col should match expected UUID");
+                assertEquals(UUID.fromString("4186bfb6-b135-48af-9236-95cacdb20327"), uuidProp.read(), "uuid_col should match expected UUID");
                 
                 Property blobProp = aspect.get("blob_col");
-                assertNotNull(blobProp.unsafeRead(), "blob_col should not be null");
+                assertNotNull(blobProp.read(), "blob_col should not be null");
                 
             } else if (idValue == 2) {
                 foundRow2 = true;
                 
                 Property stringProp = aspect.get("string_col");
-                assertEquals("string2", stringProp.unsafeRead(), "string_col should be 'string2'");
+                assertEquals("string2", stringProp.read(), "string_col should be 'string2'");
                 
                 Property integerProp = aspect.get("integer_col");
-                assertEquals(2, (Long) integerProp.unsafeRead(), "integer_col should be 2");
+                assertEquals(2, (Long) integerProp.read(), "integer_col should be 2");
                 
                 Property floatProp = aspect.get("float_col");
-                assertEquals(2.5, ((Double) floatProp.unsafeRead()), "float_col should be 2.5");
+                assertEquals(2.5, ((Double) floatProp.read()), "float_col should be 2.5");
                 
                 Property dateProp = aspect.get("date_col");
-                assertEquals("2025-02-02", dateProp.unsafeRead(), "date_col should be 2025-02-02");
+                assertEquals("2025-02-02", dateProp.read(), "date_col should be 2025-02-02");
                 
                 Property timestampProp = aspect.get("timestamp_col");
-                assertEquals("2025-02-02T10:02:02.002Z", timestampProp.unsafeRead(), "timestamp_col should match expected timestamp");
+                assertEquals("2025-02-02T10:02:02.002Z", timestampProp.read(), "timestamp_col should match expected timestamp");
                 
                 Property booleanProp = aspect.get("boolean_col");
-                assertEquals(false, (Boolean) booleanProp.unsafeRead(), "boolean_col should be false");
+                assertEquals(false, (Boolean) booleanProp.read(), "boolean_col should be false");
                 
                 Property uuidProp = aspect.get("uuid_col");
-                assertEquals(UUID.fromString("655a99b9-af7c-4f2f-afa8-c4801986b9d4"), uuidProp.unsafeRead(), "uuid_col should match expected UUID");
+                assertEquals(UUID.fromString("655a99b9-af7c-4f2f-afa8-c4801986b9d4"), uuidProp.read(), "uuid_col should match expected UUID");
             }
         }
         
@@ -244,7 +244,7 @@ class PostgresCatalogTest
         Aspect aspect = table.values().iterator().next();
         Property idProp = aspect.get("id");
         assertNotNull(idProp, "id property should exist");
-        assertEquals(1, (Long) idProp.unsafeRead(), "Should have loaded the first row (id=1)");
+        assertEquals(1, (Long) idProp.read(), "Should have loaded the first row (id=1)");
     }
     
     @Test

@@ -130,7 +130,7 @@ public class ImmutablePojoAspectBuilder<P> extends AspectBuilderBase
 
                 // Apply all properties to initialize the POJO
                 for (Map.Entry<String, Object> entry : properties.entrySet()) {
-                    tempAspect.unsafeWrite(entry.getKey(), entry.getValue());
+                    tempAspect.write(entry.getKey(), entry.getValue());
                 }
             } catch (Exception e) {
                 throw new RuntimeException("Failed to initialize POJO properties for " + pojoClass.getName(), e);

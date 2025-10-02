@@ -108,7 +108,7 @@ public class MutablePojoAspectBuilder<P> implements AspectBuilder
     public AspectBuilder property(@NotNull String propertyName, Object value)
     {
         Objects.requireNonNull(propertyName, "Property name cannot be null");
-        this.aspect.unsafeWrite(propertyName, value);
+        this.aspect.write(propertyName, value);
         return this;
     }
 
@@ -124,8 +124,8 @@ public class MutablePojoAspectBuilder<P> implements AspectBuilder
     {
         Objects.requireNonNull(property, "Property cannot be null");
         String propertyName = property.def().name();
-        Object value = property.unsafeRead();
-        this.aspect.unsafeWrite(propertyName, value);
+        Object value = property.read();
+        this.aspect.write(propertyName, value);
         return this;
     }
 

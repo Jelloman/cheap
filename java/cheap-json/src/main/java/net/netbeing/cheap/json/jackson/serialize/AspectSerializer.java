@@ -39,7 +39,7 @@ class AspectSerializer extends JsonSerializer<Aspect>
 
         // Add all properties
         for (PropertyDef propertyDef : aspect.def().propertyDefs()) {
-            Object value = aspect.unsafeReadObj(propertyDef.name());
+            Object value = aspect.readObj(propertyDef.name());
             if (value != null) {
                 gen.writeFieldName(propertyDef.name());
                 writeValue(value, gen);

@@ -741,32 +741,32 @@ class PostgresDaoTest
         Entity loadedEntity1 = factory.getOrRegisterNewEntity(entityId1);
         Aspect loadedAspect1 = loadedHierarchy.get(loadedEntity1);
         assertNotNull(loadedAspect1);
-        assertEquals(42L, loadedAspect1.unsafeReadObj("int_prop"));
-        assertEquals(3.14159, (Double) loadedAspect1.unsafeReadObj("float_prop"), 0.00001);
-        assertEquals(true, loadedAspect1.unsafeReadObj("bool_prop"));
-        assertEquals("Hello World", loadedAspect1.unsafeReadObj("string_prop"));
-        assertEquals("This is a long text field with lots of content", loadedAspect1.unsafeReadObj("text_prop"));
-        assertEquals(new java.math.BigInteger("12345678901234567890"), new java.math.BigInteger(loadedAspect1.unsafeReadObj("bigint_prop").toString()));
-        assertEquals(new java.math.BigDecimal("123.456789012345678901234567890"), new java.math.BigDecimal(loadedAspect1.unsafeReadObj("bigdec_prop").toString()));
-        assertEquals("https://example.com/path", loadedAspect1.unsafeReadObj("uri_prop").toString());
-        assertEquals(UUID.fromString("550e8400-e29b-41d4-a716-446655440000"), loadedAspect1.unsafeReadObj("uuid_prop"));
-        assertEquals("CLOB content here", loadedAspect1.unsafeReadObj("clob_prop"));
-        assertArrayEquals(new byte[]{1, 2, 3, 4, 5}, (byte[]) loadedAspect1.unsafeReadObj("blob_prop"));
+        assertEquals(42L, loadedAspect1.readObj("int_prop"));
+        assertEquals(3.14159, (Double) loadedAspect1.readObj("float_prop"), 0.00001);
+        assertEquals(true, loadedAspect1.readObj("bool_prop"));
+        assertEquals("Hello World", loadedAspect1.readObj("string_prop"));
+        assertEquals("This is a long text field with lots of content", loadedAspect1.readObj("text_prop"));
+        assertEquals(new java.math.BigInteger("12345678901234567890"), new java.math.BigInteger(loadedAspect1.readObj("bigint_prop").toString()));
+        assertEquals(new java.math.BigDecimal("123.456789012345678901234567890"), new java.math.BigDecimal(loadedAspect1.readObj("bigdec_prop").toString()));
+        assertEquals("https://example.com/path", loadedAspect1.readObj("uri_prop").toString());
+        assertEquals(UUID.fromString("550e8400-e29b-41d4-a716-446655440000"), loadedAspect1.readObj("uuid_prop"));
+        assertEquals("CLOB content here", loadedAspect1.readObj("clob_prop"));
+        assertArrayEquals(new byte[]{1, 2, 3, 4, 5}, (byte[]) loadedAspect1.readObj("blob_prop"));
 
         // Verify second aspect was correctly reconstituted
         Entity loadedEntity2 = factory.getOrRegisterNewEntity(entityId2);
         Aspect loadedAspect2 = loadedHierarchy.get(loadedEntity2);
         assertNotNull(loadedAspect2);
-        assertEquals(99L, loadedAspect2.unsafeReadObj("int_prop"));
-        assertEquals(2.71828, (Double) loadedAspect2.unsafeReadObj("float_prop"), 0.00001);
-        assertEquals(false, loadedAspect2.unsafeReadObj("bool_prop"));
-        assertEquals("Goodbye World", loadedAspect2.unsafeReadObj("string_prop"));
-        assertEquals("Another long text field", loadedAspect2.unsafeReadObj("text_prop"));
-        assertEquals(new java.math.BigInteger("98765432109876543210"), new java.math.BigInteger(loadedAspect2.unsafeReadObj("bigint_prop").toString()));
-        assertEquals(new java.math.BigDecimal("987.654321098765432109876543210"), new java.math.BigDecimal(loadedAspect2.unsafeReadObj("bigdec_prop").toString()));
-        assertEquals("https://example.org/another", loadedAspect2.unsafeReadObj("uri_prop").toString());
-        assertEquals(UUID.fromString("6ba7b810-9dad-11d1-80b4-00c04fd430c8"), loadedAspect2.unsafeReadObj("uuid_prop"));
-        assertEquals("Different CLOB content", loadedAspect2.unsafeReadObj("clob_prop"));
-        assertArrayEquals(new byte[]{10, 20, 30, 40, 50}, (byte[]) loadedAspect2.unsafeReadObj("blob_prop"));
+        assertEquals(99L, loadedAspect2.readObj("int_prop"));
+        assertEquals(2.71828, (Double) loadedAspect2.readObj("float_prop"), 0.00001);
+        assertEquals(false, loadedAspect2.readObj("bool_prop"));
+        assertEquals("Goodbye World", loadedAspect2.readObj("string_prop"));
+        assertEquals("Another long text field", loadedAspect2.readObj("text_prop"));
+        assertEquals(new java.math.BigInteger("98765432109876543210"), new java.math.BigInteger(loadedAspect2.readObj("bigint_prop").toString()));
+        assertEquals(new java.math.BigDecimal("987.654321098765432109876543210"), new java.math.BigDecimal(loadedAspect2.readObj("bigdec_prop").toString()));
+        assertEquals("https://example.org/another", loadedAspect2.readObj("uri_prop").toString());
+        assertEquals(UUID.fromString("6ba7b810-9dad-11d1-80b4-00c04fd430c8"), loadedAspect2.readObj("uuid_prop"));
+        assertEquals("Different CLOB content", loadedAspect2.readObj("clob_prop"));
+        assertArrayEquals(new byte[]{10, 20, 30, 40, 50}, (byte[]) loadedAspect2.readObj("blob_prop"));
     }
 }

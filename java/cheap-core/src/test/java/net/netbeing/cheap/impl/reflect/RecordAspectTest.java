@@ -333,12 +333,12 @@ public class RecordAspectTest
         TestRecord recordWithNull = new TestRecord(1, 'a', true, (byte) 10, (short) 100, 1000L, 10.5f, 100.25, null, null, null, null, null, null);
         recordAspect = new RecordAspect<>(testEntity, def, recordWithNull);
         
-        assertNull(recordAspect.unsafeReadObj("string"));
-        assertNull(recordAspect.unsafeReadObj("integer"));
-        assertNull(recordAspect.unsafeReadObj("character"));
-        assertNull(recordAspect.unsafeReadObj("uuid"));
-        assertNull(recordAspect.unsafeReadObj("uri"));
-        assertNull(recordAspect.unsafeReadObj("localDateTime"));
+        assertNull(recordAspect.readObj("string"));
+        assertNull(recordAspect.readObj("integer"));
+        assertNull(recordAspect.readObj("character"));
+        assertNull(recordAspect.readObj("uuid"));
+        assertNull(recordAspect.readObj("uri"));
+        assertNull(recordAspect.readObj("localDateTime"));
         
         // Test that contains() returns false for null values
         assertFalse(recordAspect.contains("string"));

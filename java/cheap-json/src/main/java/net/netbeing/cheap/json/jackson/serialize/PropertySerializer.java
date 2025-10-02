@@ -19,7 +19,7 @@ class PropertySerializer extends JsonSerializer<Property>
         gen.writeObject(property.def());
         
         gen.writeFieldName("value");
-        writeValue(property.unsafeRead(), gen);
+        writeValue(property.read(), gen);
         
         gen.writeEndObject();
     }

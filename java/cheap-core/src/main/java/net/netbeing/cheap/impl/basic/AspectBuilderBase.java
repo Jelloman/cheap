@@ -116,7 +116,7 @@ public abstract class AspectBuilderBase implements AspectBuilder
     {
         Objects.requireNonNull(property, "Property cannot be null");
         String propertyName = property.def().name();
-        Object value = property.unsafeRead();
+        Object value = property.read();
         this.properties.put(propertyName, value);
         return this;
     }
@@ -212,7 +212,7 @@ public abstract class AspectBuilderBase implements AspectBuilder
     {
         Objects.requireNonNull(aspect, "Aspect cannot be null");
         for (Map.Entry<String, Object> entry : properties.entrySet()) {
-            aspect.unsafeWrite(entry.getKey(), entry.getValue());
+            aspect.write(entry.getKey(), entry.getValue());
         }
     }
 

@@ -277,7 +277,7 @@ public class CheapJacksonSerializerTest
         AspectMapHierarchy personAspects = catalog.extend(personAspectDef);
 
         AspectObjectMapImpl personAspect = new AspectObjectMapImpl(entity, personAspectDef);
-        personAspect.unsafeWrite("name", "John Doe");
+        personAspect.write("name", "John Doe");
         personAspects.put(entity, personAspect);
 
         return catalog;
@@ -388,21 +388,21 @@ public class CheapJacksonSerializerTest
 
         // 5. First AspectMapHierarchy (person aspects)
         AspectObjectMapImpl personAspect1 = new AspectObjectMapImpl(entity1, personAspectDef);
-        personAspect1.unsafeWrite("age", 30);
-        personAspect1.unsafeWrite("name", "John Doe");
+        personAspect1.write("age", 30);
+        personAspect1.write("name", "John Doe");
         AspectObjectMapImpl personAspect2 = new AspectObjectMapImpl(entity2, personAspectDef);
-        personAspect2.unsafeWrite("age", 25);
-        personAspect2.unsafeWrite("name", "Jane Smith");
+        personAspect2.write("age", 25);
+        personAspect2.write("name", "Jane Smith");
         personAspects.put(entity1, personAspect1);
         personAspects.put(entity2, personAspect2);
 
         // 6. Second AspectMapHierarchy (document aspects)
         AspectObjectMapImpl docAspect1 = new AspectObjectMapImpl(entity3, docAspectDef);
-        docAspect1.unsafeWrite("title", "User Manual");
-        docAspect1.unsafeWrite("description", "Complete user guide");
+        docAspect1.write("title", "User Manual");
+        docAspect1.write("description", "Complete user guide");
         AspectObjectMapImpl docAspect2 = new AspectObjectMapImpl(entity4, docAspectDef);
-        docAspect2.unsafeWrite("title", "API Documentation");
-        docAspect2.unsafeWrite("description", "REST API reference");
+        docAspect2.write("title", "API Documentation");
+        docAspect2.write("description", "REST API reference");
         docAspects.put(entity3, docAspect1);
         docAspects.put(entity4, docAspect2);
 

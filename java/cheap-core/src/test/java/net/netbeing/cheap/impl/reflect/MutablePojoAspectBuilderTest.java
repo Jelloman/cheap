@@ -1,6 +1,5 @@
 package net.netbeing.cheap.impl.reflect;
 
-import com.google.common.collect.ImmutableMap;
 import net.netbeing.cheap.impl.basic.EntityImpl;
 import net.netbeing.cheap.impl.basic.PropertyDefImpl;
 import net.netbeing.cheap.impl.basic.PropertyImpl;
@@ -69,6 +68,7 @@ class MutablePojoAspectBuilderTest
         assertEquals(TestPojo.class, newBuilder.getPojoClass());
     }
 
+    @SuppressWarnings("DataFlowIssue")
     @Test
     void constructor_NullClass_ThrowsException()
     {
@@ -89,6 +89,7 @@ class MutablePojoAspectBuilderTest
         assertSame(builder, result);
     }
 
+    @SuppressWarnings("DataFlowIssue")
     @Test
     void entity_NullEntity_ThrowsException()
     {
@@ -104,6 +105,7 @@ class MutablePojoAspectBuilderTest
         assertSame(builder, result);
     }
 
+    @SuppressWarnings("DataFlowIssue")
     @Test
     void aspectDef_NullAspectDef_ThrowsException()
     {
@@ -118,6 +120,7 @@ class MutablePojoAspectBuilderTest
         assertSame(builder, result);
     }
 
+    @SuppressWarnings("DataFlowIssue")
     @Test
     void property_NullPropertyName_ThrowsException()
     {
@@ -135,10 +138,11 @@ class MutablePojoAspectBuilderTest
         assertSame(builder, result);
     }
 
+    @SuppressWarnings("DataFlowIssue")
     @Test
     void property_NullProperty_ThrowsException()
     {
-        assertThrows(NullPointerException.class, () -> builder.property((Property) null));
+        assertThrows(NullPointerException.class, () -> builder.property(null));
     }
 
     @Test
@@ -157,10 +161,10 @@ class MutablePojoAspectBuilderTest
         assertSame(entity, result.entity());
 
         // Verify property values
-        assertEquals("John Doe", result.unsafeReadObj("name"));
-        assertEquals(30, result.unsafeReadObj("age"));
-        assertEquals(true, result.unsafeReadObj("active"));
-        assertEquals(50000.0, result.unsafeReadObj("salary"));
+        assertEquals("John Doe", result.readObj("name"));
+        assertEquals(30, result.readObj("age"));
+        assertEquals(true, result.readObj("active"));
+        assertEquals(50000.0, result.readObj("salary"));
     }
 
     @Test
@@ -177,8 +181,8 @@ class MutablePojoAspectBuilderTest
 
         assertNotNull(result);
         assertInstanceOf(MutablePojoAspect.class, result);
-        assertEquals("Jane Smith", result.unsafeReadObj("name"));
-        assertEquals(25, result.unsafeReadObj("age"));
+        assertEquals("Jane Smith", result.readObj("name"));
+        assertEquals(25, result.readObj("age"));
     }
 
     @Test
@@ -201,7 +205,7 @@ class MutablePojoAspectBuilderTest
 
         assertNotNull(result);
         assertInstanceOf(MutablePojoAspect.class, result);
-        assertEquals("Test Name", result.unsafeReadObj("name"));
+        assertEquals("Test Name", result.readObj("name"));
     }
 
     @Test
@@ -241,12 +245,12 @@ class MutablePojoAspectBuilderTest
     {
         Aspect result = builder
             .entity(entity)
-            .property("age", Integer.valueOf(42))
-            .property("active", Boolean.valueOf(true))
+            .property("age", 42)
+            .property("active", Boolean.TRUE)
             .build();
 
-        assertEquals(42, result.unsafeReadObj("age"));
-        assertEquals(true, result.unsafeReadObj("active"));
+        assertEquals(42, result.readObj("age"));
+        assertEquals(true, result.readObj("active"));
     }
 
     @Test
@@ -284,10 +288,10 @@ class MutablePojoAspectBuilderTest
             .build();
 
         assertNotSame(aspect1, aspect2);
-        assertEquals("John", aspect1.unsafeReadObj("name"));
-        assertEquals("Jane", aspect2.unsafeReadObj("name"));
-        assertEquals(25, aspect1.unsafeReadObj("age"));
-        assertEquals(30, aspect2.unsafeReadObj("age"));
+        assertEquals("John", aspect1.readObj("name"));
+        assertEquals("Jane", aspect2.readObj("name"));
+        assertEquals(25, aspect1.readObj("age"));
+        assertEquals(30, aspect2.readObj("age"));
         assertNotSame(aspect1.entity(), aspect2.entity());
     }
 
@@ -324,8 +328,8 @@ class MutablePojoAspectBuilderTest
             .build();
 
         assertNotNull(result);
-        assertEquals("prop-value", result.unsafeReadObj("name")); // Should be the value from the property object
-        assertEquals(40, result.unsafeReadObj("age"));
+        assertEquals("prop-value", result.readObj("name")); // Should be the value from the property object
+        assertEquals(40, result.readObj("age"));
     }
 
     @Test
@@ -343,7 +347,7 @@ class MutablePojoAspectBuilderTest
             .build();
 
         assertNotNull(result);
-        assertEquals("Custom Def Test", result.unsafeReadObj("name"));
+        assertEquals("Custom Def Test", result.readObj("name"));
         // After reset with custom definition, it should use the custom definition
         assertSame(customDef, result.def());
     }
@@ -361,10 +365,10 @@ class MutablePojoAspectBuilderTest
             .build();
 
         assertNotNull(result);
-        assertEquals("Fallback Test", result.unsafeReadObj("name"));
+        assertEquals("Fallback Test", result.readObj("name"));
         // Should have fallen back to creating a new definition for TestPojo.class
         assertNotSame(genericDef, result.def());
-        assertTrue(result.def() instanceof MutablePojoAspectDef);
+        assertInstanceOf(MutablePojoAspectDef.class, result.def());
         // Verify it's using TestPojo definition, not String definition
         assertEquals(TestPojo.class.getCanonicalName(), result.def().name());
     }
@@ -383,16 +387,16 @@ class MutablePojoAspectBuilderTest
         MutablePojoAspect<TestPojo> result = (MutablePojoAspect<TestPojo>) aspectResult;
 
         // Verify initial values
-        assertEquals("Initial Name", result.unsafeReadObj("name"));
-        assertEquals(20, result.unsafeReadObj("age"));
+        assertEquals("Initial Name", result.readObj("name"));
+        assertEquals(20, result.readObj("age"));
 
         // Modify through the aspect
         result.unsafeWrite("name", "Modified Name");
         result.unsafeWrite("age", 30);
 
         // Verify modifications
-        assertEquals("Modified Name", result.unsafeReadObj("name"));
-        assertEquals(30, result.unsafeReadObj("age"));
+        assertEquals("Modified Name", result.readObj("name"));
+        assertEquals(30, result.readObj("age"));
 
         // Verify underlying POJO was also modified
         TestPojo pojo = result.object();

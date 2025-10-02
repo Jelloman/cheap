@@ -301,7 +301,7 @@ class CheapFactoryTest
         Property property = factory.createProperty(propertyDef, "test value");
         assertNotNull(property);
         assertEquals(propertyDef, property.def());
-        assertEquals("test value", property.unsafeRead());
+        assertEquals("test value", property.read());
     }
 
     @Test

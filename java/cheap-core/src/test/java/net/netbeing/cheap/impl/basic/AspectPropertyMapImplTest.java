@@ -74,7 +74,7 @@ class AspectPropertyMapImplTest
     @Test
     void contains_PropertyPresent_ReturnsTrue()
     {
-        aspect.unsafeAdd(property1);
+        aspect.put(property1);
         
         assertTrue(aspect.contains("prop1"));
     }
@@ -88,7 +88,7 @@ class AspectPropertyMapImplTest
     @Test
     void unsafeReadObj_PropertyPresent_ReturnsPropertyValue()
     {
-        aspect.unsafeAdd(property1);
+        aspect.put(property1);
         
         Object result = aspect.unsafeReadObj("prop1");
         assertEquals("test-value", result);
@@ -103,7 +103,7 @@ class AspectPropertyMapImplTest
             public boolean isReadable() { return false; }
         };
         aspect = new AspectPropertyMapImpl(entity, aspectDef);
-        aspect.unsafeAdd(property1);
+        aspect.put(property1);
         
         UnsupportedOperationException exception = assertThrows(
             UnsupportedOperationException.class,
@@ -136,7 +136,7 @@ class AspectPropertyMapImplTest
         aspect = new AspectPropertyMapImpl(entity, aspectDef);
         PropertyDefImpl nonReadablePropDef = new PropertyDefImpl("readonly", PropertyType.String, false, true, true, true, false);
         Property nonReadableProperty = new PropertyImpl(nonReadablePropDef, "value");
-        aspect.unsafeAdd(nonReadableProperty);
+        aspect.put(nonReadableProperty);
         
         UnsupportedOperationException exception = assertThrows(
             UnsupportedOperationException.class,
@@ -154,7 +154,7 @@ class AspectPropertyMapImplTest
         aspect = new AspectPropertyMapImpl(entity, aspectDef);
         PropertyDefImpl readablePropDef = new PropertyDefImpl("readable", PropertyType.String, true, true, true, true, false);
         Property readableProperty = new PropertyImpl(readablePropDef, "value");
-        aspect.unsafeAdd(readableProperty);
+        aspect.put(readableProperty);
         
         Property result = aspect.get("readable");
         
@@ -319,7 +319,7 @@ class AspectPropertyMapImplTest
     @Test
     void unsafeRemove_PropertyPresent_RemovesProperty()
     {
-        aspect.unsafeAdd(property1);
+        aspect.put(property1);
         assertTrue(aspect.contains("prop1"));
         
         aspect.unsafeRemove("prop1");

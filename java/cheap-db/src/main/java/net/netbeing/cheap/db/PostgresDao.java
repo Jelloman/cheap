@@ -776,7 +776,8 @@ public class PostgresDao implements CatalogPersistence
 
     private void loadEntityDirectoryContent(Connection conn, UUID catalogId, String hierarchyName, EntityDirectoryHierarchy hierarchy) throws SQLException
     {
-        String sql = "SELECT entity_key, entity_id FROM hierarchy_entity_directory WHERE catalog_id = ? AND hierarchy_name = ? ORDER BY dir_order";
+        String sql = "SELECT entity_key, entity_id FROM hierarchy_entity_directory " +
+            "WHERE catalog_id = ? AND hierarchy_name = ? ORDER BY dir_order";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setObject(1, catalogId);
             stmt.setString(2, hierarchyName);
@@ -873,7 +874,8 @@ public class PostgresDao implements CatalogPersistence
 
     private void loadAspectMapContentFromDefaultTables(Connection conn, UUID catalogId, String hierarchyName, AspectMapHierarchy hierarchy) throws SQLException
     {
-        String sql = "SELECT entity_id FROM hierarchy_aspect_map WHERE catalog_id = ? AND hierarchy_name = ? ORDER BY map_order";
+        String sql = "SELECT entity_id FROM hierarchy_aspect_map " +
+            "WHERE catalog_id = ? AND hierarchy_name = ? ORDER BY map_order";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setObject(1, catalogId);
             stmt.setString(2, hierarchyName);

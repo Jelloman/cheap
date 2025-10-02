@@ -141,33 +141,33 @@ class SqliteCatalogTest {
             Property idProp = aspect.get("id");
             assertNotNull(idProp, "id property should exist");
             
-            Long idValue = (Long) idProp.unsafeRead();
+            Long idValue = (Long) idProp.read();
             if (idValue == 1L) {
                 foundRow1 = true;
                 
                 Property numericProp = aspect.get("numeric_col");
-                assertEquals(1.0, ((Double) numericProp.unsafeRead()), "numeric_col should be 1.0");
+                assertEquals(1.0, ((Double) numericProp.read()), "numeric_col should be 1.0");
                 
                 Property realProp = aspect.get("real_col");
-                assertEquals(1.5, ((Double) realProp.unsafeRead()), "real_col should be 1.5");
+                assertEquals(1.5, ((Double) realProp.read()), "real_col should be 1.5");
                 
                 Property textProp = aspect.get("text_col");
-                assertEquals("one", textProp.unsafeRead(), "text_col should be 'one'");
+                assertEquals("one", textProp.read(), "text_col should be 'one'");
                 
                 Property blobProp = aspect.get("blob_col");
-                assertNotNull(blobProp.unsafeRead(), "blob_col should not be null");
+                assertNotNull(blobProp.read(), "blob_col should not be null");
                 
             } else if (idValue == 2L) {
                 foundRow2 = true;
                 
                 Property numericProp = aspect.get("numeric_col");
-                assertEquals(2.0, ((Double) numericProp.unsafeRead()), "numeric_col should be 2.0");
+                assertEquals(2.0, ((Double) numericProp.read()), "numeric_col should be 2.0");
                 
                 Property realProp = aspect.get("real_col");
-                assertEquals(2.5, ((Double) realProp.unsafeRead()), "real_col should be 2.5");
+                assertEquals(2.5, ((Double) realProp.read()), "real_col should be 2.5");
                 
                 Property textProp = aspect.get("text_col");
-                assertEquals("two", textProp.unsafeRead(), "text_col should be 'two'");
+                assertEquals("two", textProp.read(), "text_col should be 'two'");
             }
         }
         
@@ -187,7 +187,7 @@ class SqliteCatalogTest {
         Aspect aspect = table.values().iterator().next();
         Property idProp = aspect.get("id");
         assertNotNull(idProp, "id property should exist");
-        assertEquals(1L, (Long) idProp.unsafeRead(), "Should have loaded the first row (id=1)");
+        assertEquals(1L, (Long) idProp.read(), "Should have loaded the first row (id=1)");
     }
     
     @Test

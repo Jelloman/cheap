@@ -166,10 +166,10 @@ class ImmutablePojoAspectBuilderTest
         assertSame(entity, result.entity());
 
         // Verify property values were set during construction
-        assertEquals("John Doe", result.unsafeReadObj("name"));
-        assertEquals(30, result.unsafeReadObj("age"));
-        assertEquals(true, result.unsafeReadObj("active"));
-        assertEquals(50000.0, result.unsafeReadObj("salary"));
+        assertEquals("John Doe", result.readObj("name"));
+        assertEquals(30, result.readObj("age"));
+        assertEquals(true, result.readObj("active"));
+        assertEquals(50000.0, result.readObj("salary"));
     }
 
     @Test
@@ -186,8 +186,8 @@ class ImmutablePojoAspectBuilderTest
 
         assertNotNull(result);
         assertInstanceOf(ImmutablePojoAspect.class, result);
-        assertEquals("Jane Smith", result.unsafeReadObj("name"));
-        assertEquals(25, result.unsafeReadObj("age"));
+        assertEquals("Jane Smith", result.readObj("name"));
+        assertEquals(25, result.readObj("age"));
     }
 
     @Test
@@ -210,7 +210,7 @@ class ImmutablePojoAspectBuilderTest
 
         assertNotNull(result);
         assertInstanceOf(ImmutablePojoAspect.class, result);
-        assertEquals("Test Name", result.unsafeReadObj("name"));
+        assertEquals("Test Name", result.readObj("name"));
     }
 
     @Test
@@ -242,16 +242,16 @@ class ImmutablePojoAspectBuilderTest
         assertInstanceOf(ImmutablePojoAspect.class, result);
 
         // Verify initial values
-        assertEquals("Test", result.unsafeReadObj("name"));
-        assertEquals(35, result.unsafeReadObj("age"));
+        assertEquals("Test", result.readObj("name"));
+        assertEquals(35, result.readObj("age"));
 
         // Verify immutability - writes should throw UnsupportedOperationException
         assertThrows(UnsupportedOperationException.class, () -> result.unsafeWrite("name", "Modified"));
         assertThrows(UnsupportedOperationException.class, () -> result.unsafeWrite("age", 40));
 
         // Values should remain unchanged
-        assertEquals("Test", result.unsafeReadObj("name"));
-        assertEquals(35, result.unsafeReadObj("age"));
+        assertEquals("Test", result.readObj("name"));
+        assertEquals(35, result.readObj("age"));
     }
 
     @Test
@@ -263,8 +263,8 @@ class ImmutablePojoAspectBuilderTest
             .property("active", Boolean.valueOf(true))
             .build();
 
-        assertEquals(42, result.unsafeReadObj("age"));
-        assertEquals(true, result.unsafeReadObj("active"));
+        assertEquals(42, result.readObj("age"));
+        assertEquals(true, result.readObj("active"));
     }
 
     @Test
@@ -302,10 +302,10 @@ class ImmutablePojoAspectBuilderTest
             .build();
 
         assertNotSame(aspect1, aspect2);
-        assertEquals("John", aspect1.unsafeReadObj("name"));
-        assertEquals("Jane", aspect2.unsafeReadObj("name"));
-        assertEquals(25, aspect1.unsafeReadObj("age"));
-        assertEquals(30, aspect2.unsafeReadObj("age"));
+        assertEquals("John", aspect1.readObj("name"));
+        assertEquals("Jane", aspect2.readObj("name"));
+        assertEquals(25, aspect1.readObj("age"));
+        assertEquals(30, aspect2.readObj("age"));
         assertNotSame(aspect1.entity(), aspect2.entity());
     }
 
@@ -323,8 +323,8 @@ class ImmutablePojoAspectBuilderTest
             .build();
 
         assertNotNull(result);
-        assertEquals("prop-value", result.unsafeReadObj("name")); // Should be the value from the property object
-        assertEquals(40, result.unsafeReadObj("age"));
+        assertEquals("prop-value", result.readObj("name")); // Should be the value from the property object
+        assertEquals(40, result.readObj("age"));
     }
 
     @Test
@@ -339,7 +339,7 @@ class ImmutablePojoAspectBuilderTest
             .build();
 
         assertNotNull(result);
-        assertEquals("Custom Def Test", result.unsafeReadObj("name"));
+        assertEquals("Custom Def Test", result.readObj("name"));
         // Verify the custom definition is being used
         assertSame(customDef, result.def());
     }
@@ -357,7 +357,7 @@ class ImmutablePojoAspectBuilderTest
             .build();
 
         assertNotNull(result);
-        assertEquals("Fallback Test", result.unsafeReadObj("name"));
+        assertEquals("Fallback Test", result.readObj("name"));
         // Should have fallen back to creating a new definition for TestPojo.class
         assertNotSame(genericDef, result.def());
         assertTrue(result.def() instanceof ImmutablePojoAspectDef);
@@ -376,10 +376,10 @@ class ImmutablePojoAspectBuilderTest
         assertInstanceOf(ImmutablePojoAspect.class, result);
 
         // Should be able to read properties (they'll have default values)
-        assertNull(result.unsafeReadObj("name")); // String defaults to null
-        assertEquals(0, result.unsafeReadObj("age")); // int defaults to 0
-        assertEquals(false, result.unsafeReadObj("active")); // boolean defaults to false
-        assertNull(result.unsafeReadObj("salary")); // Double defaults to null
+        assertNull(result.readObj("name")); // String defaults to null
+        assertEquals(0, result.readObj("age")); // int defaults to 0
+        assertEquals(false, result.readObj("active")); // boolean defaults to false
+        assertNull(result.readObj("salary")); // Double defaults to null
     }
 
     @Test
@@ -423,7 +423,7 @@ class ImmutablePojoAspectBuilderTest
         assertThrows(UnsupportedOperationException.class, () -> result.unsafeWrite("name", "Modified"));
 
         // The POJO value should remain unchanged through the aspect
-        assertEquals("Initial", result.unsafeReadObj("name"));
+        assertEquals("Initial", result.readObj("name"));
         assertEquals("Initial", pojo.getName());
     }
 }

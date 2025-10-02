@@ -91,28 +91,25 @@ net.netbeing.cheap/
 
 ### Core Concepts
 
-**Catalogs**: All catalogs are caches that can be:
-- Root catalogs: Represent external data sources (fixed or thin)
-- Mirror catalogs: Cached views of other catalogs
-- Write types: Fixed (read-only), thin (write-through), or thick (buffered writes)
+**Catalogs**: All catalogs are caches or working copies that can be one of six species:
 
 **Hierarchies** come in 5 types:
 - `ENTITY_LIST` (EL) - Ordered list with possible duplicates
 - `ENTITY_SET` (ES) - Non-ordered set of unique entity IDs  
 - `ENTITY_DIR` (ED) - String-to-entity ID mapping
 - `ENTITY_TREE` (ET) - String-to-entity ID OR tree node mapping
-- `ASPECT_SET` (AM) - Entity ID-to-aspect mapping for single aspect type
-
-**Fixed Hierarchies**:
-- Hierarchy 0: Entity set of all global hierarchies in catalog
-- Hierarchy 1: Entity set of all entities in catalog (iteration may be expensive)
+- `ASPECT_MAP` (AM) - Entity ID-to-aspect mapping for single aspect type
 
 ## Development Notes
 
-- Uses Java module system with `module-info.java` and `modularity.inferModulePath = true`
 - Lombok managed via Gradle plugin rather than direct dependencies
 - Dependencies managed through Gradle version catalogs (`libs.*`)
 - Null safety enforced with JetBrains annotations
+
+# Code style
+- Always put a newline at the end of every text file (.java, .json, .sql, .ms, etc.)
+- Put left brackets at the end of the line, except for class and function bodies where they should go on the next line
+- When using Cheap interfaces, prefer not to use methods named "unsafe*", except in unit tests that are specifically testing those unsafe* methods
 
 ## Unit testing
 - Comprehensive test coverage with JUnit Jupiter

@@ -209,8 +209,8 @@ class AspectPropertyMapBuilderTest
         assertInstanceOf(AspectPropertyMapImpl.class, result);
         assertSame(entity, result.entity());
         assertSame(aspectDef, result.def());
-        assertEquals("test-value", result.unsafeReadObj("stringProp"));
-        assertEquals(42L, result.unsafeReadObj("intProp"));
+        assertEquals("test-value", result.readObj("stringProp"));
+        assertEquals(42L, result.readObj("intProp"));
     }
 
     @Test
@@ -226,7 +226,7 @@ class AspectPropertyMapBuilderTest
         assertInstanceOf(AspectPropertyMapImpl.class, result);
         assertEquals(entityId, result.entity().globalId());
         assertSame(aspectDef, result.def());
-        assertEquals("test-value", result.unsafeReadObj("stringProp"));
+        assertEquals("test-value", result.readObj("stringProp"));
     }
 
     @Test
@@ -241,8 +241,8 @@ class AspectPropertyMapBuilderTest
 
         assertNotNull(result);
         assertInstanceOf(AspectPropertyMapImpl.class, result);
-        assertEquals("test-value", result.unsafeReadObj("stringProp"));
-        assertEquals(42L, result.unsafeReadObj("intProp"));
+        assertEquals("test-value", result.readObj("stringProp"));
+        assertEquals(42L, result.readObj("intProp"));
     }
 
     @Test
@@ -273,7 +273,7 @@ class AspectPropertyMapBuilderTest
             .build();
 
         assertNotNull(result);
-        assertNull(result.unsafeReadObj("nullableProp"));
+        assertNull(result.readObj("nullableProp"));
     }
 
     @Test
@@ -312,8 +312,8 @@ class AspectPropertyMapBuilderTest
             .build();
 
         assertNotSame(aspect1, aspect2);
-        assertEquals("value1", aspect1.unsafeReadObj("stringProp"));
-        assertEquals("value2", aspect2.unsafeReadObj("stringProp"));
+        assertEquals("value1", aspect1.readObj("stringProp"));
+        assertEquals("value2", aspect2.readObj("stringProp"));
         assertNotSame(aspect1.entity(), aspect2.entity());
     }
 
@@ -328,8 +328,8 @@ class AspectPropertyMapBuilderTest
             .build();
 
         assertNotNull(result);
-        assertEquals("test-value", result.unsafeReadObj("stringProp"));
-        assertEquals(42L, result.unsafeReadObj("intProp"));
+        assertEquals("test-value", result.readObj("stringProp"));
+        assertEquals(42L, result.readObj("intProp"));
     }
 
     @Test
@@ -344,9 +344,9 @@ class AspectPropertyMapBuilderTest
             .build();
 
         assertNotNull(result);
-        assertEquals("from-name-value", result.unsafeReadObj("stringProp"));
-        assertEquals(42L, result.unsafeReadObj("intProp"));
-        assertNull(result.unsafeReadObj("nullableProp"));
+        assertEquals("from-name-value", result.readObj("stringProp"));
+        assertEquals(42L, result.readObj("intProp"));
+        assertNull(result.readObj("nullableProp"));
     }
 
     @Test
@@ -360,6 +360,6 @@ class AspectPropertyMapBuilderTest
             .build();
 
         assertNotNull(result);
-        assertEquals("second-value", result.unsafeReadObj("stringProp"));
+        assertEquals("second-value", result.readObj("stringProp"));
     }
 }

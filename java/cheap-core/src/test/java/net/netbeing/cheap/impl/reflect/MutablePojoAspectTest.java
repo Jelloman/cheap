@@ -302,12 +302,12 @@ public class MutablePojoAspectTest
         TestClass pojoWithNull = new TestClass(1, 'a', true, null, null, null, null, null, null);
         mutablePojoAspect = new MutablePojoAspect<>(testEntity, def, pojoWithNull);
         
-        assertNull(mutablePojoAspect.unsafeReadObj("string"));
-        assertNull(mutablePojoAspect.unsafeReadObj("integer"));
-        assertNull(mutablePojoAspect.unsafeReadObj("character"));
-        assertNull(mutablePojoAspect.unsafeReadObj("uuid"));
-        assertNull(mutablePojoAspect.unsafeReadObj("uri"));
-        assertNull(mutablePojoAspect.unsafeReadObj("localDateTime"));
+        assertNull(mutablePojoAspect.readObj("string"));
+        assertNull(mutablePojoAspect.readObj("integer"));
+        assertNull(mutablePojoAspect.readObj("character"));
+        assertNull(mutablePojoAspect.readObj("uuid"));
+        assertNull(mutablePojoAspect.readObj("uri"));
+        assertNull(mutablePojoAspect.readObj("localDateTime"));
         
         // Test that contains() returns false for null values
         assertFalse(mutablePojoAspect.contains("string"));
@@ -319,11 +319,11 @@ public class MutablePojoAspectTest
     {
         mutablePojoAspect = new MutablePojoAspect<>(testEntity, def, pojo1);
         
-        assertNotNull(mutablePojoAspect.unsafeReadObj("string"));
+        assertNotNull(mutablePojoAspect.readObj("string"));
         
         mutablePojoAspect.unsafeWrite("string", null);
         
-        assertNull(mutablePojoAspect.unsafeReadObj("string"));
+        assertNull(mutablePojoAspect.readObj("string"));
         assertNull(pojo1.getString());
     }
 

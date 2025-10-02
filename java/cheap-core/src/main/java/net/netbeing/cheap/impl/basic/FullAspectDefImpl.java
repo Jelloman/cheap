@@ -118,7 +118,7 @@ public class FullAspectDefImpl extends AspectDefBase implements MutableAspectDef
     {
         if (!canAddProperties) {
             throw new UnsupportedOperationException(
-                "Cannot add properties to AspectDef '" + name + "' (canAddProperties=false)");
+                "Cannot add properties to AspectDef '" + name + "' (canAddProperties=false).");
         }
         return propertyDefs.put(prop.name(), prop);
     }
@@ -135,7 +135,7 @@ public class FullAspectDefImpl extends AspectDefBase implements MutableAspectDef
     {
         if (!canRemoveProperties) {
             throw new UnsupportedOperationException(
-                "Cannot remove properties from AspectDef '" + name + "' (canRemoveProperties=false)");
+                "Cannot remove properties from AspectDef '" + name + "' (canRemoveProperties=false).");
         }
         return propertyDefs.remove(prop.name());
     }
