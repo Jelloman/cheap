@@ -1017,4 +1017,10 @@ public class CatalogDao implements CatalogPersistence
         String ddlContent = loadDdlResource("/db/schemas/postgres-cheap-drop.sql");
         executeDdl(dataSource, ddlContent);
     }
+
+    public void executeTruncateSchemaDdl(@NotNull DataSource dataSource) throws SQLException
+    {
+        String ddlContent = loadDdlResource("/db/schemas/postgres-cheap-truncate.sql");
+        executeDdl(dataSource, ddlContent);
+    }
 }
