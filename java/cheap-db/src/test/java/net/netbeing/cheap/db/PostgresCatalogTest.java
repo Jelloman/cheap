@@ -36,8 +36,9 @@ class PostgresCatalogTest
         
         List<String> tables = catalog.getTables();
         assertNotNull(tables, "Tables list should not be null");
-        assertEquals(2, tables.size(), "Should have exactly two tables (test_table + flyway_schema_history)");
+        assertEquals(3, tables.size(), "Should have exactly two tables (test_table + flyway_schema_history)");
         assertTrue(tables.contains("test_table"), "Should contain test_table");
+        assertTrue(tables.contains("test_aspect_mapping"), "Should contain test_table");
     }
     
     @Test
@@ -49,8 +50,9 @@ class PostgresCatalogTest
         
         List<String> tables = staticCatalog.getTables();
         assertNotNull(tables, "Tables list should not be null");
-        assertEquals(2, tables.size(), "Should have exactly two tables");
+        assertEquals(3, tables.size(), "Should have exactly two tables");
         assertTrue(tables.contains("test_table"), "Should contain test_table");
+        assertTrue(tables.contains("test_aspect_mapping"), "Should contain test_table");
     }
 
     @Test
@@ -233,7 +235,7 @@ class PostgresCatalogTest
     void constructor_LoadsTestTable()
     {
         // Should be a single test table and the Flyway schema table
-        assertEquals(2, catalog.getTables().size());
+        assertEquals(3, catalog.getTables().size());
 
         AspectDef aspectDef = catalog.getTableDef("test_table");
         assertEquals(9, aspectDef.propertyDefs().size());
