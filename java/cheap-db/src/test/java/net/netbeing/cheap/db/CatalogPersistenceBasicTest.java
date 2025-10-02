@@ -14,7 +14,7 @@ class CatalogPersistenceBasicTest {
     void testCatalogPersistenceInterfaceExists() {
         // Just verify that our interface and implementation compile
         assertNotNull(CatalogPersistence.class);
-        assertNotNull(CatalogDao.class);
+        assertNotNull(PostgresDao.class);
     }
 
     @Test

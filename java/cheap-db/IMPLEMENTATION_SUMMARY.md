@@ -96,7 +96,7 @@ The implementation works seamlessly with the existing Cheap schema:
 
 ```java
 // Create DAO with DataSource
-CatalogDao catalogDao = new CatalogDao(dataSource);
+CatalogDao postgresDao = new CatalogDao(dataSource);
 
 // Create a catalog using factory
 CheapFactory factory = new CheapFactory();
@@ -108,10 +108,10 @@ EntitySetHierarchy hierarchy = factory.createEntitySetHierarchy(catalog, hierarc
 catalog.addHierarchy(hierarchy);
 
 // Save to database
-catalogDao.saveCatalog(catalog);
+postgresDao.saveCatalog(catalog);
 
 // Load from database
-Catalog loadedCatalog = catalogDao.loadCatalog(catalogId);
+Catalog loadedCatalog = postgresDao.loadCatalog(catalogId);
 ```
 
 ### Future Enhancements

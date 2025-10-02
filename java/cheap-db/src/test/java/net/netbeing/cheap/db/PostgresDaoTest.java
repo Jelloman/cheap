@@ -21,7 +21,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class CatalogDaoTest
+class PostgresDaoTest
 {
     @RegisterExtension
     public static PreparedDbExtension flywayDB = EmbeddedPostgresExtension.preparedDatabase(FlywayPreparer.forClasspathLocation("db/pg"));
@@ -29,7 +29,7 @@ class CatalogDaoTest
     static volatile DataSource dataSource;
     static volatile boolean schemaInitialized = false;
 
-    CatalogDao catalogDao;
+    PostgresDao postgresDao;
     CheapFactory factory;
 
     void setUp() throws SQLException, IOException, URISyntaxException
@@ -47,7 +47,7 @@ class CatalogDaoTest
         }
 
         factory = new CheapFactory();
-        catalogDao = new CatalogDao(dataSource, factory);
+        postgresDao = new PostgresDao(dataSource, factory);
 
         // Clean up all tables before each test
         truncateAllTables();
@@ -78,7 +78,7 @@ class CatalogDaoTest
     @SuppressWarnings("DataFlowIssue")
     private static String loadResourceFile(String resourcePath) throws IOException, URISyntaxException
     {
-        Path path = Paths.get(CatalogDaoTest.class.getResource(resourcePath).toURI());
+        Path path = Paths.get(PostgresDaoTest.class.getResource(resourcePath).toURI());
         return Files.readString(path);
     }
 
@@ -102,10 +102,10 @@ class CatalogDaoTest
         Catalog originalCatalog = factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
 
         // Save the catalog
-        catalogDao.saveCatalog(originalCatalog);
+        postgresDao.saveCatalog(originalCatalog);
 
         // Load the catalog
-        Catalog loadedCatalog = catalogDao.loadCatalog(catalogId);
+        Catalog loadedCatalog = postgresDao.loadCatalog(catalogId);
 
         // Verify basic properties
         assertNotNull(loadedCatalog);
@@ -126,8 +126,8 @@ class CatalogDaoTest
         // Note: Would need a way to set URI - this depends on catalog implementation
         // For now, test without URI
 
-        catalogDao.saveCatalog(originalCatalog);
-        Catalog loadedCatalog = catalogDao.loadCatalog(catalogId);
+        postgresDao.saveCatalog(originalCatalog);
+        Catalog loadedCatalog = postgresDao.loadCatalog(catalogId);
 
         assertNotNull(loadedCatalog);
         assertEquals(originalCatalog.globalId(), loadedCatalog.globalId());
@@ -141,14 +141,14 @@ class CatalogDaoTest
         // Create upstream catalog first
         UUID upstreamId = UUID.randomUUID();
         Catalog upstreamCatalog = factory.createCatalog(upstreamId, CatalogSpecies.SOURCE, null, null, 0L);
-        catalogDao.saveCatalog(upstreamCatalog);
+        postgresDao.saveCatalog(upstreamCatalog);
 
         // Create derived catalog
         UUID catalogId = UUID.randomUUID();
         Catalog originalCatalog = factory.createCatalog(catalogId, CatalogSpecies.MIRROR, null, upstreamId, 0L);
 
-        catalogDao.saveCatalog(originalCatalog);
-        Catalog loadedCatalog = catalogDao.loadCatalog(catalogId);
+        postgresDao.saveCatalog(originalCatalog);
+        Catalog loadedCatalog = postgresDao.loadCatalog(catalogId);
 
         assertNotNull(loadedCatalog);
         assertEquals(originalCatalog.globalId(), loadedCatalog.globalId());
@@ -174,8 +174,8 @@ class CatalogDaoTest
         // Extend catalog with aspect def
         originalCatalog.extend(personAspectDef);
 
-        catalogDao.saveCatalog(originalCatalog);
-        Catalog loadedCatalog = catalogDao.loadCatalog(catalogId);
+        postgresDao.saveCatalog(originalCatalog);
+        Catalog loadedCatalog = postgresDao.loadCatalog(catalogId);
 
         assertNotNull(loadedCatalog);
         assertEquals(originalCatalog.globalId(), loadedCatalog.globalId());
@@ -219,8 +219,8 @@ class CatalogDaoTest
         originalCatalog.addHierarchy(hierarchy);
 
         // Save and load
-        catalogDao.saveCatalog(originalCatalog);
-        Catalog loadedCatalog = catalogDao.loadCatalog(catalogId);
+        postgresDao.saveCatalog(originalCatalog);
+        Catalog loadedCatalog = postgresDao.loadCatalog(catalogId);
 
         assertNotNull(loadedCatalog);
 
@@ -265,8 +265,8 @@ class CatalogDaoTest
         originalCatalog.addHierarchy(hierarchy);
 
         // Save and load
-        catalogDao.saveCatalog(originalCatalog);
-        Catalog loadedCatalog = catalogDao.loadCatalog(catalogId);
+        postgresDao.saveCatalog(originalCatalog);
+        Catalog loadedCatalog = postgresDao.loadCatalog(catalogId);
 
         assertNotNull(loadedCatalog);
 
@@ -310,8 +310,8 @@ class CatalogDaoTest
         // Note: AspectMapHierarchy is automatically added to catalog when created
 
         // Save and load
-        catalogDao.saveCatalog(originalCatalog);
-        Catalog loadedCatalog = catalogDao.loadCatalog(catalogId);
+        postgresDao.saveCatalog(originalCatalog);
+        Catalog loadedCatalog = postgresDao.loadCatalog(catalogId);
 
         assertNotNull(loadedCatalog);
 
@@ -347,18 +347,18 @@ class CatalogDaoTest
         // Create and save catalog
         UUID catalogId = UUID.randomUUID();
         Catalog catalog = factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
-        catalogDao.saveCatalog(catalog);
+        postgresDao.saveCatalog(catalog);
 
         // Verify it exists
-        assertTrue(catalogDao.catalogExists(catalogId));
+        assertTrue(postgresDao.catalogExists(catalogId));
 
         // Delete it
-        boolean deleted = catalogDao.deleteCatalog(catalogId);
+        boolean deleted = postgresDao.deleteCatalog(catalogId);
         assertTrue(deleted);
 
         // Verify it no longer exists
-        assertFalse(catalogDao.catalogExists(catalogId));
-        assertNull(catalogDao.loadCatalog(catalogId));
+        assertFalse(postgresDao.catalogExists(catalogId));
+        assertNull(postgresDao.loadCatalog(catalogId));
     }
 
     @Test
@@ -369,7 +369,7 @@ class CatalogDaoTest
         UUID nonExistentId = UUID.randomUUID();
 
         // Delete non-existent catalog
-        boolean deleted = catalogDao.deleteCatalog(nonExistentId);
+        boolean deleted = postgresDao.deleteCatalog(nonExistentId);
         assertFalse(deleted);
     }
 
@@ -381,14 +381,14 @@ class CatalogDaoTest
         UUID catalogId = UUID.randomUUID();
 
         // Should not exist initially
-        assertFalse(catalogDao.catalogExists(catalogId));
+        assertFalse(postgresDao.catalogExists(catalogId));
 
         // Create and save catalog
         Catalog catalog = factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
-        catalogDao.saveCatalog(catalog);
+        postgresDao.saveCatalog(catalog);
 
         // Should exist now
-        assertTrue(catalogDao.catalogExists(catalogId));
+        assertTrue(postgresDao.catalogExists(catalogId));
     }
 
     @Test
@@ -397,7 +397,7 @@ class CatalogDaoTest
         setUp();
 
         UUID nonExistentId = UUID.randomUUID();
-        Catalog catalog = catalogDao.loadCatalog(nonExistentId);
+        Catalog catalog = postgresDao.loadCatalog(nonExistentId);
         assertNull(catalog);
     }
 
@@ -408,7 +408,7 @@ class CatalogDaoTest
         setUp();
 
         assertThrows(IllegalArgumentException.class, () -> {
-            catalogDao.saveCatalog(null);
+            postgresDao.saveCatalog(null);
         });
     }
 
@@ -425,8 +425,8 @@ class CatalogDaoTest
         Catalog catalog = factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
 
         // Save should succeed
-        assertDoesNotThrow(() -> catalogDao.saveCatalog(catalog));
-        assertTrue(catalogDao.catalogExists(catalogId));
+        assertDoesNotThrow(() -> postgresDao.saveCatalog(catalog));
+        assertTrue(postgresDao.catalogExists(catalogId));
     }
 
     @Test
@@ -476,8 +476,8 @@ class CatalogDaoTest
         originalCatalog.addHierarchy(directory);
 
         // Save and load
-        catalogDao.saveCatalog(originalCatalog);
-        Catalog loadedCatalog = catalogDao.loadCatalog(catalogId);
+        postgresDao.saveCatalog(originalCatalog);
+        Catalog loadedCatalog = postgresDao.loadCatalog(catalogId);
 
         // Verify complex catalog structure
         assertNotNull(loadedCatalog);
@@ -535,7 +535,7 @@ class CatalogDaoTest
         );
 
         // Add mapping to DAO
-        catalogDao.addAspectTableMapping(mapping);
+        postgresDao.addAspectTableMapping(mapping);
 
         // Create catalog with AspectMapHierarchy
         UUID catalogId = UUID.randomUUID();
@@ -575,7 +575,7 @@ class CatalogDaoTest
         }
 
         // Save catalog (should use mapped table for the hierarchy)
-        catalogDao.saveCatalog(catalog);
+        postgresDao.saveCatalog(catalog);
 
         // Verify the data was saved to the mapped table by querying directly
         try (java.sql.Connection conn = dataSource.getConnection();
@@ -654,7 +654,7 @@ class CatalogDaoTest
 
         // Create the table using createAspectTable()
         String tableName = "test_all_types";
-        catalogDao.createAspectTable(aspectDef, tableName);
+        postgresDao.createAspectTable(aspectDef, tableName);
 
         // Create and register an AspectTableMapping
         java.util.Map<String, String> columnMapping = new java.util.LinkedHashMap<>();
@@ -676,7 +676,7 @@ class CatalogDaoTest
             tableName,
             columnMapping
         );
-        catalogDao.addAspectTableMapping(mapping);
+        postgresDao.addAspectTableMapping(mapping);
 
         // Create catalog with AspectMapHierarchy
         UUID catalogId = UUID.randomUUID();
@@ -727,10 +727,10 @@ class CatalogDaoTest
         hierarchy.put(entity2, aspect2);
 
         // Save catalog (should use mapped table for the hierarchy)
-        catalogDao.saveCatalog(catalog);
+        postgresDao.saveCatalog(catalog);
 
         // Load the catalog back
-        Catalog loadedCatalog = catalogDao.loadCatalog(catalogId);
+        Catalog loadedCatalog = postgresDao.loadCatalog(catalogId);
         assertNotNull(loadedCatalog);
 
         // Get the loaded hierarchy

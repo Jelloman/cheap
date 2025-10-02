@@ -22,10 +22,10 @@ class PostgresCheapSchemaTest {
     @Test
     void testAllSchemaExecution() throws SQLException {
         DataSource dataSource = postgres.getEmbeddedPostgres().getPostgresDatabase();
-        CatalogDao catalogDao = new CatalogDao(dataSource);
+        PostgresDao postgresDao = new PostgresDao(dataSource);
 
         // Execute the main schema DDL using CatalogDao
-        catalogDao.executeMainSchemaDdl(dataSource);
+        postgresDao.executeMainSchemaDdl(dataSource);
 
         try (Connection connection = dataSource.getConnection()) {
 
@@ -42,7 +42,7 @@ class PostgresCheapSchemaTest {
         }
 
         // Execute the audit schema DDL using CatalogDao
-        catalogDao.executeAuditSchemaDdl(dataSource);
+        postgresDao.executeAuditSchemaDdl(dataSource);
 
         try (Connection connection = dataSource.getConnection()) {
 
@@ -62,7 +62,7 @@ class PostgresCheapSchemaTest {
         }
 
         // Execute the drop schema DDL using CatalogDao
-        catalogDao.executeDropSchemaDdl(dataSource);
+        postgresDao.executeDropSchemaDdl(dataSource);
 
         try (Connection connection = dataSource.getConnection()) {
 
@@ -113,10 +113,10 @@ class PostgresCheapSchemaTest {
     @Test
     void testTruncateAllTables() throws SQLException {
         DataSource dataSource = postgres.getEmbeddedPostgres().getPostgresDatabase();
-        CatalogDao catalogDao = new CatalogDao(dataSource);
+        PostgresDao postgresDao = new PostgresDao(dataSource);
 
         // Execute the main schema DDL
-        catalogDao.executeMainSchemaDdl(dataSource);
+        postgresDao.executeMainSchemaDdl(dataSource);
 
         try (Connection conn = dataSource.getConnection()) {
             // Populate all tables with at least 1 row
@@ -202,7 +202,7 @@ class PostgresCheapSchemaTest {
             assertTrue(getRowCount(conn, "hierarchy_aspect_map") >= 1, "hierarchy_aspect_map should have at least 1 row");
 
             // Execute truncate script
-            catalogDao.executeTruncateSchemaDdl(dataSource);
+            postgresDao.executeTruncateSchemaDdl(dataSource);
 
             // Verify all tables are empty
             assertEquals(0, getRowCount(conn, "entity"), "entity should be empty after truncate");

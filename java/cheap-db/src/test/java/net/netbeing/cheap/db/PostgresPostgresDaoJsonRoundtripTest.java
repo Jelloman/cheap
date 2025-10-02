@@ -24,7 +24,7 @@ import java.sql.Statement;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class PostgresCatalogDaoJsonRoundtripTest
+class PostgresPostgresDaoJsonRoundtripTest
 {
     @RegisterExtension
     public static PreparedDbExtension flywayDB = EmbeddedPostgresExtension.preparedDatabase(FlywayPreparer.forClasspathLocation("db/pg"));
@@ -32,7 +32,7 @@ class PostgresCatalogDaoJsonRoundtripTest
     static volatile DataSource dataSource;
     static volatile boolean schemaInitialized = false;
 
-    CatalogDao catalogDao;
+    PostgresDao postgresDao;
     CheapFactory factory;
     ObjectMapper objectMapper;
     CheapJacksonDeserializer deserializer;
@@ -49,7 +49,7 @@ class PostgresCatalogDaoJsonRoundtripTest
         }
 
         factory = new CheapFactory();
-        catalogDao = new CatalogDao(dataSource, factory);
+        postgresDao = new PostgresDao(dataSource, factory);
         objectMapper = new ObjectMapper();
         deserializer = new CheapJacksonDeserializer(factory);
 
@@ -75,7 +75,7 @@ class PostgresCatalogDaoJsonRoundtripTest
     @SuppressWarnings("DataFlowIssue")
     private static String loadResourceFile(String resourcePath) throws IOException, URISyntaxException
     {
-        Path path = Paths.get(PostgresCatalogDaoJsonRoundtripTest.class.getResource(resourcePath).toURI());
+        Path path = Paths.get(PostgresPostgresDaoJsonRoundtripTest.class.getResource(resourcePath).toURI());
         return Files.readString(path);
     }
 
@@ -103,10 +103,10 @@ class PostgresCatalogDaoJsonRoundtripTest
         assertNotNull(catalog);
 
         // Save to database
-        catalogDao.saveCatalog(catalog);
+        postgresDao.saveCatalog(catalog);
 
         // Load back from database
-        Catalog loadedCatalog = catalogDao.loadCatalog(catalog.globalId());
+        Catalog loadedCatalog = postgresDao.loadCatalog(catalog.globalId());
         assertNotNull(loadedCatalog);
 
         // Serialize loaded catalog to JSON

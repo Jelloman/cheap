@@ -7,7 +7,11 @@ import org.jetbrains.annotations.NotNull;
 import javax.sql.DataSource;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
 import java.sql.*;
+import java.time.Instant;
+import java.time.ZonedDateTime;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -18,20 +22,19 @@ import java.util.UUID;
  * to/from a PostgreSQL database using the Cheap schema.
  */
 @SuppressWarnings("DuplicateBranchesInSwitch")
-public class CatalogDao implements CatalogPersistence
+public class PostgresDao implements CatalogPersistence
 {
-
     private final DataSource dataSource;
     private final CheapFactory factory;
     private final Map<String, AspectTableMapping> aspectTableMappings = new LinkedHashMap<>();
 
-    public CatalogDao(@NotNull DataSource dataSource)
+    public PostgresDao(@NotNull DataSource dataSource)
     {
         this.dataSource = dataSource;
         this.factory = new CheapFactory();
     }
 
-    public CatalogDao(@NotNull DataSource dataSource, @NotNull CheapFactory factory)
+    public PostgresDao(@NotNull DataSource dataSource, @NotNull CheapFactory factory)
     {
         this.dataSource = dataSource;
         this.factory = factory;
@@ -112,11 +115,11 @@ public class CatalogDao implements CatalogPersistence
 
     private static String loadDdlResource(String resourcePath) throws SQLException
     {
-        try (var inputStream = CatalogDao.class.getResourceAsStream(resourcePath)) {
+        try (var inputStream = PostgresDao.class.getResourceAsStream(resourcePath)) {
             if (inputStream == null) {
                 throw new SQLException("DDL resource not found: " + resourcePath);
             }
-            return new String(inputStream.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
+            return new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
         } catch (Exception e) {
             throw new SQLException("Failed to load DDL resource: " + resourcePath, e);
         }
@@ -504,7 +507,7 @@ public class CatalogDao implements CatalogPersistence
 
                     for (Map.Entry<String, String> entry : mapping.propertyToColumnMap().entrySet()) {
                         String propName = entry.getKey();
-                        Object value = aspect.unsafeReadObj(propName);
+                        Object value = aspect.readObj(propName);
 
                         PropertyDef propDef = aspect.def().propertyDef(propName);
                         if (propDef != null) {
@@ -540,7 +543,7 @@ public class CatalogDao implements CatalogPersistence
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             for (PropertyDef propDef : aspectDef.propertyDefs()) {
                 String propName = propDef.name();
-                Object value = aspect.unsafeReadObj(propName);
+                Object value = aspect.readObj(propName);
 
                 stmt.setObject(1, entityId);
                 stmt.setObject(2, aspectDefId);
@@ -573,12 +576,11 @@ public class CatalogDao implements CatalogPersistence
                             stmt.setBoolean(8, (Boolean) value);
                         }
                         case DateTime -> {
-                            if (value instanceof java.sql.Timestamp) {
-                                stmt.setTimestamp(9, (java.sql.Timestamp) value);
-                            } else if (value instanceof java.util.Date) {
-                                stmt.setTimestamp(9, new java.sql.Timestamp(((java.util.Date) value).getTime()));
-                            } else if (value instanceof java.time.Instant) {
-                                stmt.setTimestamp(9, java.sql.Timestamp.from((java.time.Instant) value));
+                            switch (value) {
+                                case Timestamp timestamp -> stmt.setTimestamp(9, timestamp);
+                                case Date date -> stmt.setTimestamp(9, new Timestamp(date.getTime()));
+                                case Instant instant -> stmt.setTimestamp(9, Timestamp.from(instant));
+                                default -> throw new IllegalStateException("Unexpected value class for DateTime: " + value.getClass());
                             }
                         }
                         case BLOB -> {
@@ -1035,7 +1037,7 @@ public class CatalogDao implements CatalogPersistence
             aspectDef = factory.createImmutableAspectDef(aspectDefName, propertyDefMap);
         } else {
             // Mixed mutability - use FullAspectDefImpl
-            aspectDef = factory.createFullAspectDef(aspectDefName, java.util.UUID.randomUUID(), propertyDefMap,
+            aspectDef = factory.createFullAspectDef(aspectDefName, UUID.randomUUID(), propertyDefMap,
                 isReadable, isWritable, canAddProperties, canRemoveProperties);
         }
 
@@ -1166,17 +1168,17 @@ public class CatalogDao implements CatalogPersistence
             case DateTime -> {
                 if (value instanceof Timestamp) {
                     stmt.setTimestamp(paramIndex, (Timestamp) value);
-                } else if (value instanceof java.time.ZonedDateTime) {
-                    stmt.setTimestamp(paramIndex, Timestamp.from(((java.time.ZonedDateTime) value).toInstant()));
-                } else if (value instanceof java.time.Instant) {
-                    stmt.setTimestamp(paramIndex, Timestamp.from((java.time.Instant) value));
-                } else if (value instanceof java.util.Date) {
-                    stmt.setTimestamp(paramIndex, new Timestamp(((java.util.Date) value).getTime()));
+                } else if (value instanceof ZonedDateTime) {
+                    stmt.setTimestamp(paramIndex, Timestamp.from(((ZonedDateTime) value).toInstant()));
+                } else if (value instanceof Instant) {
+                    stmt.setTimestamp(paramIndex, Timestamp.from((Instant) value));
+                } else if (value instanceof Date) {
+                    stmt.setTimestamp(paramIndex, new Timestamp(((Date) value).getTime()));
                 } else {
                     stmt.setTimestamp(paramIndex, Timestamp.valueOf(value.toString()));
                 }
             }
-            case UUID -> stmt.setObject(paramIndex, value instanceof java.util.UUID ? value : java.util.UUID.fromString(value.toString()));
+            case UUID -> stmt.setObject(paramIndex, value instanceof UUID ? value : UUID.fromString(value.toString()));
             case BLOB -> stmt.setBytes(paramIndex, (byte[]) value);
             default -> stmt.setString(paramIndex, value.toString());
         }
