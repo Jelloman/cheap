@@ -8,19 +8,14 @@ import java.sql.*;
 import java.util.*;
 import javax.sql.DataSource;
 import java.sql.SQLDataException;
-import java.util.Date;
 
 import static java.util.Map.entry;
 
-public class PostgresCatalog extends CatalogImpl
+public class PostgresCatalog extends JdbcCatalogBase
 {
-    protected final List<String> tables = new LinkedList<>();
-    protected final Map<String, AspectDef> tableAspects = new LinkedHashMap<>();
-    protected DataSource dataSource;
-    
-    public PostgresCatalog(@NotNull DataSource dataSource) {
-        this.dataSource = dataSource;
-        loadTables();
+    public PostgresCatalog(@NotNull DataSource dataSource)
+    {
+        super(dataSource);
     }
     
     private static final Map<String, PropertyType> POSTGRES_TO_PROPERTY_TYPE = Map.<String, PropertyType>ofEntries(
@@ -132,191 +127,96 @@ public class PostgresCatalog extends CatalogImpl
         entry("XML", PropertyType.Text)
     );
 
-    private void loadTables() {
+    @Override
+    protected void loadTables()
+    {
         try (Connection connection = dataSource.getConnection();
              PreparedStatement statement = connection.prepareStatement(
                  "SELECT table_name FROM information_schema.tables " +
                  "WHERE table_schema = 'public' AND table_type = 'BASE TABLE'");
              ResultSet resultSet = statement.executeQuery()) {
-            
+
             while (resultSet.next()) {
                 tables.add(resultSet.getString("table_name"));
             }
-            
+
         } catch (SQLException e) {
             throw new RuntimeException("Failed to load tables from PostgreSQL database", e);
         }
     }
 
-    public AspectDef getTableDef(String tableName)
+    @Override
+    protected String getSchemaName()
     {
-        AspectDef def = tableAspects.get(tableName);
-        if (def != null) {
-            return def;
-        }
-        return loadTableDef(tableName);
+        return "public";
     }
 
-    public AspectDef loadTableDef(String tableName)
+    @Override
+    protected Entity createEntity()
     {
-        if (dataSource == null) {
-            throw new IllegalStateException("DataSource not set. Use constructor with DataSource to initialize the catalog.");
-        }
-        
-        MutableAspectDefImpl aspectDef = new MutableAspectDefImpl(tableName);
-        
-        try (Connection connection = dataSource.getConnection()) {
-            DatabaseMetaData metaData = connection.getMetaData();
-            
-            try (ResultSet columns = metaData.getColumns(null, "public", tableName, null)) {
-                while (columns.next()) {
-                    String columnName = columns.getString("COLUMN_NAME");
-                    String postgresTypeName = columns.getString("TYPE_NAME").toUpperCase();
-                    boolean isNullable = columns.getInt("NULLABLE") == DatabaseMetaData.columnNullable;
-                    
-                    PropertyType propertyType = mapPostgresTypeToPropertyType(postgresTypeName);
-                    PropertyDefImpl propertyDef = new PropertyDefImpl(columnName, propertyType, true, true, isNullable, true, false);
-                    
-                    aspectDef.add(propertyDef);
-                }
-            }
-            
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to load table definition for table: " + tableName, e);
-        }
-
-        tableAspects.put(tableName, aspectDef);
-        
-        return aspectDef;
+        return new EntityImpl();
     }
-    
-    private PropertyType mapPostgresTypeToPropertyType(String postgresType)
+
+    @Override
+    protected PropertyType mapDbTypeToPropertyType(String dbTypeName)
     {
-        PropertyType propertyType = POSTGRES_TO_PROPERTY_TYPE.get(postgresType);
+        PropertyType propertyType = POSTGRES_TO_PROPERTY_TYPE.get(dbTypeName);
         if (propertyType != null) {
             return propertyType;
         }
-        
+
         // Handle parameterized types like VARCHAR(50) by extracting base type
-        String baseType = postgresType.split("\\(")[0].trim();
+        String baseType = extractBaseType(dbTypeName);
         propertyType = POSTGRES_TO_PROPERTY_TYPE.get(baseType);
-        
+
         // Handle array types like INTEGER[]
         if (baseType.endsWith("[]")) {
             return PropertyType.Text; // Arrays mapped to Text for now
         }
-        
+
         // Default to Text type if no mapping found
         return propertyType != null ? propertyType : PropertyType.Text;
     }
 
-    public AspectMapHierarchy loadTable(String tableName, int maxRows)
-    {
-        if (dataSource == null) {
-            throw new IllegalStateException("DataSource not set. Use constructor with DataSource to initialize the catalog.");
-        }
-        
-        AspectDef aspectDef = getTableDef(tableName);
-        AspectMapHierarchyImpl hierarchy = new AspectMapHierarchyImpl(this, aspectDef);
-
-        String query = "SELECT * FROM " + tableName;
-        if (maxRows >= 0) {
-            query += " LIMIT " + maxRows;
-        }
-        
-        try (Connection connection = dataSource.getConnection();
-             Statement statement = connection.createStatement();
-             ResultSet resultSet = statement.executeQuery(query)) {
-            
-            ResultSetMetaData metaData = resultSet.getMetaData();
-            int columnCount = metaData.getColumnCount();
-            
-            while (resultSet.next()) {
-                Entity entity = new EntityImpl();
-                AspectPropertyMapImpl aspect = new AspectPropertyMapImpl(entity, aspectDef);
-                
-                // Create properties for each column
-                for (int i = 1; i <= columnCount; i++) {
-                    String columnName = metaData.getColumnLabel(i);
-                    Object value = resultSet.getObject(i);
-                    
-                    PropertyDef propDef = aspectDef.propertyDef(columnName);
-                    if (propDef != null) {
-                        PropertyImpl property = new PropertyImpl(propDef, convertValue(value, propDef.type()));
-                        aspect.unsafeAdd(property);
-                    }
-                }
-                
-                hierarchy.put(entity, aspect);
-            }
-            
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to load table data for table: " + tableName, e);
-        }
-
-        return hierarchy;
-    }
-    
-    private Object convertValue(Object value, PropertyType expectedType) throws SQLDataException
+    @Override
+    protected Object convertValue(Object value, PropertyType expectedType)
     {
         if (value == null) {
             return null;
         }
-        
-        // Convert based on expected PropertyType
-        switch (expectedType) {
-            case Integer:
-                return switch (value) {
-                    case Number n -> n.longValue();
-                    case String s -> Long.valueOf(s);
-                    default -> throw new SQLDataException("Expected Long type but found " + value.getClass());
-                };
-            case Float:
-                return switch (value) {
-                    case Number n -> n.doubleValue();
-                    case String s -> Double.valueOf(s);
-                    default -> throw new SQLDataException("Expected Double type but found " + value.getClass());
-                };
-            case Boolean:
-                return switch (value) {
-                    case Boolean b -> value;
-                    case Number n -> n.intValue() != 0;
-                    case String s -> Boolean.valueOf(s);
-                    default -> throw new SQLDataException("Expected Boolean type but found " + value.getClass());
-                };
-            case UUID:
-                if (value instanceof UUID) {
-                    return value;
-                }
-                break;
-            case DateTime:
-                if (value instanceof java.sql.Date) {
-                    return ((java.sql.Date)value).toLocalDate().toString();
-                } else if (value instanceof Date) {
-                    return ((Date)value).toInstant().toString();
-                }
-                break;
-            case String:
-            case Text:
-            case BigInteger:
-            case URI:
-                return value.toString();
-            case BLOB:
-            case CLOB:
-                // For now, return raw value - could be enhanced with streaming support
-                return value;
-        }
-        
-        return value;
-    }
 
-    public List<String> getTables()
-    {
-        return new LinkedList<>(tables);
-    }
-    
-    public DataSource getDataSource()
-    {
-        return dataSource;
+        // Handle PostgreSQL-specific type conversions, fall back to base implementation
+        try {
+            switch (expectedType) {
+                case Integer:
+                    if (value instanceof Number n) {
+                        return n.longValue();
+                    } else if (value instanceof String s) {
+                        return Long.valueOf(s);
+                    }
+                    throw new SQLDataException("Expected Long type but found " + value.getClass());
+                case Float:
+                    if (value instanceof Number n) {
+                        return n.doubleValue();
+                    } else if (value instanceof String s) {
+                        return Double.valueOf(s);
+                    }
+                    throw new SQLDataException("Expected Double type but found " + value.getClass());
+                case Boolean:
+                    if (value instanceof Boolean b) {
+                        return value;
+                    } else if (value instanceof Number n) {
+                        return n.intValue() != 0;
+                    } else if (value instanceof String s) {
+                        return Boolean.valueOf(s);
+                    }
+                    throw new SQLDataException("Expected Boolean type but found " + value.getClass());
+                default:
+                    // Use base implementation for other types
+                    return super.convertValue(value, expectedType);
+            }
+        } catch (SQLDataException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

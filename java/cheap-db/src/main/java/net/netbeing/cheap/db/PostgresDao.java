@@ -576,12 +576,7 @@ public class PostgresDao implements CatalogPersistence
                             stmt.setBoolean(8, (Boolean) value);
                         }
                         case DateTime -> {
-                            switch (value) {
-                                case Timestamp timestamp -> stmt.setTimestamp(9, timestamp);
-                                case Date date -> stmt.setTimestamp(9, new Timestamp(date.getTime()));
-                                case Instant instant -> stmt.setTimestamp(9, Timestamp.from(instant));
-                                default -> throw new IllegalStateException("Unexpected value class for DateTime: " + value.getClass());
-                            }
+                            stmt.setTimestamp(9, convertToTimestamp(value));
                         }
                         case BLOB -> {
                             stmt.setBytes(10, (byte[]) value);
@@ -1078,7 +1073,11 @@ public class PostgresDao implements CatalogPersistence
         }
     }
 
-    // Helper methods for ID lookups
+    // ===== Helper Methods =====
+
+    /**
+     * Looks up the UUID for an AspectDef by name.
+     */
     private UUID getAspectDefId(Connection conn, String name) throws SQLException
     {
         String sql = "SELECT aspect_def_id FROM aspect_def WHERE name = ?";
@@ -1093,7 +1092,11 @@ public class PostgresDao implements CatalogPersistence
         throw new SQLException("AspectDef not found: " + name);
     }
 
-    // Type mapping helper methods
+    // ===== Type Mapping Methods =====
+
+    /**
+     * Maps a PropertyType to the internal 3-letter database type code.
+     */
     private String mapPropertyTypeToDbType(PropertyType type)
     {
         return switch (type) {
@@ -1112,6 +1115,9 @@ public class PostgresDao implements CatalogPersistence
         };
     }
 
+    /**
+     * Maps a database type code to the corresponding PropertyType.
+     */
     private PropertyType mapDbTypeToPropertyType(String dbType)
     {
         return switch (dbType) {
@@ -1131,6 +1137,9 @@ public class PostgresDao implements CatalogPersistence
         };
     }
 
+    /**
+     * Maps a HierarchyType to the internal 2-letter database type code.
+     */
     private String mapHierarchyTypeToDbType(HierarchyType type)
     {
         return switch (type) {
@@ -1142,8 +1151,9 @@ public class PostgresDao implements CatalogPersistence
         };
     }
 
-    // ===== Static DDL Execution Methods =====
-
+    /**
+     * Maps a database type code to the corresponding HierarchyType.
+     */
     private HierarchyType mapDbTypeToHierarchyType(String dbType)
     {
         return switch (dbType) {
@@ -1156,6 +1166,31 @@ public class PostgresDao implements CatalogPersistence
         };
     }
 
+    // ===== Value Conversion Methods =====
+
+    /**
+     * Converts a DateTime value to a Timestamp for database storage.
+     * Handles various date/time types including Timestamp, Date, Instant, and ZonedDateTime.
+     *
+     * @param value the date/time value
+     * @return a Timestamp suitable for database storage
+     * @throws IllegalStateException if the value type is not supported
+     */
+    private Timestamp convertToTimestamp(Object value)
+    {
+        return switch (value) {
+            case Timestamp timestamp -> timestamp;
+            case Date date -> new Timestamp(date.getTime());
+            case Instant instant -> Timestamp.from(instant);
+            case ZonedDateTime zonedDateTime -> Timestamp.from(zonedDateTime.toInstant());
+            default -> throw new IllegalStateException("Unexpected value class for DateTime: " + value.getClass());
+        };
+    }
+
+    /**
+     * Sets a property value in a PreparedStatement, handling type conversions.
+     * Used when saving aspects to custom mapped tables.
+     */
     private void setPropertyValue(PreparedStatement stmt, int paramIndex, Object value, PropertyType type) throws SQLException
     {
         if (value == null) {
@@ -1167,25 +1202,17 @@ public class PostgresDao implements CatalogPersistence
             case Integer -> stmt.setLong(paramIndex, ((Number) value).longValue());
             case Float -> stmt.setDouble(paramIndex, ((Number) value).doubleValue());
             case Boolean -> stmt.setBoolean(paramIndex, (Boolean) value);
-            case DateTime -> {
-                if (value instanceof Timestamp) {
-                    stmt.setTimestamp(paramIndex, (Timestamp) value);
-                } else if (value instanceof ZonedDateTime) {
-                    stmt.setTimestamp(paramIndex, Timestamp.from(((ZonedDateTime) value).toInstant()));
-                } else if (value instanceof Instant) {
-                    stmt.setTimestamp(paramIndex, Timestamp.from((Instant) value));
-                } else if (value instanceof Date) {
-                    stmt.setTimestamp(paramIndex, new Timestamp(((Date) value).getTime()));
-                } else {
-                    stmt.setTimestamp(paramIndex, Timestamp.valueOf(value.toString()));
-                }
-            }
+            case DateTime -> stmt.setTimestamp(paramIndex, convertToTimestamp(value));
             case UUID -> stmt.setObject(paramIndex, value instanceof UUID ? value : UUID.fromString(value.toString()));
             case BLOB -> stmt.setBytes(paramIndex, (byte[]) value);
             default -> stmt.setString(paramIndex, value.toString());
         }
     }
 
+    /**
+     * Extracts a property value from a ResultSet based on the PropertyType.
+     * Used when loading aspects from the default property_value table.
+     */
     private Object extractValueFromResultSet(ResultSet rs, PropertyType type) throws SQLException
     {
         return switch (type) {
@@ -1197,6 +1224,8 @@ public class PostgresDao implements CatalogPersistence
             default -> rs.getString("value_text");
         };
     }
+
+    // ===== Static DDL Execution Methods =====
 
     /**
      * Executes the main Cheap schema DDL script to create all core tables and indexes.
