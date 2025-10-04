@@ -10,6 +10,9 @@ plugins {
     id("io.freefair.lombok") version "8.14.2"
 }
 
+group = "net.netbeing"
+version = "0.1"
+
 repositories {
     // Use Maven Central for resolving dependencies.
     mavenCentral()

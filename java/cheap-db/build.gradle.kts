@@ -1,5 +1,3 @@
-import org.gradle.internal.impldep.org.apache.maven.model.Build
-
 plugins {
     // Apply the java-library plugin for API and implementation separation.
     `java-library`
