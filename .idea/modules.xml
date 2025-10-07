@@ -12,6 +12,7 @@
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/cheap-json/cheap.cheap-json.iml" filepath="$PROJECT_DIR$/.idea/modules/cheap-json/cheap.cheap-json.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/cheap-json/cheap.cheap-json.main.iml" filepath="$PROJECT_DIR$/.idea/modules/cheap-json/cheap.cheap-json.main.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/cheap-json/cheap.cheap-json.test.iml" filepath="$PROJECT_DIR$/.idea/modules/cheap-json/cheap.cheap-json.test.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/cheap.java.cheap.iml" filepath="$PROJECT_DIR$/.idea/modules/cheap.java.cheap.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/java.cheap.iml" filepath="$PROJECT_DIR$/.idea/modules/java.cheap.iml" />
     </modules>
   </component>
