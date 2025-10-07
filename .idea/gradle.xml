@@ -1,18 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="GradleMigrationSettings" migrationVersion="1" />
   <component name="GradleSettings">
     <option name="linkedExternalProjectsSettings">
       <GradleProjectSettings>
-        <option name="externalProjectPath" value="$PROJECT_DIR$/java" />
-        <option name="gradleHome" value="C:\ProgramData\chocolatey\lib\gradle\tools\gradle-9.0.0" />
-        <option name="gradleJvm" value="temurin-24" />
+        <option name="externalProjectPath" value="$PROJECT_DIR$" />
         <option name="modules">
           <set>
-            <option value="$PROJECT_DIR$/java" />
-            <option value="$PROJECT_DIR$/java/cheap-core" />
-            <option value="$PROJECT_DIR$/java/cheap-db" />
-            <option value="$PROJECT_DIR$/java/cheap-json" />
+            <option value="$PROJECT_DIR$" />
+            <option value="$PROJECT_DIR$/cheap-core" />
+            <option value="$PROJECT_DIR$/cheap-db" />
+            <option value="$PROJECT_DIR$/cheap-json" />
           </set>
         </option>
       </GradleProjectSettings>

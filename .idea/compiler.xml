@@ -2,7 +2,6 @@
 <project version="4">
   <component name="CompilerConfiguration">
     <annotationProcessing>
-      <profile default="true" name="Default" enabled="true" />
       <profile name="Gradle Imported" enabled="true">
         <outputRelativeToContentRoot value="true" />
         <processorPath useClasspath="false">
@@ -16,17 +15,7 @@
         <module name="cheap.cheap-json.test" />
       </profile>
     </annotationProcessing>
-    <bytecodeTargetLevel>
-      <module name="cheap.cheap-core" target="24" />
-      <module name="cheap.cheap-core.main" target="24" />
-      <module name="cheap.cheap-core.test" target="24" />
-      <module name="cheap.cheap-db" target="24" />
-      <module name="cheap.cheap-db.main" target="24" />
-      <module name="cheap.cheap-db.test" target="24" />
-      <module name="cheap.cheap-json" target="24" />
-      <module name="cheap.cheap-json.main" target="24" />
-      <module name="cheap.cheap-json.test" target="24" />
-    </bytecodeTargetLevel>
+    <bytecodeTargetLevel target="24" />
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
