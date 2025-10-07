@@ -22,7 +22,6 @@ jobs:
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v5
-        working-directory: ./java
 
       # When cheap-core changes, rebuild everything
       - name: Run gradle build

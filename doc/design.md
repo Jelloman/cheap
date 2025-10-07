@@ -29,10 +29,10 @@ Modules
 | cheap-core | Core Cheap interfaces and basic implementations. Includes filesystem functionality. Minimal dependencies. |
 | cheap-db   | Database connectors and catalog implementations.                                                          |
 | cheap-json | JSON serialization and deserialization of Cheap elements.                                                 |
-| cheap-net  | Networking library, including interop with wire protocols like protobuf and Cap'n Proto/Web.              |
-| cheapd     | Service to provide access to a set of catalogs through standard REST APIs or other protocols.             |
+| cheap-net* | Networking library, including interop with wire protocols like protobuf and Cap'n Proto/Web.              |
+| cheapd*    | Service to provide access to a set of catalogs through standard REST APIs or other protocols.             |
 
-
+\* planned
 
 
 
