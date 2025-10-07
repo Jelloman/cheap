@@ -21,13 +21,13 @@ jobs:
           java-version: '24'
 
       - name: Setup Gradle
-        working-directory: ./java
         uses: gradle/actions/setup-gradle@v5
+        working-directory: ./java
 
       # When cheap-core changes, rebuild everything
       - name: Run gradle build
-        working-directory: ./java
         run: ./gradlew build
+        working-directory: ./java
 
       - uses: actions/upload-artifact@v4
         with:
@@ -35,4 +35,3 @@ jobs:
             java/*/build/libs/*.jar
             java/*/build/reports/
             java/*/build/test-results/
-            
