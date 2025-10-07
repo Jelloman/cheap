@@ -5,11 +5,11 @@ name: Build Cheap Java
 on:
   push:
     paths:
-      - "java/cheap-core/**"
-      - "java/cheap-json/**"
-      - "java/cheap-db/**"
-      - "java/*.gradle.kts"
-      - "java/gradle/**"
+      - "cheap-core/**"
+      - "cheap-json/**"
+      - "cheap-db/**"
+      - "*.gradle.kts"
+      - "gradle/**"
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -26,11 +26,10 @@ jobs:
       # When cheap-core changes, rebuild everything
       - name: Run gradle build
         run: ./gradlew build
-        working-directory: ./java
 
       - uses: actions/upload-artifact@v4
         with:
           path: |
-            java/*/build/libs/*.jar
-            java/*/build/reports/
-            java/*/build/test-results/
+            */build/libs/*.jar
+            */build/reports/
+            */build/test-results/
