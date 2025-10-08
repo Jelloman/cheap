@@ -2,10 +2,9 @@ Cheap Design Notes
 ==================
 
 Cheap is a data caching system and metadata model. Its design is focused on flexible and performant modeling and
-usage of a wide variety of data sources and sinks.
+usage of a wide variety of data sources and sinks, and also automated schema translation and mapping.
 Cheap is NOT a database. All Cheap data is held in catalogs, and all Cheap Catalogs are caches or working copies
 of external data (or other Catalogs).
-
 The best analogy for understanding Cheap is **git**. Cheap is a git-like mechanism for structured data and objects. 
 
 | Tier          | RDBMS equivalent | Filesystem equivalent                 |
@@ -16,11 +15,22 @@ The best analogy for understanding Cheap is **git**. Cheap is a git-like mechani
 | A - Aspect    | Row              | File or element attributes or content |
 | P - Property  | Column           | Single attribute or content atom      |
 
+Purpose
+-------
+I'm building Cheap primarily to serve as the data layer for a featureful desktop/web application for
+interacting with and managing disparate data sources. I expect it will be useful for many other purposes.
 
-Cheap does not dictate patterns of network communication or other external resource access.
-Cheap offers utility functions and callback mechanisms to allow applications to use it in conjunction with databases,
-filesystems, etc. but it does not mandate their usage.
-Cheap is not concerned with access control, but tries to be flexible enough to accommodate fine-grained access control.
+
+**WORK IN PROGRESS**
+--------------------
+Cheap is a work in progress. I'll add a roadmap soon, for now here are the broad strokes of a plan:
+* cheap-net and cheapd modules (see [Modules](#modules) below)
+* TypeScript port
+* Python port
+* MySQL/MariaDB integration
+* protobuf, capnproto and flatbuffers support (read, write, schema translation) 
+* Catalog-based task management and logging for current AND past read and write jobs to the upstream/source.
+
 
 Modules
 -------
@@ -29,11 +39,10 @@ Modules
 | cheap-core | Core Cheap interfaces and basic implementations. Includes filesystem functionality. Minimal dependencies. |
 | cheap-db   | Database connectors and catalog implementations.                                                          |
 | cheap-json | JSON serialization and deserialization of Cheap elements.                                                 |
-| cheap-net* | Networking library, including interop with wire protocols like protobuf and Cap'n Proto/Web.              |
+| cheap-net* | Networking library, including interop with wire protocols like protobuf, flatbuffers and Cap'n Proto/Web. |
 | cheapd*    | Service to provide access to a set of catalogs through standard REST APIs or other protocols.             |
 
 \* planned
-
 
 
 CATALOGS
@@ -116,15 +125,17 @@ PROPERTIES
 | Float      | FLT       | Double        | 64-bit floating-point values (double precision).                            |
 | Boolean    | BLN       | Boolean       | Boolean values supporting true, false, or null states.                      |
 | String     | STR       | String        | String values with length limited to 8192 characters, processed atomically. |
-| Text       | TXT       | String        | Text values with unlimited length, processed atomically.                    |
+| Text       | TXT       | String*       | Text values with unlimited length, processed atomically.                    |
 | BigInteger | BGI       | BigInteger    | Arbitrary precision integer values with unlimited size.                     |
 | BigDecimal | BGF       | BigDecimal    | Arbitrary precision floating-point values with unlimited size.              |
 | DateTime   | DAT       | ZonedDateTime | Date and time values, usually stored as ISO-8601 formatted strings.         |
 | URI        | URI       | URI           | Uniform Resource Identifier values following RFC 3986 specification.        |
 | UUID       | UID       | UUID          | Universally Unique Identifier values following RFC 4122 specification.      |
-| CLOB       | CLB       | String        | Character Large Object (CLOB) for streaming text data.                      |
-| BLOB       | BLB       | byte[]        | Binary Large Object (BLOB) for streaming binary data.                       |
+| CLOB       | CLB       | String*       | Character Large Object (CLOB) for streaming text data.                      |
+| BLOB       | BLB       | byte[]*       | Binary Large Object (BLOB) for streaming binary data.                       |
 
+\* Cheap will provide streaming mechanisms to read and write Text,CLOB and BLOB properties
+(and multivalued properties of any type) in fixed-sized chunks.
 
 
 Identity in Cheap
@@ -132,17 +143,17 @@ Identity in Cheap
 
 ### Global IDs
 * Catalogs and AspectDefs always have a global UUID.
-* AspectDefs also have a name that should be globally unique and use reverse domain name notation.
-* Entities almost always have a UUID.
-  * Local Entities can be used to lazily generate UUIDs for performance reasons.
+* AspectDefs also have a name that should be globally unique, preferably using reverse domain name notation.
+* Entities have a UUID, and are, in fact, nothing but a UUID.
+  * Local Entity objects can be used to lazily generate UUIDs for performance reasons.
 * Catalogs usually have a URL.
-  * All Cheap elements within such Catalogs (4 tiers, 4 Defs) are addressable via URLs.
+  * All Cheap elements within such Catalogs are addressable via URLs.
 * Hierarchies are owned by a single Catalog and do not have a global ID.
   * They must have a unique name within their catalog.
 * PropertyDefs are owned by a single AspectDef and do not have a global ID.
   * They must have a unique name within their AspectDef.
 * Properties are owned by an Aspect and do not have a global ID.
-  * They must have a unique name within their Aspect.
+  * They must have a unique name within their Aspect, which matches the PropertyDef.
 
 ### Versions
 * CatalogDefs, HierarchyDefs and AspectDefs have an implicit hash version.
@@ -166,12 +177,19 @@ Identity in Cheap
 Serialization and Persistence
 -----------------------------
 * Serialization (S11N) and persistence of Cheap Catalogs has some constraints:
-  * PropertyDefs may only be contained in an AspectDef.
-  * Aspects may only be contained in an AspectMapHierarchy.
-  * AspectDefs must be serialized before any Aspects.
-* These constraints do not apply to smaller atoms of persistence, i.e., JSON representing a single Aspect only.
-* HierarchyDefs may only be contained in a CatalogDef.
-  * Both types of elements are purely informational and do not reside in Catalogs.
+  * PropertyDefs have no global ID and must be contained in an AspectDef.
+  * Aspects are always stored in an AspectMapHierarchy.
+    * Any other Aspect access methods (Entities and Hierarchies) are for convenience and not meant to be persisted.
+  * AspectDefs must be serialized/persisted before any Aspects.
+* These constraints do not apply to smaller atoms of S11N, i.e., JSON representing a single Aspect only.
+* HierarchyDefs have no global ID and must be contained in a CatalogDef.
+  * Both types of elements are purely informational and are stored as Aspects only.
 
+Principles
+----------
+* Cheap does not dictate patterns of network communication or other external resource access.
+* Cheap offers utility functions and callback mechanisms to allow applications to use it in conjunction with databases,
+filesystems, etc. but it does not mandate their usage.
+* Cheap is not concerned with access control, but tries to be flexible enough to accommodate fine-grained access control.
 
 
