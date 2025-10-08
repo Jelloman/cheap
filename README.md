@@ -3,8 +3,10 @@ Cheap Design Notes
 
 Cheap is a data caching system and metadata model. Its design is focused on flexible and performant modeling and
 usage of a wide variety of data sources and sinks, and also automated schema translation and mapping.
+
 Cheap is NOT a database. All Cheap data is held in catalogs, and all Cheap Catalogs are caches or working copies
 of external data (or other Catalogs).
+
 The best analogy for understanding Cheap is **git**. Cheap is a git-like mechanism for structured data and objects. 
 
 | Tier          | RDBMS equivalent | Filesystem equivalent                 |
@@ -24,10 +26,14 @@ interacting with and managing disparate data sources. I expect it will be useful
 **WORK IN PROGRESS**
 --------------------
 Cheap is a work in progress. I'll add a roadmap soon, for now here are the broad strokes of a plan:
+* Standard AspectDefs provided by Cheap, including CatalogDef and HierarchyDef
+* MySQL/MariaDB support
 * cheap-net and cheapd modules (see [Modules](#modules) below)
+* Convenience Hierarchy types, such as an AspectTree that marries an EntityTree and AspectMap to
+  provide tree-based access to a specific Aspect type.
 * TypeScript port
 * Python port
-* MySQL/MariaDB integration
+* Maybe C++ and/or Rust ports
 * protobuf, capnproto and flatbuffers support (read, write, schema translation) 
 * Catalog-based task management and logging for current AND past read and write jobs to the upstream/source.
 
