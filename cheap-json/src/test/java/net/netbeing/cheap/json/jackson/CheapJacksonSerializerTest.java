@@ -24,13 +24,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * Tests the Jackson-based serializer against the raw serializer to ensure
  * equivalent functionality.
  */
-@SuppressWarnings("MismatchedQueryAndUpdateOfCollection")
+@SuppressWarnings({"MismatchedQueryAndUpdateOfCollection", "ConstantValue"})
 public class CheapJacksonSerializerTest
 {
     private static final UUID CATALOG_ID = UUID.fromString("550e8400-e29b-41d4-a716-444444444444");
 
-    private static final boolean WRITE_OUTPUT = true;
-    private static final String WRITE_OUTPUT_PATH = "D:\\src\\tmp";
+    private static final String WRITE_OUTPUT_PATH = null;
 
     private static CatalogImpl createTestCatalog()
     {
@@ -58,7 +57,9 @@ public class CheapJacksonSerializerTest
         CatalogImpl catalog = setupSimpleCatalog();
 
         String jacksonResult = CheapJacksonSerializer.toJson(catalog, true);
-        Files.writeString(Paths.get("D:\\src\\tmp", "simple-catalog.json"), jacksonResult, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+        if (WRITE_OUTPUT_PATH != null)
+            Files.writeString(Paths.get(WRITE_OUTPUT_PATH, "simple-catalog.json"), jacksonResult, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+
         String expectedJson = loadExpectedJson("simple-catalog.json");
 
         assertEquals(expectedJson, jacksonResult);
@@ -70,7 +71,8 @@ public class CheapJacksonSerializerTest
         CatalogImpl catalog = setupSimpleCatalog();
 
         String jacksonResult = CheapJacksonSerializer.toJson(catalog, false);
-        Files.writeString(Paths.get("D:\\src\\tmp", "simple-catalog-compact.json"), jacksonResult, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+        if (WRITE_OUTPUT_PATH != null)
+            Files.writeString(Paths.get(WRITE_OUTPUT_PATH, "simple-catalog-compact.json"), jacksonResult, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
         String expectedJson = loadExpectedJson("simple-catalog-compact.json");
 
         assertEquals(expectedJson, jacksonResult);
@@ -82,7 +84,8 @@ public class CheapJacksonSerializerTest
         CatalogImpl catalog = createTestCatalog();
 
         String jacksonResult = CheapJacksonSerializer.toJson(catalog, true);
-        Files.writeString(Paths.get("D:\\src\\tmp", "catalog-with-aspectdef.json"), jacksonResult, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+        if (WRITE_OUTPUT_PATH != null)
+            Files.writeString(Paths.get(WRITE_OUTPUT_PATH, "catalog-with-aspectdef.json"), jacksonResult, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
         String expectedJson = loadExpectedJson("catalog-with-aspectdef.json");
 
         assertEquals(expectedJson, jacksonResult);
@@ -94,7 +97,8 @@ public class CheapJacksonSerializerTest
         CatalogImpl catalog = createTestCatalog();
 
         String jacksonResult = CheapJacksonSerializer.toJson(catalog, false);
-        Files.writeString(Paths.get("D:\\src\\tmp", "catalog-with-aspectdef-compact.json"), jacksonResult, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+        if (WRITE_OUTPUT_PATH != null)
+            Files.writeString(Paths.get(WRITE_OUTPUT_PATH, "catalog-with-aspectdef-compact.json"), jacksonResult, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
         String expectedJson = loadExpectedJson("catalog-with-aspectdef-compact.json");
 
         assertEquals(expectedJson, jacksonResult);
@@ -123,7 +127,8 @@ public class CheapJacksonSerializerTest
         CatalogImpl catalog = setupCatalogWithEntityDirectoryHierarchy();
 
         String jacksonResult = CheapJacksonSerializer.toJson(catalog, true);
-        Files.writeString(Paths.get("D:\\src\\tmp", "entity-directory.json"), jacksonResult, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+        if (WRITE_OUTPUT_PATH != null)
+            Files.writeString(Paths.get(WRITE_OUTPUT_PATH, "entity-directory.json"), jacksonResult, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
         String expectedJson = loadExpectedJson("entity-directory.json");
 
         assertEquals(expectedJson, jacksonResult);
@@ -135,7 +140,8 @@ public class CheapJacksonSerializerTest
         CatalogImpl catalog = setupCatalogWithEntityDirectoryHierarchy();
 
         String jacksonResult = CheapJacksonSerializer.toJson(catalog, false);
-        Files.writeString(Paths.get("D:\\src\\tmp", "entity-directory-compact.json"), jacksonResult, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+        if (WRITE_OUTPUT_PATH != null)
+            Files.writeString(Paths.get(WRITE_OUTPUT_PATH, "entity-directory-compact.json"), jacksonResult, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
         String expectedJson = loadExpectedJson("entity-directory-compact.json");
 
         assertEquals(expectedJson, jacksonResult);
@@ -164,7 +170,8 @@ public class CheapJacksonSerializerTest
         CatalogImpl catalog = setupCatalogWithEntityListHierarchy();
 
         String jacksonResult = CheapJacksonSerializer.toJson(catalog, true);
-        Files.writeString(Paths.get("D:\\src\\tmp", "entity-list.json"), jacksonResult, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+        if (WRITE_OUTPUT_PATH != null)
+            Files.writeString(Paths.get(WRITE_OUTPUT_PATH, "entity-list.json"), jacksonResult, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
         String expectedJson = loadExpectedJson("entity-list.json");
 
         assertEquals(expectedJson, jacksonResult);
@@ -176,7 +183,8 @@ public class CheapJacksonSerializerTest
         CatalogImpl catalog = setupCatalogWithEntityListHierarchy();
 
         String jacksonResult = CheapJacksonSerializer.toJson(catalog, false);
-        Files.writeString(Paths.get("D:\\src\\tmp", "entity-list-compact.json"), jacksonResult, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+        if (WRITE_OUTPUT_PATH != null)
+            Files.writeString(Paths.get(WRITE_OUTPUT_PATH, "entity-list-compact.json"), jacksonResult, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
         String expectedJson = loadExpectedJson("entity-list-compact.json");
 
         assertEquals(expectedJson, jacksonResult);
@@ -205,7 +213,8 @@ public class CheapJacksonSerializerTest
         CatalogImpl catalog = setupCatalogWithEntitySetHierarchy();
 
         String jacksonResult = CheapJacksonSerializer.toJson(catalog, true);
-        Files.writeString(Paths.get("D:\\src\\tmp", "entity-set.json"), jacksonResult, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+        if (WRITE_OUTPUT_PATH != null)
+            Files.writeString(Paths.get(WRITE_OUTPUT_PATH, "entity-set.json"), jacksonResult, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
         String expectedJson = loadExpectedJson("entity-set.json");
 
         assertEquals(expectedJson, jacksonResult);
@@ -217,7 +226,8 @@ public class CheapJacksonSerializerTest
         CatalogImpl catalog = setupCatalogWithEntitySetHierarchy();
 
         String jacksonResult = CheapJacksonSerializer.toJson(catalog, false);
-        Files.writeString(Paths.get("D:\\src\\tmp", "entity-set-compact.json"), jacksonResult, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+        if (WRITE_OUTPUT_PATH != null)
+            Files.writeString(Paths.get(WRITE_OUTPUT_PATH, "entity-set-compact.json"), jacksonResult, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
         String expectedJson = loadExpectedJson("entity-set-compact.json");
 
         assertEquals(expectedJson, jacksonResult);
@@ -246,7 +256,8 @@ public class CheapJacksonSerializerTest
         CatalogImpl catalog = setupCatalogWithEntityTreeHierarchy();
 
         String jacksonResult = CheapJacksonSerializer.toJson(catalog, true);
-        Files.writeString(Paths.get("D:\\src\\tmp", "entity-tree.json"), jacksonResult, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+        if (WRITE_OUTPUT_PATH != null)
+            Files.writeString(Paths.get(WRITE_OUTPUT_PATH, "entity-tree.json"), jacksonResult, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
         String expectedJson = loadExpectedJson("entity-tree.json");
 
         assertEquals(expectedJson, jacksonResult);
@@ -258,7 +269,8 @@ public class CheapJacksonSerializerTest
         CatalogImpl catalog = setupCatalogWithEntityTreeHierarchy();
 
         String jacksonResult = CheapJacksonSerializer.toJson(catalog, false);
-        Files.writeString(Paths.get("D:\\src\\tmp", "entity-tree-compact.json"), jacksonResult, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+        if (WRITE_OUTPUT_PATH != null)
+            Files.writeString(Paths.get(WRITE_OUTPUT_PATH, "entity-tree-compact.json"), jacksonResult, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
         String expectedJson = loadExpectedJson("entity-tree-compact.json");
 
         assertEquals(expectedJson, jacksonResult);
@@ -289,7 +301,8 @@ public class CheapJacksonSerializerTest
         CatalogImpl catalog = setupCatalogWithAspectMapHierarchy();
 
         String jacksonResult = CheapJacksonSerializer.toJson(catalog, true);
-        Files.writeString(Paths.get("D:\\src\\tmp", "aspect-map.json"), jacksonResult, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+        if (WRITE_OUTPUT_PATH != null)
+            Files.writeString(Paths.get(WRITE_OUTPUT_PATH, "aspect-map.json"), jacksonResult, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
         String expectedJson = loadExpectedJson("aspect-map.json");
 
         assertEquals(expectedJson, jacksonResult);
@@ -301,7 +314,8 @@ public class CheapJacksonSerializerTest
         CatalogImpl catalog = setupCatalogWithAspectMapHierarchy();
 
         String jacksonResult = CheapJacksonSerializer.toJson(catalog, false);
-        Files.writeString(Paths.get("D:\\src\\tmp", "aspect-map-compact.json"), jacksonResult, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+        if (WRITE_OUTPUT_PATH != null)
+            Files.writeString(Paths.get(WRITE_OUTPUT_PATH, "aspect-map-compact.json"), jacksonResult, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
         String expectedJson = loadExpectedJson("aspect-map-compact.json");
 
         assertEquals(expectedJson, jacksonResult);
@@ -415,7 +429,8 @@ public class CheapJacksonSerializerTest
         CatalogImpl catalog = setupFullCatalogWithAllHierarchyTypes();
 
         String jacksonResult = CheapJacksonSerializer.toJson(catalog, true);
-        Files.writeString(Paths.get("D:\\src\\tmp", "full-catalog.json"), jacksonResult, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+        if (WRITE_OUTPUT_PATH != null)
+            Files.writeString(Paths.get(WRITE_OUTPUT_PATH, "full-catalog.json"), jacksonResult, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
         String expectedJson = loadExpectedJson("full-catalog.json");
 
         assertEquals(expectedJson, jacksonResult);
@@ -427,7 +442,8 @@ public class CheapJacksonSerializerTest
         CatalogImpl catalog = setupFullCatalogWithAllHierarchyTypes();
 
         String jacksonResult = CheapJacksonSerializer.toJson(catalog, false);
-        Files.writeString(Paths.get("D:\\src\\tmp", "full-catalog-compact.json"), jacksonResult, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+        if (WRITE_OUTPUT_PATH != null)
+            Files.writeString(Paths.get(WRITE_OUTPUT_PATH, "full-catalog-compact.json"), jacksonResult, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
         String expectedJson = loadExpectedJson("full-catalog-compact.json");
 
         assertEquals(expectedJson, jacksonResult);
