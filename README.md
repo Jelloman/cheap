@@ -25,8 +25,12 @@ interacting with and managing disparate data sources. I expect it will be useful
 
 **WORK IN PROGRESS**
 --------------------
-Cheap is a work in progress. I'll add a roadmap soon, for now here are the broad strokes of a plan:
+Cheap is a work in progress. I'll add a roadmap soon, for now here are the broad strokes:
 * Standard AspectDefs provided by Cheap, including CatalogDef and HierarchyDef
+* Better testing and support for multivalued properties
+* Better testing for large properties such as Text, CLOB, BLOB, BigDecimal, BigInteger
+* Streaming/chunking methods for reading and writing multivalued properties, and Text/CLOB/BLOB
+  * Decide whether Text and CLOB are both needed; probably not
 * MySQL/MariaDB support
 * cheap-net and cheapd modules (see [Modules](#modules) below)
 * Convenience Hierarchy types, such as an AspectTree that marries an EntityTree and AspectMap to
@@ -140,7 +144,7 @@ PROPERTIES
 | CLOB       | CLB       | String*       | Character Large Object (CLOB) for streaming text data.                      |
 | BLOB       | BLB       | byte[]*       | Binary Large Object (BLOB) for streaming binary data.                       |
 
-\* Cheap will provide streaming mechanisms to read and write Text,CLOB and BLOB properties
+\* Cheap will provide streaming mechanisms to read and write Text, CLOB and BLOB properties
 (and multivalued properties of any type) in fixed-sized chunks.
 
 
