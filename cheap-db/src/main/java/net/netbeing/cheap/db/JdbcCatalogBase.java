@@ -19,15 +19,30 @@ import java.util.Map;
  */
 public abstract class JdbcCatalogBase extends CatalogImpl
 {
+    /** List of table names available in the database. Populated by {@link #loadTables()}. */
     protected final List<String> tables = new LinkedList<>();
+
+    /** Cache of AspectDef objects created for each table, keyed by table name. */
     protected final Map<String, AspectDef> tableAspects = new LinkedHashMap<>();
+
+    /** JDBC data source for database connections. */
     protected DataSource dataSource;
 
+    /**
+     * Default constructor for testing or lazy initialization.
+     * The data source must be set before calling most methods.
+     */
     protected JdbcCatalogBase()
     {
         // Default constructor
     }
 
+    /**
+     * Constructs a new catalog connected to the given data source.
+     * Immediately loads the list of available tables from the database.
+     *
+     * @param dataSource the JDBC data source to use for database access
+     */
     protected JdbcCatalogBase(DataSource dataSource)
     {
         this.dataSource = dataSource;
@@ -62,6 +77,13 @@ public abstract class JdbcCatalogBase extends CatalogImpl
      */
     protected abstract String getSchemaName();
 
+    /**
+     * Gets the AspectDef for a database table, loading it from the database if necessary.
+     * This method caches AspectDefs to avoid repeated introspection of the same table.
+     *
+     * @param tableName the name of the database table
+     * @return the AspectDef representing the table's schema
+     */
     public AspectDef getTableDef(String tableName)
     {
         AspectDef def = tableAspects.get(tableName);
@@ -71,6 +93,16 @@ public abstract class JdbcCatalogBase extends CatalogImpl
         return loadTableDef(tableName);
     }
 
+    /**
+     * Loads a table's schema from the database and creates an AspectDef.
+     * Uses JDBC metadata to introspect the table's column names, types, and nullability.
+     * The resulting AspectDef is cached for future use.
+     *
+     * @param tableName the name of the database table to introspect
+     * @return a MutableAspectDef representing the table structure
+     * @throws IllegalStateException if dataSource is not set
+     * @throws RuntimeException if database introspection fails
+     */
     public AspectDef loadTableDef(@NotNull String tableName)
     {
         if (dataSource == null) {
@@ -104,6 +136,23 @@ public abstract class JdbcCatalogBase extends CatalogImpl
         return aspectDef;
     }
 
+    /**
+     * Loads data from a database table into an AspectMapHierarchy.
+     * <p>
+     * Each row in the table becomes an Aspect attached to an Entity. The table's columns
+     * are mapped to properties according to the AspectDef created from the table schema.
+     * </p>
+     * <p>
+     * This method performs a SELECT * query with an optional row limit. For large tables,
+     * specifying maxRows helps prevent memory issues.
+     * </p>
+     *
+     * @param tableName the name of the database table to load
+     * @param maxRows maximum number of rows to load, or -1 for unlimited
+     * @return an AspectMapHierarchy containing the table data
+     * @throws IllegalStateException if dataSource is not set
+     * @throws RuntimeException if the query fails
+     */
     public AspectMapHierarchy loadTable(@NotNull String tableName, int maxRows)
     {
         if (dataSource == null) {
@@ -228,11 +277,22 @@ public abstract class JdbcCatalogBase extends CatalogImpl
         return dbTypeName.split("\\(")[0].trim();
     }
 
+    /**
+     * Returns a list of all table names available in the database.
+     * The list is populated when the catalog is constructed.
+     *
+     * @return a new list containing all table names
+     */
     public List<String> getTables()
     {
         return new LinkedList<>(tables);
     }
 
+    /**
+     * Gets the JDBC data source used by this catalog.
+     *
+     * @return the data source, or null if not set
+     */
     public DataSource getDataSource()
     {
         return dataSource;

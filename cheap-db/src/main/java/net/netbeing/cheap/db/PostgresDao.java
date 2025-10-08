@@ -20,6 +20,115 @@ import java.util.UUID;
 /**
  * Data Access Object for persisting and loading complete Catalog instances
  * to/from a PostgreSQL database using the Cheap schema.
+ * <p>
+ * This DAO provides comprehensive persistence capabilities for the entire Cheap data model,
+ * including catalogs, aspect definitions, hierarchies, entities, aspects, and properties.
+ * It supports transactional saves and loads with full referential integrity.
+ * </p>
+ *
+ * <h2>Key Features</h2>
+ * <ul>
+ *   <li><b>Full Model Persistence:</b> Saves/loads complete catalog structures including all
+ *       definitions, entities, hierarchies, aspects, and properties</li>
+ *   <li><b>Transaction Management:</b> All save operations execute within transactions with
+ *       automatic rollback on failure</li>
+ *   <li><b>Two Persistence Modes:</b> Supports both default schema tables and custom table
+ *       mappings via {@link AspectTableMapping}</li>
+ *   <li><b>DDL Management:</b> Provides methods to create, audit, and drop the Cheap database schema</li>
+ *   <li><b>CheapFactory Integration:</b> Uses CheapFactory for consistent object creation and
+ *       entity registry management</li>
+ * </ul>
+ *
+ * <h2>Database Schema</h2>
+ * <p>
+ * PostgresDao works with a normalized schema that closely mirrors the Cheap data model:
+ * </p>
+ * <ul>
+ *   <li><b>entity:</b> All entities with their UUIDs</li>
+ *   <li><b>catalog:</b> Catalog metadata (species, URI, upstream, version)</li>
+ *   <li><b>aspect_def:</b> Aspect definitions with access control flags</li>
+ *   <li><b>property_def:</b> Property definitions within aspect definitions</li>
+ *   <li><b>hierarchy:</b> Hierarchy metadata (name, type, version)</li>
+ *   <li><b>hierarchy_entity_list, hierarchy_entity_set, hierarchy_entity_directory,
+ *       hierarchy_entity_tree_node, hierarchy_aspect_map:</b> Type-specific hierarchy content tables</li>
+ *   <li><b>aspect:</b> Aspect-to-entity associations</li>
+ *   <li><b>property_value:</b> Property values with type-specific columns (value_text, value_integer,
+ *       value_float, value_boolean, value_datetime, value_binary)</li>
+ * </ul>
+ *
+ * <h2>Persistence Modes</h2>
+ *
+ * <h3>Default Mode</h3>
+ * <p>
+ * By default, aspects are stored in the generic {@code aspect} and {@code property_value} tables
+ * using an EAV (Entity-Attribute-Value) pattern. This provides maximum flexibility for dynamic
+ * schemas but may be less performant for queries.
+ * </p>
+ *
+ * <h3>Custom Table Mapping Mode</h3>
+ * <p>
+ * For aspects that benefit from traditional relational table structure, you can register
+ * an {@link AspectTableMapping} to store aspects in a custom table. The custom table must
+ * have an {@code entity_id} column as the primary key, plus columns for each property.
+ * This provides better query performance and easier integration with SQL-based tools.
+ * </p>
+ *
+ * <h2>Usage Example</h2>
+ * <pre>{@code
+ * // Initialize DAO with data source
+ * DataSource ds = createPostgresDataSource("jdbc:postgresql://localhost/cheapdb");
+ * PostgresDao dao = new PostgresDao(ds);
+ *
+ * // Create schema (first time only)
+ * dao.executeMainSchemaDdl(ds);
+ *
+ * // Create a catalog with data
+ * Catalog catalog = factory.createCatalog(UUID.randomUUID(), CatalogSpecies.SOURCE, null, null, 1);
+ * AspectDef customerDef = factory.createImmutableAspectDef("Customer", props);
+ * catalog.extend(customerDef);
+ * // ... populate with hierarchies and data ...
+ *
+ * // Save catalog
+ * dao.saveCatalog(catalog);
+ *
+ * // Load catalog
+ * Catalog loaded = dao.loadCatalog(catalog.globalId());
+ *
+ * // Use custom table mapping for better performance
+ * AspectTableMapping mapping = new AspectTableMapping(
+ *     "Customer",
+ *     "customers_table",
+ *     Map.of("name", "customer_name", "email", "email_address")
+ * );
+ * dao.addAspectTableMapping(mapping);
+ * dao.createAspectTable(customerDef, "customers_table");
+ * }</pre>
+ *
+ * <h2>Transaction Handling</h2>
+ * <p>
+ * All save operations execute within a single database transaction. If any part of the save
+ * fails, the entire transaction is rolled back to maintain data consistency. Load operations
+ * do not use explicit transactions but maintain consistency through foreign key constraints.
+ * </p>
+ *
+ * <h2>Type Mapping</h2>
+ * <p>
+ * PropertyTypes are mapped to PostgreSQL column types and internal 3-letter codes:
+ * </p>
+ * <ul>
+ *   <li>Integer → BIGINT / INT</li>
+ *   <li>Float → DOUBLE PRECISION / FLT</li>
+ *   <li>Boolean → BOOLEAN / BLN</li>
+ *   <li>String → TEXT / STR</li>
+ *   <li>DateTime → TIMESTAMP WITH TIME ZONE / DAT</li>
+ *   <li>UUID → UUID / UID</li>
+ *   <li>BLOB → BYTEA / BLB</li>
+ * </ul>
+ *
+ * @see CatalogPersistence
+ * @see AspectTableMapping
+ * @see CheapFactory
+ * @see Catalog
  */
 @SuppressWarnings("DuplicateBranchesInSwitch")
 public class PostgresDao implements CatalogPersistence
@@ -28,12 +137,26 @@ public class PostgresDao implements CatalogPersistence
     private final CheapFactory factory;
     private final Map<String, AspectTableMapping> aspectTableMappings = new LinkedHashMap<>();
 
+    /**
+     * Constructs a new PostgresDao with the given data source.
+     * Creates a new CheapFactory instance for object creation and entity management.
+     *
+     * @param dataSource the PostgreSQL data source to use for database operations
+     */
     public PostgresDao(@NotNull DataSource dataSource)
     {
         this.dataSource = dataSource;
         this.factory = new CheapFactory();
     }
 
+    /**
+     * Constructs a new PostgresDao with the given data source and factory.
+     * This constructor allows sharing a CheapFactory instance across multiple DAOs
+     * to maintain a consistent entity registry.
+     *
+     * @param dataSource the PostgreSQL data source to use for database operations
+     * @param factory the CheapFactory to use for object creation and entity management
+     */
     public PostgresDao(@NotNull DataSource dataSource, @NotNull CheapFactory factory)
     {
         this.dataSource = dataSource;
@@ -1266,6 +1389,14 @@ public class PostgresDao implements CatalogPersistence
         executeDdl(dataSource, ddlContent);
     }
 
+    /**
+     * Executes the truncate schema DDL script to delete all data from Cheap tables
+     * while preserving the schema structure. This is useful for clearing test data
+     * or resetting the database without recreating all tables and constraints.
+     *
+     * @param dataSource the data source to execute the DDL against
+     * @throws SQLException if database operation fails
+     */
     public void executeTruncateSchemaDdl(@NotNull DataSource dataSource) throws SQLException
     {
         String ddlContent = loadDdlResource("/db/schemas/postgres-cheap-truncate.sql");
