@@ -20,31 +20,30 @@ This is a multi-module Gradle-based Java project using Java 24 with modules.
 ### Project Structure
 
 ```
-java/
-├── cheap-core/          # Core library module
-├── cheap-db/            # Database module (depends on cheap-core)
-├── cheap-json/          # JSON module (depends on cheap-core)
-├── settings.gradle.kts  # Multi-module build configuration
-└── gradle/
-    └── libs.versions.toml # Version catalog for dependencies
+cheap-core/          # Core library module
+cheap-db/            # Database module (depends on cheap-core)
+cheap-json/          # JSON module (depends on cheap-core)
+settings.gradle.kts  # Multi-module build configuration
+gradle/
+└── libs.versions.toml # Version catalog for dependencies
 ```
 
 ### Common Commands
 
 ```bash
 # Build all modules
-cd java && ./gradlew build
+./gradlew build
 
 # Run tests for all modules
-cd java && ./gradlew test
+./gradlew test
 
 # Clean build all modules
-cd java && ./gradlew clean build
+./gradlew clean build
 
 # Build specific module
-cd java && ./gradlew :cheap-core:build
-cd java && ./gradlew :cheap-db:build
-cd java && ./gradlew :cheap-json:build
+./gradlew :cheap-core:build
+./gradlew :cheap-db:build
+./gradlew :cheap-json:build
 ```
 
 ## Architecture
@@ -55,13 +54,6 @@ cd java && ./gradlew :cheap-json:build
 - **Database Module**: `cheap-db` - Database-related functionality (depends on cheap-core)
 - **JSON Module**: `cheap-json` - JSON serialization and schemas (depends on cheap-core)
 - **Main Package**: `net.netbeing.cheap`
-- **Exported Packages**:
-  - `net.netbeing.cheap.model` - Core interfaces and data model
-  - `net.netbeing.cheap.impl.basic` - Basic implementations
-  - `net.netbeing.cheap.impl.reflect` - Reflection-based implementations
-  - `net.netbeing.cheap.util` - Utility classes
-  - `net.netbeing.cheap.db` - Database persistence functionality
-  - `net.netbeing.cheap.json` - JSON serialization utilities
 
 ### Key Dependencies
 - **Guava** - Core utilities (used across all modules)
@@ -176,15 +168,16 @@ A Property is a "field" of data within an Aspect. Each property:
 - Null safety enforced with JetBrains annotations
 
 # Code style
-- Always put a newline at the end of every text file (.java, .json, .sql, .md, etc.)
+- Always put a newline at the end of every text file (.java, .js, .ts, .json, .sql, .md, etc.)
+ 
+# Java code style
 - Put left brackets at the end of the line, except for class and function bodies where they should go on the next line
 - When using Cheap interfaces, prefer not to use methods named "unsafe*", except in unit tests that are specifically testing those unsafe* methods
 
-## Unit testing
+## Java unit testing
 - Comprehensive test coverage with JUnit Jupiter
 - Do not use mocks unless explicitly instructed
 - When constructing collections within a unit test, use Guava Immutable* collections whenever possible. Prefer ImmutableMap.of() to Map.of(), and ImmutableList.of() to List.of().
 - When constructing Cheap elements, prefer constructors that pass in a fixed UUID for global ID.
 - When testing JSON output, prefer testing the entire output
 - Whenever testing expected String values, if an inline String would be longer than 10 lines, put it in a file in the test/resources directory instead.
-- 
