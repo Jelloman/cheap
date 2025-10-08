@@ -11,6 +11,31 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 
+/**
+ * Jackson deserializer for {@link PropertyDef} objects in the Cheap data model.
+ * <p>
+ * This deserializer reconstructs a PropertyDef from JSON format, including its name,
+ * type, default value (if any), and all configuration flags (isReadable, isWritable,
+ * isNullable, isRemovable, isMultivalued).
+ * </p>
+ * <p>
+ * PropertyDef objects are typically deserialized as part of an AspectDef, where they
+ * are embedded inline within the "propertyDefs" array. However, this deserializer can
+ * also handle standalone PropertyDef deserialization if needed.
+ * </p>
+ * <p>
+ * The deserializer uses the {@link CheapFactory#createPropertyDef} method to ensure
+ * consistent PropertyDef creation with proper defaults and validation.
+ * </p>
+ * <p>
+ * This class is package-private and used internally by {@link AspectDefDeserializer}
+ * when deserializing AspectDef property collections.
+ * </p>
+ *
+ * @see PropertyDef
+ * @see AspectDefDeserializer
+ * @see CheapFactory
+ */
 class PropertyDefDeserializer extends JsonDeserializer<PropertyDef>
 {
     private final CheapFactory factory;

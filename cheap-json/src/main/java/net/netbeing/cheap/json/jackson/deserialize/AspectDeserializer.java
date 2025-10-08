@@ -12,6 +12,37 @@ import org.jetbrains.annotations.NotNull;
 import java.io.IOException;
 import java.util.*;
 
+/**
+ * Jackson deserializer for {@link Aspect} objects in the Cheap data model.
+ * <p>
+ * This deserializer reconstructs an Aspect from JSON format by reading property values
+ * and using an {@link AspectBuilder} from the {@link CheapFactory} to construct the
+ * final Aspect instance. The deserializer requires access to both an AspectDef and Entity
+ * reference, which can be provided through the JSON or via context attributes.
+ * </p>
+ * <p>
+ * The deserializer supports two modes of operation:
+ * </p>
+ * <ul>
+ *   <li>Standalone: JSON includes "aspectDefName" and "entityId" fields</li>
+ *   <li>Contextual: AspectDef and Entity are provided via DeserializationContext attributes
+ *       (used when deserializing as part of a hierarchy)</li>
+ * </ul>
+ * <p>
+ * Property values are deserialized according to their PropertyType, with automatic type
+ * conversion for numeric and boolean values that may be represented as strings in the JSON.
+ * Multivalued properties are handled as JSON arrays.
+ * </p>
+ * <p>
+ * This class is package-private and used internally by {@link CheapJacksonDeserializer}
+ * and {@link HierarchyDeserializer}.
+ * </p>
+ *
+ * @see Aspect
+ * @see AspectBuilder
+ * @see CheapFactory
+ * @see HierarchyDeserializer
+ */
 class AspectDeserializer extends JsonDeserializer<Aspect>
 {
     private final CheapFactory factory;
@@ -121,6 +152,8 @@ class AspectDeserializer extends JsonDeserializer<Aspect>
                     // Handle string values that represent booleans
                     String value = p.getValueAsString();
                     yield Boolean.parseBoolean(value);
+                } else if (p.currentToken() == JsonToken.VALUE_NUMBER_INT) {
+                    yield p.getLongValue() == 0 ? Boolean.FALSE : Boolean.TRUE;
                 } else {
                     yield p.getBooleanValue();
                 }

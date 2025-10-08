@@ -109,7 +109,6 @@ public class CheapJacksonDeserializer
         module.addDeserializer(HierarchyDef.class, new HierarchyDefDeserializer(factory));
         module.addDeserializer(Hierarchy.class, new HierarchyDeserializer(factory));
         module.addDeserializer(Aspect.class, new AspectDeserializer(factory));
-        module.addDeserializer(Property.class, new PropertyDeserializer(factory));
         module.addDeserializer(EntityTreeHierarchy.Node.class, new TreeNodeDeserializer(factory));
 
         mapper.registerModule(module);

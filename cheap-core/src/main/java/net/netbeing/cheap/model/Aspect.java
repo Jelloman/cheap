@@ -11,11 +11,12 @@ import org.jetbrains.annotations.NotNull;
  * filesystem context. Every aspect has a definition that specifies its structure
  * and the properties it can contain.</p>
  *
- * <p>Aspects have three lifecycle stages: <ol>
+ * <p>Aspects have three lifecycle stages:</p>
+ * <ol>
  *     <li>Detached (optional): not attached to any entity</li>
  *     <li>Attached: attached to an entity, but not in any catalog</li>
  *     <li>Saved: Attached to an entity and stored in a catalog</li>
- * </ol></p>
+ * </ol>
  * 
  * <p>This interface provides both safe (type-checked) and unsafe (unchecked) methods
  * for reading and writing property values. Safe methods perform validation against

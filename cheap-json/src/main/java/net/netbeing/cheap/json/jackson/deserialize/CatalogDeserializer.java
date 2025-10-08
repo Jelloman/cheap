@@ -14,6 +14,35 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.*;
 
+/**
+ * Jackson deserializer for {@link Catalog} objects in the Cheap data model.
+ * <p>
+ * This deserializer reconstructs a Catalog from JSON format, creating all necessary
+ * AspectDef and Hierarchy objects and populating them with data from the JSON structure.
+ * The deserializer uses a {@link CheapFactory} to create model objects consistently.
+ * </p>
+ * <p>
+ * The deserialization process follows a specific order:
+ * </p>
+ * <ol>
+ *   <li>Parse catalog metadata (globalId, URI, species, upstream, version)</li>
+ *   <li>Deserialize and register all AspectDefs with the factory</li>
+ *   <li>Store hierarchy JSON data for deferred processing</li>
+ *   <li>Create the Catalog instance</li>
+ *   <li>Deserialize hierarchies (which can now resolve AspectDef references)</li>
+ * </ol>
+ * <p>
+ * This two-phase approach ensures that AspectDef objects are available when deserializing
+ * AspectMapHierarchy contents, avoiding forward reference issues.
+ * </p>
+ * <p>
+ * This class is package-private and used internally by {@link CheapJacksonDeserializer}.
+ * </p>
+ *
+ * @see Catalog
+ * @see CheapJacksonDeserializer
+ * @see CheapFactory
+ */
 class CatalogDeserializer extends JsonDeserializer<Catalog>
 {
     private final CheapFactory factory;

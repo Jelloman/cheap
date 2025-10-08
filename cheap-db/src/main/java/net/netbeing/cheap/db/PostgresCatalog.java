@@ -11,8 +11,73 @@ import java.sql.SQLDataException;
 
 import static java.util.Map.entry;
 
+/**
+ * Catalog implementation that loads PostgreSQL database tables as Cheap AspectMapHierarchies.
+ * <p>
+ * This class extends {@link JdbcCatalogBase} to provide PostgreSQL-specific database metadata
+ * access and type mapping. It introspects PostgreSQL database schemas to automatically create
+ * AspectDefs from table definitions, and loads table data as aspects within the catalog.
+ * </p>
+ * <p>
+ * Each table in the PostgreSQL database is represented as an AspectDef with properties
+ * corresponding to the table's columns. The table data is loaded into an AspectMapHierarchy
+ * where each row becomes an Aspect attached to an Entity.
+ * </p>
+ * <p>
+ * PostgreSQL-specific characteristics handled by this class:
+ * </p>
+ * <ul>
+ *   <li>Schema support (defaults to "public" schema)</li>
+ *   <li>Rich type system including UUID, JSON, arrays, geometric types, etc.</li>
+ *   <li>Metadata accessed via information_schema.tables</li>
+ *   <li>Strong type checking with custom type conversions</li>
+ *   <li>Support for serial/bigserial auto-increment types</li>
+ * </ul>
+ * <p>
+ * Type mapping includes comprehensive coverage of PostgreSQL types:
+ * </p>
+ * <ul>
+ *   <li>Numeric: INTEGER, BIGINT, REAL, DOUBLE PRECISION, NUMERIC, DECIMAL, SERIAL</li>
+ *   <li>Text: TEXT, VARCHAR, CHAR, JSON, JSONB, XML</li>
+ *   <li>Binary: BYTEA</li>
+ *   <li>Date/Time: DATE, TIME, TIMESTAMP (with/without time zone), INTERVAL</li>
+ *   <li>Boolean: BOOLEAN, BOOL</li>
+ *   <li>UUID: Native UUID support</li>
+ *   <li>Network: INET, CIDR, MACADDR</li>
+ *   <li>Geometric: POINT, LINE, BOX, CIRCLE, etc. (mapped to Text)</li>
+ *   <li>Arrays: All array types (mapped to Text)</li>
+ * </ul>
+ * <p>
+ * Usage example:
+ * </p>
+ * <pre>{@code
+ * DataSource dataSource = createPostgreSQLDataSource("jdbc:postgresql://localhost/mydb");
+ * PostgresCatalog catalog = new PostgresCatalog(dataSource);
+ *
+ * // Get list of available tables
+ * List<String> tables = catalog.getTables();
+ *
+ * // Load a specific table as an AspectMapHierarchy
+ * AspectMapHierarchy products = catalog.loadTable("products", 1000);
+ * }</pre>
+ *
+ * @see JdbcCatalogBase
+ * @see SqliteCatalog
+ * @see PostgresDao
+ */
 public class PostgresCatalog extends JdbcCatalogBase
 {
+    /**
+     * Constructs a new PostgreSQL catalog connected to the given data source.
+     * <p>
+     * This constructor immediately loads the list of available tables from the PostgreSQL
+     * database by querying the information_schema.tables view for all BASE TABLEs in the
+     * 'public' schema. The table names are cached for subsequent use.
+     * </p>
+     *
+     * @param dataSource the PostgreSQL data source to use for database access
+     * @throws NullPointerException if dataSource is null
+     */
     public PostgresCatalog(@NotNull DataSource dataSource)
     {
         super(dataSource);
@@ -187,34 +252,37 @@ public class PostgresCatalog extends JdbcCatalogBase
 
         // Handle PostgreSQL-specific type conversions, fall back to base implementation
         try {
-            switch (expectedType) {
-                case Integer:
+            return switch (expectedType) {
+                case Integer -> {
                     if (value instanceof Number n) {
-                        return n.longValue();
+                        yield n.longValue();
                     } else if (value instanceof String s) {
-                        return Long.valueOf(s);
+                        yield Long.valueOf(s);
                     }
                     throw new SQLDataException("Expected Long type but found " + value.getClass());
-                case Float:
+                }
+                case Float -> {
                     if (value instanceof Number n) {
-                        return n.doubleValue();
+                        yield n.doubleValue();
                     } else if (value instanceof String s) {
-                        return Double.valueOf(s);
+                        yield Double.valueOf(s);
                     }
                     throw new SQLDataException("Expected Double type but found " + value.getClass());
-                case Boolean:
+                }
+                case Boolean -> {
                     if (value instanceof Boolean b) {
-                        return value;
+                        yield value;
                     } else if (value instanceof Number n) {
-                        return n.intValue() != 0;
+                        yield n.intValue() != 0;
                     } else if (value instanceof String s) {
-                        return Boolean.valueOf(s);
+                        yield Boolean.valueOf(s);
                     }
                     throw new SQLDataException("Expected Boolean type but found " + value.getClass());
-                default:
+                }
+                default ->
                     // Use base implementation for other types
-                    return super.convertValue(value, expectedType);
-            }
+                    super.convertValue(value, expectedType);
+            };
         } catch (SQLDataException e) {
             throw new RuntimeException(e);
         }

@@ -9,13 +9,68 @@ import javax.sql.DataSource;
 
 import static java.util.Map.entry;
 
+/**
+ * Catalog implementation that loads SQLite database tables as Cheap AspectMapHierarchies.
+ * <p>
+ * This class extends {@link JdbcCatalogBase} to provide SQLite-specific database metadata
+ * access and type mapping. It introspects SQLite database schemas to automatically create
+ * AspectDefs from table definitions, and loads table data as aspects within the catalog.
+ * </p>
+ * <p>
+ * Each table in the SQLite database is represented as an AspectDef with properties
+ * corresponding to the table's columns. The table data is loaded into an AspectMapHierarchy
+ * where each row becomes an Aspect attached to an Entity.
+ * </p>
+ * <p>
+ * SQLite-specific characteristics handled by this class:
+ * </p>
+ * <ul>
+ *   <li>No schema names (SQLite doesn't use schemas)</li>
+ *   <li>Type affinity system where column types map to property types</li>
+ *   <li>Metadata accessed via sqlite_master system table</li>
+ *   <li>Dynamic typing with TEXT, INTEGER, REAL, BLOB, and NUMERIC affinities</li>
+ * </ul>
+ * <p>
+ * Usage example:
+ * </p>
+ * <pre>{@code
+ * DataSource dataSource = createSQLiteDataSource("mydata.db");
+ * SqliteCatalog catalog = SqliteCatalog.loadDb(dataSource);
+ *
+ * // Get list of available tables
+ * List<String> tables = catalog.getTables();
+ *
+ * // Load a specific table as an AspectMapHierarchy
+ * AspectMapHierarchy customers = catalog.loadTable("customers", 1000);
+ * }</pre>
+ *
+ * @see JdbcCatalogBase
+ * @see PostgresCatalog
+ */
 public class SqliteCatalog extends JdbcCatalogBase
 {
+    /**
+     * Default constructor for testing or lazy initialization.
+     * <p>
+     * When using this constructor, the data source must be set separately before calling
+     * methods that interact with the database. This constructor is primarily used for testing
+     * scenarios or when the catalog needs to be initialized before the data source is available.
+     * </p>
+     */
     public SqliteCatalog()
     {
         // Default constructor for testing
     }
 
+    /**
+     * Constructs a new SQLite catalog connected to the given data source.
+     * <p>
+     * This constructor immediately loads the list of available tables from the SQLite database
+     * by querying the sqlite_master system table. The table names are cached for subsequent use.
+     * </p>
+     *
+     * @param dataSource the SQLite data source to use for database access
+     */
     public SqliteCatalog(DataSource dataSource)
     {
         super(dataSource);
@@ -57,6 +112,12 @@ public class SqliteCatalog extends JdbcCatalogBase
         entry("BOOLEAN", PropertyType.Boolean)
     );
 
+    /**
+     * Convenience factory method to create and load a SqliteCatalog from a data source.
+     *
+     * @param dataSource the SQLite data source
+     * @return a new SqliteCatalog instance with tables loaded
+     */
     public static SqliteCatalog loadDb(DataSource dataSource)
     {
         return new SqliteCatalog(dataSource);
@@ -94,6 +155,14 @@ public class SqliteCatalog extends JdbcCatalogBase
         return new LocalEntityOneCatalogImpl(this);
     }
 
+    /**
+     * Maps SQLite type names to Cheap PropertyTypes.
+     * Handles SQLite's type affinity system where column types are flexible.
+     * Supports parameterized types like VARCHAR(50) by extracting the base type.
+     *
+     * @param dbTypeName the SQLite type name (e.g., "INTEGER", "VARCHAR", "TEXT")
+     * @return the corresponding PropertyType, defaults to Text if unknown
+     */
     @Override
     protected PropertyType mapDbTypeToPropertyType(String dbTypeName)
     {
