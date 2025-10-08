@@ -11,6 +11,28 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 
+/**
+ * Jackson deserializer for {@link HierarchyDef} objects in the Cheap data model.
+ * <p>
+ * This deserializer reconstructs a HierarchyDef from JSON format by reading its name
+ * and type code. HierarchyDef is a simple metadata structure that specifies the name
+ * and organizational type of a hierarchy.
+ * </p>
+ * <p>
+ * The deserializer converts two-character type codes (EL, ES, ED, ET, AM) to the
+ * corresponding {@link HierarchyType} enumeration values. Legacy fields like
+ * "isModifiable" are gracefully ignored for backward compatibility.
+ * </p>
+ * <p>
+ * This class is package-private and used internally by {@link CatalogDefDeserializer}
+ * when deserializing catalog definitions from JSON.
+ * </p>
+ *
+ * @see HierarchyDef
+ * @see HierarchyType
+ * @see CatalogDefDeserializer
+ * @see CheapFactory
+ */
 class HierarchyDefDeserializer extends JsonDeserializer<HierarchyDef>
 {
     private final CheapFactory factory;

@@ -8,6 +8,33 @@ import net.netbeing.cheap.model.*;
 import java.io.IOException;
 import java.util.Map;
 
+/**
+ * Jackson serializer for {@link Hierarchy} objects in the Cheap data model.
+ * <p>
+ * This serializer converts any Hierarchy to JSON format by dispatching to
+ * specialized serialization methods based on the hierarchy type (ENTITY_LIST,
+ * ENTITY_SET, ENTITY_DIR, ENTITY_TREE, or ASPECT_MAP).
+ * </p>
+ * <p>
+ * Each hierarchy type has a corresponding serialization method that produces
+ * JSON appropriate for its structure:
+ * </p>
+ * <ul>
+ *   <li>{@link AspectMapHierarchy}: Object mapping entity UUIDs to Aspect objects</li>
+ *   <li>{@link EntityDirectoryHierarchy}: Object mapping string keys to entity UUIDs</li>
+ *   <li>{@link EntityListHierarchy}: Array of entity UUIDs (may contain duplicates)</li>
+ *   <li>{@link EntitySetHierarchy}: Array of unique entity UUIDs</li>
+ *   <li>{@link EntityTreeHierarchy}: Recursive tree structure with entity values</li>
+ * </ul>
+ * <p>
+ * This class is package-private and used internally by {@link CheapJacksonSerializer}
+ * when serializing Catalog objects that contain Hierarchy collections.
+ * </p>
+ *
+ * @see Hierarchy
+ * @see HierarchyType
+ * @see CatalogSerializer
+ */
 class HierarchySerializer extends JsonSerializer<Hierarchy>
 {
     @Override

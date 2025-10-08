@@ -17,6 +17,35 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Jackson deserializer for {@link AspectDef} objects in the Cheap data model.
+ * <p>
+ * This deserializer reconstructs an AspectDef from JSON format, including its name,
+ * access control flags, and property definitions. The deserializer intelligently
+ * selects the appropriate AspectDef implementation (ImmutableAspectDef, MutableAspectDef,
+ * or FullAspectDef) based on the mutability flags in the JSON.
+ * </p>
+ * <p>
+ * The deserializer handles both aspect-level and property-level flags, with property
+ * flags inheriting aspect defaults when not explicitly specified. This allows for
+ * compact JSON representation while maintaining full configuration flexibility.
+ * </p>
+ * <p>
+ * After deserialization, the AspectDef is automatically registered with the CheapFactory
+ * to make it available for subsequent AspectMapHierarchy deserialization. If an AspectDef
+ * with the same name already exists, the deserializer verifies full equality to prevent
+ * conflicts.
+ * </p>
+ * <p>
+ * This class is package-private and used internally by {@link CheapJacksonDeserializer}
+ * and {@link CatalogDeserializer}.
+ * </p>
+ *
+ * @see AspectDef
+ * @see PropertyDef
+ * @see CheapFactory
+ * @see CatalogDeserializer
+ */
 class AspectDefDeserializer extends JsonDeserializer<AspectDef>
 {
     private final CheapFactory factory;

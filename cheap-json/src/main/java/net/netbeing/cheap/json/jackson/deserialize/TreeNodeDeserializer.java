@@ -15,6 +15,37 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
 
+/**
+ * Jackson deserializer for {@link EntityTreeHierarchy.Node} objects in the Cheap data model.
+ * <p>
+ * This deserializer recursively reconstructs tree node structures from JSON format,
+ * handling both leaf nodes and internal nodes with children. Each node can optionally
+ * contain an entity reference identified by UUID.
+ * </p>
+ * <p>
+ * The deserializer processes JSON with the following structure:
+ * </p>
+ * <ul>
+ *   <li>entityId: Optional UUID of the entity associated with this node</li>
+ *   <li>isLeaf: Optional flag indicating if this is a leaf node (defaults to false)</li>
+ *   <li>children: Optional object mapping string keys to child nodes (for non-leaf nodes)</li>
+ * </ul>
+ * <p>
+ * Entity references are resolved through the CheapFactory's entity registry to ensure
+ * consistent Entity object instances across the deserialization process. The deserializer
+ * uses the factory to create the appropriate node type (leaf or internal) based on the
+ * isLeaf flag.
+ * </p>
+ * <p>
+ * This class is package-private and used internally by {@link HierarchyDeserializer}
+ * when deserializing EntityTreeHierarchy objects.
+ * </p>
+ *
+ * @see EntityTreeHierarchy.Node
+ * @see EntityTreeHierarchy
+ * @see HierarchyDeserializer
+ * @see CheapFactory
+ */
 class TreeNodeDeserializer extends JsonDeserializer<EntityTreeHierarchy.Node>
 {
     private final CheapFactory factory;

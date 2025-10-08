@@ -85,8 +85,7 @@ public class CheapJacksonSerializer
         module.addSerializer(HierarchyDef.class, new HierarchyDefSerializer());
         module.addSerializer(Hierarchy.class, new HierarchySerializer());
         module.addSerializer(Aspect.class, new AspectSerializer());
-        module.addSerializer(Property.class, new PropertySerializer());
-        
+
         mapper.registerModule(module);
         
         return mapper;

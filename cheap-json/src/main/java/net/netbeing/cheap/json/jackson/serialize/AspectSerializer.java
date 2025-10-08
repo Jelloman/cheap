@@ -9,6 +9,27 @@ import java.io.IOException;
 import java.lang.reflect.Array;
 import java.util.Collection;
 
+/**
+ * Jackson serializer for {@link Aspect} objects in the Cheap data model.
+ * <p>
+ * This serializer converts an Aspect to JSON format, including all of its properties
+ * as defined by its AspectDef. The serializer can optionally include the aspect
+ * definition name and entity ID in the output based on configuration flags.
+ * </p>
+ * <p>
+ * The serializer iterates through all property definitions in the aspect's AspectDef
+ * and writes the corresponding property values to JSON. Only non-null property values
+ * are included in the output to keep the JSON concise.
+ * </p>
+ * <p>
+ * This class is package-private and used internally by {@link CheapJacksonSerializer}
+ * and {@link HierarchySerializer} when serializing AspectMapHierarchy contents.
+ * </p>
+ *
+ * @see Aspect
+ * @see AspectDef
+ * @see CheapJacksonSerializer
+ */
 class AspectSerializer extends JsonSerializer<Aspect>
 {
     private final boolean includeEntityId;

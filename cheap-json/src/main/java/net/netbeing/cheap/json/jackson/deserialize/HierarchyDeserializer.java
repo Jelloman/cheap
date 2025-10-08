@@ -14,6 +14,39 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
 
+/**
+ * Jackson deserializer for {@link Hierarchy} objects in the Cheap data model.
+ * <p>
+ * This deserializer reconstructs any type of Hierarchy from JSON format by dispatching
+ * to specialized deserialization methods based on the hierarchy type code (EL, ES, ED,
+ * ET, or AM). The deserializer uses a {@link CheapFactory} to create hierarchy instances
+ * and manage entity references consistently.
+ * </p>
+ * <p>
+ * Each hierarchy type has a corresponding deserialization method:
+ * </p>
+ * <ul>
+ *   <li>{@link AspectMapHierarchy}: Deserializes entity-to-aspect mappings, using
+ *       context attributes to pass AspectDef and Entity to the AspectDeserializer</li>
+ *   <li>{@link EntityDirectoryHierarchy}: Deserializes string-to-entity mappings</li>
+ *   <li>{@link EntityListHierarchy}: Deserializes ordered entity UUID arrays</li>
+ *   <li>{@link EntitySetHierarchy}: Deserializes unique entity UUID arrays</li>
+ *   <li>{@link EntityTreeHierarchy}: Deserializes recursive tree structures with TreeNodeDeserializer</li>
+ * </ul>
+ * <p>
+ * Entity references are resolved through the CheapFactory's entity registry, ensuring
+ * that entities with the same UUID are represented by the same Entity object instances.
+ * </p>
+ * <p>
+ * This class is package-private and used internally by {@link CheapJacksonDeserializer}
+ * and {@link CatalogDeserializer}.
+ * </p>
+ *
+ * @see Hierarchy
+ * @see HierarchyType
+ * @see CheapFactory
+ * @see CatalogDeserializer
+ */
 class HierarchyDeserializer extends JsonDeserializer<Hierarchy>
 {
     private final CheapFactory factory;

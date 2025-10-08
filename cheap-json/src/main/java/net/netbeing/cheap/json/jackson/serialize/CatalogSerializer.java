@@ -9,6 +9,41 @@ import net.netbeing.cheap.model.*;
 import java.io.IOException;
 import java.util.Map;
 
+/**
+ * Jackson serializer for {@link Catalog} objects in the Cheap data model.
+ * <p>
+ * This serializer converts a Catalog to JSON format, including its global ID, URI,
+ * species, upstream catalog reference, aspect definitions, and all contained hierarchies.
+ * The output JSON structure provides a complete representation of the catalog suitable
+ * for storage or transmission.
+ * </p>
+ * <p>
+ * The serializer produces JSON with the following structure:
+ * <pre>{@code
+ * {
+ *   "globalId": "uuid-string",
+ *   "uri": "catalog-uri" or null,
+ *   "species": "source|sink|mirror|cache|clone|fork",
+ *   "upstream": "upstream-catalog-uuid" (optional),
+ *   "aspectDefs": {
+ *     "aspectDefName": { AspectDef JSON... },
+ *     ...
+ *   },
+ *   "hierarchies": {
+ *     "hierarchyName": { Hierarchy JSON... },
+ *     ...
+ *   }
+ * }
+ * }</pre>
+ * </p>
+ * <p>
+ * This class is package-private and used internally by {@link CheapJacksonSerializer}.
+ * It delegates to other specialized serializers for nested objects like AspectDef and Hierarchy.
+ * </p>
+ *
+ * @see Catalog
+ * @see CheapJacksonSerializer
+ */
 class CatalogSerializer extends JsonSerializer<Catalog>
 {
     @Override

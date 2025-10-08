@@ -7,6 +7,31 @@ import net.netbeing.cheap.model.*;
 
 import java.io.IOException;
 
+/**
+ * Jackson serializer for {@link AspectDef} objects in the Cheap data model.
+ * <p>
+ * This serializer converts an AspectDef to JSON format, including its name,
+ * access control flags (isReadable, isWritable, canAddProperties, canRemoveProperties),
+ * and the collection of PropertyDef specifications.
+ * </p>
+ * <p>
+ * The serializer optimizes the JSON output by omitting boolean flags that have
+ * their default values (true for isReadable/isWritable, false for canAddProperties/canRemoveProperties).
+ * This reduces JSON verbosity while maintaining full fidelity.
+ * </p>
+ * <p>
+ * Property definitions are serialized inline as an array of objects, with each
+ * PropertyDef containing its name, type, and any non-default configuration flags.
+ * </p>
+ * <p>
+ * This class is package-private and used internally by {@link CheapJacksonSerializer}
+ * when serializing Catalog objects that contain AspectDef collections.
+ * </p>
+ *
+ * @see AspectDef
+ * @see PropertyDef
+ * @see CatalogSerializer
+ */
 class AspectDefSerializer extends JsonSerializer<AspectDef>
 {
     @Override

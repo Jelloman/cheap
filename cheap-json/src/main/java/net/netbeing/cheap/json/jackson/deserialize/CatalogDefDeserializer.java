@@ -13,6 +13,31 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Jackson deserializer for {@link CatalogDef} objects in the Cheap data model.
+ * <p>
+ * This deserializer reconstructs a CatalogDef from JSON format, including its collections
+ * of AspectDef and HierarchyDef objects. A CatalogDef provides informational metadata
+ * describing the structure and types that a catalog contains or typically contains.
+ * </p>
+ * <p>
+ * The deserialization process delegates to {@link AspectDefDeserializer} and
+ * {@link HierarchyDefDeserializer} for nested objects. AspectDef registration is
+ * handled by AspectDefDeserializer, while HierarchyDefs are registered with the
+ * factory by this deserializer.
+ * </p>
+ * <p>
+ * This class is package-private and used internally by {@link CheapJacksonDeserializer}
+ * for standalone CatalogDef deserialization or as part of metadata imports.
+ * </p>
+ *
+ * @see CatalogDef
+ * @see AspectDef
+ * @see HierarchyDef
+ * @see CheapFactory
+ * @see AspectDefDeserializer
+ * @see HierarchyDefDeserializer
+ */
 class CatalogDefDeserializer extends JsonDeserializer<CatalogDef>
 {
     private final CheapFactory factory;
