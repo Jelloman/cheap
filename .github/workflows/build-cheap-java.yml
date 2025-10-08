@@ -38,6 +38,7 @@ jobs:
       - name: Upload JARs
         uses: actions/upload-artifact@v4
         with:
-          path: */build/libs/*.jar
+          path: |
+            */build/libs/*.jar
 
  
