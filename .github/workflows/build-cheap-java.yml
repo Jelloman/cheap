@@ -10,6 +10,7 @@ on:
       - "cheap-db/**"
       - "*.gradle.kts"
       - "gradle/**"
+      - ".github/workflows/build-cheap-java.yml"
 jobs:
   build:
     runs-on: ubuntu-latest
