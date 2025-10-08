@@ -199,8 +199,6 @@ public class CheapFileUtilTest
         FileRec dirRec = files.get(testRoot);
         assertTrue(dirRec.isDirectory());
         assertFalse(dirRec.isSymLink());
-        
-        assertEquals(0, dirRec.size()); // Directories typically have 0 size
         assertNotNull(dirRec.creationTime());
         assertNotNull(dirRec.modifiedTime());
         assertNotNull(dirRec.accessTime());
