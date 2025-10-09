@@ -20,11 +20,9 @@ dependencies {
     testRuntimeOnly(libs.junit.platform.launcher)
     testRuntimeOnly(libs.junit.jupiter)
 
-    // This dependency is exported to consumers, that is to say found on their compile classpath.
     api(libs.commons.math3)
+    api(libs.guava)
 
-    // This dependency is used internally, and not exposed to consumers on their own compile classpath.
-    implementation(libs.guava)
     compileOnly(libs.jetbrains.annotations)
 
     // Lombok

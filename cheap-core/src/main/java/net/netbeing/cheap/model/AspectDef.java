@@ -141,7 +141,7 @@ public interface AspectDef extends Entity
         return hasher.hash();
     }
 
-    static Funneler FUNNEL = new Funneler();
+    Funneler FUNNEL = new Funneler();
 
     @SuppressWarnings("UnstableApiUsage")
     class Funneler implements Funnel<AspectDef>

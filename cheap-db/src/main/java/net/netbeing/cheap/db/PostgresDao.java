@@ -20,9 +20,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -330,7 +332,7 @@ public class PostgresDao implements CatalogPersistence
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setObject(1, UUID.randomUUID());
             stmt.setString(2, aspectDef.name());
-            stmt.setString(3, "TODO_HASH"); // TODO: Fix hash serialization
+            stmt.setString(3, aspectDef.hash().toString());
             stmt.setBoolean(4, aspectDef.isReadable());
             stmt.setBoolean(5, aspectDef.isWritable());
             stmt.setBoolean(6, aspectDef.canAddProperties());
@@ -677,21 +679,25 @@ public class PostgresDao implements CatalogPersistence
                 PropertyType type = propDef.type();
 
                 if (value == null) {
-                    // For null values, insert a single row with null in the appropriate column
-                    stmt.setObject(1, entityId);
-                    stmt.setObject(2, aspectDefId);
-                    stmt.setObject(3, catalogId);
-                    stmt.setString(4, propName);
-                    stmt.setInt(5, 0); // value_index
+                    // For null values:
+                    // - Single-valued: insert a row with NULL
+                    // - Multivalued: don't insert any rows (null will be distinguished from empty list during load)
+                    if (!propDef.isMultivalued()) {
+                        stmt.setObject(1, entityId);
+                        stmt.setObject(2, aspectDefId);
+                        stmt.setObject(3, catalogId);
+                        stmt.setString(4, propName);
+                        stmt.setInt(5, 0); // value_index
 
-                    if (type == PropertyType.BLOB) {
-                        stmt.setString(6, null); // value_text
-                        stmt.setBytes(7, null);  // value_binary
-                    } else {
-                        stmt.setString(6, null); // value_text
-                        stmt.setBytes(7, null);  // value_binary
+                        if (type == PropertyType.BLOB) {
+                            stmt.setString(6, null); // value_text
+                            stmt.setBytes(7, null);  // value_binary
+                        } else {
+                            stmt.setString(6, null); // value_text
+                            stmt.setBytes(7, null);  // value_binary
+                        }
+                        stmt.addBatch();
                     }
-                    stmt.addBatch();
                 } else if (propDef.isMultivalued() && value instanceof List) {
                     // For multivalued properties, insert one row per value
                     @SuppressWarnings("unchecked")
@@ -1086,6 +1092,9 @@ public class PostgresDao implements CatalogPersistence
 
         UUID aspectDefId = getAspectDefId(conn, aspectDef.name());
 
+        // Track which properties we've loaded from the database
+        Set<String> loadedProperties = new HashSet<>();
+
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setObject(1, entity.globalId());
             stmt.setObject(2, aspectDefId);
@@ -1110,6 +1119,7 @@ public class PostgresDao implements CatalogPersistence
                         // Save the previous property if it exists
                         if (currentPropertyName != null) {
                             saveLoadedProperty(aspect, currentPropDef, multivaluedValues);
+                            loadedProperties.add(currentPropertyName);
                         }
 
                         // Start collecting values for the new property
@@ -1126,7 +1136,19 @@ public class PostgresDao implements CatalogPersistence
                 // Save the last property
                 if (currentPropertyName != null) {
                     saveLoadedProperty(aspect, currentPropDef, multivaluedValues);
+                    loadedProperties.add(currentPropertyName);
                 }
+            }
+        }
+
+        // Handle properties that had no rows in the database
+        // For multivalued properties: no rows means empty list
+        // For single-valued properties: no rows means null (or use default value if available)
+        for (PropertyDef propDef : aspectDef.propertyDefs()) {
+            if (!loadedProperties.contains(propDef.name()) && propDef.isMultivalued()) {
+                // Multivalued property with no rows → create with empty list
+                Property property = factory.createProperty(propDef, Collections.emptyList());
+                aspect.put(property);
             }
         }
 
