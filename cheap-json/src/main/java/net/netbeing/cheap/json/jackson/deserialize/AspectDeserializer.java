@@ -123,6 +123,15 @@ class AspectDeserializer extends JsonDeserializer<Aspect>
             return null;
         }
 
+        // Handle multivalued properties (arrays) regardless of type
+        if (p.currentToken() == JsonToken.START_ARRAY) {
+            List<Object> list = new ArrayList<>();
+            while (p.nextToken() != JsonToken.END_ARRAY) {
+                list.add(readValue(p, type));
+            }
+            return list;
+        }
+
         if (type == null) {
             return p.getValueAsString();
         }
@@ -158,17 +167,7 @@ class AspectDeserializer extends JsonDeserializer<Aspect>
                     yield p.getBooleanValue();
                 }
             }
-            default -> {
-                if (p.currentToken() == JsonToken.START_ARRAY) {
-                    List<Object> list = new ArrayList<>();
-                    while (p.nextToken() != JsonToken.END_ARRAY) {
-                        list.add(readValue(p, type));
-                    }
-                    yield list;
-                } else {
-                    yield p.getValueAsString();
-                }
-            }
+            default -> p.getValueAsString();
         };
     }
 }

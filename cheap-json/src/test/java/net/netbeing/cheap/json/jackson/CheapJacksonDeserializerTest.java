@@ -260,6 +260,122 @@ public class CheapJacksonDeserializerTest
         assertEquals(UUID.fromString("550e8400-e29b-41d4-a716-444444444444"), catalog.globalId());
     }
 
+    @Test
+    void testDeserializeMultivaluedProperties() throws IOException
+    {
+        // Use a fresh deserializer with custom factory
+        CheapFactory customFactory = new CheapFactory();
+        CheapJacksonDeserializer freshDeserializer = new CheapJacksonDeserializer(customFactory);
+
+        String json = loadJsonResource("multivalued-properties.json");
+        Catalog catalog = freshDeserializer.fromJson(json);
+
+        assertEquals(UUID.fromString("550e8400-e29b-41d4-a716-444444444444"), catalog.globalId());
+
+        // Verify AspectDef with multivalued properties
+        AspectDef productDef = null;
+        for (AspectDef ad : catalog.aspectDefs()) {
+            if ("product".equals(ad.name())) {
+                productDef = ad;
+                break;
+            }
+        }
+        assertNotNull(productDef);
+
+        // Check multivalued PropertyDefs
+        PropertyDef tagsProp = productDef.propertyDef("tags");
+        assertNotNull(tagsProp);
+        assertTrue(tagsProp.isMultivalued());
+        assertEquals(PropertyType.String, tagsProp.type());
+
+        PropertyDef scoresProp = productDef.propertyDef("scores");
+        assertNotNull(scoresProp);
+        assertTrue(scoresProp.isMultivalued());
+        assertEquals(PropertyType.Integer, scoresProp.type());
+
+        PropertyDef ratingsProp = productDef.propertyDef("ratings");
+        assertNotNull(ratingsProp);
+        assertTrue(ratingsProp.isMultivalued());
+        assertEquals(PropertyType.Float, ratingsProp.type());
+
+        PropertyDef titleProp = productDef.propertyDef("title");
+        assertNotNull(titleProp);
+        assertFalse(titleProp.isMultivalued());
+
+        // Verify AspectMap with multivalued property values
+        AspectMapHierarchy productAspects = (AspectMapHierarchy) catalog.hierarchy("product");
+        assertNotNull(productAspects);
+        assertEquals(2, productAspects.size());
+
+        // Check first product
+        Entity entity1 = freshDeserializer.getFactory().getEntity(UUID.fromString("550e8400-e29b-41d4-a716-446655440000"));
+        Aspect product1 = productAspects.get(entity1);
+        assertNotNull(product1);
+
+        assertEquals("Smart Watch", product1.readObj("title"));
+
+        @SuppressWarnings("unchecked")
+        java.util.List<String> tags1 = (java.util.List<String>) product1.readObj("tags");
+        assertNotNull(tags1);
+        assertEquals(3, tags1.size());
+        assertEquals("electronics", tags1.get(0));
+        assertEquals("gadget", tags1.get(1));
+        assertEquals("popular", tags1.get(2));
+
+        @SuppressWarnings("unchecked")
+        java.util.List<Long> scores1 = (java.util.List<Long>) product1.readObj("scores");
+        assertNotNull(scores1);
+        assertEquals(3, scores1.size());
+        assertEquals(100L, scores1.get(0));
+        assertEquals(95L, scores1.get(1));
+        assertEquals(87L, scores1.get(2));
+
+        @SuppressWarnings("unchecked")
+        java.util.List<Double> ratings1 = (java.util.List<Double>) product1.readObj("ratings");
+        assertNotNull(ratings1);
+        assertEquals(3, ratings1.size());
+        assertEquals(4.5, ratings1.get(0), 0.01);
+        assertEquals(4.8, ratings1.get(1), 0.01);
+        assertEquals(4.2, ratings1.get(2), 0.01);
+
+        // Check second product
+        Entity entity2 = freshDeserializer.getFactory().getEntity(UUID.fromString("550e8400-e29b-41d4-a716-446655440001"));
+        Aspect product2 = productAspects.get(entity2);
+        assertNotNull(product2);
+
+        assertEquals("Office Suite", product2.readObj("title"));
+
+        @SuppressWarnings("unchecked")
+        java.util.List<String> tags2 = (java.util.List<String>) product2.readObj("tags");
+        assertEquals(2, tags2.size());
+        assertEquals("software", tags2.get(0));
+        assertEquals("productivity", tags2.get(1));
+    }
+
+    @Test
+    void testDeserializeMultivaluedPropertiesCompact() throws IOException
+    {
+        // Use a fresh deserializer with custom factory
+        CheapFactory customFactory = new CheapFactory();
+        CheapJacksonDeserializer freshDeserializer = new CheapJacksonDeserializer(customFactory);
+
+        String json = loadJsonResource("multivalued-properties-compact.json");
+        Catalog catalog = freshDeserializer.fromJson(json);
+
+        // Verify the data is the same as pretty format
+        AspectMapHierarchy productAspects = (AspectMapHierarchy) catalog.hierarchy("product");
+        assertNotNull(productAspects);
+        assertEquals(2, productAspects.size());
+
+        Entity entity1 = freshDeserializer.getFactory().getEntity(UUID.fromString("550e8400-e29b-41d4-a716-446655440000"));
+        Aspect product1 = productAspects.get(entity1);
+
+        @SuppressWarnings("unchecked")
+        java.util.List<String> tags = (java.util.List<String>) product1.readObj("tags");
+        assertEquals(3, tags.size());
+        assertEquals("electronics", tags.get(0));
+    }
+
     private String loadJsonResource(String filename) throws IOException
     {
         try (InputStream is = getClass().getResourceAsStream("/jackson/" + filename)) {

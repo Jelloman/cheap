@@ -449,6 +449,75 @@ public class CheapJacksonSerializerTest
         assertEquals(expectedJson, jacksonResult);
     }
 
+    private CatalogImpl setupCatalogWithMultivaluedProperties()
+    {
+        CatalogImpl catalog = new CatalogImpl(CATALOG_ID);
+
+        UUID entityId1 = UUID.fromString("550e8400-e29b-41d4-a716-446655440000");
+        UUID entityId2 = UUID.fromString("550e8400-e29b-41d4-a716-446655440001");
+        Entity entity1 = new EntityImpl(entityId1);
+        Entity entity2 = new EntityImpl(entityId2);
+
+        // Create PropertyDefs with multivalued properties
+        PropertyDef tagsProp = new PropertyDefImpl("tags", PropertyType.String, null, false, true, true, true, false, true);
+        PropertyDef scoresProp = new PropertyDefImpl("scores", PropertyType.Integer, null, false, true, true, true, false, true);
+        PropertyDef ratingsProp = new PropertyDefImpl("ratings", PropertyType.Float, null, false, true, true, true, false, true);
+        PropertyDef titleProp = new PropertyDefImpl("title", PropertyType.String, null, false, true, true, false, false, false);
+
+        Map<String, PropertyDef> productProps = ImmutableMap.of(
+            "tags", tagsProp,
+            "scores", scoresProp,
+            "ratings", ratingsProp,
+            "title", titleProp
+        );
+        AspectDef productAspectDef = new ImmutableAspectDefImpl("product", productProps);
+        AspectMapHierarchy productAspects = catalog.extend(productAspectDef);
+
+        // Create first product with multivalued properties
+        AspectObjectMapImpl product1 = new AspectObjectMapImpl(entity1, productAspectDef);
+        product1.write("tags", ImmutableList.of("electronics", "gadget", "popular"));
+        product1.write("scores", ImmutableList.of(100L, 95L, 87L));
+        product1.write("ratings", ImmutableList.of(4.5, 4.8, 4.2));
+        product1.write("title", "Smart Watch");
+        productAspects.put(entity1, product1);
+
+        // Create second product with multivalued properties
+        AspectObjectMapImpl product2 = new AspectObjectMapImpl(entity2, productAspectDef);
+        product2.write("tags", ImmutableList.of("software", "productivity"));
+        product2.write("scores", ImmutableList.of(98L, 92L));
+        product2.write("ratings", ImmutableList.of(4.7, 4.9));
+        product2.write("title", "Office Suite");
+        productAspects.put(entity2, product2);
+
+        return catalog;
+    }
+
+    @Test
+    void testCatalogWithMultivaluedProperties() throws IOException
+    {
+        CatalogImpl catalog = setupCatalogWithMultivaluedProperties();
+
+        String jacksonResult = CheapJacksonSerializer.toJson(catalog, true);
+        if (WRITE_OUTPUT_PATH != null)
+            Files.writeString(Paths.get(WRITE_OUTPUT_PATH, "multivalued-properties.json"), jacksonResult, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+        String expectedJson = loadExpectedJson("multivalued-properties.json");
+
+        assertEquals(expectedJson, jacksonResult);
+    }
+
+    @Test
+    void testCatalogWithMultivaluedPropertiesCompact() throws IOException
+    {
+        CatalogImpl catalog = setupCatalogWithMultivaluedProperties();
+
+        String jacksonResult = CheapJacksonSerializer.toJson(catalog, false);
+        if (WRITE_OUTPUT_PATH != null)
+            Files.writeString(Paths.get(WRITE_OUTPUT_PATH, "multivalued-properties-compact.json"), jacksonResult, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+        String expectedJson = loadExpectedJson("multivalued-properties-compact.json");
+
+        assertEquals(expectedJson, jacksonResult);
+    }
+
     private String loadExpectedJson(String filename) throws IOException
     {
         try (InputStream is = getClass().getResourceAsStream("/jackson/" + filename)) {
