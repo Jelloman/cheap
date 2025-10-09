@@ -152,8 +152,8 @@ class PostgresCheapSchemaTest {
                 entityId, aspectDefId, catalogId, "test_hierarchy");
 
             // Insert into property_value
-            executeUpdate(conn, "INSERT INTO property_value (entity_id, aspect_def_id, catalog_id, property_name, value_text, value_integer, value_float, value_boolean, value_datetime, value_binary, value_type, is_null) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                entityId, aspectDefId, catalogId, "test_prop", "test_value", 0L, 0.0, false, null, null, "STR", false);
+            executeUpdate(conn, "INSERT INTO property_value (entity_id, aspect_def_id, catalog_id, property_name, value_text, value_binary) VALUES (?, ?, ?, ?, ?, ?)",
+                entityId, aspectDefId, catalogId, "test_prop", "test_value", null);
 
             // Insert into hierarchy_entity_list
             executeUpdate(conn, "INSERT INTO hierarchy_entity_list (catalog_id, hierarchy_name, entity_id, list_order) VALUES (?, ?, ?, ?)",
