@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) 2025. David Noha
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ */
+
 package net.netbeing.cheap.db;
 
 import io.zonky.test.db.postgres.junit5.EmbeddedPostgresExtension;
@@ -152,8 +168,8 @@ class PostgresCheapSchemaTest {
                 entityId, aspectDefId, catalogId, "test_hierarchy");
 
             // Insert into property_value
-            executeUpdate(conn, "INSERT INTO property_value (entity_id, aspect_def_id, catalog_id, property_name, value_text, value_integer, value_float, value_boolean, value_datetime, value_binary, value_type, is_null) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                entityId, aspectDefId, catalogId, "test_prop", "test_value", 0L, 0.0, false, null, null, "STR", false);
+            executeUpdate(conn, "INSERT INTO property_value (entity_id, aspect_def_id, catalog_id, property_name, value_text, value_binary) VALUES (?, ?, ?, ?, ?, ?)",
+                entityId, aspectDefId, catalogId, "test_prop", "test_value", null);
 
             // Insert into hierarchy_entity_list
             executeUpdate(conn, "INSERT INTO hierarchy_entity_list (catalog_id, hierarchy_name, entity_id, list_order) VALUES (?, ?, ?, ?)",

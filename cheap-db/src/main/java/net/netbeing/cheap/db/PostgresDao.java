@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) 2025. David Noha
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ */
+
 package net.netbeing.cheap.db;
 
 import net.netbeing.cheap.model.*;
@@ -8,13 +24,23 @@ import javax.sql.DataSource;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -52,8 +78,8 @@ import java.util.UUID;
  *   <li><b>hierarchy_entity_list, hierarchy_entity_set, hierarchy_entity_directory,
  *       hierarchy_entity_tree_node, hierarchy_aspect_map:</b> Type-specific hierarchy content tables</li>
  *   <li><b>aspect:</b> Aspect-to-entity associations</li>
- *   <li><b>property_value:</b> Property values with type-specific columns (value_text, value_integer,
- *       value_float, value_boolean, value_datetime, value_binary)</li>
+ *   <li><b>property_value:</b> Property values with simplified storage (value_text and value_binary columns,
+ *       one row per value for multivalued properties)</li>
  * </ul>
  *
  * <h2>Persistence Modes</h2>
@@ -322,7 +348,7 @@ public class PostgresDao implements CatalogPersistence
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setObject(1, UUID.randomUUID());
             stmt.setString(2, aspectDef.name());
-            stmt.setString(3, "TODO_HASH"); // TODO: Fix hash serialization
+            stmt.setString(3, aspectDef.hash().toString());
             stmt.setBoolean(4, aspectDef.isReadable());
             stmt.setBoolean(5, aspectDef.isWritable());
             stmt.setBoolean(6, aspectDef.canAddProperties());
@@ -648,18 +674,17 @@ public class PostgresDao implements CatalogPersistence
 
     private void saveAspectProperties(Connection conn, UUID entityId, UUID aspectDefId, UUID catalogId, Aspect aspect) throws SQLException
     {
-        String sql = "INSERT INTO property_value (entity_id, aspect_def_id, catalog_id, property_name, " +
-            "value_text, value_integer, value_float, value_boolean, value_datetime, value_binary, " +
-            "value_type, is_null) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) " +
-            "ON CONFLICT (entity_id, aspect_def_id, catalog_id, property_name) DO UPDATE SET " +
-            "value_text = EXCLUDED.value_text, " +
-            "value_integer = EXCLUDED.value_integer, " +
-            "value_float = EXCLUDED.value_float, " +
-            "value_boolean = EXCLUDED.value_boolean, " +
-            "value_datetime = EXCLUDED.value_datetime, " +
-            "value_binary = EXCLUDED.value_binary, " +
-            "value_type = EXCLUDED.value_type, " +
-            "is_null = EXCLUDED.is_null";
+        // First, delete existing property values for this aspect to handle updates properly
+        String deleteSql = "DELETE FROM property_value WHERE entity_id = ? AND aspect_def_id = ? AND catalog_id = ?";
+        try (PreparedStatement deleteStmt = conn.prepareStatement(deleteSql)) {
+            deleteStmt.setObject(1, entityId);
+            deleteStmt.setObject(2, aspectDefId);
+            deleteStmt.setObject(3, catalogId);
+            deleteStmt.executeUpdate();
+        }
+
+        String sql = "INSERT INTO property_value (entity_id, aspect_def_id, catalog_id, property_name, value_index, " +
+            "value_text, value_binary) VALUES (?, ?, ?, ?, ?, ?, ?)";
 
         AspectDef aspectDef = aspect.def();
 
@@ -667,57 +692,83 @@ public class PostgresDao implements CatalogPersistence
             for (PropertyDef propDef : aspectDef.propertyDefs()) {
                 String propName = propDef.name();
                 Object value = aspect.readObj(propName);
+                PropertyType type = propDef.type();
 
-                stmt.setObject(1, entityId);
-                stmt.setObject(2, aspectDefId);
-                stmt.setObject(3, catalogId);
-                stmt.setString(4, propName);
+                if (value == null) {
+                    // For null values:
+                    // - Single-valued: insert a row with NULL
+                    // - Multivalued: don't insert any rows (null will be distinguished from empty list during load)
+                    if (!propDef.isMultivalued()) {
+                        stmt.setObject(1, entityId);
+                        stmt.setObject(2, aspectDefId);
+                        stmt.setObject(3, catalogId);
+                        stmt.setString(4, propName);
+                        stmt.setInt(5, 0); // value_index
 
-                // Set all value columns to null initially
-                stmt.setString(5, null);  // value_text
-                stmt.setLong(6, 0);       // value_integer
-                stmt.setDouble(7, 0.0);   // value_float
-                stmt.setBoolean(8, false); // value_boolean
-                stmt.setTimestamp(9, null); // value_datetime
-                stmt.setBytes(10, null);    // value_binary
+                        if (type == PropertyType.BLOB) {
+                            stmt.setString(6, null); // value_text
+                            stmt.setBytes(7, null);  // value_binary
+                        } else {
+                            stmt.setString(6, null); // value_text
+                            stmt.setBytes(7, null);  // value_binary
+                        }
+                        stmt.addBatch();
+                    }
+                } else if (propDef.isMultivalued() && value instanceof List) {
+                    // For multivalued properties, insert one row per value
+                    @SuppressWarnings("unchecked")
+                    List<Object> listValues = (List<Object>) value;
 
-                boolean isNull = (value == null);
-                stmt.setBoolean(12, isNull);
+                    // If empty list, don't insert any rows (empty list represented by no rows)
+                    for (int i = 0; i < listValues.size(); i++) {
+                        Object itemValue = listValues.get(i);
+                        stmt.setObject(1, entityId);
+                        stmt.setObject(2, aspectDefId);
+                        stmt.setObject(3, catalogId);
+                        stmt.setString(4, propName);
+                        stmt.setInt(5, i); // value_index
 
-                if (!isNull) {
-                    PropertyType type = propDef.type();
-                    stmt.setString(11, mapPropertyTypeToDbType(type));
-
-                    switch (type) {
-                        case Integer -> {
-                            stmt.setLong(6, ((Number) value).longValue());
+                        if (type == PropertyType.BLOB) {
+                            stmt.setString(6, null); // value_text
+                            stmt.setBytes(7, (byte[]) itemValue); // value_binary
+                        } else {
+                            stmt.setString(6, convertValueToString(itemValue, type)); // value_text
+                            stmt.setBytes(7, null); // value_binary
                         }
-                        case Float -> {
-                            stmt.setDouble(7, ((Number) value).doubleValue());
-                        }
-                        case Boolean -> {
-                            stmt.setBoolean(8, (Boolean) value);
-                        }
-                        case DateTime -> {
-                            stmt.setTimestamp(9, convertToTimestamp(value));
-                        }
-                        case BLOB -> {
-                            stmt.setBytes(10, (byte[]) value);
-                        }
-                        default -> {
-                            // All other types stored as text
-                            stmt.setString(5, value.toString());
-                        }
+                        stmt.addBatch();
                     }
                 } else {
-                    stmt.setString(11, mapPropertyTypeToDbType(propDef.type()));
-                }
+                    // For single-valued properties, insert one row with value_index 0
+                    stmt.setObject(1, entityId);
+                    stmt.setObject(2, aspectDefId);
+                    stmt.setObject(3, catalogId);
+                    stmt.setString(4, propName);
+                    stmt.setInt(5, 0); // value_index
 
-                stmt.addBatch();
+                    if (type == PropertyType.BLOB) {
+                        stmt.setString(6, null); // value_text
+                        stmt.setBytes(7, (byte[]) value); // value_binary
+                    } else {
+                        stmt.setString(6, convertValueToString(value, type)); // value_text
+                        stmt.setBytes(7, null); // value_binary
+                    }
+                    stmt.addBatch();
+                }
             }
 
             stmt.executeBatch();
         }
+    }
+
+    /**
+     * Converts a property value to its string representation for storage in value_text column.
+     */
+    private String convertValueToString(Object value, PropertyType type) throws SQLException
+    {
+        return switch (type) {
+            case DateTime -> convertToTimestamp(value).toString();
+            default -> value.toString();
+        };
     }
 
     @Override
@@ -1050,38 +1101,132 @@ public class PostgresDao implements CatalogPersistence
     {
         Aspect aspect = factory.createPropertyMapAspect(entity, aspectDef);
 
-        String sql = "SELECT property_name, value_text, value_integer, value_float, value_boolean, " +
-            "value_datetime, value_binary, value_type, is_null " +
+        String sql = "SELECT property_name, value_index, value_text, value_binary " +
             "FROM property_value " +
-            "WHERE entity_id = ? AND aspect_def_id = ? AND catalog_id = ?";
+            "WHERE entity_id = ? AND aspect_def_id = ? AND catalog_id = ? " +
+            "ORDER BY property_name, value_index";
 
         UUID aspectDefId = getAspectDefId(conn, aspectDef.name());
+
+        // Track which properties we've loaded from the database
+        Set<String> loadedProperties = new HashSet<>();
 
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setObject(1, entity.globalId());
             stmt.setObject(2, aspectDefId);
             stmt.setObject(3, catalogId);
             try (ResultSet rs = stmt.executeQuery()) {
+                String currentPropertyName = null;
+                List<Object> multivaluedValues = new ArrayList<>();
+                PropertyDef currentPropDef = null;
+
                 while (rs.next()) {
                     String propertyName = rs.getString("property_name");
-                    String valueType = rs.getString("value_type");
-                    boolean isNull = rs.getBoolean("is_null");
+                    String valueText = rs.getString("value_text");
+                    byte[] valueBinary = rs.getBytes("value_binary");
 
                     PropertyDef propDef = aspectDef.propertyDef(propertyName);
-                    if (propDef != null) {
-                        Object value = null;
-                        if (!isNull) {
-                            value = extractValueFromResultSet(rs, mapDbTypeToPropertyType(valueType));
+                    if (propDef == null) {
+                        continue; // Skip unknown properties
+                    }
+
+                    // Check if we've moved to a new property
+                    if (!propertyName.equals(currentPropertyName)) {
+                        // Save the previous property if it exists
+                        if (currentPropertyName != null) {
+                            saveLoadedProperty(aspect, currentPropDef, multivaluedValues);
+                            loadedProperties.add(currentPropertyName);
                         }
 
-                        Property property = factory.createProperty(propDef, value);
-                        aspect.put(property);
+                        // Start collecting values for the new property
+                        currentPropertyName = propertyName;
+                        currentPropDef = propDef;
+                        multivaluedValues = new ArrayList<>();
                     }
+
+                    // Extract and add the value
+                    Object value = extractPropertyValue(propDef.type(), valueText, valueBinary);
+                    multivaluedValues.add(value);
+                }
+
+                // Save the last property
+                if (currentPropertyName != null) {
+                    saveLoadedProperty(aspect, currentPropDef, multivaluedValues);
+                    loadedProperties.add(currentPropertyName);
                 }
             }
         }
 
+        // Handle properties that had no rows in the database
+        // For multivalued properties: no rows means empty list
+        // For single-valued properties: no rows means null (or use default value if available)
+        for (PropertyDef propDef : aspectDef.propertyDefs()) {
+            if (!loadedProperties.contains(propDef.name()) && propDef.isMultivalued()) {
+                // Multivalued property with no rows → create with empty list
+                Property property = factory.createProperty(propDef, Collections.emptyList());
+                aspect.put(property);
+            }
+        }
+
         return aspect;
+    }
+
+    /**
+     * Saves a loaded property to an aspect, handling both single-valued and multivalued properties.
+     */
+    private void saveLoadedProperty(Aspect aspect, PropertyDef propDef, List<Object> values)
+    {
+        if (values.isEmpty()) {
+            // No rows found - for multivalued, this means empty list
+            if (propDef.isMultivalued()) {
+                Property property = factory.createProperty(propDef, Collections.emptyList());
+                aspect.put(property);
+            }
+            // For single-valued, don't add the property (will use default value if available)
+        } else if (propDef.isMultivalued()) {
+            // Multivalued property - create property with list of all values
+            Property property = factory.createProperty(propDef, new ArrayList<>(values));
+            aspect.put(property);
+        } else {
+            // Single-valued property - use the first (and only) value
+            Object value = values.getFirst();
+            Property property = factory.createProperty(propDef, value);
+            aspect.put(property);
+        }
+    }
+
+    /**
+     * Extracts a property value from the result set based on the property type.
+     * Uses value_text for all types except BLOB (which uses value_binary).
+     */
+    private Object extractPropertyValue(PropertyType type, String valueText, byte[] valueBinary) throws SQLException
+    {
+        if (type == PropertyType.BLOB) {
+            return valueBinary; // May be null
+        }
+
+        if (valueText == null) {
+            return null;
+        }
+
+        return switch (type) {
+            case Integer -> Long.parseLong(valueText);
+            case Float -> Double.parseDouble(valueText);
+            case Boolean -> Boolean.parseBoolean(valueText);
+            case String, Text, CLOB -> valueText;
+            case BigInteger -> new java.math.BigInteger(valueText);
+            case BigDecimal -> new java.math.BigDecimal(valueText);
+            case DateTime -> java.sql.Timestamp.valueOf(valueText);
+            case URI -> {
+                try {
+                    yield new java.net.URI(valueText);
+                } catch (java.net.URISyntaxException e) {
+                    throw new SQLException("Invalid URI value: " + valueText, e);
+                }
+            }
+            case UUID -> UUID.fromString(valueText);
+            case BLOB -> throw new IllegalStateException("BLOB should be handled before this switch");
+        };
     }
 
     private AspectDef loadAspectDefForHierarchy(Connection conn, UUID catalogId, String hierarchyName) throws SQLException
@@ -1330,22 +1475,6 @@ public class PostgresDao implements CatalogPersistence
             case BLOB -> stmt.setBytes(paramIndex, (byte[]) value);
             default -> stmt.setString(paramIndex, value.toString());
         }
-    }
-
-    /**
-     * Extracts a property value from a ResultSet based on the PropertyType.
-     * Used when loading aspects from the default property_value table.
-     */
-    private Object extractValueFromResultSet(ResultSet rs, PropertyType type) throws SQLException
-    {
-        return switch (type) {
-            case Integer -> rs.getLong("value_integer");
-            case Float -> rs.getDouble("value_float");
-            case Boolean -> rs.getBoolean("value_boolean");
-            case DateTime -> rs.getTimestamp("value_datetime");
-            case BLOB -> rs.getBytes("value_binary");
-            default -> rs.getString("value_text");
-        };
     }
 
     // ===== Static DDL Execution Methods =====

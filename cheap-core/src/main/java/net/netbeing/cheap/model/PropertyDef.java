@@ -1,8 +1,25 @@
+/*
+ * Copyright (c) 2025. David Noha
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ */
+
 package net.netbeing.cheap.model;
 
 import com.google.common.hash.*;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.List;
 import java.util.Objects;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -161,6 +178,10 @@ public interface PropertyDef
     /**
      * Validates that a property value is compatible with this property definition.
      *
+     * <p>For multivalued properties (where {@link #isMultivalued()} returns true), the value
+     * must be a List, and each element in the list is validated against the property type.
+     * For single-valued properties, the value itself is validated against the property type.</p>
+     *
      * @param value the value to validate
      * @param throwExceptions whether this method should throw exceptions or merely return true/false
      * @throws IllegalArgumentException if the value is invalid for the property definition, and throwExceptions is true
@@ -180,12 +201,39 @@ public interface PropertyDef
             PropertyType expectedType = type();
             Class<?> expectedJavaClass = expectedType.getJavaClass();
 
-            if (!expectedJavaClass.isAssignableFrom(value.getClass())) {
-                if (throwExceptions) {
-                    throw new IllegalArgumentException("Property '" + name() + "' expects type "
-                        + expectedJavaClass.getSimpleName() + " but got " + value.getClass().getSimpleName());
+            if (isMultivalued()) {
+                // For multivalued properties, expect a List
+                if (!(value instanceof List<?> listValue)) {
+                    if (throwExceptions) {
+                        throw new IllegalArgumentException("Property '" + name() + "' is multivalued and expects a List but got "
+                            + value.getClass().getSimpleName());
+                    }
+                    return false;
                 }
-                return false;
+
+                // Because of type erasure, the only way to validate the correctness of
+                // the type of the list is to examine each element. For performance reasons,
+                // we examine only the first element, if there is one.
+                if (!listValue.isEmpty()) {
+                    Object element = listValue.getFirst();
+                    if (element != null && !expectedJavaClass.isAssignableFrom(element.getClass())) {
+                        if (throwExceptions) {
+                            throw new IllegalArgumentException("Property '" + name() + "' expects List<"
+                                + expectedJavaClass.getSimpleName() + "> but the first element is "
+                                + element.getClass().getSimpleName());
+                        }
+                        return false;
+                    }
+                }
+            } else {
+                // For single-valued properties, validate the value directly
+                if (!expectedJavaClass.isAssignableFrom(value.getClass())) {
+                    if (throwExceptions) {
+                        throw new IllegalArgumentException("Property '" + name() + "' expects type "
+                            + expectedJavaClass.getSimpleName() + " but got " + value.getClass().getSimpleName());
+                    }
+                    return false;
+                }
             }
         }
         return true;

@@ -84,7 +84,9 @@ CREATE TABLE aspect (
 -- ========== PROPERTY VALUE STORAGE ==========
 
 -- Generic property value table: One row per property value
--- No global ID - identified by aspect + property_name combination
+-- No global ID - identified by aspect + property_name + value_index combination
+-- For multivalued properties, one row is inserted per value with sequential value_index
+-- For single-valued properties, value_index is always 0
 -- Note that this table is insanely inefficient; it's expected aspects will
 -- mainly be stored in dedicated tables.
 CREATE TABLE property_value (
@@ -92,23 +94,13 @@ CREATE TABLE property_value (
     aspect_def_id UUID NOT NULL,
     catalog_id UUID NOT NULL,
     property_name TEXT NOT NULL,
+    value_index INTEGER NOT NULL DEFAULT 0,
 
-    -- Value storage columns for different types
+    -- Value storage columns - use value_text for all types except BLOB (which uses value_binary)
     value_text TEXT,
-    value_integer BIGINT,
-    value_float DOUBLE PRECISION,
-    value_boolean BOOLEAN,
-    value_datetime TIMESTAMP WITH TIME ZONE,
     value_binary BYTEA,
 
-    -- Metadata
-    value_type TEXT NOT NULL CHECK (value_type IN (
-        'INT', 'FLT', 'BLN', 'STR', 'TXT', 'BGI', 'BGF',
-        'DAT', 'URI', 'UID', 'CLB', 'BLB'
-    )),
-    is_null BOOLEAN NOT NULL DEFAULT false,
-
-    PRIMARY KEY (entity_id, aspect_def_id, catalog_id, property_name),
+    PRIMARY KEY (entity_id, aspect_def_id, catalog_id, property_name, value_index),
     FOREIGN KEY (entity_id, aspect_def_id, catalog_id) REFERENCES aspect(entity_id, aspect_def_id, catalog_id) ON DELETE CASCADE,
     FOREIGN KEY (aspect_def_id, property_name) REFERENCES property_def(aspect_def_id, name)
 );
@@ -201,7 +193,6 @@ CREATE INDEX idx_property_value_entity_id ON property_value(entity_id);
 CREATE INDEX idx_property_value_aspect_def_id ON property_value(aspect_def_id);
 CREATE INDEX idx_property_value_catalog_id ON property_value(catalog_id);
 CREATE INDEX idx_property_value_name ON property_value(property_name);
-CREATE INDEX idx_property_value_type ON property_value(value_type);
 
 -- Hierarchy content indexes
 CREATE INDEX idx_hierarchy_entity_list_catalog_id ON hierarchy_entity_list(catalog_id);
@@ -245,9 +236,6 @@ COMMENT ON TABLE hierarchy_entity_directory IS 'Entity Directory Hierarchy: Stri
 COMMENT ON TABLE hierarchy_entity_tree_node IS 'Entity Tree Hierarchy: Tree structure with named nodes';
 COMMENT ON TABLE hierarchy_aspect_map IS 'Aspect Map Hierarchy: Entity-to-aspect mapping for single aspect type';
 
-COMMENT ON COLUMN property_value.value_text IS 'Storage for STR, TXT, BGI, BGF, URI, UID, CLB types';
-COMMENT ON COLUMN property_value.value_integer IS 'Storage for INT type (stored as BIGINT for 64-bit range)';
-COMMENT ON COLUMN property_value.value_float IS 'Storage for FLT type (stored as DOUBLE PRECISION)';
-COMMENT ON COLUMN property_value.value_boolean IS 'Storage for BLN type';
-COMMENT ON COLUMN property_value.value_datetime IS 'Storage for DAT type';
-COMMENT ON COLUMN property_value.value_binary IS 'Storage for BLB type';
+COMMENT ON COLUMN property_value.value_text IS 'Storage for all property types except BLOB (INT, FLT, BLN, STR, TXT, BGI, BGF, DAT, URI, UID, CLB)';
+COMMENT ON COLUMN property_value.value_binary IS 'Storage for BLB type only';
+COMMENT ON COLUMN property_value.value_index IS 'Index for multivalued properties (0 for single-valued, 0..N-1 for multivalued)';

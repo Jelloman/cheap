@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) 2025. David Noha
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ */
+
 package net.netbeing.cheap.json.jackson.deserialize;
 
 import com.fasterxml.jackson.core.JsonParser;
@@ -123,6 +139,15 @@ class AspectDeserializer extends JsonDeserializer<Aspect>
             return null;
         }
 
+        // Handle multivalued properties (arrays) regardless of type
+        if (p.currentToken() == JsonToken.START_ARRAY) {
+            List<Object> list = new ArrayList<>();
+            while (p.nextToken() != JsonToken.END_ARRAY) {
+                list.add(readValue(p, type));
+            }
+            return list;
+        }
+
         if (type == null) {
             return p.getValueAsString();
         }
@@ -158,17 +183,7 @@ class AspectDeserializer extends JsonDeserializer<Aspect>
                     yield p.getBooleanValue();
                 }
             }
-            default -> {
-                if (p.currentToken() == JsonToken.START_ARRAY) {
-                    List<Object> list = new ArrayList<>();
-                    while (p.nextToken() != JsonToken.END_ARRAY) {
-                        list.add(readValue(p, type));
-                    }
-                    yield list;
-                } else {
-                    yield p.getValueAsString();
-                }
-            }
+            default -> p.getValueAsString();
         };
     }
 }
