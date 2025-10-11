@@ -83,9 +83,10 @@ class SqliteDaoTest
 
     private void initializeSchema() throws SQLException
     {
-        // Use SqliteDao methods to execute DDL
-        sqliteDao.executeMainSchemaDdl(connection);
-        sqliteDao.executeAuditSchemaDdl(connection);
+        // Use SqliteCheapSchema to execute DDL
+        SqliteCheapSchema schema = new SqliteCheapSchema();
+        schema.executeMainSchemaDdl(connection);
+        schema.executeAuditSchemaDdl(connection);
     }
 
     @Test

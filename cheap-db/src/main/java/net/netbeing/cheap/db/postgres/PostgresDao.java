@@ -300,25 +300,6 @@ public class PostgresDao implements CatalogPersistence
         };
     }
 
-    private static String loadDdlResource(String resourcePath) throws SQLException
-    {
-        try (var inputStream = PostgresDao.class.getResourceAsStream(resourcePath)) {
-            if (inputStream == null) {
-                throw new SQLException("DDL resource not found: " + resourcePath);
-            }
-            return new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
-        } catch (Exception e) {
-            throw new SQLException("Failed to load DDL resource: " + resourcePath, e);
-        }
-    }
-
-    private static void executeDdl(@NotNull DataSource dataSource, String ddlContent) throws SQLException
-    {
-        try (Connection conn = dataSource.getConnection(); Statement stmt = conn.createStatement()) {
-            stmt.execute(ddlContent);
-        }
-    }
-
     @Override
     public void saveCatalog(@NotNull Catalog catalog) throws SQLException
     {
@@ -1601,58 +1582,4 @@ public class PostgresDao implements CatalogPersistence
         }
     }
 
-    // ===== Static DDL Execution Methods =====
-
-    /**
-     * Executes the main Cheap schema DDL script to create all core tables and indexes.
-     * This creates the foundation database structure for the Cheap data model.
-     *
-     * @param dataSource the data source to execute the DDL against
-     * @throws SQLException if database operation fails
-     */
-    public void executeMainSchemaDdl(@NotNull DataSource dataSource) throws SQLException
-    {
-        String ddlContent = loadDdlResource("/db/schemas/postgres/postgres-cheap.sql");
-        executeDdl(dataSource, ddlContent);
-    }
-
-    /**
-     * Executes the audit schema DDL script to add audit columns and triggers.
-     * This should be run after the main schema DDL.
-     *
-     * @param dataSource the data source to execute the DDL against
-     * @throws SQLException if database operation fails
-     */
-    public void executeAuditSchemaDdl(@NotNull DataSource dataSource) throws SQLException
-    {
-        String ddlContent = loadDdlResource("/db/schemas/postgres/postgres-cheap-audit.sql");
-        executeDdl(dataSource, ddlContent);
-    }
-
-    /**
-     * Executes the drop schema DDL script to remove all Cheap database objects.
-     * This completely cleans up the Cheap schema from the database.
-     *
-     * @param dataSource the data source to execute the DDL against
-     * @throws SQLException if database operation fails
-     */
-    public void executeDropSchemaDdl(@NotNull DataSource dataSource) throws SQLException
-    {
-        String ddlContent = loadDdlResource("/db/schemas/postgres/postgres-cheap-drop.sql");
-        executeDdl(dataSource, ddlContent);
-    }
-
-    /**
-     * Executes the truncate schema DDL script to delete all data from Cheap tables
-     * while preserving the schema structure. This is useful for clearing test data
-     * or resetting the database without recreating all tables and constraints.
-     *
-     * @param dataSource the data source to execute the DDL against
-     * @throws SQLException if database operation fails
-     */
-    public void executeTruncateSchemaDdl(@NotNull DataSource dataSource) throws SQLException
-    {
-        String ddlContent = loadDdlResource("/db/schemas/postgres/postgres-cheap-truncate.sql");
-        executeDdl(dataSource, ddlContent);
-    }
 }

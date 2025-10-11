@@ -57,10 +57,10 @@ class SqliteCheapSchemaTest {
 
     @Test
     void testAllSchemaExecution() throws SQLException {
-        SqliteDao sqliteDao = new SqliteDao(dataSource);
+        SqliteCheapSchema schema = new SqliteCheapSchema();
 
-        // Execute the main schema DDL using SqliteDao with connection
-        sqliteDao.executeMainSchemaDdl(connection);
+        // Execute the main schema DDL using SqliteCheapSchema with connection
+        schema.executeMainSchemaDdl(connection);
 
         // Verify that key tables were created
         assertTrue(tableExists(connection, "aspect_def"), "aspect_def table should exist");
@@ -72,8 +72,8 @@ class SqliteCheapSchemaTest {
         assertTrue(tableExists(connection, "aspect"), "aspect table should exist");
         assertTrue(tableExists(connection, "property_value"), "property_value table should exist");
 
-        // Execute the audit schema DDL using SqliteDao with connection
-        sqliteDao.executeAuditSchemaDdl(connection);
+        // Execute the audit schema DDL using SqliteCheapSchema with connection
+        schema.executeAuditSchemaDdl(connection);
 
         // Verify that audit columns were added to key tables
         assertTrue(columnExists(connection, "aspect_def", "created_at"), "aspect_def should have created_at column");
@@ -89,8 +89,8 @@ class SqliteCheapSchemaTest {
         assertTrue(triggerExists(connection, "update_aspect_def_updated_at"), "update_aspect_def_updated_at trigger should exist");
         assertTrue(triggerExists(connection, "update_catalog_updated_at"), "update_catalog_updated_at trigger should exist");
 
-        // Execute the drop schema DDL using SqliteDao with connection
-        sqliteDao.executeDropSchemaDdl(connection);
+        // Execute the drop schema DDL using SqliteCheapSchema with connection
+        schema.executeDropSchemaDdl(connection);
 
         // Verify that key tables have been dropped
         assertFalse(tableExists(connection, "aspect_def"), "aspect_def table should be dropped");
@@ -138,10 +138,10 @@ class SqliteCheapSchemaTest {
 
     @Test
     void testTruncateAllTables() throws SQLException {
-        SqliteDao sqliteDao = new SqliteDao(dataSource);
+        SqliteCheapSchema schema = new SqliteCheapSchema();
 
         // Execute the main schema DDL
-        sqliteDao.executeMainSchemaDdl(connection);
+        schema.executeMainSchemaDdl(connection);
 
         Connection conn = connection;
             // Populate all tables with at least 1 row
@@ -227,7 +227,7 @@ class SqliteCheapSchemaTest {
             assertTrue(getRowCount(conn, "hierarchy_aspect_map") >= 1, "hierarchy_aspect_map should have at least 1 row");
 
         // Execute truncate script
-        sqliteDao.executeTruncateSchemaDdl(connection);
+        schema.executeTruncateSchemaDdl(connection);
 
         // Verify all tables are empty
         assertEquals(0, getRowCount(conn, "entity"), "entity should be empty after truncate");
