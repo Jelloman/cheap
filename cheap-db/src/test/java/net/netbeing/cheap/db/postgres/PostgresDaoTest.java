@@ -30,6 +30,7 @@ import javax.sql.DataSource;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -38,6 +39,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.time.ZonedDateTime;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -431,9 +433,7 @@ class PostgresDaoTest
     {
         setUp();
 
-        assertThrows(IllegalArgumentException.class, () -> {
-            postgresDao.saveCatalog(null);
-        });
+        assertThrows(IllegalArgumentException.class, () -> postgresDao.saveCatalog(null));
     }
 
     @Test
@@ -571,28 +571,7 @@ class PostgresDaoTest
         AspectDef aspectDef = factory.createImmutableAspectDef(aspectDefName, propDefs);
 
         // Create the table using createAspectTable()
-        String tableName = "test_all_types";
-
-        // Create and register an AspectTableMapping
-        Map<String, String> columnMapping = new LinkedHashMap<>();
-        columnMapping.put("int_prop", "int_prop");
-        columnMapping.put("float_prop", "float_prop");
-        columnMapping.put("bool_prop", "bool_prop");
-        columnMapping.put("string_prop", "string_prop");
-        columnMapping.put("text_prop", "text_prop");
-        columnMapping.put("bigint_prop", "bigint_prop");
-        columnMapping.put("bigdec_prop", "bigdec_prop");
-        columnMapping.put("date_prop", "date_prop");
-        columnMapping.put("uri_prop", "uri_prop");
-        columnMapping.put("uuid_prop", "uuid_prop");
-        columnMapping.put("clob_prop", "clob_prop");
-        columnMapping.put("blob_prop", "blob_prop");
-
-        AspectTableMapping mapping = new AspectTableMapping(
-            aspectDef,
-            tableName,
-            columnMapping
-        );
+        AspectTableMapping mapping = getAspectTableMapping(aspectDef);
         postgresDao.createTable(mapping);
 
         // Create catalog with AspectMapHierarchy
@@ -619,8 +598,8 @@ class PostgresDaoTest
         aspect1.put(factory.createProperty(textProp, "This is a long text field with lots of content"));
         aspect1.put(factory.createProperty(bigIntProp, new BigInteger("12345678901234567890")));
         aspect1.put(factory.createProperty(bigDecProp, new BigDecimal("123.456789012345678901234567890")));
-        aspect1.put(factory.createProperty(dateProp, java.time.ZonedDateTime.parse("2025-01-15T10:30:00Z")));
-        aspect1.put(factory.createProperty(uriProp, new java.net.URI("https://example.com/path")));
+        aspect1.put(factory.createProperty(dateProp, ZonedDateTime.parse("2025-01-15T10:30:00Z")));
+        aspect1.put(factory.createProperty(uriProp, new URI("https://example.com/path")));
         aspect1.put(factory.createProperty(uuidProp, UUID.fromString("550e8400-e29b-41d4-a716-446655440000")));
         aspect1.put(factory.createProperty(clobProp, "CLOB content here"));
         aspect1.put(factory.createProperty(blobProp, new byte[]{1, 2, 3, 4, 5}));
@@ -634,8 +613,8 @@ class PostgresDaoTest
         aspect2.put(factory.createProperty(textProp, "Another long text field"));
         aspect2.put(factory.createProperty(bigIntProp, new BigInteger("98765432109876543210")));
         aspect2.put(factory.createProperty(bigDecProp, new BigDecimal("987.654321098765432109876543210")));
-        aspect2.put(factory.createProperty(dateProp, java.time.ZonedDateTime.parse("2025-12-31T23:59:59Z")));
-        aspect2.put(factory.createProperty(uriProp, new java.net.URI("https://example.org/another")));
+        aspect2.put(factory.createProperty(dateProp, ZonedDateTime.parse("2025-12-31T23:59:59Z")));
+        aspect2.put(factory.createProperty(uriProp, new URI("https://example.org/another")));
         aspect2.put(factory.createProperty(uuidProp, UUID.fromString("6ba7b810-9dad-11d1-80b4-00c04fd430c8")));
         aspect2.put(factory.createProperty(clobProp, "Different CLOB content"));
         aspect2.put(factory.createProperty(blobProp, new byte[]{10, 20, 30, 40, 50}));
@@ -685,6 +664,33 @@ class PostgresDaoTest
         assertEquals(UUID.fromString("6ba7b810-9dad-11d1-80b4-00c04fd430c8"), loadedAspect2.readObj("uuid_prop"));
         assertEquals("Different CLOB content", loadedAspect2.readObj("clob_prop"));
         assertArrayEquals(new byte[]{10, 20, 30, 40, 50}, (byte[]) loadedAspect2.readObj("blob_prop"));
+    }
+
+    private static AspectTableMapping getAspectTableMapping(AspectDef aspectDef)
+    {
+        String tableName = "test_all_types";
+
+        // Create and register an AspectTableMapping
+        Map<String, String> columnMapping = new LinkedHashMap<>();
+        columnMapping.put("int_prop", "int_prop");
+        columnMapping.put("float_prop", "float_prop");
+        columnMapping.put("bool_prop", "bool_prop");
+        columnMapping.put("string_prop", "string_prop");
+        columnMapping.put("text_prop", "text_prop");
+        columnMapping.put("bigint_prop", "bigint_prop");
+        columnMapping.put("bigdec_prop", "bigdec_prop");
+        columnMapping.put("date_prop", "date_prop");
+        columnMapping.put("uri_prop", "uri_prop");
+        columnMapping.put("uuid_prop", "uuid_prop");
+        columnMapping.put("clob_prop", "clob_prop");
+        columnMapping.put("blob_prop", "blob_prop");
+
+        AspectTableMapping mapping = new AspectTableMapping(
+            aspectDef,
+            tableName,
+            columnMapping
+        );
+        return mapping;
     }
 
     @Test
