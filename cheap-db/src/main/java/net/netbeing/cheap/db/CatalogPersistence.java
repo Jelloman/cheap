@@ -67,31 +67,4 @@ public interface CatalogPersistence {
      * @throws SQLException if database operation fails
      */
     boolean catalogExists(@NotNull UUID catalogId) throws SQLException;
-
-    /**
-     * Executes the main Cheap schema DDL script to create all core tables and indexes.
-     * This creates the foundation database structure for the Cheap data model.
-     *
-     * @param dataSource the data source to execute the DDL against
-     * @throws SQLException if database operation fails
-     */
-    void executeMainSchemaDdl(@NotNull DataSource dataSource) throws SQLException;
-
-    /**
-     * Executes the audit schema DDL script to add audit columns and triggers.
-     * This should be run after the main schema DDL.
-     *
-     * @param dataSource the data source to execute the DDL against
-     * @throws SQLException if database operation fails
-     */
-    void executeAuditSchemaDdl(@NotNull DataSource dataSource) throws SQLException;
-
-    /**
-     * Executes the drop schema DDL script to remove all Cheap database objects.
-     * This completely cleans up the Cheap schema from the database.
-     *
-     * @param dataSource the data source to execute the DDL against
-     * @throws SQLException if database operation fails
-     */
-    void executeDropSchemaDdl(@NotNull DataSource dataSource) throws SQLException;
 }

@@ -14,7 +14,7 @@
  *  limitations under the License.
  */
 
-package net.netbeing.cheap.db.postgres;
+package net.netbeing.cheap.db.mariadb;
 
 import net.netbeing.cheap.db.AspectTableMapping;
 import net.netbeing.cheap.db.CatalogPersistence;
@@ -49,7 +49,7 @@ import java.util.UUID;
 
 /**
  * Data Access Object for persisting and loading complete Catalog instances
- * to/from a PostgreSQL database using the Cheap schema.
+ * to/from a MariaDB database using the Cheap schema.
  * <p>
  * This DAO provides comprehensive persistence capabilities for the entire Cheap data model,
  * including catalogs, aspect definitions, hierarchies, entities, aspects, and properties.
@@ -71,7 +71,7 @@ import java.util.UUID;
  *
  * <h2>Database Schema</h2>
  * <p>
- * PostgresDao works with a normalized schema that closely mirrors the Cheap data model:
+ * MariaDbDao works with a normalized schema that closely mirrors the Cheap data model:
  * </p>
  * <ul>
  *   <li><b>entity:</b> All entities with their UUIDs</li>
@@ -106,8 +106,8 @@ import java.util.UUID;
  * <h2>Usage Example</h2>
  * <pre>{@code
  * // Initialize DAO with data source
- * DataSource ds = createPostgresDataSource("jdbc:postgresql://localhost/cheapdb");
- * PostgresDao dao = new PostgresDao(ds);
+ * DataSource ds = createMariaDbDataSource("jdbc:mariadb://localhost/cheapdb");
+ * MariaDbDao dao = new MariaDbDao(ds);
  *
  * // Create schema (first time only)
  * dao.executeMainSchemaDdl(ds);
@@ -143,16 +143,16 @@ import java.util.UUID;
  *
  * <h2>Type Mapping</h2>
  * <p>
- * PropertyTypes are mapped to PostgreSQL column types and internal 3-letter codes:
+ * PropertyTypes are mapped to MariaDB column types and internal 3-letter codes:
  * </p>
  * <ul>
  *   <li>Integer → BIGINT / INT</li>
- *   <li>Float → DOUBLE PRECISION / FLT</li>
+ *   <li>Float → DOUBLE / FLT</li>
  *   <li>Boolean → BOOLEAN / BLN</li>
  *   <li>String → TEXT / STR</li>
  *   <li>DateTime → TIMESTAMP WITH TIME ZONE / DAT</li>
- *   <li>UUID → UUID / UID</li>
- *   <li>BLOB → BYTEA / BLB</li>
+ *   <li>UUID → CHAR(36) / UID</li>
+ *   <li>BLOB → LONGBLOB / BLB</li>
  * </ul>
  *
  * @see CatalogPersistence
@@ -161,33 +161,33 @@ import java.util.UUID;
  * @see Catalog
  */
 @SuppressWarnings("DuplicateBranchesInSwitch")
-public class PostgresDao implements CatalogPersistence
+public class MariaDbDao implements CatalogPersistence
 {
     private final DataSource dataSource;
     private final CheapFactory factory;
     private final Map<String, AspectTableMapping> aspectTableMappings = new LinkedHashMap<>();
 
     /**
-     * Constructs a new PostgresDao with the given data source.
+     * Constructs a new MariaDbDao with the given data source.
      * Creates a new CheapFactory instance for object creation and entity management.
      *
-     * @param dataSource the PostgreSQL data source to use for database operations
+     * @param dataSource the MariaDB data source to use for database operations
      */
-    public PostgresDao(@NotNull DataSource dataSource)
+    public MariaDbDao(@NotNull DataSource dataSource)
     {
         this.dataSource = dataSource;
         this.factory = new CheapFactory();
     }
 
     /**
-     * Constructs a new PostgresDao with the given data source and factory.
+     * Constructs a new MariaDbDao with the given data source and factory.
      * This constructor allows sharing a CheapFactory instance across multiple DAOs
      * to maintain a consistent entity registry.
      *
-     * @param dataSource the PostgreSQL data source to use for database operations
+     * @param dataSource the MariaDB data source to use for database operations
      * @param factory the CheapFactory to use for object creation and entity management
      */
-    public PostgresDao(@NotNull DataSource dataSource, @NotNull CheapFactory factory)
+    public MariaDbDao(@NotNull DataSource dataSource, @NotNull CheapFactory factory)
     {
         this.dataSource = dataSource;
         this.factory = factory;
@@ -236,14 +236,14 @@ public class PostgresDao implements CatalogPersistence
 
         // Add catalog_id column if needed
         if (mapping.hasCatalogId()) {
-            sql.append("    catalog_id UUID NOT NULL");
+            sql.append("    catalog_id CHAR(36) NOT NULL");
             hasColumns = true;
         }
 
         // Add entity_id column if needed
         if (mapping.hasEntityId()) {
             if (hasColumns) sql.append(",\n");
-            sql.append("    entity_id UUID NOT NULL");
+            sql.append("    entity_id CHAR(36) NOT NULL");
             hasColumns = true;
         }
 
@@ -280,23 +280,23 @@ public class PostgresDao implements CatalogPersistence
     }
 
     /**
-     * Maps a PropertyType to the corresponding PostgreSQL column type.
+     * Maps a PropertyType to the corresponding MariaDB column type.
      */
     private String mapPropertyTypeToSqlType(PropertyType type)
     {
         return switch (type) {
             case Integer -> "BIGINT";
-            case Float -> "DOUBLE PRECISION";
+            case Float -> "DOUBLE";
             case Boolean -> "BOOLEAN";
             case String -> "TEXT";
             case Text -> "TEXT";
             case BigInteger -> "TEXT";
             case BigDecimal -> "TEXT";
-            case DateTime -> "TIMESTAMP WITH TIME ZONE";
+            case DateTime -> "TIMESTAMP";
             case URI -> "TEXT";
-            case UUID -> "UUID";
+            case UUID -> "CHAR(36)";
             case CLOB -> "TEXT";
-            case BLOB -> "BYTEA";
+            case BLOB -> "LONGBLOB";
         };
     }
 
@@ -345,10 +345,10 @@ public class PostgresDao implements CatalogPersistence
     {
         UUID aspectDefId = getAspectDefId(conn, aspectDef.name());
         String sql = "INSERT INTO catalog_aspect_def (catalog_id, aspect_def_id) " +
-            "VALUES (?, ?) ON CONFLICT (catalog_id, aspect_def_id) DO NOTHING";
+            "VALUES (?, ?) ON DUPLICATE KEY UPDATE catalog_id=VALUES(catalog_id)";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setObject(1, catalogId);
-            stmt.setObject(2, aspectDefId);
+            stmt.setString(1, catalogId.toString());
+            stmt.setString(2, aspectDefId.toString());
             stmt.executeUpdate();
         }
     }
@@ -358,14 +358,14 @@ public class PostgresDao implements CatalogPersistence
         String sql =
             "INSERT INTO aspect_def (aspect_def_id, name, hash_version, is_readable, is_writable, can_add_properties, can_remove_properties) " +
                 "VALUES (?, ?, ?, ?, ?, ?, ?) " +
-                "ON CONFLICT (name) DO UPDATE SET " +
-                "hash_version = EXCLUDED.hash_version, " +
-                "is_readable = EXCLUDED.is_readable, " +
-                "is_writable = EXCLUDED.is_writable, " +
-                "can_add_properties = EXCLUDED.can_add_properties, " +
-                "can_remove_properties = EXCLUDED.can_remove_properties";
+                "ON DUPLICATE KEY UPDATE " +
+                "hash_version = VALUES(hash_version), " +
+                "is_readable = VALUES(is_readable), " +
+                "is_writable = VALUES(is_writable), " +
+                "can_add_properties = VALUES(can_add_properties), " +
+                "can_remove_properties = VALUES(can_remove_properties)";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setObject(1, UUID.randomUUID());
+            stmt.setString(1, UUID.randomUUID().toString());
             stmt.setString(2, aspectDef.name());
             stmt.setLong(3, aspectDef.hash());
             stmt.setBoolean(4, aspectDef.isReadable());
@@ -389,17 +389,17 @@ public class PostgresDao implements CatalogPersistence
         String sql = "INSERT INTO property_def (aspect_def_id, name, property_type, default_value, " +
             "has_default_value, is_readable, is_writable, is_nullable, is_removable, is_multivalued) " +
             "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) " +
-            "ON CONFLICT (aspect_def_id, name) DO UPDATE SET " +
-            "property_type = EXCLUDED.property_type, " +
-            "default_value = EXCLUDED.default_value, " +
-            "has_default_value = EXCLUDED.has_default_value, " +
-            "is_readable = EXCLUDED.is_readable, " +
-            "is_writable = EXCLUDED.is_writable, " +
-            "is_nullable = EXCLUDED.is_nullable, " +
-            "is_removable = EXCLUDED.is_removable, " +
-            "is_multivalued = EXCLUDED.is_multivalued";
+            "ON DUPLICATE KEY UPDATE " +
+            "property_type = VALUES(property_type), " +
+            "default_value = VALUES(default_value), " +
+            "has_default_value = VALUES(has_default_value), " +
+            "is_readable = VALUES(is_readable), " +
+            "is_writable = VALUES(is_writable), " +
+            "is_nullable = VALUES(is_nullable), " +
+            "is_removable = VALUES(is_removable), " +
+            "is_multivalued = VALUES(is_multivalued)";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setObject(1, aspectDefId);
+            stmt.setString(1, aspectDefId.toString());
             stmt.setString(2, propDef.name());
             stmt.setString(3, mapPropertyTypeToDbType(propDef.type()));
             stmt.setString(4, propDef.hasDefaultValue() ? propDef.defaultValue().toString() : null);
@@ -416,9 +416,9 @@ public class PostgresDao implements CatalogPersistence
 
     private void saveEntity(Connection conn, Entity entity) throws SQLException
     {
-        String sql = "INSERT INTO entity (entity_id) VALUES (?) ON CONFLICT (entity_id) DO NOTHING";
+        String sql = "INSERT INTO entity (entity_id) VALUES (?) ON DUPLICATE KEY UPDATE entity_id=VALUES(entity_id)";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setObject(1, entity.globalId());
+            stmt.setString(1, entity.globalId().toString());
             stmt.executeUpdate();
         }
     }
@@ -427,16 +427,16 @@ public class PostgresDao implements CatalogPersistence
     {
         String sql = "INSERT INTO catalog (catalog_id, species, uri, upstream_catalog_id, version_number) "
             + "VALUES (?, ?, ?, ?, ?) " +
-            "ON CONFLICT (catalog_id) DO UPDATE SET " +
-            "species = EXCLUDED.species, " +
-            "uri = EXCLUDED.uri, " +
-            "upstream_catalog_id = EXCLUDED.upstream_catalog_id, " +
-            "version_number = EXCLUDED.version_number";
+            "ON DUPLICATE KEY UPDATE " +
+            "species = VALUES(species), " +
+            "uri = VALUES(uri), " +
+            "upstream_catalog_id = VALUES(upstream_catalog_id), " +
+            "version_number = VALUES(version_number)";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setObject(1, catalog.globalId());
+            stmt.setString(1, catalog.globalId().toString());
             stmt.setString(2, catalog.species().name());
             stmt.setString(3, catalog.uri() != null ? catalog.uri().toString() : null);
-            stmt.setObject(4, catalog.upstream());
+            stmt.setString(4, catalog.upstream() != null ? catalog.upstream().toString() : null);
             stmt.setLong(5, catalog.version());
             stmt.executeUpdate();
         }
@@ -448,11 +448,11 @@ public class PostgresDao implements CatalogPersistence
 
         String sql = "INSERT INTO hierarchy (catalog_id, name, hierarchy_type, version_number) " +
             "VALUES (?, ?, ?, ?) " +
-            "ON CONFLICT (catalog_id, name) DO UPDATE SET " +
-            "hierarchy_type = EXCLUDED.hierarchy_type, " +
-            "version_number = EXCLUDED.version_number";
+            "ON DUPLICATE KEY UPDATE " +
+            "hierarchy_type = VALUES(hierarchy_type), " +
+            "version_number = VALUES(version_number)";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setObject(1, catalogId);
+            stmt.setString(1, catalogId.toString());
             stmt.setString(2, hierarchy.name());
             stmt.setString(3, mapHierarchyTypeToDbType(hierarchy.type()));
             stmt.setLong(4, hierarchy.version());
@@ -478,15 +478,15 @@ public class PostgresDao implements CatalogPersistence
     {
         String sql = "INSERT INTO hierarchy_entity_list (catalog_id, hierarchy_name, entity_id, list_order) " +
             "VALUES (?, ?, ?, ?) " +
-            "ON CONFLICT (catalog_id, hierarchy_name, list_order) DO UPDATE SET " +
-            "entity_id = EXCLUDED.entity_id";
+            "ON DUPLICATE KEY UPDATE " +
+            "entity_id = VALUES(entity_id)";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             int order = 0;
             for (Entity entity : hierarchy) {
                 saveEntity(conn, entity);
-                stmt.setObject(1, catalogId);
+                stmt.setString(1, catalogId.toString());
                 stmt.setString(2, hierarchyName);
-                stmt.setObject(3, entity.globalId());
+                stmt.setString(3, entity.globalId().toString());
                 stmt.setInt(4, order++);
                 stmt.addBatch();
             }
@@ -498,15 +498,15 @@ public class PostgresDao implements CatalogPersistence
     {
         String sql = "INSERT INTO hierarchy_entity_set (catalog_id, hierarchy_name, entity_id, set_order) " +
             "VALUES (?, ?, ?, ?) " +
-            "ON CONFLICT (catalog_id, hierarchy_name, entity_id) DO UPDATE SET " +
-            "set_order = EXCLUDED.set_order";
+            "ON DUPLICATE KEY UPDATE " +
+            "set_order = VALUES(set_order)";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             int order = 0;
             for (Entity entity : hierarchy) {
                 saveEntity(conn, entity);
-                stmt.setObject(1, catalogId);
+                stmt.setString(1, catalogId.toString());
                 stmt.setString(2, hierarchyName);
-                stmt.setObject(3, entity.globalId());
+                stmt.setString(3, entity.globalId().toString());
                 stmt.setInt(4, order++);
                 stmt.addBatch();
             }
@@ -518,19 +518,19 @@ public class PostgresDao implements CatalogPersistence
     {
         String sql = "INSERT INTO hierarchy_entity_directory (catalog_id, hierarchy_name, entity_key, entity_id, dir_order) " +
             "VALUES (?, ?, ?, ?, ?) " +
-            "ON CONFLICT (catalog_id, hierarchy_name, entity_key) DO UPDATE SET " +
-            "entity_id = EXCLUDED.entity_id, " +
-            "dir_order = EXCLUDED.dir_order";
+            "ON DUPLICATE KEY UPDATE " +
+            "entity_id = VALUES(entity_id), " +
+            "dir_order = VALUES(dir_order)";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             int order = 0;
             for (String key : hierarchy.keySet()) {
                 Entity entity = hierarchy.get(key);
                 if (entity != null) {
                     saveEntity(conn, entity);
-                    stmt.setObject(1, catalogId);
+                    stmt.setString(1, catalogId.toString());
                     stmt.setString(2, hierarchyName);
                     stmt.setString(3, key);
-                    stmt.setObject(4, entity.globalId());
+                    stmt.setString(4, entity.globalId().toString());
                     stmt.setInt(5, order++);
                     stmt.addBatch();
                 }
@@ -554,17 +554,17 @@ public class PostgresDao implements CatalogPersistence
         String sql = "INSERT INTO hierarchy_entity_tree_node " +
             "(node_id, catalog_id, hierarchy_name, parent_node_id, node_key, entity_id, node_path, tree_order) " +
             "VALUES (?, ?, ?, ?, ?, ?, ?, ?) " +
-            "ON CONFLICT (catalog_id, hierarchy_name, parent_node_id, node_key) DO UPDATE SET " +
-            "entity_id = EXCLUDED.entity_id, " +
-            "node_path = EXCLUDED.node_path, " +
-            "tree_order = EXCLUDED.tree_order";
+            "ON DUPLICATE KEY UPDATE " +
+            "entity_id = VALUES(entity_id), " +
+            "node_path = VALUES(node_path), " +
+            "tree_order = VALUES(tree_order)";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setObject(1, nodeId);
-            stmt.setObject(2, catalogId);
+            stmt.setString(1, nodeId.toString());
+            stmt.setString(2, catalogId.toString());
             stmt.setString(3, hierarchyName);
-            stmt.setObject(4, parentNodeId);
+            stmt.setString(4, parentNodeId != null ? parentNodeId.toString() : null);
             stmt.setString(5, nodeKey);
-            stmt.setObject(6, entityId);
+            stmt.setString(6, entityId != null ? entityId.toString() : null);
             stmt.setString(7, nodePath); // node.path() - method needs checking
             stmt.setInt(8, order);
             stmt.executeUpdate();
@@ -600,13 +600,13 @@ public class PostgresDao implements CatalogPersistence
     {
         String aspectSql = "INSERT INTO aspect (entity_id, aspect_def_id, catalog_id, hierarchy_name) " +
             "VALUES (?, ?, ?, ?) " +
-            "ON CONFLICT (entity_id, aspect_def_id, catalog_id) DO UPDATE SET " +
-            "hierarchy_name = EXCLUDED.hierarchy_name";
+            "ON DUPLICATE KEY UPDATE " +
+            "hierarchy_name = VALUES(hierarchy_name)";
         String hierarchyMapSql = "INSERT INTO hierarchy_aspect_map (catalog_id, hierarchy_name, entity_id, aspect_def_id, map_order) " +
             "VALUES (?, ?, ?, ?, ?) " +
-            "ON CONFLICT (catalog_id, hierarchy_name, entity_id) DO UPDATE SET " +
-            "aspect_def_id = EXCLUDED.aspect_def_id, " +
-            "map_order = EXCLUDED.map_order";
+            "ON DUPLICATE KEY UPDATE " +
+            "aspect_def_id = VALUES(aspect_def_id), " +
+            "map_order = VALUES(map_order)";
 
         UUID aspectDefId = getAspectDefId(conn, hierarchy.aspectDef().name());
 
@@ -618,19 +618,19 @@ public class PostgresDao implements CatalogPersistence
             if (aspect != null) {
                 // Save aspect
                 try (PreparedStatement aspectStmt = conn.prepareStatement(aspectSql)) {
-                    aspectStmt.setObject(1, entity.globalId());
-                    aspectStmt.setObject(2, aspectDefId);
-                    aspectStmt.setObject(3, catalogId);
+                    aspectStmt.setString(1, entity.globalId().toString());
+                    aspectStmt.setString(2, aspectDefId.toString());
+                    aspectStmt.setString(3, catalogId.toString());
                     aspectStmt.setString(4, hierarchyName);
                     aspectStmt.executeUpdate();
                 }
 
                 // Save hierarchy mapping
                 try (PreparedStatement mapStmt = conn.prepareStatement(hierarchyMapSql)) {
-                    mapStmt.setObject(1, catalogId);
+                    mapStmt.setString(1, catalogId.toString());
                     mapStmt.setString(2, hierarchyName);
-                    mapStmt.setObject(3, entity.globalId());
-                    mapStmt.setObject(4, aspectDefId);
+                    mapStmt.setString(3, entity.globalId().toString());
+                    mapStmt.setString(4, aspectDefId.toString());
                     mapStmt.setInt(5, order++);
                     mapStmt.executeUpdate();
                 }
@@ -653,11 +653,11 @@ public class PostgresDao implements CatalogPersistence
             // Catalog ID only: DELETE rows for this catalog
             String deleteSql = "DELETE FROM " + mapping.tableName() + " WHERE catalog_id = ?";
             try (PreparedStatement stmt = conn.prepareStatement(deleteSql)) {
-                stmt.setObject(1, catalogId);
+                stmt.setString(1, catalogId.toString());
                 stmt.executeUpdate();
             }
         }
-        // If hasEntityId, no pre-save cleanup needed (will use ON CONFLICT)
+        // If hasEntityId, no pre-save cleanup needed (will use ON DUPLICATE KEY UPDATE)
 
         // Build column list and placeholders for INSERT
         StringBuilder columns = new StringBuilder();
@@ -690,27 +690,23 @@ public class PostgresDao implements CatalogPersistence
             firstCol = false;
         }
 
-        // Build SQL with appropriate ON CONFLICT clause
+        // Build SQL with appropriate ON DUPLICATE KEY UPDATE clause
         StringBuilder sql = new StringBuilder("INSERT INTO " + mapping.tableName()
             + " (" + columns + ") VALUES (" + placeholders + ")");
 
         if (mapping.hasEntityId()) {
-            // Only add ON CONFLICT when we have a primary key
-            if (mapping.hasCatalogId()) {
-                sql.append(" ON CONFLICT (catalog_id, entity_id) DO UPDATE SET ");
-            } else {
-                sql.append(" ON CONFLICT (entity_id) DO UPDATE SET ");
-            }
+            // Only add ON DUPLICATE KEY UPDATE when we have a primary key
+            sql.append(" ON DUPLICATE KEY UPDATE ");
 
             // Build UPDATE clause
             boolean first = true;
             for (String columnName : mapping.propertyToColumnMap().values()) {
                 if (!first) sql.append(", ");
-                sql.append(columnName).append(" = EXCLUDED.").append(columnName);
+                sql.append(columnName).append(" = VALUES(").append(columnName).append(")");
                 first = false;
             }
         }
-        // No ON CONFLICT clause if !hasEntityId (simple INSERT after cleanup)
+        // No ON DUPLICATE KEY UPDATE clause if !hasEntityId (simple INSERT after cleanup)
 
         try (PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
             for (Entity entity : hierarchy.keySet()) {
@@ -721,11 +717,11 @@ public class PostgresDao implements CatalogPersistence
                     int paramIndex = 1;
 
                     if (mapping.hasCatalogId()) {
-                        stmt.setObject(paramIndex++, catalogId);
+                        stmt.setString(paramIndex++, catalogId.toString());
                     }
 
                     if (mapping.hasEntityId()) {
-                        stmt.setObject(paramIndex++, entity.globalId());
+                        stmt.setString(paramIndex++, entity.globalId().toString());
                     }
 
                     for (Map.Entry<String, String> entry : mapping.propertyToColumnMap().entrySet()) {
@@ -751,9 +747,9 @@ public class PostgresDao implements CatalogPersistence
         // First, delete existing property values for this aspect to handle updates properly
         String deleteSql = "DELETE FROM property_value WHERE entity_id = ? AND aspect_def_id = ? AND catalog_id = ?";
         try (PreparedStatement deleteStmt = conn.prepareStatement(deleteSql)) {
-            deleteStmt.setObject(1, entityId);
-            deleteStmt.setObject(2, aspectDefId);
-            deleteStmt.setObject(3, catalogId);
+            deleteStmt.setString(1, entityId.toString());
+            deleteStmt.setString(2, aspectDefId.toString());
+            deleteStmt.setString(3, catalogId.toString());
             deleteStmt.executeUpdate();
         }
 
@@ -773,9 +769,9 @@ public class PostgresDao implements CatalogPersistence
                     // - Single-valued: insert a row with NULL
                     // - Multivalued: don't insert any rows (null will be distinguished from empty list during load)
                     if (!propDef.isMultivalued()) {
-                        stmt.setObject(1, entityId);
-                        stmt.setObject(2, aspectDefId);
-                        stmt.setObject(3, catalogId);
+                        stmt.setString(1, entityId.toString());
+                        stmt.setString(2, aspectDefId.toString());
+                        stmt.setString(3, catalogId.toString());
                         stmt.setString(4, propName);
                         stmt.setInt(5, 0); // value_index
 
@@ -796,9 +792,9 @@ public class PostgresDao implements CatalogPersistence
                     // If empty list, don't insert any rows (empty list represented by no rows)
                     for (int i = 0; i < listValues.size(); i++) {
                         Object itemValue = listValues.get(i);
-                        stmt.setObject(1, entityId);
-                        stmt.setObject(2, aspectDefId);
-                        stmt.setObject(3, catalogId);
+                        stmt.setString(1, entityId.toString());
+                        stmt.setString(2, aspectDefId.toString());
+                        stmt.setString(3, catalogId.toString());
                         stmt.setString(4, propName);
                         stmt.setInt(5, i); // value_index
 
@@ -813,9 +809,9 @@ public class PostgresDao implements CatalogPersistence
                     }
                 } else {
                     // For single-valued properties, insert one row with value_index 0
-                    stmt.setObject(1, entityId);
-                    stmt.setObject(2, aspectDefId);
-                    stmt.setObject(3, catalogId);
+                    stmt.setString(1, entityId.toString());
+                    stmt.setString(2, aspectDefId.toString());
+                    stmt.setString(3, catalogId.toString());
                     stmt.setString(4, propName);
                     stmt.setInt(5, 0); // value_index
 
@@ -841,6 +837,7 @@ public class PostgresDao implements CatalogPersistence
     {
         return switch (type) {
             case DateTime -> convertToTimestamp(value).toString();
+            case UUID -> value.toString();
             default -> value.toString();
         };
     }
@@ -859,7 +856,7 @@ public class PostgresDao implements CatalogPersistence
         String sql = "SELECT catalog_id, species, uri, upstream_catalog_id, version_number FROM catalog WHERE catalog_id = ?";
 
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setObject(1, catalogId);
+            stmt.setString(1, catalogId.toString());
             try (ResultSet rs = stmt.executeQuery()) {
                 if (!rs.next()) {
                     return null; // Catalog not found
@@ -875,7 +872,8 @@ public class PostgresDao implements CatalogPersistence
                         throw new SQLException(e);
                     }
                 }
-                UUID upstream = rs.getObject("upstream_catalog_id", UUID.class);
+                String upstreamStr = rs.getString("upstream_catalog_id");
+                UUID upstream = upstreamStr != null ? UUID.fromString(upstreamStr) : null;
                 long version = rs.getLong("version_number");
 
                 // Create catalog with version
@@ -899,7 +897,7 @@ public class PostgresDao implements CatalogPersistence
             "WHERE cad.catalog_id = ?";
 
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setObject(1, catalog.globalId());
+            stmt.setString(1, catalog.globalId().toString());
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
                     String aspectDefName = rs.getString("name");
@@ -915,7 +913,7 @@ public class PostgresDao implements CatalogPersistence
         String sql = "SELECT name, hierarchy_type, version_number FROM hierarchy WHERE catalog_id = ?";
 
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setObject(1, catalog.globalId());
+            stmt.setString(1, catalog.globalId().toString());
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
                     String name = rs.getString("name");
@@ -989,11 +987,12 @@ public class PostgresDao implements CatalogPersistence
     {
         String sql = "SELECT entity_id, list_order FROM hierarchy_entity_list WHERE catalog_id = ? AND hierarchy_name = ? ORDER BY list_order";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setObject(1, catalogId);
+            stmt.setString(1, catalogId.toString());
             stmt.setString(2, hierarchyName);
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
-                    UUID entityId = rs.getObject("entity_id", UUID.class);
+                    String entityIdStr = rs.getString("entity_id");
+                    UUID entityId = UUID.fromString(entityIdStr);
                     Entity entity = factory.getOrRegisterNewEntity(entityId);
                     hierarchy.add(entity);
                 }
@@ -1005,11 +1004,12 @@ public class PostgresDao implements CatalogPersistence
     {
         String sql = "SELECT entity_id FROM hierarchy_entity_set WHERE catalog_id = ? AND hierarchy_name = ? ORDER BY set_order";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setObject(1, catalogId);
+            stmt.setString(1, catalogId.toString());
             stmt.setString(2, hierarchyName);
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
-                    UUID entityId = rs.getObject("entity_id", UUID.class);
+                    String entityIdStr = rs.getString("entity_id");
+                    UUID entityId = UUID.fromString(entityIdStr);
                     Entity entity = factory.getOrRegisterNewEntity(entityId);
                     hierarchy.add(entity);
                 }
@@ -1022,12 +1022,13 @@ public class PostgresDao implements CatalogPersistence
         String sql = "SELECT entity_key, entity_id FROM hierarchy_entity_directory " +
             "WHERE catalog_id = ? AND hierarchy_name = ? ORDER BY dir_order";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setObject(1, catalogId);
+            stmt.setString(1, catalogId.toString());
             stmt.setString(2, hierarchyName);
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
                     String key = rs.getString("entity_key");
-                    UUID entityId = rs.getObject("entity_id", UUID.class);
+                    String entityIdStr = rs.getString("entity_id");
+                    UUID entityId = UUID.fromString(entityIdStr);
                     Entity entity = factory.getOrRegisterNewEntity(entityId);
                     hierarchy.put(key, entity);
                 }
@@ -1047,14 +1048,17 @@ public class PostgresDao implements CatalogPersistence
             "ORDER BY node_path, tree_order";
 
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setObject(1, catalogId);
+            stmt.setString(1, catalogId.toString());
             stmt.setString(2, hierarchyName);
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
-                    UUID nodeId = rs.getObject("node_id", UUID.class);
-                    UUID parentNodeId = rs.getObject("parent_node_id", UUID.class);
+                    String nodeIdStr = rs.getString("node_id");
+                    UUID nodeId = UUID.fromString(nodeIdStr);
+                    String parentNodeIdStr = rs.getString("parent_node_id");
+                    UUID parentNodeId = parentNodeIdStr != null ? UUID.fromString(parentNodeIdStr) : null;
                     String nodeKey = rs.getString("node_key");
-                    UUID entityId = rs.getObject("entity_id", UUID.class);
+                    String entityIdStr = rs.getString("entity_id");
+                    UUID entityId = entityIdStr != null ? UUID.fromString(entityIdStr) : null;
 
                     Entity entity = entityId != null ? factory.getOrRegisterNewEntity(entityId) : null;
                     EntityTreeHierarchy.Node node = factory.createTreeNode(entity);
@@ -1120,11 +1124,12 @@ public class PostgresDao implements CatalogPersistence
         String sql = "SELECT entity_id FROM hierarchy_aspect_map " +
             "WHERE catalog_id = ? AND hierarchy_name = ? ORDER BY map_order";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setObject(1, catalogId);
+            stmt.setString(1, catalogId.toString());
             stmt.setString(2, hierarchyName);
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
-                    UUID entityId = rs.getObject("entity_id", UUID.class);
+                    String entityIdStr = rs.getString("entity_id");
+                    UUID entityId = UUID.fromString(entityIdStr);
 
                     Entity entity = factory.getOrRegisterNewEntity(entityId);
                     Aspect aspect = loadAspect(conn, entity, hierarchy.aspectDef(), catalogId);
@@ -1165,7 +1170,7 @@ public class PostgresDao implements CatalogPersistence
 
         try (PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
             if (mapping.hasCatalogId()) {
-                stmt.setObject(1, catalogId);
+                stmt.setString(1, catalogId.toString());
             }
 
             try (ResultSet rs = stmt.executeQuery()) {
@@ -1174,7 +1179,8 @@ public class PostgresDao implements CatalogPersistence
 
                     if (mapping.hasEntityId()) {
                         // Entity ID is in the table - use it
-                        UUID entityId = rs.getObject("entity_id", UUID.class);
+                        String entityIdStr = rs.getString("entity_id");
+                        UUID entityId = UUID.fromString(entityIdStr);
                         entity = factory.getOrRegisterNewEntity(entityId);
                     } else {
                         // No entity ID in table - generate a new one
@@ -1217,9 +1223,9 @@ public class PostgresDao implements CatalogPersistence
         Set<String> loadedProperties = new HashSet<>();
 
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setObject(1, entity.globalId());
-            stmt.setObject(2, aspectDefId);
-            stmt.setObject(3, catalogId);
+            stmt.setString(1, entity.globalId().toString());
+            stmt.setString(2, aspectDefId.toString());
+            stmt.setString(3, catalogId.toString());
             try (ResultSet rs = stmt.executeQuery()) {
                 String currentPropertyName = null;
                 List<Object> multivaluedValues = new ArrayList<>();
@@ -1422,7 +1428,7 @@ public class PostgresDao implements CatalogPersistence
             try {
                 String sql = "DELETE FROM catalog WHERE catalog_id = ?";
                 try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-                    stmt.setObject(1, catalogId);
+                    stmt.setString(1, catalogId.toString());
                     int deleted = stmt.executeUpdate();
                     conn.commit();
                     return deleted > 0;
@@ -1439,7 +1445,7 @@ public class PostgresDao implements CatalogPersistence
     {
         String sql = "SELECT 1 FROM catalog WHERE catalog_id = ?";
         try (Connection conn = dataSource.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setObject(1, catalogId);
+            stmt.setString(1, catalogId.toString());
             try (ResultSet rs = stmt.executeQuery()) {
                 return rs.next();
             }
@@ -1458,7 +1464,8 @@ public class PostgresDao implements CatalogPersistence
             stmt.setString(1, name);
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
-                    return rs.getObject("aspect_def_id", UUID.class);
+                    String aspectDefIdStr = rs.getString("aspect_def_id");
+                    return UUID.fromString(aspectDefIdStr);
                 }
             }
         }
@@ -1576,7 +1583,7 @@ public class PostgresDao implements CatalogPersistence
             case Float -> stmt.setDouble(paramIndex, ((Number) value).doubleValue());
             case Boolean -> stmt.setBoolean(paramIndex, (Boolean) value);
             case DateTime -> stmt.setTimestamp(paramIndex, convertToTimestamp(value));
-            case UUID -> stmt.setObject(paramIndex, value instanceof UUID ? value : UUID.fromString(value.toString()));
+            case UUID -> stmt.setString(paramIndex, value instanceof UUID ? value.toString() : value.toString());
             case BLOB -> stmt.setBytes(paramIndex, (byte[]) value);
             default -> stmt.setString(paramIndex, value.toString());
         }

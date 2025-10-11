@@ -14,18 +14,15 @@
  *  limitations under the License.
  */
 
-package net.netbeing.cheap.db.sqlite;
+package net.netbeing.cheap.db.mariadb;
 
 import com.google.common.collect.ImmutableList;
 import net.netbeing.cheap.db.AspectTableMapping;
 import net.netbeing.cheap.model.*;
-import net.netbeing.cheap.util.CheapFactory;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.sqlite.SQLiteDataSource;
 
-import javax.sql.DataSource;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
@@ -42,51 +39,24 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class SqliteDaoTest
+class MariaDbDaoTest
 {
-    DataSource dataSource;
-    Connection connection;
-    SqliteDao sqliteDao;
-    CheapFactory factory;
+    static final String DB_NAME = "cheap";
+    volatile static MariaDbTestDb db;
 
-    @BeforeEach
-    void setUp() throws SQLException
+    @BeforeAll
+    static void setUp() throws Exception
     {
-        // Create an in-memory SQLite database with shared cache
-        // Using shared cache mode allows multiple connections to access the same in-memory database
-        SQLiteDataSource ds = new SQLiteDataSource();
-        ds.setUrl("jdbc:sqlite:file::memory:?cache=shared");
-        this.dataSource = ds;
-        // Keep connection open to prevent in-memory database deletion
-        this.connection = ds.getConnection();
-
-        // Initialize factory and DAO
-        factory = new CheapFactory();
-        sqliteDao = new SqliteDao(dataSource, factory);
-
-        // Initialize schema
-        initializeSchema();
-    }
-
-    @AfterEach
-    void tearDown() throws SQLException
-    {
-        // Close the connection (which will delete the in-memory database)
-        if (this.connection != null && !this.connection.isClosed()) {
-            this.connection.close();
+        if (db == null) {
+            db = new MariaDbTestDb(DB_NAME);
+            db.initializeCheapSchema();
         }
-        this.connection = null;
-        this.dataSource = null;
-        this.sqliteDao = null;
-        this.factory = null;
     }
 
-    private void initializeSchema() throws SQLException
+    @AfterAll
+    static void tearDown() throws Exception
     {
-        // Use SqliteCheapSchema to execute DDL
-        SqliteCheapSchema schema = new SqliteCheapSchema();
-        schema.executeMainSchemaDdl(connection);
-        schema.executeAuditSchemaDdl(connection);
+        db.tearDown();
     }
 
     @Test
@@ -94,13 +64,13 @@ class SqliteDaoTest
     {
         // Create a simple catalog
         UUID catalogId = UUID.randomUUID();
-        Catalog originalCatalog = factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
+        Catalog originalCatalog = db.factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
 
         // Save the catalog
-        sqliteDao.saveCatalog(originalCatalog);
+        db.mariaDbDao.saveCatalog(originalCatalog);
 
         // Load the catalog
-        Catalog loadedCatalog = sqliteDao.loadCatalog(catalogId);
+        Catalog loadedCatalog = db.mariaDbDao.loadCatalog(catalogId);
 
         // Verify basic properties
         assertNotNull(loadedCatalog);
@@ -114,10 +84,10 @@ class SqliteDaoTest
     {
         // Create catalog with URI
         UUID catalogId = UUID.randomUUID();
-        Catalog originalCatalog = factory.createCatalog(catalogId, CatalogSpecies.SOURCE, null, null, 0L);
+        Catalog originalCatalog = db.factory.createCatalog(catalogId, CatalogSpecies.SOURCE, null, null, 0L);
 
-        sqliteDao.saveCatalog(originalCatalog);
-        Catalog loadedCatalog = sqliteDao.loadCatalog(catalogId);
+        db.mariaDbDao.saveCatalog(originalCatalog);
+        Catalog loadedCatalog = db.mariaDbDao.loadCatalog(catalogId);
 
         assertNotNull(loadedCatalog);
         assertEquals(originalCatalog.globalId(), loadedCatalog.globalId());
@@ -128,15 +98,15 @@ class SqliteDaoTest
     {
         // Create upstream catalog first
         UUID upstreamId = UUID.randomUUID();
-        Catalog upstreamCatalog = factory.createCatalog(upstreamId, CatalogSpecies.SOURCE, null, null, 0L);
-        sqliteDao.saveCatalog(upstreamCatalog);
+        Catalog upstreamCatalog = db.factory.createCatalog(upstreamId, CatalogSpecies.SOURCE, null, null, 0L);
+        db.mariaDbDao.saveCatalog(upstreamCatalog);
 
         // Create derived catalog
         UUID catalogId = UUID.randomUUID();
-        Catalog originalCatalog = factory.createCatalog(catalogId, CatalogSpecies.MIRROR, null, upstreamId, 0L);
+        Catalog originalCatalog = db.factory.createCatalog(catalogId, CatalogSpecies.MIRROR, null, upstreamId, 0L);
 
-        sqliteDao.saveCatalog(originalCatalog);
-        Catalog loadedCatalog = sqliteDao.loadCatalog(catalogId);
+        db.mariaDbDao.saveCatalog(originalCatalog);
+        Catalog loadedCatalog = db.mariaDbDao.loadCatalog(catalogId);
 
         assertNotNull(loadedCatalog);
         assertEquals(originalCatalog.globalId(), loadedCatalog.globalId());
@@ -148,17 +118,17 @@ class SqliteDaoTest
     void testSaveAndLoadCatalogWithAspectDefs() throws SQLException
     {
         // Create AspectDef
-        AspectDef personAspectDef = factory.createMutableAspectDef("person");
+        AspectDef personAspectDef = db.factory.createMutableAspectDef("person");
 
         // Create catalog
         UUID catalogId = UUID.randomUUID();
-        Catalog originalCatalog = factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
+        Catalog originalCatalog = db.factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
 
         // Extend catalog with aspect def
         originalCatalog.extend(personAspectDef);
 
-        sqliteDao.saveCatalog(originalCatalog);
-        Catalog loadedCatalog = sqliteDao.loadCatalog(catalogId);
+        db.mariaDbDao.saveCatalog(originalCatalog);
+        Catalog loadedCatalog = db.mariaDbDao.loadCatalog(catalogId);
 
         assertNotNull(loadedCatalog);
         assertEquals(originalCatalog.globalId(), loadedCatalog.globalId());
@@ -179,18 +149,18 @@ class SqliteDaoTest
     {
         // Create catalog
         UUID catalogId = UUID.randomUUID();
-        Catalog originalCatalog = factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
+        Catalog originalCatalog = db.factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
 
         // Create hierarchy definition
-        HierarchyDef hierarchyDef = factory.createHierarchyDef("entities", HierarchyType.ENTITY_SET);
+        HierarchyDef hierarchyDef = db.factory.createHierarchyDef("entities", HierarchyType.ENTITY_SET);
 
         // Create hierarchy
-        EntitySetHierarchy hierarchy = factory.createEntitySetHierarchy(originalCatalog, "entities");
+        EntitySetHierarchy hierarchy = db.factory.createEntitySetHierarchy(originalCatalog, "entities");
 
         // Add some entities
-        Entity entity1 = factory.createEntity(UUID.randomUUID());
-        Entity entity2 = factory.createEntity(UUID.randomUUID());
-        Entity entity3 = factory.createEntity(UUID.randomUUID());
+        Entity entity1 = db.factory.createEntity(UUID.randomUUID());
+        Entity entity2 = db.factory.createEntity(UUID.randomUUID());
+        Entity entity3 = db.factory.createEntity(UUID.randomUUID());
 
         hierarchy.add(entity1);
         hierarchy.add(entity2);
@@ -200,8 +170,8 @@ class SqliteDaoTest
         originalCatalog.addHierarchy(hierarchy);
 
         // Save and load
-        sqliteDao.saveCatalog(originalCatalog);
-        Catalog loadedCatalog = sqliteDao.loadCatalog(catalogId);
+        db.mariaDbDao.saveCatalog(originalCatalog);
+        Catalog loadedCatalog = db.mariaDbDao.loadCatalog(catalogId);
 
         assertNotNull(loadedCatalog);
 
@@ -225,17 +195,17 @@ class SqliteDaoTest
     {
         // Create catalog
         UUID catalogId = UUID.randomUUID();
-        Catalog originalCatalog = factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
+        Catalog originalCatalog = db.factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
 
         // Create hierarchy definition
-        HierarchyDef hierarchyDef = factory.createHierarchyDef("directory", HierarchyType.ENTITY_DIR);
+        HierarchyDef hierarchyDef = db.factory.createHierarchyDef("directory", HierarchyType.ENTITY_DIR);
 
         // Create hierarchy
-        EntityDirectoryHierarchy hierarchy = factory.createEntityDirectoryHierarchy(originalCatalog, "directory");
+        EntityDirectoryHierarchy hierarchy = db.factory.createEntityDirectoryHierarchy(originalCatalog, "directory");
 
         // Add some entities with keys
-        Entity entity1 = factory.createEntity(UUID.randomUUID());
-        Entity entity2 = factory.createEntity(UUID.randomUUID());
+        Entity entity1 = db.factory.createEntity(UUID.randomUUID());
+        Entity entity2 = db.factory.createEntity(UUID.randomUUID());
 
         hierarchy.put("key1", entity1);
         hierarchy.put("key2", entity2);
@@ -244,8 +214,8 @@ class SqliteDaoTest
         originalCatalog.addHierarchy(hierarchy);
 
         // Save and load
-        sqliteDao.saveCatalog(originalCatalog);
-        Catalog loadedCatalog = sqliteDao.loadCatalog(catalogId);
+        db.mariaDbDao.saveCatalog(originalCatalog);
+        Catalog loadedCatalog = db.mariaDbDao.loadCatalog(catalogId);
 
         assertNotNull(loadedCatalog);
 
@@ -264,29 +234,29 @@ class SqliteDaoTest
     void testSaveAndLoadCatalogWithAspectMapHierarchy() throws SQLException
     {
         // Create AspectDef with properties
-        AspectDef personAspectDef = factory.createMutableAspectDef("person");
+        AspectDef personAspectDef = db.factory.createMutableAspectDef("person");
 
         // Create catalog
         UUID catalogId = UUID.randomUUID();
-        Catalog originalCatalog = factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
+        Catalog originalCatalog = db.factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
 
         // Create aspect map hierarchy
-        AspectMapHierarchy hierarchy = factory.createAspectMapHierarchy(originalCatalog, personAspectDef);
+        AspectMapHierarchy hierarchy = db.factory.createAspectMapHierarchy(originalCatalog, personAspectDef);
 
         // Create entities and aspects
-        Entity person1 = factory.createEntity(UUID.randomUUID());
-        Entity person2 = factory.createEntity(UUID.randomUUID());
+        Entity person1 = db.factory.createEntity(UUID.randomUUID());
+        Entity person2 = db.factory.createEntity(UUID.randomUUID());
 
-        Aspect aspect1 = factory.createPropertyMapAspect(person1, personAspectDef);
-        Aspect aspect2 = factory.createPropertyMapAspect(person2, personAspectDef);
+        Aspect aspect1 = db.factory.createPropertyMapAspect(person1, personAspectDef);
+        Aspect aspect2 = db.factory.createPropertyMapAspect(person2, personAspectDef);
 
         // Add aspects to hierarchy
         hierarchy.put(person1, aspect1);
         hierarchy.put(person2, aspect2);
 
         // Save and load
-        sqliteDao.saveCatalog(originalCatalog);
-        Catalog loadedCatalog = sqliteDao.loadCatalog(catalogId);
+        db.mariaDbDao.saveCatalog(originalCatalog);
+        Catalog loadedCatalog = db.mariaDbDao.loadCatalog(catalogId);
 
         assertNotNull(loadedCatalog);
 
@@ -319,19 +289,19 @@ class SqliteDaoTest
     {
         // Create and save catalog
         UUID catalogId = UUID.randomUUID();
-        Catalog catalog = factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
-        sqliteDao.saveCatalog(catalog);
+        Catalog catalog = db.factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
+        db.mariaDbDao.saveCatalog(catalog);
 
         // Verify it exists
-        assertTrue(sqliteDao.catalogExists(catalogId));
+        assertTrue(db.mariaDbDao.catalogExists(catalogId));
 
         // Delete it
-        boolean deleted = sqliteDao.deleteCatalog(catalogId);
+        boolean deleted = db.mariaDbDao.deleteCatalog(catalogId);
         assertTrue(deleted);
 
         // Verify it no longer exists
-        assertFalse(sqliteDao.catalogExists(catalogId));
-        assertNull(sqliteDao.loadCatalog(catalogId));
+        assertFalse(db.mariaDbDao.catalogExists(catalogId));
+        assertNull(db.mariaDbDao.loadCatalog(catalogId));
     }
 
     @Test
@@ -340,7 +310,7 @@ class SqliteDaoTest
         UUID nonExistentId = UUID.randomUUID();
 
         // Delete non-existent catalog
-        boolean deleted = sqliteDao.deleteCatalog(nonExistentId);
+        boolean deleted = db.mariaDbDao.deleteCatalog(nonExistentId);
         assertFalse(deleted);
     }
 
@@ -350,21 +320,21 @@ class SqliteDaoTest
         UUID catalogId = UUID.randomUUID();
 
         // Should not exist initially
-        assertFalse(sqliteDao.catalogExists(catalogId));
+        assertFalse(db.mariaDbDao.catalogExists(catalogId));
 
         // Create and save catalog
-        Catalog catalog = factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
-        sqliteDao.saveCatalog(catalog);
+        Catalog catalog = db.factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
+        db.mariaDbDao.saveCatalog(catalog);
 
         // Should exist now
-        assertTrue(sqliteDao.catalogExists(catalogId));
+        assertTrue(db.mariaDbDao.catalogExists(catalogId));
     }
 
     @Test
     void testLoadNonExistentCatalog() throws SQLException
     {
         UUID nonExistentId = UUID.randomUUID();
-        Catalog catalog = sqliteDao.loadCatalog(nonExistentId);
+        Catalog catalog = db.mariaDbDao.loadCatalog(nonExistentId);
         assertNull(catalog);
     }
 
@@ -373,7 +343,7 @@ class SqliteDaoTest
     void testSaveNullCatalogThrowsException()
     {
         assertThrows(IllegalArgumentException.class, () -> {
-            sqliteDao.saveCatalog(null);
+            db.mariaDbDao.saveCatalog(null);
         });
     }
 
@@ -381,11 +351,11 @@ class SqliteDaoTest
     void testTransactionRollbackOnError() throws SQLException
     {
         UUID catalogId = UUID.randomUUID();
-        Catalog catalog = factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
+        Catalog catalog = db.factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
 
         // Save should succeed
-        assertDoesNotThrow(() -> sqliteDao.saveCatalog(catalog));
-        assertTrue(sqliteDao.catalogExists(catalogId));
+        assertDoesNotThrow(() -> db.mariaDbDao.saveCatalog(catalog));
+        assertTrue(db.mariaDbDao.catalogExists(catalogId));
     }
 
     @Test
@@ -393,35 +363,35 @@ class SqliteDaoTest
     {
         // Create a complex catalog with multiple hierarchy types
         UUID catalogId = UUID.randomUUID();
-        Catalog originalCatalog = factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
+        Catalog originalCatalog = db.factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
 
         // Create multiple aspect definitions
-        AspectDef personAspect = factory.createMutableAspectDef("person");
-        AspectDef addressAspect = factory.createMutableAspectDef("address");
+        AspectDef personAspect = db.factory.createMutableAspectDef("person");
+        AspectDef addressAspect = db.factory.createMutableAspectDef("address");
 
         // Create multiple hierarchies
-        HierarchyDef entitiesHierarchy = factory.createHierarchyDef("entities", HierarchyType.ENTITY_SET);
-        HierarchyDef directoryHierarchy = factory.createHierarchyDef("directory", HierarchyType.ENTITY_DIR);
+        HierarchyDef entitiesHierarchy = db.factory.createHierarchyDef("entities", HierarchyType.ENTITY_SET);
+        HierarchyDef directoryHierarchy = db.factory.createHierarchyDef("directory", HierarchyType.ENTITY_DIR);
 
         // Create entity set hierarchy
-        EntitySetHierarchy entitySet = factory.createEntitySetHierarchy(originalCatalog, "entities");
-        Entity entity1 = factory.createEntity(UUID.randomUUID());
-        Entity entity2 = factory.createEntity(UUID.randomUUID());
+        EntitySetHierarchy entitySet = db.factory.createEntitySetHierarchy(originalCatalog, "entities");
+        Entity entity1 = db.factory.createEntity(UUID.randomUUID());
+        Entity entity2 = db.factory.createEntity(UUID.randomUUID());
         entitySet.add(entity1);
         entitySet.add(entity2);
 
         // Create directory hierarchy
-        EntityDirectoryHierarchy directory = factory.createEntityDirectoryHierarchy(originalCatalog, "directory");
+        EntityDirectoryHierarchy directory = db.factory.createEntityDirectoryHierarchy(originalCatalog, "directory");
         directory.put("first", entity1);
         directory.put("second", entity2);
 
         // Create aspect map hierarchies
-        AspectMapHierarchy personMap = factory.createAspectMapHierarchy(originalCatalog, personAspect);
-        AspectMapHierarchy addressMap = factory.createAspectMapHierarchy(originalCatalog, addressAspect);
+        AspectMapHierarchy personMap = db.factory.createAspectMapHierarchy(originalCatalog, personAspect);
+        AspectMapHierarchy addressMap = db.factory.createAspectMapHierarchy(originalCatalog, addressAspect);
 
-        Aspect person1Aspect = factory.createPropertyMapAspect(entity1, personAspect);
-        Aspect person2Aspect = factory.createPropertyMapAspect(entity2, personAspect);
-        Aspect address1Aspect = factory.createPropertyMapAspect(entity1, addressAspect);
+        Aspect person1Aspect = db.factory.createPropertyMapAspect(entity1, personAspect);
+        Aspect person2Aspect = db.factory.createPropertyMapAspect(entity2, personAspect);
+        Aspect address1Aspect = db.factory.createPropertyMapAspect(entity1, addressAspect);
 
         personMap.put(entity1, person1Aspect);
         personMap.put(entity2, person2Aspect);
@@ -432,8 +402,8 @@ class SqliteDaoTest
         originalCatalog.addHierarchy(directory);
 
         // Save and load
-        sqliteDao.saveCatalog(originalCatalog);
-        Catalog loadedCatalog = sqliteDao.loadCatalog(catalogId);
+        db.mariaDbDao.saveCatalog(originalCatalog);
+        Catalog loadedCatalog = db.mariaDbDao.loadCatalog(catalogId);
 
         // Verify complex catalog structure
         assertNotNull(loadedCatalog);
@@ -469,33 +439,33 @@ class SqliteDaoTest
     void testSaveAndLoadMultivaluedStringProperties() throws SQLException
     {
         // Create AspectDef with multivalued String property
-        PropertyDef tagsProp = factory.createPropertyDef("tags", PropertyType.String,
+        PropertyDef tagsProp = db.factory.createPropertyDef("tags", PropertyType.String,
             true, true, true, true, true);
 
         Map<String, PropertyDef> propDefs = Map.of("tags", tagsProp);
-        AspectDef productDef = factory.createImmutableAspectDef("product", propDefs);
+        AspectDef productDef = db.factory.createImmutableAspectDef("product", propDefs);
 
         // Create catalog with AspectMapHierarchy
         UUID catalogId = UUID.randomUUID();
-        Catalog catalog = factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
+        Catalog catalog = db.factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
         catalog.extend(productDef);
         AspectMapHierarchy hierarchy = (AspectMapHierarchy) catalog.hierarchy("product");
 
         // Create entity with multivalued property
         UUID entityId = UUID.randomUUID();
-        Entity entity = factory.createEntity(entityId);
-        Aspect aspect = factory.createPropertyMapAspect(entity, productDef);
+        Entity entity = db.factory.createEntity(entityId);
+        Aspect aspect = db.factory.createPropertyMapAspect(entity, productDef);
 
         List<String> tags = ImmutableList.of("electronics", "gadget", "popular");
-        aspect.put(factory.createProperty(tagsProp, tags));
+        aspect.put(db.factory.createProperty(tagsProp, tags));
 
         hierarchy.put(entity, aspect);
 
         // Save catalog
-        sqliteDao.saveCatalog(catalog);
+        db.mariaDbDao.saveCatalog(catalog);
 
         // Verify database rows - should have 3 rows for the multivalued property
-        try (Connection conn = dataSource.getConnection();
+        try (Connection conn = db.dataSource.getConnection();
              PreparedStatement stmt = conn.prepareStatement(
                  "SELECT value_text, value_index FROM property_value WHERE entity_id = ? AND property_name = ? ORDER BY value_index")) {
             stmt.setString(1, entityId.toString());
@@ -518,9 +488,9 @@ class SqliteDaoTest
         }
 
         // Load catalog and verify multivalued property
-        Catalog loadedCatalog = sqliteDao.loadCatalog(catalogId);
+        Catalog loadedCatalog = db.mariaDbDao.loadCatalog(catalogId);
         AspectMapHierarchy loadedHierarchy = (AspectMapHierarchy) loadedCatalog.hierarchy("product");
-        Entity loadedEntity = factory.getOrRegisterNewEntity(entityId);
+        Entity loadedEntity = db.factory.getOrRegisterNewEntity(entityId);
         Aspect loadedAspect = loadedHierarchy.get(loadedEntity);
 
         assertNotNull(loadedAspect);
@@ -539,35 +509,35 @@ class SqliteDaoTest
     void testSaveAndLoadMultivaluedIntegerProperties() throws SQLException
     {
         // Create AspectDef with multivalued Integer property
-        PropertyDef scoresProp = factory.createPropertyDef("scores", PropertyType.Integer,
+        PropertyDef scoresProp = db.factory.createPropertyDef("scores", PropertyType.Integer,
             true, true, true, true, true);
 
         Map<String, PropertyDef> propDefs = Map.of("scores", scoresProp);
-        AspectDef testDef = factory.createImmutableAspectDef("test_results", propDefs);
+        AspectDef testDef = db.factory.createImmutableAspectDef("test_results", propDefs);
 
         // Create catalog
         UUID catalogId = UUID.randomUUID();
-        Catalog catalog = factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
+        Catalog catalog = db.factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
         catalog.extend(testDef);
         AspectMapHierarchy hierarchy = (AspectMapHierarchy) catalog.hierarchy("test_results");
 
         // Create entity with multivalued Integer property
         UUID entityId = UUID.randomUUID();
-        Entity entity = factory.createEntity(entityId);
-        Aspect aspect = factory.createPropertyMapAspect(entity, testDef);
+        Entity entity = db.factory.createEntity(entityId);
+        Aspect aspect = db.factory.createPropertyMapAspect(entity, testDef);
 
         List<Long> scores = ImmutableList.of(100L, 95L, 87L, 92L);
-        aspect.put(factory.createProperty(scoresProp, scores));
+        aspect.put(db.factory.createProperty(scoresProp, scores));
 
         hierarchy.put(entity, aspect);
 
         // Save and load
-        sqliteDao.saveCatalog(catalog);
-        Catalog loadedCatalog = sqliteDao.loadCatalog(catalogId);
+        db.mariaDbDao.saveCatalog(catalog);
+        Catalog loadedCatalog = db.mariaDbDao.loadCatalog(catalogId);
 
         // Verify loaded data
         AspectMapHierarchy loadedHierarchy = (AspectMapHierarchy) loadedCatalog.hierarchy("test_results");
-        Entity loadedEntity = factory.getOrRegisterNewEntity(entityId);
+        Entity loadedEntity = db.factory.getOrRegisterNewEntity(entityId);
         Aspect loadedAspect = loadedHierarchy.get(loadedEntity);
 
         @SuppressWarnings("unchecked")
@@ -583,33 +553,33 @@ class SqliteDaoTest
     void testSaveAndLoadEmptyMultivaluedProperty() throws SQLException
     {
         // Create AspectDef with multivalued property
-        PropertyDef tagsProp = factory.createPropertyDef("tags", PropertyType.String,
+        PropertyDef tagsProp = db.factory.createPropertyDef("tags", PropertyType.String,
             true, true, true, true, true);
 
         Map<String, PropertyDef> propDefs = Map.of("tags", tagsProp);
-        AspectDef productDef = factory.createImmutableAspectDef("product", propDefs);
+        AspectDef productDef = db.factory.createImmutableAspectDef("product", propDefs);
 
         // Create catalog
         UUID catalogId = UUID.randomUUID();
-        Catalog catalog = factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
+        Catalog catalog = db.factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
         catalog.extend(productDef);
         AspectMapHierarchy hierarchy = (AspectMapHierarchy) catalog.hierarchy("product");
 
         // Create entity with empty list
         UUID entityId = UUID.randomUUID();
-        Entity entity = factory.createEntity(entityId);
-        Aspect aspect = factory.createPropertyMapAspect(entity, productDef);
+        Entity entity = db.factory.createEntity(entityId);
+        Aspect aspect = db.factory.createPropertyMapAspect(entity, productDef);
 
         List<String> emptyTags = ImmutableList.of();
-        aspect.put(factory.createProperty(tagsProp, emptyTags));
+        aspect.put(db.factory.createProperty(tagsProp, emptyTags));
 
         hierarchy.put(entity, aspect);
 
         // Save catalog
-        sqliteDao.saveCatalog(catalog);
+        db.mariaDbDao.saveCatalog(catalog);
 
         // Verify no rows in database for empty list
-        try (Connection conn = dataSource.getConnection();
+        try (Connection conn = db.dataSource.getConnection();
              PreparedStatement stmt = conn.prepareStatement(
                  "SELECT COUNT(*) FROM property_value WHERE entity_id = ? AND property_name = ?")) {
             stmt.setString(1, entityId.toString());
@@ -621,9 +591,9 @@ class SqliteDaoTest
         }
 
         // Load catalog and verify empty list is restored
-        Catalog loadedCatalog = sqliteDao.loadCatalog(catalogId);
+        Catalog loadedCatalog = db.mariaDbDao.loadCatalog(catalogId);
         AspectMapHierarchy loadedHierarchy = (AspectMapHierarchy) loadedCatalog.hierarchy("product");
-        Entity loadedEntity = factory.getOrRegisterNewEntity(entityId);
+        Entity loadedEntity = db.factory.getOrRegisterNewEntity(entityId);
         Aspect loadedAspect = loadedHierarchy.get(loadedEntity);
 
         Object loadedValue = loadedAspect.readObj("tags");
@@ -638,32 +608,32 @@ class SqliteDaoTest
     void testSaveAndLoadNullMultivaluedProperty() throws SQLException
     {
         // Create AspectDef with nullable multivalued property
-        PropertyDef tagsProp = factory.createPropertyDef("tags", PropertyType.String,
+        PropertyDef tagsProp = db.factory.createPropertyDef("tags", PropertyType.String,
             true, true, true, true, true);
 
         Map<String, PropertyDef> propDefs = Map.of("tags", tagsProp);
-        AspectDef productDef = factory.createImmutableAspectDef("product", propDefs);
+        AspectDef productDef = db.factory.createImmutableAspectDef("product", propDefs);
 
         // Create catalog
         UUID catalogId = UUID.randomUUID();
-        Catalog catalog = factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
+        Catalog catalog = db.factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
         catalog.extend(productDef);
         AspectMapHierarchy hierarchy = (AspectMapHierarchy) catalog.hierarchy("product");
 
         // Create entity with null value
         UUID entityId = UUID.randomUUID();
-        Entity entity = factory.createEntity(entityId);
-        Aspect aspect = factory.createPropertyMapAspect(entity, productDef);
+        Entity entity = db.factory.createEntity(entityId);
+        Aspect aspect = db.factory.createPropertyMapAspect(entity, productDef);
 
-        aspect.put(factory.createProperty(tagsProp, null));
+        aspect.put(db.factory.createProperty(tagsProp, null));
 
         hierarchy.put(entity, aspect);
 
         // Save and load
-        sqliteDao.saveCatalog(catalog);
+        db.mariaDbDao.saveCatalog(catalog);
 
         // Verify no rows in database (null multivalued is treated same as empty list)
-        try (Connection conn = dataSource.getConnection();
+        try (Connection conn = db.dataSource.getConnection();
              PreparedStatement stmt = conn.prepareStatement(
                  "SELECT COUNT(*) FROM property_value WHERE entity_id = ? AND property_name = ?")) {
             stmt.setString(1, entityId.toString());
@@ -674,9 +644,9 @@ class SqliteDaoTest
             }
         }
 
-        Catalog loadedCatalog = sqliteDao.loadCatalog(catalogId);
+        Catalog loadedCatalog = db.mariaDbDao.loadCatalog(catalogId);
         AspectMapHierarchy loadedHierarchy = (AspectMapHierarchy) loadedCatalog.hierarchy("product");
-        Entity loadedEntity = factory.getOrRegisterNewEntity(entityId);
+        Entity loadedEntity = db.factory.getOrRegisterNewEntity(entityId);
         Aspect loadedAspect = loadedHierarchy.get(loadedEntity);
 
         // With the simplified schema, null and empty list are indistinguishable for multivalued properties
@@ -692,11 +662,11 @@ class SqliteDaoTest
     void testSaveAndLoadMixedSingleAndMultivaluedProperties() throws SQLException
     {
         // Create AspectDef with both single-valued and multivalued properties
-        PropertyDef titleProp = factory.createPropertyDef("title", PropertyType.String,
+        PropertyDef titleProp = db.factory.createPropertyDef("title", PropertyType.String,
             null, false, true, true, false, false, false);
-        PropertyDef tagsProp = factory.createPropertyDef("tags", PropertyType.String,
+        PropertyDef tagsProp = db.factory.createPropertyDef("tags", PropertyType.String,
             true, true, true, true, true);
-        PropertyDef pricesProp = factory.createPropertyDef("prices", PropertyType.Float,
+        PropertyDef pricesProp = db.factory.createPropertyDef("prices", PropertyType.Float,
             true, true, true, true, true);
 
         Map<String, PropertyDef> propDefs = new LinkedHashMap<>();
@@ -704,30 +674,30 @@ class SqliteDaoTest
         propDefs.put("tags", tagsProp);
         propDefs.put("prices", pricesProp);
 
-        AspectDef productDef = factory.createImmutableAspectDef("product", propDefs);
+        AspectDef productDef = db.factory.createImmutableAspectDef("product", propDefs);
 
         // Create catalog
         UUID catalogId = UUID.randomUUID();
-        Catalog catalog = factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
+        Catalog catalog = db.factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
         catalog.extend(productDef);
         AspectMapHierarchy hierarchy = (AspectMapHierarchy) catalog.hierarchy("product");
 
         // Create entity with mixed properties
         UUID entityId = UUID.randomUUID();
-        Entity entity = factory.createEntity(entityId);
-        Aspect aspect = factory.createPropertyMapAspect(entity, productDef);
+        Entity entity = db.factory.createEntity(entityId);
+        Aspect aspect = db.factory.createPropertyMapAspect(entity, productDef);
 
-        aspect.put(factory.createProperty(titleProp, "Smart Watch"));
-        aspect.put(factory.createProperty(tagsProp, ImmutableList.of("electronics", "gadget")));
-        aspect.put(factory.createProperty(pricesProp, ImmutableList.of(199.99, 249.99, 299.99)));
+        aspect.put(db.factory.createProperty(titleProp, "Smart Watch"));
+        aspect.put(db.factory.createProperty(tagsProp, ImmutableList.of("electronics", "gadget")));
+        aspect.put(db.factory.createProperty(pricesProp, ImmutableList.of(199.99, 249.99, 299.99)));
 
         hierarchy.put(entity, aspect);
 
         // Save and load
-        sqliteDao.saveCatalog(catalog);
+        db.mariaDbDao.saveCatalog(catalog);
 
         // Verify database rows
-        try (Connection conn = dataSource.getConnection();
+        try (Connection conn = db.dataSource.getConnection();
              PreparedStatement stmt = conn.prepareStatement(
                  "SELECT property_name, COUNT(*) as row_count FROM property_value WHERE entity_id = ? GROUP BY property_name ORDER BY property_name")) {
             stmt.setString(1, entityId.toString());
@@ -748,9 +718,9 @@ class SqliteDaoTest
             }
         }
 
-        Catalog loadedCatalog = sqliteDao.loadCatalog(catalogId);
+        Catalog loadedCatalog = db.mariaDbDao.loadCatalog(catalogId);
         AspectMapHierarchy loadedHierarchy = (AspectMapHierarchy) loadedCatalog.hierarchy("product");
-        Entity loadedEntity = factory.getOrRegisterNewEntity(entityId);
+        Entity loadedEntity = db.factory.getOrRegisterNewEntity(entityId);
         Aspect loadedAspect = loadedHierarchy.get(loadedEntity);
 
         // Verify single-valued property
@@ -776,44 +746,44 @@ class SqliteDaoTest
     void testSaveAndLoadMultivaluedBooleanAndUUIDProperties() throws SQLException
     {
         // Create AspectDef with multivalued Boolean and UUID properties
-        PropertyDef flagsProp = factory.createPropertyDef("flags", PropertyType.Boolean,
+        PropertyDef flagsProp = db.factory.createPropertyDef("flags", PropertyType.Boolean,
             true, true, true, true, true);
-        PropertyDef idsProp = factory.createPropertyDef("ids", PropertyType.UUID,
+        PropertyDef idsProp = db.factory.createPropertyDef("ids", PropertyType.UUID,
             true, true, true, true, true);
 
         Map<String, PropertyDef> propDefs = new LinkedHashMap<>();
         propDefs.put("flags", flagsProp);
         propDefs.put("ids", idsProp);
 
-        AspectDef testDef = factory.createImmutableAspectDef("test_data", propDefs);
+        AspectDef testDef = db.factory.createImmutableAspectDef("test_data", propDefs);
 
         // Create catalog
         UUID catalogId = UUID.randomUUID();
-        Catalog catalog = factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
+        Catalog catalog = db.factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
         catalog.extend(testDef);
         AspectMapHierarchy hierarchy = (AspectMapHierarchy) catalog.hierarchy("test_data");
 
         // Create entity with multivalued Boolean and UUID properties
         UUID entityId = UUID.randomUUID();
-        Entity entity = factory.createEntity(entityId);
-        Aspect aspect = factory.createPropertyMapAspect(entity, testDef);
+        Entity entity = db.factory.createEntity(entityId);
+        Aspect aspect = db.factory.createPropertyMapAspect(entity, testDef);
 
         UUID id1 = UUID.fromString("550e8400-e29b-41d4-a716-446655440000");
         UUID id2 = UUID.fromString("6ba7b810-9dad-11d1-80b4-00c04fd430c8");
         UUID id3 = UUID.fromString("7c9e6679-7425-40de-944b-e07fc1f90ae7");
 
-        aspect.put(factory.createProperty(flagsProp, ImmutableList.of(true, false, true, true)));
-        aspect.put(factory.createProperty(idsProp, ImmutableList.of(id1, id2, id3)));
+        aspect.put(db.factory.createProperty(flagsProp, ImmutableList.of(true, false, true, true)));
+        aspect.put(db.factory.createProperty(idsProp, ImmutableList.of(id1, id2, id3)));
 
         hierarchy.put(entity, aspect);
 
         // Save and load
-        sqliteDao.saveCatalog(catalog);
-        Catalog loadedCatalog = sqliteDao.loadCatalog(catalogId);
+        db.mariaDbDao.saveCatalog(catalog);
+        Catalog loadedCatalog = db.mariaDbDao.loadCatalog(catalogId);
 
         // Verify loaded data
         AspectMapHierarchy loadedHierarchy = (AspectMapHierarchy) loadedCatalog.hierarchy("test_data");
-        Entity loadedEntity = factory.getOrRegisterNewEntity(entityId);
+        Entity loadedEntity = db.factory.getOrRegisterNewEntity(entityId);
         Aspect loadedAspect = loadedHierarchy.get(loadedEntity);
 
         // Verify Boolean list
@@ -838,40 +808,40 @@ class SqliteDaoTest
     void testUpdateMultivaluedPropertyWithDifferentLength() throws SQLException
     {
         // Create AspectDef with multivalued property
-        PropertyDef tagsProp = factory.createPropertyDef("tags", PropertyType.String,
+        PropertyDef tagsProp = db.factory.createPropertyDef("tags", PropertyType.String,
             true, true, true, true, true);
 
         Map<String, PropertyDef> propDefs = Map.of("tags", tagsProp);
-        AspectDef productDef = factory.createImmutableAspectDef("product", propDefs);
+        AspectDef productDef = db.factory.createImmutableAspectDef("product", propDefs);
 
         // Create catalog
         UUID catalogId = UUID.randomUUID();
-        Catalog catalog = factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
+        Catalog catalog = db.factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
         catalog.extend(productDef);
         AspectMapHierarchy hierarchy = (AspectMapHierarchy) catalog.hierarchy("product");
 
         // Create entity with initial list of 3 items
         UUID entityId = UUID.randomUUID();
-        Entity entity = factory.createEntity(entityId);
-        Aspect aspect = factory.createPropertyMapAspect(entity, productDef);
+        Entity entity = db.factory.createEntity(entityId);
+        Aspect aspect = db.factory.createPropertyMapAspect(entity, productDef);
 
-        aspect.put(factory.createProperty(tagsProp, ImmutableList.of("tag1", "tag2", "tag3")));
+        aspect.put(db.factory.createProperty(tagsProp, ImmutableList.of("tag1", "tag2", "tag3")));
         hierarchy.put(entity, aspect);
 
         // Save catalog
-        sqliteDao.saveCatalog(catalog);
+        db.mariaDbDao.saveCatalog(catalog);
 
         // Update with list of 5 items
-        Aspect updatedAspect = factory.createPropertyMapAspect(entity, productDef);
-        updatedAspect.put(factory.createProperty(tagsProp,
+        Aspect updatedAspect = db.factory.createPropertyMapAspect(entity, productDef);
+        updatedAspect.put(db.factory.createProperty(tagsProp,
             ImmutableList.of("new1", "new2", "new3", "new4", "new5")));
         hierarchy.put(entity, updatedAspect);
 
         // Save again
-        sqliteDao.saveCatalog(catalog);
+        db.mariaDbDao.saveCatalog(catalog);
 
         // Verify database has 5 rows (old rows should be deleted)
-        try (Connection conn = dataSource.getConnection();
+        try (Connection conn = db.dataSource.getConnection();
              PreparedStatement stmt = conn.prepareStatement(
                  "SELECT COUNT(*) FROM property_value WHERE entity_id = ? AND property_name = ?")) {
             stmt.setString(1, entityId.toString());
@@ -883,9 +853,9 @@ class SqliteDaoTest
         }
 
         // Load and verify new values
-        Catalog loadedCatalog = sqliteDao.loadCatalog(catalogId);
+        Catalog loadedCatalog = db.mariaDbDao.loadCatalog(catalogId);
         AspectMapHierarchy loadedHierarchy = (AspectMapHierarchy) loadedCatalog.hierarchy("product");
-        Entity loadedEntity = factory.getOrRegisterNewEntity(entityId);
+        Entity loadedEntity = db.factory.getOrRegisterNewEntity(entityId);
         Aspect loadedAspect = loadedHierarchy.get(loadedEntity);
 
         @SuppressWarnings("unchecked")
@@ -903,26 +873,26 @@ class SqliteDaoTest
     {
         // Load table creation SQL files and create tables
         String[] sqlFiles = {
-            "/db/sqlite/test_aspect_mapping_no_key.sql",
-            "/db/sqlite/test_aspect_mapping_with_cat_id.sql",
-            "/db/sqlite/test_aspect_mapping_with_entity_id.sql",
-            "/db/sqlite/test_aspect_mapping_with_both_ids.sql"
+            "/db/mariadb/test_aspect_mapping_no_key.sql",
+            "/db/mariadb/test_aspect_mapping_with_cat_id.sql",
+            "/db/mariadb/test_aspect_mapping_with_entity_id.sql",
+            "/db/mariadb/test_aspect_mapping_with_both_ids.sql"
         };
 
         for (String sqlFile : sqlFiles) {
             String sql = loadResourceFile(sqlFile);
-            try (Connection conn = dataSource.getConnection();
+            try (Connection conn = db.dataSource.getConnection();
                  Statement stmt = conn.createStatement()) {
                 stmt.execute(sql);
             }
         }
 
         // Load AspectDefs from test tables
-        SqliteCatalog sqliteCatalog = new SqliteCatalog(dataSource);
-        AspectDef noKeyAspectDef = sqliteCatalog.loadTableDef("test_aspect_mapping_no_key");
-        AspectDef catIdAspectDef = sqliteCatalog.loadTableDef("test_aspect_mapping_with_cat_id");
-        AspectDef entityIdAspectDef = sqliteCatalog.loadTableDef("test_aspect_mapping_with_entity_id");
-        AspectDef bothIdsAspectDef = sqliteCatalog.loadTableDef("test_aspect_mapping_with_both_ids");
+        MariaDbCatalog mariaDbCatalog = new MariaDbCatalog(db.dataSource);
+        AspectDef noKeyAspectDef = mariaDbCatalog.loadTableDef("test_aspect_mapping_no_key");
+        AspectDef catIdAspectDef = mariaDbCatalog.loadTableDef("test_aspect_mapping_with_cat_id");
+        AspectDef entityIdAspectDef = mariaDbCatalog.loadTableDef("test_aspect_mapping_with_entity_id");
+        AspectDef bothIdsAspectDef = mariaDbCatalog.loadTableDef("test_aspect_mapping_with_both_ids");
 
         // Create column mappings
         Map<String, String> columnMapping = Map.of(
@@ -947,57 +917,57 @@ class SqliteDaoTest
             bothIdsAspectDef, "test_aspect_mapping_with_both_ids", columnMapping, true, true);
 
         // Register all mappings
-        sqliteDao.addAspectTableMapping(noKeyMapping);
-        sqliteDao.addAspectTableMapping(catIdMapping);
-        sqliteDao.addAspectTableMapping(entityIdMapping);
-        sqliteDao.addAspectTableMapping(bothIdsMapping);
+        db.mariaDbDao.addAspectTableMapping(noKeyMapping);
+        db.mariaDbDao.addAspectTableMapping(catIdMapping);
+        db.mariaDbDao.addAspectTableMapping(entityIdMapping);
+        db.mariaDbDao.addAspectTableMapping(bothIdsMapping);
 
         // Create catalog
         UUID catalogId = UUID.randomUUID();
-        Catalog catalog = factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
+        Catalog catalog = db.factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
 
         // Create hierarchies for each pattern
-        AspectMapHierarchy noKeyHierarchy = factory.createAspectMapHierarchy(catalog, noKeyAspectDef);
-        AspectMapHierarchy catIdHierarchy = factory.createAspectMapHierarchy(catalog, catIdAspectDef);
-        AspectMapHierarchy entityIdHierarchy = factory.createAspectMapHierarchy(catalog, entityIdAspectDef);
-        AspectMapHierarchy bothIdsHierarchy = factory.createAspectMapHierarchy(catalog, bothIdsAspectDef);
+        AspectMapHierarchy noKeyHierarchy = db.factory.createAspectMapHierarchy(catalog, noKeyAspectDef);
+        AspectMapHierarchy catIdHierarchy = db.factory.createAspectMapHierarchy(catalog, catIdAspectDef);
+        AspectMapHierarchy entityIdHierarchy = db.factory.createAspectMapHierarchy(catalog, entityIdAspectDef);
+        AspectMapHierarchy bothIdsHierarchy = db.factory.createAspectMapHierarchy(catalog, bothIdsAspectDef);
 
         // Add test data to each hierarchy
         // Pattern 1: No IDs - entities will be generated
-        Entity noKey1 = factory.createEntity();
-        Aspect noKeyAsp1 = factory.createPropertyMapAspect(noKey1, noKeyAspectDef);
-        noKeyAsp1.put(factory.createProperty(noKeyAspectDef.propertyDef("string_col"), "nokey1"));
-        noKeyAsp1.put(factory.createProperty(noKeyAspectDef.propertyDef("integer_col"), 100L));
+        Entity noKey1 = db.factory.createEntity();
+        Aspect noKeyAsp1 = db.factory.createPropertyMapAspect(noKey1, noKeyAspectDef);
+        noKeyAsp1.put(db.factory.createProperty(noKeyAspectDef.propertyDef("string_col"), "nokey1"));
+        noKeyAsp1.put(db.factory.createProperty(noKeyAspectDef.propertyDef("integer_col"), 100L));
         noKeyHierarchy.put(noKey1, noKeyAsp1);
 
         // Pattern 2: Catalog ID only - entities will be generated
-        Entity catId1 = factory.createEntity();
-        Aspect catIdAsp1 = factory.createPropertyMapAspect(catId1, catIdAspectDef);
-        catIdAsp1.put(factory.createProperty(catIdAspectDef.propertyDef("string_col"), "catid1"));
-        catIdAsp1.put(factory.createProperty(catIdAspectDef.propertyDef("integer_col"), 200L));
+        Entity catId1 = db.factory.createEntity();
+        Aspect catIdAsp1 = db.factory.createPropertyMapAspect(catId1, catIdAspectDef);
+        catIdAsp1.put(db.factory.createProperty(catIdAspectDef.propertyDef("string_col"), "catid1"));
+        catIdAsp1.put(db.factory.createProperty(catIdAspectDef.propertyDef("integer_col"), 200L));
         catIdHierarchy.put(catId1, catIdAsp1);
 
         // Pattern 3: Entity ID only - entity IDs preserved
         UUID entity3Id = UUID.randomUUID();
-        Entity entityId1 = factory.createEntity(entity3Id);
-        Aspect entityIdAsp1 = factory.createPropertyMapAspect(entityId1, entityIdAspectDef);
-        entityIdAsp1.put(factory.createProperty(entityIdAspectDef.propertyDef("string_col"), "entityid1"));
-        entityIdAsp1.put(factory.createProperty(entityIdAspectDef.propertyDef("integer_col"), 300L));
+        Entity entityId1 = db.factory.createEntity(entity3Id);
+        Aspect entityIdAsp1 = db.factory.createPropertyMapAspect(entityId1, entityIdAspectDef);
+        entityIdAsp1.put(db.factory.createProperty(entityIdAspectDef.propertyDef("string_col"), "entityid1"));
+        entityIdAsp1.put(db.factory.createProperty(entityIdAspectDef.propertyDef("integer_col"), 300L));
         entityIdHierarchy.put(entityId1, entityIdAsp1);
 
         // Pattern 4: Both IDs - entity IDs preserved, catalog-scoped
         UUID entity4Id = UUID.randomUUID();
-        Entity bothIds1 = factory.createEntity(entity4Id);
-        Aspect bothIdsAsp1 = factory.createPropertyMapAspect(bothIds1, bothIdsAspectDef);
-        bothIdsAsp1.put(factory.createProperty(bothIdsAspectDef.propertyDef("string_col"), "bothids1"));
-        bothIdsAsp1.put(factory.createProperty(bothIdsAspectDef.propertyDef("integer_col"), 400L));
+        Entity bothIds1 = db.factory.createEntity(entity4Id);
+        Aspect bothIdsAsp1 = db.factory.createPropertyMapAspect(bothIds1, bothIdsAspectDef);
+        bothIdsAsp1.put(db.factory.createProperty(bothIdsAspectDef.propertyDef("string_col"), "bothids1"));
+        bothIdsAsp1.put(db.factory.createProperty(bothIdsAspectDef.propertyDef("integer_col"), 400L));
         bothIdsHierarchy.put(bothIds1, bothIdsAsp1);
 
         // Save catalog
-        sqliteDao.saveCatalog(catalog);
+        db.mariaDbDao.saveCatalog(catalog);
 
         // Verify Pattern 1: No IDs - data saved, no ID columns
-        try (Connection conn = dataSource.getConnection();
+        try (Connection conn = db.dataSource.getConnection();
              Statement stmt = conn.createStatement();
              var rs = stmt.executeQuery("SELECT string_col, integer_col FROM test_aspect_mapping_no_key")) {
             assertTrue(rs.next());
@@ -1007,7 +977,7 @@ class SqliteDaoTest
         }
 
         // Verify Pattern 2: Catalog ID - data saved with catalog_id
-        try (Connection conn = dataSource.getConnection();
+        try (Connection conn = db.dataSource.getConnection();
              Statement stmt = conn.createStatement();
              var rs = stmt.executeQuery("SELECT catalog_id, string_col, integer_col FROM test_aspect_mapping_with_cat_id")) {
             assertTrue(rs.next());
@@ -1018,7 +988,7 @@ class SqliteDaoTest
         }
 
         // Verify Pattern 3: Entity ID - data saved with entity_id preserved
-        try (Connection conn = dataSource.getConnection();
+        try (Connection conn = db.dataSource.getConnection();
              Statement stmt = conn.createStatement();
              var rs = stmt.executeQuery("SELECT entity_id, string_col, integer_col FROM test_aspect_mapping_with_entity_id")) {
             assertTrue(rs.next());
@@ -1029,7 +999,7 @@ class SqliteDaoTest
         }
 
         // Verify Pattern 4: Both IDs - data saved with both IDs
-        try (Connection conn = dataSource.getConnection();
+        try (Connection conn = db.dataSource.getConnection();
              Statement stmt = conn.createStatement();
              var rs = stmt.executeQuery("SELECT catalog_id, entity_id, string_col, integer_col FROM test_aspect_mapping_with_both_ids")) {
             assertTrue(rs.next());
@@ -1041,7 +1011,7 @@ class SqliteDaoTest
         }
 
         // Load catalog back and verify
-        Catalog loadedCatalog = sqliteDao.loadCatalog(catalogId);
+        Catalog loadedCatalog = db.mariaDbDao.loadCatalog(catalogId);
         assertNotNull(loadedCatalog);
 
         // Pattern 1: Entity IDs will be different (generated on load)
@@ -1063,7 +1033,7 @@ class SqliteDaoTest
         // Pattern 3: Entity IDs preserved
         AspectMapHierarchy loadedEntityIdHierarchy = (AspectMapHierarchy) loadedCatalog.hierarchy(entityIdAspectDef.name());
         assertEquals(1, loadedEntityIdHierarchy.size());
-        Entity loadedEntity3 = factory.getOrRegisterNewEntity(entity3Id);
+        Entity loadedEntity3 = db.factory.getOrRegisterNewEntity(entity3Id);
         Aspect loadedEntityIdAsp = loadedEntityIdHierarchy.get(loadedEntity3);
         assertNotNull(loadedEntityIdAsp);
         assertEquals("entityid1", loadedEntityIdAsp.readObj("string_col"));
@@ -1072,7 +1042,7 @@ class SqliteDaoTest
         // Pattern 4: Entity IDs preserved, catalog-scoped
         AspectMapHierarchy loadedBothIdsHierarchy = (AspectMapHierarchy) loadedCatalog.hierarchy(bothIdsAspectDef.name());
         assertEquals(1, loadedBothIdsHierarchy.size());
-        Entity loadedEntity4 = factory.getOrRegisterNewEntity(entity4Id);
+        Entity loadedEntity4 = db.factory.getOrRegisterNewEntity(entity4Id);
         Aspect loadedBothIdsAsp = loadedBothIdsHierarchy.get(loadedEntity4);
         assertNotNull(loadedBothIdsAsp);
         assertEquals("bothids1", loadedBothIdsAsp.readObj("string_col"));
