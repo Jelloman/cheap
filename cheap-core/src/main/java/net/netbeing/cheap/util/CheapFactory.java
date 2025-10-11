@@ -865,7 +865,7 @@ public class CheapFactory
      */
     public @NotNull PropertyDef createPropertyDef(@NotNull String name, @NotNull PropertyType type)
     {
-        return new PropertyDefImpl(name, type);
+        return new PropertyDefBuilder().setName(name).setType(type).build();
     }
 
     /**
@@ -885,7 +885,7 @@ public class CheapFactory
                                                         boolean isNullable, boolean isRemovable,
                                                         boolean isMultivalued)
     {
-        return new PropertyDefImpl(name, type, isReadable, isWritable, isNullable, isRemovable, isMultivalued);
+        return new PropertyDefBuilder().setName(name).setType(type).setIsReadable(isReadable).setIsWritable(isWritable).setIsNullable(isNullable).setIsRemovable(isRemovable).setIsMultivalued(isMultivalued).build();
     }
 
     /**
@@ -898,9 +898,16 @@ public class CheapFactory
      * @return a new read-only PropertyDef instance
      */
     public @NotNull PropertyDef createReadOnlyPropertyDef(@NotNull String name, @NotNull PropertyType type,
-                                                                boolean isNullable, boolean isRemovable)
+                                                          boolean isNullable, boolean isRemovable)
     {
-        return PropertyDefImpl.readOnly(name, type, isNullable, isRemovable);
+        return new PropertyDefBuilder()
+            .setName(name)
+            .setType(type)
+            .setIsRemovable(isRemovable)
+            .setIsNullable(isNullable)
+            .setIsReadable(true)
+            .setIsWritable(false)
+            .build();
     }
 
     /**

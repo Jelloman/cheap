@@ -26,8 +26,8 @@ class AspectObjectMapBuilderTest
         entityId = UUID.randomUUID();
         entity = new EntityImpl(entityId);
         aspectDef = new MutableAspectDefImpl("testAspect");
-        propDef1 = new PropertyDefImpl("prop1", PropertyType.String);
-        propDef2 = new PropertyDefImpl("prop2", PropertyType.Integer);
+        propDef1 = new PropertyDefBuilder().setName("prop1").setType(PropertyType.String).build();
+        propDef2 = new PropertyDefBuilder().setName("prop2").setType(PropertyType.Integer).build();
         property1 = new PropertyImpl(propDef1, "test-value");
         property2 = new PropertyImpl(propDef2, 42);
 

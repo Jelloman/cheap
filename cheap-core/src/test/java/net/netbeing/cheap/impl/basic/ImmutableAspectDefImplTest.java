@@ -24,9 +24,9 @@ class ImmutableAspectDefImplTest
     @BeforeEach
     void setUp()
     {
-        propDef1 = new PropertyDefImpl("prop1", PropertyType.String);
-        propDef2 = new PropertyDefImpl("prop2", PropertyType.Integer);
-        propDef3 = new PropertyDefImpl("prop3", PropertyType.Boolean);
+        propDef1 = new PropertyDefBuilder().setName("prop1").setType(PropertyType.String).build();
+        propDef2 = new PropertyDefBuilder().setName("prop2").setType(PropertyType.Integer).build();
+        propDef3 = new PropertyDefBuilder().setName("prop3").setType(PropertyType.Boolean).build();
         
         propertyDefs = new LinkedHashMap<>();
         propertyDefs.put("prop1", propDef1);
@@ -203,8 +203,8 @@ class ImmutableAspectDefImplTest
     void propertyDefs_WithDuplicatePropertyNames_LastOneWins()
     {
         Map<String, PropertyDef> duplicateMap = new LinkedHashMap<>();
-        PropertyDef originalProp = new PropertyDefImpl("sameName", PropertyType.String);
-        PropertyDef duplicateProp = new PropertyDefImpl("sameName", PropertyType.Integer);
+        PropertyDef originalProp = new PropertyDefBuilder().setName("sameName").setType(PropertyType.String).build();
+        PropertyDef duplicateProp = new PropertyDefBuilder().setName("sameName").setType(PropertyType.Integer).build();
         
         duplicateMap.put("sameName", originalProp);
         duplicateMap.put("sameName", duplicateProp); // This will overwrite
@@ -220,7 +220,7 @@ class ImmutableAspectDefImplTest
     {
         Map<String, PropertyDef> largeMap = new HashMap<>();
         for (int i = 0; i < 1000; i++) {
-            PropertyDef prop = new PropertyDefImpl("prop" + i, PropertyType.String);
+            PropertyDef prop = new PropertyDefBuilder().setName("prop" + i).setType(PropertyType.String).build();
             largeMap.put("prop" + i, prop);
         }
         
@@ -262,12 +262,12 @@ class ImmutableAspectDefImplTest
     {
         UUID globalId = UUID.randomUUID();
         Map<String, PropertyDef> propertyDefs1 = ImmutableMap.of(
-            "prop1", new PropertyDefImpl("prop1", PropertyType.String),
-            "prop2", new PropertyDefImpl("prop2", PropertyType.Integer)
+            "prop1", new PropertyDefBuilder().setName("prop1").setType(PropertyType.String).build(),
+            "prop2", new PropertyDefBuilder().setName("prop2").setType(PropertyType.Integer).build()
         );
         Map<String, PropertyDef> propertyDefs2 = ImmutableMap.of(
-            "prop1", new PropertyDefImpl("prop1", PropertyType.String),
-            "prop2", new PropertyDefImpl("prop2", PropertyType.Integer)
+            "prop1", new PropertyDefBuilder().setName("prop1").setType(PropertyType.String).build(),
+            "prop2", new PropertyDefBuilder().setName("prop2").setType(PropertyType.Integer).build()
         );
 
         ImmutableAspectDefImpl aspectDef1 = new ImmutableAspectDefImpl("testAspect", globalId, propertyDefs1);
@@ -281,8 +281,8 @@ class ImmutableAspectDefImplTest
     void fullyEquals_SameInstance_ReturnsTrue()
     {
         Map<String, PropertyDef> propertyDefs = ImmutableMap.of(
-            "prop1", new PropertyDefImpl("prop1", PropertyType.String),
-            "prop2", new PropertyDefImpl("prop2", PropertyType.Integer)
+            "prop1", new PropertyDefBuilder().setName("prop1").setType(PropertyType.String).build(),
+            "prop2", new PropertyDefBuilder().setName("prop2").setType(PropertyType.Integer).build()
         );
 
         ImmutableAspectDefImpl aspectDef = new ImmutableAspectDefImpl("testAspect", propertyDefs);
@@ -294,8 +294,8 @@ class ImmutableAspectDefImplTest
     void fullyEquals_DifferentNames_ReturnsFalse()
     {
         Map<String, PropertyDef> propertyDefs = ImmutableMap.of(
-            "prop1", new PropertyDefImpl("prop1", PropertyType.String),
-            "prop2", new PropertyDefImpl("prop2", PropertyType.Integer)
+            "prop1", new PropertyDefBuilder().setName("prop1").setType(PropertyType.String).build(),
+            "prop2", new PropertyDefBuilder().setName("prop2").setType(PropertyType.Integer).build()
         );
 
         ImmutableAspectDefImpl aspectDef1 = new ImmutableAspectDefImpl("testAspect1", propertyDefs);
@@ -309,12 +309,12 @@ class ImmutableAspectDefImplTest
     {
         UUID globalId = UUID.randomUUID();
         Map<String, PropertyDef> propertyDefs1 = ImmutableMap.of(
-            "prop1", new PropertyDefImpl("prop1", PropertyType.String),
-            "prop2", new PropertyDefImpl("prop2", PropertyType.Integer)
+            "prop1", new PropertyDefBuilder().setName("prop1").setType(PropertyType.String).build(),
+            "prop2", new PropertyDefBuilder().setName("prop2").setType(PropertyType.Integer).build()
         );
         Map<String, PropertyDef> propertyDefs2 = ImmutableMap.of(
-            "prop1", new PropertyDefImpl("prop1", PropertyType.String),
-            "prop2", new PropertyDefImpl("prop2", PropertyType.Integer)
+            "prop1", new PropertyDefBuilder().setName("prop1").setType(PropertyType.String).build(),
+            "prop2", new PropertyDefBuilder().setName("prop2").setType(PropertyType.Integer).build()
         );
 
         ImmutableAspectDefImpl aspectDef1 = new ImmutableAspectDefImpl("testAspect", globalId, propertyDefs1);
@@ -327,8 +327,8 @@ class ImmutableAspectDefImplTest
     void hash_SameInstance_ReturnsSameHash()
     {
         Map<String, PropertyDef> propertyDefs = ImmutableMap.of(
-            "prop1", new PropertyDefImpl("prop1", PropertyType.String),
-            "prop2", new PropertyDefImpl("prop2", PropertyType.Integer)
+            "prop1", new PropertyDefBuilder().setName("prop1").setType(PropertyType.String).build(),
+            "prop2", new PropertyDefBuilder().setName("prop2").setType(PropertyType.Integer).build()
         );
 
         ImmutableAspectDefImpl aspectDef = new ImmutableAspectDefImpl("testAspect", propertyDefs);
@@ -341,12 +341,12 @@ class ImmutableAspectDefImplTest
     {
         UUID globalId = UUID.randomUUID();
         Map<String, PropertyDef> propertyDefs1 = new LinkedHashMap<>();
-        propertyDefs1.put("prop1", new PropertyDefImpl("prop1", PropertyType.String));
-        propertyDefs1.put("prop2", new PropertyDefImpl("prop2", PropertyType.Integer));
+        propertyDefs1.put("prop1", new PropertyDefBuilder().setName("prop1").setType(PropertyType.String).build());
+        propertyDefs1.put("prop2", new PropertyDefBuilder().setName("prop2").setType(PropertyType.Integer).build());
 
         Map<String, PropertyDef> propertyDefs2 = new LinkedHashMap<>();
-        propertyDefs2.put("prop2", new PropertyDefImpl("prop2", PropertyType.Integer));
-        propertyDefs2.put("prop1", new PropertyDefImpl("prop1", PropertyType.String));
+        propertyDefs2.put("prop2", new PropertyDefBuilder().setName("prop2").setType(PropertyType.Integer).build());
+        propertyDefs2.put("prop1", new PropertyDefBuilder().setName("prop1").setType(PropertyType.String).build());
 
         ImmutableAspectDefImpl aspectDef1 = new ImmutableAspectDefImpl("testAspect", globalId, propertyDefs1);
         ImmutableAspectDefImpl aspectDef2 = new ImmutableAspectDefImpl("testAspect", globalId, propertyDefs2);

@@ -2,7 +2,6 @@ package net.netbeing.cheap.impl.basic;
 
 import com.google.common.collect.ImmutableList;
 import net.netbeing.cheap.model.AspectDef;
-import net.netbeing.cheap.model.CatalogDef;
 import net.netbeing.cheap.model.HierarchyDef;
 import net.netbeing.cheap.model.HierarchyType;
 import net.netbeing.cheap.model.PropertyDef;
@@ -36,7 +35,7 @@ class CatalogDefImplTest
     {
         HierarchyDef hierarchyDef = new HierarchyDefImpl("testHierarchy", HierarchyType.ENTITY_LIST);
         Map<String, PropertyDef> propertyDefs = new LinkedHashMap<>();
-        propertyDefs.put("prop1", new PropertyDefImpl("prop1", PropertyType.String));
+        propertyDefs.put("prop1", new PropertyDefBuilder().setName("prop1").setType(PropertyType.String).build());
         AspectDef aspectDef = new ImmutableAspectDefImpl("testAspect", propertyDefs);
 
         CatalogDefImpl catalogDef = new CatalogDefImpl(
@@ -58,13 +57,13 @@ class CatalogDefImplTest
         // Create identical aspect defs with same UUID
         UUID aspectId = UUID.randomUUID();
         Map<String, PropertyDef> propertyDefs1 = new LinkedHashMap<>();
-        propertyDefs1.put("prop1", new PropertyDefImpl("prop1", PropertyType.String));
-        propertyDefs1.put("prop2", new PropertyDefImpl("prop2", PropertyType.Integer));
+        propertyDefs1.put("prop1", new PropertyDefBuilder().setName("prop1").setType(PropertyType.String).build());
+        propertyDefs1.put("prop2", new PropertyDefBuilder().setName("prop2").setType(PropertyType.Integer).build());
         AspectDef aspectDef1 = new ImmutableAspectDefImpl("aspect1", aspectId, propertyDefs1);
 
         Map<String, PropertyDef> propertyDefs2 = new LinkedHashMap<>();
-        propertyDefs2.put("prop1", new PropertyDefImpl("prop1", PropertyType.String));
-        propertyDefs2.put("prop2", new PropertyDefImpl("prop2", PropertyType.Integer));
+        propertyDefs2.put("prop1", new PropertyDefBuilder().setName("prop1").setType(PropertyType.String).build());
+        propertyDefs2.put("prop2", new PropertyDefBuilder().setName("prop2").setType(PropertyType.Integer).build());
         AspectDef aspectDef2 = new ImmutableAspectDefImpl("aspect1", aspectId, propertyDefs2);
 
         // Create two CatalogDefs with identical content
@@ -90,7 +89,7 @@ class CatalogDefImplTest
     {
         HierarchyDef hierarchyDef = new HierarchyDefImpl("testHierarchy", HierarchyType.ENTITY_LIST);
         Map<String, PropertyDef> propertyDefs = new LinkedHashMap<>();
-        propertyDefs.put("prop1", new PropertyDefImpl("prop1", PropertyType.String));
+        propertyDefs.put("prop1", new PropertyDefBuilder().setName("prop1").setType(PropertyType.String).build());
         AspectDef aspectDef = new ImmutableAspectDefImpl("testAspect", propertyDefs);
 
         CatalogDefImpl catalogDef = new CatalogDefImpl(
@@ -106,7 +105,7 @@ class CatalogDefImplTest
     void hash_DifferentHierarchyDefs_ReturnsDifferentHash()
     {
         Map<String, PropertyDef> propertyDefs = new LinkedHashMap<>();
-        propertyDefs.put("prop1", new PropertyDefImpl("prop1", PropertyType.String));
+        propertyDefs.put("prop1", new PropertyDefBuilder().setName("prop1").setType(PropertyType.String).build());
         AspectDef aspectDef = new ImmutableAspectDefImpl("testAspect", propertyDefs);
 
         CatalogDefImpl catalogDef1 = new CatalogDefImpl(
@@ -129,11 +128,11 @@ class CatalogDefImplTest
         HierarchyDef hierarchyDef = new HierarchyDefImpl("testHierarchy", HierarchyType.ENTITY_LIST);
 
         Map<String, PropertyDef> propertyDefs1 = new LinkedHashMap<>();
-        propertyDefs1.put("prop1", new PropertyDefImpl("prop1", PropertyType.String));
+        propertyDefs1.put("prop1", new PropertyDefBuilder().setName("prop1").setType(PropertyType.String).build());
         AspectDef aspectDef1 = new ImmutableAspectDefImpl("aspect1", propertyDefs1);
 
         Map<String, PropertyDef> propertyDefs2 = new LinkedHashMap<>();
-        propertyDefs2.put("prop2", new PropertyDefImpl("prop2", PropertyType.Integer));
+        propertyDefs2.put("prop2", new PropertyDefBuilder().setName("prop2").setType(PropertyType.Integer).build());
         AspectDef aspectDef2 = new ImmutableAspectDefImpl("aspect2", propertyDefs2);
 
         CatalogDefImpl catalogDef1 = new CatalogDefImpl(
@@ -184,11 +183,11 @@ class CatalogDefImplTest
     void hash_DifferentOrderOfAspectDefs_ReturnsDifferentHash()
     {
         Map<String, PropertyDef> propertyDefs1 = new LinkedHashMap<>();
-        propertyDefs1.put("prop1", new PropertyDefImpl("prop1", PropertyType.String));
+        propertyDefs1.put("prop1", new PropertyDefBuilder().setName("prop1").setType(PropertyType.String).build());
         AspectDef aspectDef1 = new ImmutableAspectDefImpl("aspect1", propertyDefs1);
 
         Map<String, PropertyDef> propertyDefs2 = new LinkedHashMap<>();
-        propertyDefs2.put("prop2", new PropertyDefImpl("prop2", PropertyType.Integer));
+        propertyDefs2.put("prop2", new PropertyDefBuilder().setName("prop2").setType(PropertyType.Integer).build());
         AspectDef aspectDef2 = new ImmutableAspectDefImpl("aspect2", propertyDefs2);
 
         CatalogDefImpl catalogDef1 = new CatalogDefImpl(

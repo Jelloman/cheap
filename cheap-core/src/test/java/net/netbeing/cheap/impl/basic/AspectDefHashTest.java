@@ -23,8 +23,8 @@ class AspectDefHashTest
         // Create shared UUID and property definitions
         UUID globalId = UUID.randomUUID();
         Map<String, PropertyDef> propertyDefs = ImmutableMap.of(
-            "prop1", new PropertyDefImpl("prop1", PropertyType.String),
-            "prop2", new PropertyDefImpl("prop2", PropertyType.Integer)
+            "prop1", new PropertyDefBuilder().setName("prop1").setType(PropertyType.String).build(),
+            "prop2", new PropertyDefBuilder().setName("prop2").setType(PropertyType.Integer).build()
         );
 
         // Create FullAspectDefImpl with all mutability flags set to true (same as MutableAspectDefImpl)
@@ -56,8 +56,8 @@ class AspectDefHashTest
         // Create shared UUID and property definitions
         UUID globalId = UUID.randomUUID();
         Map<String, PropertyDef> propertyDefs = ImmutableMap.of(
-            "prop1", new PropertyDefImpl("prop1", PropertyType.String),
-            "prop2", new PropertyDefImpl("prop2", PropertyType.Integer)
+            "prop1", new PropertyDefBuilder().setName("prop1").setType(PropertyType.String).build(),
+            "prop2", new PropertyDefBuilder().setName("prop2").setType(PropertyType.Integer).build()
         );
 
         // Create FullAspectDefImpl with all mutability flags set to false (same as ImmutableAspectDefImpl)
@@ -89,8 +89,8 @@ class AspectDefHashTest
         // Create shared UUID and property definitions
         UUID globalId = UUID.randomUUID();
         Map<String, PropertyDef> propertyDefs = ImmutableMap.of(
-            "prop1", new PropertyDefImpl("prop1", PropertyType.String),
-            "prop2", new PropertyDefImpl("prop2", PropertyType.Integer)
+            "prop1", new PropertyDefBuilder().setName("prop1").setType(PropertyType.String).build(),
+            "prop2", new PropertyDefBuilder().setName("prop2").setType(PropertyType.Integer).build()
         );
 
         // Create FullAspectDefImpl with canAddProperties=true
@@ -126,8 +126,8 @@ class AspectDefHashTest
         // Create shared UUID and property definitions
         UUID globalId = UUID.randomUUID();
         Map<String, PropertyDef> propertyDefs = ImmutableMap.of(
-            "prop1", new PropertyDefImpl("prop1", PropertyType.String),
-            "prop2", new PropertyDefImpl("prop2", PropertyType.Integer)
+            "prop1", new PropertyDefBuilder().setName("prop1").setType(PropertyType.String).build(),
+            "prop2", new PropertyDefBuilder().setName("prop2").setType(PropertyType.Integer).build()
         );
 
         // Create MutableAspectDefImpl
