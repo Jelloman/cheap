@@ -19,7 +19,7 @@ class HashCachingTest
     @Test
     void propertyDefImpl_CachesHashValue_MultipleCallsReturnSameValue()
     {
-        PropertyDefImpl propDef = new PropertyDefImpl("testProp", PropertyType.String);
+        PropertyDefImpl propDef = new PropertyDefBuilder().setName("testProp").setType(PropertyType.String).build();
 
         long hash1 = propDef.hash();
         long hash2 = propDef.hash();
@@ -34,8 +34,8 @@ class HashCachingTest
     void immutableAspectDefImpl_CachesHashValue_MultipleCallsReturnSameValue()
     {
         Map<String, PropertyDef> propertyDefs = ImmutableMap.of(
-            "prop1", new PropertyDefImpl("prop1", PropertyType.String),
-            "prop2", new PropertyDefImpl("prop2", PropertyType.Integer)
+            "prop1", new PropertyDefBuilder().setName("prop1").setType(PropertyType.String).build(),
+            "prop2", new PropertyDefBuilder().setName("prop2").setType(PropertyType.Integer).build()
         );
 
         ImmutableAspectDefImpl aspectDef = new ImmutableAspectDefImpl("testAspect", propertyDefs);
@@ -53,14 +53,14 @@ class HashCachingTest
     void mutableAspectDefImpl_InvalidatesCacheOnAdd()
     {
         Map<String, PropertyDef> propertyDefs = new LinkedHashMap<>();
-        propertyDefs.put("prop1", new PropertyDefImpl("prop1", PropertyType.String));
+        propertyDefs.put("prop1", new PropertyDefBuilder().setName("prop1").setType(PropertyType.String).build());
 
         MutableAspectDefImpl aspectDef = new MutableAspectDefImpl("testAspect", propertyDefs);
 
         long hashBeforeAdd = aspectDef.hash();
 
         // Add a property - should invalidate cache
-        aspectDef.add(new PropertyDefImpl("prop2", PropertyType.Integer));
+        aspectDef.add(new PropertyDefBuilder().setName("prop2").setType(PropertyType.Integer).build());
 
         long hashAfterAdd = aspectDef.hash();
 
@@ -74,8 +74,8 @@ class HashCachingTest
     void mutableAspectDefImpl_InvalidatesCacheOnRemove()
     {
         Map<String, PropertyDef> propertyDefs = new LinkedHashMap<>();
-        PropertyDef prop1 = new PropertyDefImpl("prop1", PropertyType.String);
-        PropertyDef prop2 = new PropertyDefImpl("prop2", PropertyType.Integer);
+        PropertyDef prop1 = new PropertyDefBuilder().setName("prop1").setType(PropertyType.String).build();
+        PropertyDef prop2 = new PropertyDefBuilder().setName("prop2").setType(PropertyType.Integer).build();
         propertyDefs.put("prop1", prop1);
         propertyDefs.put("prop2", prop2);
 
@@ -98,7 +98,7 @@ class HashCachingTest
     void fullAspectDefImpl_InvalidatesCacheOnAdd_WhenAllowed()
     {
         Map<String, PropertyDef> propertyDefs = new LinkedHashMap<>();
-        propertyDefs.put("prop1", new PropertyDefImpl("prop1", PropertyType.String));
+        propertyDefs.put("prop1", new PropertyDefBuilder().setName("prop1").setType(PropertyType.String).build());
 
         FullAspectDefImpl aspectDef = new FullAspectDefImpl(
             "testAspect",
@@ -113,7 +113,7 @@ class HashCachingTest
         long hashBeforeAdd = aspectDef.hash();
 
         // Add a property - should invalidate cache
-        aspectDef.add(new PropertyDefImpl("prop2", PropertyType.Integer));
+        aspectDef.add(new PropertyDefBuilder().setName("prop2").setType(PropertyType.Integer).build());
 
         long hashAfterAdd = aspectDef.hash();
 
@@ -127,8 +127,8 @@ class HashCachingTest
     void fullAspectDefImpl_InvalidatesCacheOnRemove_WhenAllowed()
     {
         Map<String, PropertyDef> propertyDefs = new LinkedHashMap<>();
-        PropertyDef prop1 = new PropertyDefImpl("prop1", PropertyType.String);
-        PropertyDef prop2 = new PropertyDefImpl("prop2", PropertyType.Integer);
+        PropertyDef prop1 = new PropertyDefBuilder().setName("prop1").setType(PropertyType.String).build();
+        PropertyDef prop2 = new PropertyDefBuilder().setName("prop2").setType(PropertyType.Integer).build();
         propertyDefs.put("prop1", prop1);
         propertyDefs.put("prop2", prop2);
 
@@ -161,8 +161,8 @@ class HashCachingTest
         MutableAspectDefImpl aspectDef = new MutableAspectDefImpl("testAspect");
 
         // Add properties
-        aspectDef.add(new PropertyDefImpl("prop1", PropertyType.String));
-        aspectDef.add(new PropertyDefImpl("prop2", PropertyType.Integer));
+        aspectDef.add(new PropertyDefBuilder().setName("prop1").setType(PropertyType.String).build());
+        aspectDef.add(new PropertyDefBuilder().setName("prop2").setType(PropertyType.Integer).build());
 
         // Get hash (should be computed and cached)
         long hash1 = aspectDef.hash();
@@ -174,7 +174,7 @@ class HashCachingTest
         assertEquals(hash1, hash3, "Hash should remain cached");
 
         // Modify again
-        aspectDef.add(new PropertyDefImpl("prop3", PropertyType.Boolean));
+        aspectDef.add(new PropertyDefBuilder().setName("prop3").setType(PropertyType.Boolean).build());
 
         long hash4 = aspectDef.hash();
         long hash5 = aspectDef.hash();

@@ -52,8 +52,8 @@ public class CheapJacksonSerializerTest
         CatalogImpl catalog = new CatalogImpl(CATALOG_ID);
 
         // Create a simple AspectDef
-        PropertyDef nameProp = new PropertyDefImpl("name", PropertyType.String, null, false, true, true, false, false, false);
-        PropertyDef ageProp = new PropertyDefImpl("age", PropertyType.Integer, null, false, true, true, true, false, false);
+        PropertyDef nameProp = new PropertyDefBuilder().setName("name").setType(PropertyType.String).setDefaultValue(null).setHasDefaultValue(false).setIsReadable(true).setIsWritable(true).setIsNullable(false).setIsRemovable(false).setIsMultivalued(false).build();
+        PropertyDef ageProp = new PropertyDefBuilder().setName("age").setType(PropertyType.Integer).setDefaultValue(null).setHasDefaultValue(false).setIsReadable(true).setIsWritable(true).setIsNullable(true).setIsRemovable(false).setIsMultivalued(false).build();
         Map<String, PropertyDef> personProps = ImmutableMap.of("name", nameProp, "age", ageProp);
         AspectDef personAspectDef = new ImmutableAspectDefImpl("person", personProps);
 
@@ -299,7 +299,7 @@ public class CheapJacksonSerializerTest
         UUID entityId = UUID.fromString("550e8400-e29b-41d4-a716-446655440000");
         Entity entity = new EntityImpl(entityId);
 
-        PropertyDef nameProp = new PropertyDefImpl("name", PropertyType.String, null, false, true, true, false, false, false);
+        PropertyDef nameProp = new PropertyDefBuilder().setName("name").setType(PropertyType.String).setDefaultValue(null).setHasDefaultValue(false).setIsReadable(true).setIsWritable(true).setIsNullable(false).setIsRemovable(false).setIsMultivalued(false).build();
         Map<String, PropertyDef> personProps = ImmutableMap.of("name", nameProp);
         AspectDef personAspectDef = new ImmutableAspectDefImpl("person", personProps);
         AspectMapHierarchy personAspects = catalog.extend(personAspectDef);
@@ -341,13 +341,13 @@ public class CheapJacksonSerializerTest
     {
         // Create a custom CatalogDef that doesn't include all hierarchies
         // This simulates a case where one hierarchy will have its def embedded in JSON
-        PropertyDef nameProp = new PropertyDefImpl("name", PropertyType.String, null, false, true, true, false, false, false);
-        PropertyDef ageProp = new PropertyDefImpl("age", PropertyType.Integer, null, false, true, true, true, false, false);
+        PropertyDef nameProp = new PropertyDefBuilder().setName("name").setType(PropertyType.String).setDefaultValue(null).setHasDefaultValue(false).setIsReadable(true).setIsWritable(true).setIsNullable(false).setIsRemovable(false).setIsMultivalued(false).build();
+        PropertyDef ageProp = new PropertyDefBuilder().setName("age").setType(PropertyType.Integer).setDefaultValue(null).setHasDefaultValue(false).setIsReadable(true).setIsWritable(true).setIsNullable(true).setIsRemovable(false).setIsMultivalued(false).build();
         Map<String, PropertyDef> personProps = ImmutableMap.of("age", ageProp, "name", nameProp);
         AspectDef personAspectDef = new ImmutableAspectDefImpl("person", personProps);
 
-        PropertyDef titleProp = new PropertyDefImpl("title", PropertyType.String, null, false, true, true, false, false, false);
-        PropertyDef descProp = new PropertyDefImpl("description", PropertyType.String, null, false, true, true, true, false, false);
+        PropertyDef titleProp = new PropertyDefBuilder().setName("title").setType(PropertyType.String).setDefaultValue(null).setHasDefaultValue(false).setIsReadable(true).setIsWritable(true).setIsNullable(false).setIsRemovable(false).setIsMultivalued(false).build();
+        PropertyDef descProp = new PropertyDefBuilder().setName("description").setType(PropertyType.String).setDefaultValue(null).setHasDefaultValue(false).setIsReadable(true).setIsWritable(true).setIsNullable(true).setIsRemovable(false).setIsMultivalued(false).build();
         Map<String, PropertyDef> docProps = ImmutableMap.of("title", titleProp, "description", descProp);
         AspectDef docAspectDef = new ImmutableAspectDefImpl("document", docProps);
 
@@ -475,10 +475,10 @@ public class CheapJacksonSerializerTest
         Entity entity2 = new EntityImpl(entityId2);
 
         // Create PropertyDefs with multivalued properties
-        PropertyDef tagsProp = new PropertyDefImpl("tags", PropertyType.String, null, false, true, true, true, false, true);
-        PropertyDef scoresProp = new PropertyDefImpl("scores", PropertyType.Integer, null, false, true, true, true, false, true);
-        PropertyDef ratingsProp = new PropertyDefImpl("ratings", PropertyType.Float, null, false, true, true, true, false, true);
-        PropertyDef titleProp = new PropertyDefImpl("title", PropertyType.String, null, false, true, true, false, false, false);
+        PropertyDef tagsProp = new PropertyDefBuilder().setName("tags").setType(PropertyType.String).setDefaultValue(null).setHasDefaultValue(false).setIsReadable(true).setIsWritable(true).setIsNullable(true).setIsRemovable(false).setIsMultivalued(true).build();
+        PropertyDef scoresProp = new PropertyDefBuilder().setName("scores").setType(PropertyType.Integer).setDefaultValue(null).setHasDefaultValue(false).setIsReadable(true).setIsWritable(true).setIsNullable(true).setIsRemovable(false).setIsMultivalued(true).build();
+        PropertyDef ratingsProp = new PropertyDefBuilder().setName("ratings").setType(PropertyType.Float).setDefaultValue(null).setHasDefaultValue(false).setIsReadable(true).setIsWritable(true).setIsNullable(true).setIsRemovable(false).setIsMultivalued(true).build();
+        PropertyDef titleProp = new PropertyDefBuilder().setName("title").setType(PropertyType.String).setDefaultValue(null).setHasDefaultValue(false).setIsReadable(true).setIsWritable(true).setIsNullable(false).setIsRemovable(false).setIsMultivalued(false).build();
 
         Map<String, PropertyDef> productProps = ImmutableMap.of(
             "tags", tagsProp,

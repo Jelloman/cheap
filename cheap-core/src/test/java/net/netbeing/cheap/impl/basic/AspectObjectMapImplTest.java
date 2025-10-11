@@ -4,8 +4,6 @@ import net.netbeing.cheap.model.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.util.UUID;
-
 import static org.junit.jupiter.api.Assertions.*;
 
 class AspectObjectMapImplTest
@@ -25,8 +23,8 @@ class AspectObjectMapImplTest
         catalog = new CatalogImpl();
         entity = new EntityImpl();
         aspectDef = new MutableAspectDefImpl("testAspect");
-        propDef1 = new PropertyDefImpl("prop1", PropertyType.String);
-        propDef2 = new PropertyDefImpl("prop2", PropertyType.Integer);
+        propDef1 = new PropertyDefBuilder().setName("prop1").setType(PropertyType.String).build();
+        propDef2 = new PropertyDefBuilder().setName("prop2").setType(PropertyType.Integer).build();
         property1 = new PropertyImpl(propDef1, "test-value");
         property2 = new PropertyImpl(propDef2, 42);
         aspect = new AspectObjectMapImpl(entity, aspectDef);
