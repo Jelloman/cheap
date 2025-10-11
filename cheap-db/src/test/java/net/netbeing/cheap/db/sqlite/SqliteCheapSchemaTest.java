@@ -14,12 +14,12 @@
  *  limitations under the License.
  */
 
-package net.netbeing.cheap.db;
+package net.netbeing.cheap.db.sqlite;
 
-import io.zonky.test.db.postgres.junit5.EmbeddedPostgresExtension;
-import io.zonky.test.db.postgres.junit5.SingleInstancePostgresExtension;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.RegisterExtension;
+import org.sqlite.SQLiteDataSource;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -30,78 +30,88 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class PostgresCheapSchemaTest {
+class SqliteCheapSchemaTest {
 
-    @RegisterExtension
-    public static SingleInstancePostgresExtension postgres = EmbeddedPostgresExtension.singleInstance();
+    private DataSource dataSource;
+    private Connection connection;
+
+    @BeforeEach
+    void setUp() throws SQLException {
+        // Create an in-memory SQLite database
+        SQLiteDataSource ds = new SQLiteDataSource();
+        ds.setUrl("jdbc:sqlite::memory:");
+        this.dataSource = ds;
+        // Keep connection open to prevent in-memory database deletion
+        this.connection = ds.getConnection();
+    }
+
+    @AfterEach
+    void tearDown() throws SQLException {
+        // Close the connection (which will delete the in-memory database)
+        if (this.connection != null && !this.connection.isClosed()) {
+            this.connection.close();
+        }
+        this.connection = null;
+        this.dataSource = null;
+    }
 
     @Test
     void testAllSchemaExecution() throws SQLException {
-        DataSource dataSource = postgres.getEmbeddedPostgres().getPostgresDatabase();
-        PostgresDao postgresDao = new PostgresDao(dataSource);
+        SqliteDao sqliteDao = new SqliteDao(dataSource);
 
-        // Execute the main schema DDL using CatalogDao
-        postgresDao.executeMainSchemaDdl(dataSource);
+        // Execute the main schema DDL using SqliteDao with connection
+        sqliteDao.executeMainSchemaDdl(connection);
 
-        try (Connection connection = dataSource.getConnection()) {
+        // Verify that key tables were created
+        assertTrue(tableExists(connection, "aspect_def"), "aspect_def table should exist");
+        assertTrue(tableExists(connection, "property_def"), "property_def table should exist");
+        assertTrue(tableExists(connection, "entity"), "entity table should exist");
+        assertTrue(tableExists(connection, "catalog"), "catalog table should exist");
+        assertTrue(tableExists(connection, "catalog_aspect_def"), "catalog_aspect_def table should exist");
+        assertTrue(tableExists(connection, "hierarchy"), "hierarchy table should exist");
+        assertTrue(tableExists(connection, "aspect"), "aspect table should exist");
+        assertTrue(tableExists(connection, "property_value"), "property_value table should exist");
 
-            // Verify that key tables were created
-            assertTrue(tableExists(connection, "aspect_def"), "aspect_def table should exist");
-            assertTrue(tableExists(connection, "property_def"), "property_def table should exist");
-            assertTrue(tableExists(connection, "entity"), "entity table should exist");
-            assertTrue(tableExists(connection, "catalog"), "catalog table should exist");
-            assertTrue(tableExists(connection, "catalog_aspect_def"), "catalog_aspect_def table should exist");
-            assertTrue(tableExists(connection, "hierarchy"), "hierarchy table should exist");
-            assertTrue(tableExists(connection, "aspect"), "aspect table should exist");
-            assertTrue(tableExists(connection, "property_value"), "property_value table should exist");
+        // Execute the audit schema DDL using SqliteDao with connection
+        sqliteDao.executeAuditSchemaDdl(connection);
 
-        }
+        // Verify that audit columns were added to key tables
+        assertTrue(columnExists(connection, "aspect_def", "created_at"), "aspect_def should have created_at column");
+        assertTrue(columnExists(connection, "aspect_def", "updated_at"), "aspect_def should have updated_at column");
+        assertTrue(columnExists(connection, "property_def", "created_at"), "property_def should have created_at column");
+        assertTrue(columnExists(connection, "property_def", "updated_at"), "property_def should have updated_at column");
+        assertTrue(columnExists(connection, "catalog", "created_at"), "catalog should have created_at column");
+        assertTrue(columnExists(connection, "catalog", "updated_at"), "catalog should have updated_at column");
+        assertTrue(columnExists(connection, "aspect", "created_at"), "aspect should have created_at column");
+        assertTrue(columnExists(connection, "aspect", "updated_at"), "aspect should have updated_at column");
 
-        // Execute the audit schema DDL using CatalogDao
-        postgresDao.executeAuditSchemaDdl(dataSource);
+        // Verify that the update triggers were created
+        assertTrue(triggerExists(connection, "update_aspect_def_updated_at"), "update_aspect_def_updated_at trigger should exist");
+        assertTrue(triggerExists(connection, "update_catalog_updated_at"), "update_catalog_updated_at trigger should exist");
 
-        try (Connection connection = dataSource.getConnection()) {
+        // Execute the drop schema DDL using SqliteDao with connection
+        sqliteDao.executeDropSchemaDdl(connection);
 
-            // Verify that audit columns were added to key tables
-            assertTrue(columnExists(connection, "aspect_def", "created_at"), "aspect_def should have created_at column");
-            assertTrue(columnExists(connection, "aspect_def", "updated_at"), "aspect_def should have updated_at column");
-            assertTrue(columnExists(connection, "property_def", "created_at"), "property_def should have created_at column");
-            assertTrue(columnExists(connection, "property_def", "updated_at"), "property_def should have updated_at column");
-            assertTrue(columnExists(connection, "catalog", "created_at"), "catalog should have created_at column");
-            assertTrue(columnExists(connection, "catalog", "updated_at"), "catalog should have updated_at column");
-            assertTrue(columnExists(connection, "aspect", "created_at"), "aspect should have created_at column");
-            assertTrue(columnExists(connection, "aspect", "updated_at"), "aspect should have updated_at column");
+        // Verify that key tables have been dropped
+        assertFalse(tableExists(connection, "aspect_def"), "aspect_def table should be dropped");
+        assertFalse(tableExists(connection, "property_def"), "property_def table should be dropped");
+        assertFalse(tableExists(connection, "entity"), "entity table should be dropped");
+        assertFalse(tableExists(connection, "catalog"), "catalog table should be dropped");
+        assertFalse(tableExists(connection, "catalog_aspect_def"), "catalog_aspect_def table should be dropped");
+        assertFalse(tableExists(connection, "hierarchy"), "hierarchy table should be dropped");
+        assertFalse(tableExists(connection, "aspect"), "aspect table should be dropped");
+        assertFalse(tableExists(connection, "property_value"), "property_value table should be dropped");
 
-            // Verify that the update trigger function was created
-            assertTrue(functionExists(connection, "update_updated_at_column"), "update_updated_at_column function should exist");
+        // Verify that hierarchy content tables have been dropped
+        assertFalse(tableExists(connection, "hierarchy_entity_list"), "hierarchy_entity_list table should be dropped");
+        assertFalse(tableExists(connection, "hierarchy_entity_set"), "hierarchy_entity_set table should be dropped");
+        assertFalse(tableExists(connection, "hierarchy_entity_directory"), "hierarchy_entity_directory table should be dropped");
+        assertFalse(tableExists(connection, "hierarchy_entity_tree_node"), "hierarchy_entity_tree_node table should be dropped");
+        assertFalse(tableExists(connection, "hierarchy_aspect_map"), "hierarchy_aspect_map table should be dropped");
 
-        }
-
-        // Execute the drop schema DDL using CatalogDao
-        postgresDao.executeDropSchemaDdl(dataSource);
-
-        try (Connection connection = dataSource.getConnection()) {
-
-            // Verify that key tables have been dropped
-            assertFalse(tableExists(connection, "aspect_def"), "aspect_def table should be dropped");
-            assertFalse(tableExists(connection, "property_def"), "property_def table should be dropped");
-            assertFalse(tableExists(connection, "entity"), "entity table should be dropped");
-            assertFalse(tableExists(connection, "catalog"), "catalog table should be dropped");
-            assertFalse(tableExists(connection, "catalog_aspect_def"), "catalog_aspect_def table should be dropped");
-            assertFalse(tableExists(connection, "hierarchy"), "hierarchy table should be dropped");
-            assertFalse(tableExists(connection, "aspect"), "aspect table should be dropped");
-            assertFalse(tableExists(connection, "property_value"), "property_value table should be dropped");
-
-            // Verify that hierarchy content tables have been dropped
-            assertFalse(tableExists(connection, "hierarchy_entity_list"), "hierarchy_entity_list table should be dropped");
-            assertFalse(tableExists(connection, "hierarchy_entity_set"), "hierarchy_entity_set table should be dropped");
-            assertFalse(tableExists(connection, "hierarchy_entity_directory"), "hierarchy_entity_directory table should be dropped");
-            assertFalse(tableExists(connection, "hierarchy_entity_tree_node"), "hierarchy_entity_tree_node table should be dropped");
-            assertFalse(tableExists(connection, "hierarchy_aspect_map"), "hierarchy_aspect_map table should be dropped");
-
-            // Verify that the update trigger function was dropped
-            assertFalse(functionExists(connection, "update_updated_at_column"), "update_updated_at_column function should be dropped");
-        }
+        // Verify that the update triggers were dropped
+        assertFalse(triggerExists(connection, "update_aspect_def_updated_at"), "update_aspect_def_updated_at trigger should be dropped");
+        assertFalse(triggerExists(connection, "update_catalog_updated_at"), "update_catalog_updated_at trigger should be dropped");
     }
 
     private boolean tableExists(Connection connection, String tableName) throws SQLException {
@@ -116,42 +126,41 @@ class PostgresCheapSchemaTest {
         }
     }
 
-    private boolean functionExists(Connection connection, String functionName) throws SQLException {
-        String sql = "SELECT EXISTS (SELECT 1 FROM pg_proc WHERE proname = ?)";
+    private boolean triggerExists(Connection connection, String triggerName) throws SQLException {
+        String sql = "SELECT name FROM sqlite_master WHERE type='trigger' AND name = ?";
         try (var stmt = connection.prepareStatement(sql)) {
-            stmt.setString(1, functionName);
+            stmt.setString(1, triggerName);
             try (var rs = stmt.executeQuery()) {
-                return rs.next() && rs.getBoolean(1);
+                return rs.next();
             }
         }
     }
 
     @Test
     void testTruncateAllTables() throws SQLException {
-        DataSource dataSource = postgres.getEmbeddedPostgres().getPostgresDatabase();
-        PostgresDao postgresDao = new PostgresDao(dataSource);
+        SqliteDao sqliteDao = new SqliteDao(dataSource);
 
         // Execute the main schema DDL
-        postgresDao.executeMainSchemaDdl(dataSource);
+        sqliteDao.executeMainSchemaDdl(connection);
 
-        try (Connection conn = dataSource.getConnection()) {
+        Connection conn = connection;
             // Populate all tables with at least 1 row
 
             // Insert into entity
-            UUID entityId = UUID.randomUUID();
+            String entityId = UUID.randomUUID().toString();
             executeUpdate(conn, "INSERT INTO entity (entity_id) VALUES (?)", entityId);
 
             // Insert into aspect_def
-            UUID aspectDefId = UUID.randomUUID();
+            String aspectDefId = UUID.randomUUID().toString();
             executeUpdate(conn, "INSERT INTO aspect_def (aspect_def_id, name, hash_version, is_readable, is_writable, can_add_properties, can_remove_properties) VALUES (?, ?, ?, ?, ?, ?, ?)",
-                aspectDefId, "test_aspect", 123L, true, true, false, false);
+                aspectDefId, "test_aspect", "hash123", 1, 1, 0, 0);
 
             // Insert into property_def
             executeUpdate(conn, "INSERT INTO property_def (aspect_def_id, name, property_type, default_value, has_default_value, is_readable, is_writable, is_nullable, is_removable, is_multivalued) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                aspectDefId, "test_prop", "STR", null, false, true, true, true, false, false);
+                aspectDefId, "test_prop", "STR", null, 0, 1, 1, 1, 0, 0);
 
             // Insert into catalog
-            UUID catalogId = UUID.randomUUID();
+            String catalogId = UUID.randomUUID().toString();
             executeUpdate(conn, "INSERT INTO catalog (catalog_id, species, uri, upstream_catalog_id, version_number) VALUES (?, ?, ?, ?, ?)",
                 catalogId, "SINK", null, null, 1L);
 
@@ -176,7 +185,7 @@ class PostgresCheapSchemaTest {
                 catalogId, "test_hierarchy", entityId, 0);
 
             // Insert into hierarchy_entity_set
-            UUID entityId2 = UUID.randomUUID();
+            String entityId2 = UUID.randomUUID().toString();
             executeUpdate(conn, "INSERT INTO entity (entity_id) VALUES (?)", entityId2);
             executeUpdate(conn, "INSERT INTO hierarchy (catalog_id, name, hierarchy_type, version_number) VALUES (?, ?, ?, ?)",
                 catalogId, "test_set", "ES", 1L);
@@ -192,7 +201,7 @@ class PostgresCheapSchemaTest {
             // Insert into hierarchy_entity_tree_node
             executeUpdate(conn, "INSERT INTO hierarchy (catalog_id, name, hierarchy_type, version_number) VALUES (?, ?, ?, ?)",
                 catalogId, "test_tree", "ET", 1L);
-            UUID nodeId = UUID.randomUUID();
+            String nodeId = UUID.randomUUID().toString();
             executeUpdate(conn, "INSERT INTO hierarchy_entity_tree_node (node_id, catalog_id, hierarchy_name, parent_node_id, node_key, entity_id, node_path, tree_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
                 nodeId, catalogId, "test_tree", null, "", entityId, "", 0);
 
@@ -217,24 +226,23 @@ class PostgresCheapSchemaTest {
             assertTrue(getRowCount(conn, "hierarchy_entity_tree_node") >= 1, "hierarchy_entity_tree_node should have at least 1 row");
             assertTrue(getRowCount(conn, "hierarchy_aspect_map") >= 1, "hierarchy_aspect_map should have at least 1 row");
 
-            // Execute truncate script
-            postgresDao.executeTruncateSchemaDdl(dataSource);
+        // Execute truncate script
+        sqliteDao.executeTruncateSchemaDdl(connection);
 
-            // Verify all tables are empty
-            assertEquals(0, getRowCount(conn, "entity"), "entity should be empty after truncate");
-            assertEquals(0, getRowCount(conn, "aspect_def"), "aspect_def should be empty after truncate");
-            assertEquals(0, getRowCount(conn, "property_def"), "property_def should be empty after truncate");
-            assertEquals(0, getRowCount(conn, "catalog"), "catalog should be empty after truncate");
-            assertEquals(0, getRowCount(conn, "catalog_aspect_def"), "catalog_aspect_def should be empty after truncate");
-            assertEquals(0, getRowCount(conn, "hierarchy"), "hierarchy should be empty after truncate");
-            assertEquals(0, getRowCount(conn, "aspect"), "aspect should be empty after truncate");
-            assertEquals(0, getRowCount(conn, "property_value"), "property_value should be empty after truncate");
-            assertEquals(0, getRowCount(conn, "hierarchy_entity_list"), "hierarchy_entity_list should be empty after truncate");
-            assertEquals(0, getRowCount(conn, "hierarchy_entity_set"), "hierarchy_entity_set should be empty after truncate");
-            assertEquals(0, getRowCount(conn, "hierarchy_entity_directory"), "hierarchy_entity_directory should be empty after truncate");
-            assertEquals(0, getRowCount(conn, "hierarchy_entity_tree_node"), "hierarchy_entity_tree_node should be empty after truncate");
-            assertEquals(0, getRowCount(conn, "hierarchy_aspect_map"), "hierarchy_aspect_map should be empty after truncate");
-        }
+        // Verify all tables are empty
+        assertEquals(0, getRowCount(conn, "entity"), "entity should be empty after truncate");
+        assertEquals(0, getRowCount(conn, "aspect_def"), "aspect_def should be empty after truncate");
+        assertEquals(0, getRowCount(conn, "property_def"), "property_def should be empty after truncate");
+        assertEquals(0, getRowCount(conn, "catalog"), "catalog should be empty after truncate");
+        assertEquals(0, getRowCount(conn, "catalog_aspect_def"), "catalog_aspect_def should be empty after truncate");
+        assertEquals(0, getRowCount(conn, "hierarchy"), "hierarchy should be empty after truncate");
+        assertEquals(0, getRowCount(conn, "aspect"), "aspect should be empty after truncate");
+        assertEquals(0, getRowCount(conn, "property_value"), "property_value should be empty after truncate");
+        assertEquals(0, getRowCount(conn, "hierarchy_entity_list"), "hierarchy_entity_list should be empty after truncate");
+        assertEquals(0, getRowCount(conn, "hierarchy_entity_set"), "hierarchy_entity_set should be empty after truncate");
+        assertEquals(0, getRowCount(conn, "hierarchy_entity_directory"), "hierarchy_entity_directory should be empty after truncate");
+        assertEquals(0, getRowCount(conn, "hierarchy_entity_tree_node"), "hierarchy_entity_tree_node should be empty after truncate");
+        assertEquals(0, getRowCount(conn, "hierarchy_aspect_map"), "hierarchy_aspect_map should be empty after truncate");
     }
 
     private void executeUpdate(Connection conn, String sql, Object... params) throws SQLException {

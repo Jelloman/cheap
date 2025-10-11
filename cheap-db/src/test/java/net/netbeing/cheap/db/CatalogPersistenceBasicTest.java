@@ -27,13 +27,6 @@ import static org.junit.jupiter.api.Assertions.*;
 class CatalogPersistenceBasicTest {
 
     @Test
-    void testCatalogPersistenceInterfaceExists() {
-        // Just verify that our interface and implementation compile
-        assertNotNull(CatalogPersistence.class);
-        assertNotNull(PostgresDao.class);
-    }
-
-    @Test
     void testFactoryCanCreateCatalog() {
         CheapFactory factory = new CheapFactory();
 
@@ -42,7 +35,6 @@ class CatalogPersistenceBasicTest {
         assertNotNull(catalog);
         assertNotNull(catalog.globalId());
         assertEquals(CatalogSpecies.SINK, catalog.species());
-        // catalog.isStrict() removed from model
     }
 
     @Test
@@ -55,7 +47,6 @@ class CatalogPersistenceBasicTest {
         assertNotNull(catalog);
         assertEquals(catalogId, catalog.globalId());
         assertEquals(CatalogSpecies.SOURCE, catalog.species());
-        // catalog.isStrict() removed from model
         assertNull(catalog.upstream());
     }
 

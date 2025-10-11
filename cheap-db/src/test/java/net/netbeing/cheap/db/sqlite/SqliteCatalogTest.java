@@ -14,7 +14,7 @@
  *  limitations under the License.
  */
 
-package net.netbeing.cheap.db;
+package net.netbeing.cheap.db.sqlite;
 
 import net.netbeing.cheap.model.*;
 import org.junit.jupiter.api.BeforeEach;

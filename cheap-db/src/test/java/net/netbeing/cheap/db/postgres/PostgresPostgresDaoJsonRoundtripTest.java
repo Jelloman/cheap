@@ -14,7 +14,7 @@
  *  limitations under the License.
  */
 
-package net.netbeing.cheap.db;
+package net.netbeing.cheap.db.postgres;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;

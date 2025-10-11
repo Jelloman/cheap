@@ -14,17 +14,24 @@
  *  limitations under the License.
  */
 
-package net.netbeing.cheap.db;
+package net.netbeing.cheap.db.postgres;
 
 import com.google.common.collect.ImmutableList;
+import io.zonky.test.db.postgres.embedded.FlywayPreparer;
+import io.zonky.test.db.postgres.junit5.EmbeddedPostgresExtension;
+import io.zonky.test.db.postgres.junit5.PreparedDbExtension;
+import net.netbeing.cheap.db.AspectTableMapping;
 import net.netbeing.cheap.model.*;
 import net.netbeing.cheap.util.CheapFactory;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.sqlite.SQLiteDataSource;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import javax.sql.DataSource;
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -32,64 +39,91 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class SqliteDaoTest
+class PostgresDaoTest
 {
-    DataSource dataSource;
-    Connection connection;
-    SqliteDao sqliteDao;
+    @RegisterExtension
+    public static PreparedDbExtension flywayDB = EmbeddedPostgresExtension.preparedDatabase(FlywayPreparer.forClasspathLocation("db/pg"));
+
+    static volatile DataSource dataSource;
+    static volatile boolean schemaInitialized = false;
+
+    PostgresDao postgresDao;
     CheapFactory factory;
 
-    @BeforeEach
-    void setUp() throws SQLException
+    void setUp() throws SQLException, IOException, URISyntaxException
     {
-        // Create an in-memory SQLite database with shared cache
-        // Using shared cache mode allows multiple connections to access the same in-memory database
-        SQLiteDataSource ds = new SQLiteDataSource();
-        ds.setUrl("jdbc:sqlite:file::memory:?cache=shared");
-        this.dataSource = ds;
-        // Keep connection open to prevent in-memory database deletion
-        this.connection = ds.getConnection();
+        // Get the datasource (will be initialized by JUnit extension)
+        dataSource = flywayDB.getTestDatabase();
 
-        // Initialize factory and DAO
-        factory = new CheapFactory();
-        sqliteDao = new SqliteDao(dataSource, factory);
-
-        // Initialize schema
-        initializeSchema();
-    }
-
-    @AfterEach
-    void tearDown() throws SQLException
-    {
-        // Close the connection (which will delete the in-memory database)
-        if (this.connection != null && !this.connection.isClosed()) {
-            this.connection.close();
+        // Initialize database schema once for all tests
+        if (!schemaInitialized) {
+            initializeSchema();
+            schemaInitialized = true;
         }
-        this.connection = null;
-        this.dataSource = null;
-        this.sqliteDao = null;
-        this.factory = null;
+        try (Connection connection = dataSource.getConnection()) {
+            assertTrue(tableExists(connection, "catalog"), "catalog table should exist");
+        }
+
+        factory = new CheapFactory();
+        postgresDao = new PostgresDao(dataSource, factory);
+
+        // Clean up all tables before each test
+        truncateAllTables();
     }
 
-    private void initializeSchema() throws SQLException
+    @SuppressWarnings("SameParameterValue")
+    private boolean tableExists(Connection connection, String tableName) throws SQLException {
+        try (var rs = connection.getMetaData().getTables(null, null, tableName, null)) {
+            return rs.next();
+        }
+    }
+
+    private static void initializeSchema() throws SQLException, IOException, URISyntaxException
     {
-        // Use SqliteDao methods to execute DDL
-        sqliteDao.executeMainSchemaDdl(connection);
-        sqliteDao.executeAuditSchemaDdl(connection);
+        String mainSchemaPath = "/db/schemas/postgres-cheap.sql";
+        String auditSchemaPath = "/db/schemas/postgres-cheap-audit.sql";
+
+        String mainDdl = loadResourceFile(mainSchemaPath);
+        String auditDdl = loadResourceFile(auditSchemaPath);
+
+        try (Connection connection = dataSource.getConnection();
+             Statement statement = connection.createStatement()) {
+            statement.execute(mainDdl);
+            statement.execute(auditDdl);
+        }
+    }
+
+    @SuppressWarnings("DataFlowIssue")
+    private static String loadResourceFile(String resourcePath) throws IOException, URISyntaxException
+    {
+        Path path = Paths.get(PostgresDaoTest.class.getResource(resourcePath).toURI());
+        return Files.readString(path);
+    }
+
+    private void truncateAllTables() throws SQLException, IOException, URISyntaxException
+    {
+        String truncateSql = loadResourceFile("/db/schemas/postgres-cheap-truncate.sql");
+
+        try (Connection connection = dataSource.getConnection();
+             Statement statement = connection.createStatement()) {
+            statement.execute(truncateSql);
+        }
     }
 
     @Test
-    void testSaveAndLoadSimpleCatalog() throws SQLException
+    void testSaveAndLoadSimpleCatalog() throws SQLException, IOException, URISyntaxException
     {
+        setUp();
+
         // Create a simple catalog
         UUID catalogId = UUID.randomUUID();
         Catalog originalCatalog = factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
 
         // Save the catalog
-        sqliteDao.saveCatalog(originalCatalog);
+        postgresDao.saveCatalog(originalCatalog);
 
         // Load the catalog
-        Catalog loadedCatalog = sqliteDao.loadCatalog(catalogId);
+        Catalog loadedCatalog = postgresDao.loadCatalog(catalogId);
 
         // Verify basic properties
         assertNotNull(loadedCatalog);
@@ -99,33 +133,40 @@ class SqliteDaoTest
     }
 
     @Test
-    void testSaveAndLoadCatalogWithUri() throws SQLException
+    void testSaveAndLoadCatalogWithUri() throws SQLException, IOException, URISyntaxException
     {
+        setUp();
+
         // Create catalog with URI
         UUID catalogId = UUID.randomUUID();
         Catalog originalCatalog = factory.createCatalog(catalogId, CatalogSpecies.SOURCE, null, null, 0L);
 
-        sqliteDao.saveCatalog(originalCatalog);
-        Catalog loadedCatalog = sqliteDao.loadCatalog(catalogId);
+        // Note: Would need a way to set URI - this depends on catalog implementation
+        // For now, test without URI
+
+        postgresDao.saveCatalog(originalCatalog);
+        Catalog loadedCatalog = postgresDao.loadCatalog(catalogId);
 
         assertNotNull(loadedCatalog);
         assertEquals(originalCatalog.globalId(), loadedCatalog.globalId());
     }
 
     @Test
-    void testSaveAndLoadCatalogWithUpstream() throws SQLException
+    void testSaveAndLoadCatalogWithUpstream() throws SQLException, IOException, URISyntaxException
     {
+        setUp();
+
         // Create upstream catalog first
         UUID upstreamId = UUID.randomUUID();
         Catalog upstreamCatalog = factory.createCatalog(upstreamId, CatalogSpecies.SOURCE, null, null, 0L);
-        sqliteDao.saveCatalog(upstreamCatalog);
+        postgresDao.saveCatalog(upstreamCatalog);
 
         // Create derived catalog
         UUID catalogId = UUID.randomUUID();
         Catalog originalCatalog = factory.createCatalog(catalogId, CatalogSpecies.MIRROR, null, upstreamId, 0L);
 
-        sqliteDao.saveCatalog(originalCatalog);
-        Catalog loadedCatalog = sqliteDao.loadCatalog(catalogId);
+        postgresDao.saveCatalog(originalCatalog);
+        Catalog loadedCatalog = postgresDao.loadCatalog(catalogId);
 
         assertNotNull(loadedCatalog);
         assertEquals(originalCatalog.globalId(), loadedCatalog.globalId());
@@ -134,10 +175,15 @@ class SqliteDaoTest
     }
 
     @Test
-    void testSaveAndLoadCatalogWithAspectDefs() throws SQLException
+    void testSaveAndLoadCatalogWithAspectDefs() throws SQLException, IOException, URISyntaxException
     {
+        setUp();
+
         // Create AspectDef
         AspectDef personAspectDef = factory.createMutableAspectDef("person");
+
+        // Add property definitions - need to access mutable aspect def
+        // Note: This test is simplified - in reality would need to add properties to mutable aspect def
 
         // Create catalog
         UUID catalogId = UUID.randomUUID();
@@ -146,8 +192,8 @@ class SqliteDaoTest
         // Extend catalog with aspect def
         originalCatalog.extend(personAspectDef);
 
-        sqliteDao.saveCatalog(originalCatalog);
-        Catalog loadedCatalog = sqliteDao.loadCatalog(catalogId);
+        postgresDao.saveCatalog(originalCatalog);
+        Catalog loadedCatalog = postgresDao.loadCatalog(catalogId);
 
         assertNotNull(loadedCatalog);
         assertEquals(originalCatalog.globalId(), loadedCatalog.globalId());
@@ -164,8 +210,10 @@ class SqliteDaoTest
     }
 
     @Test
-    void testSaveAndLoadCatalogWithEntitySetHierarchy() throws SQLException
+    void testSaveAndLoadCatalogWithEntitySetHierarchy() throws SQLException, IOException, URISyntaxException
     {
+        setUp();
+
         // Create catalog
         UUID catalogId = UUID.randomUUID();
         Catalog originalCatalog = factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
@@ -189,8 +237,8 @@ class SqliteDaoTest
         originalCatalog.addHierarchy(hierarchy);
 
         // Save and load
-        sqliteDao.saveCatalog(originalCatalog);
-        Catalog loadedCatalog = sqliteDao.loadCatalog(catalogId);
+        postgresDao.saveCatalog(originalCatalog);
+        Catalog loadedCatalog = postgresDao.loadCatalog(catalogId);
 
         assertNotNull(loadedCatalog);
 
@@ -210,8 +258,10 @@ class SqliteDaoTest
     }
 
     @Test
-    void testSaveAndLoadCatalogWithEntityDirectoryHierarchy() throws SQLException
+    void testSaveAndLoadCatalogWithEntityDirectoryHierarchy() throws SQLException, IOException, URISyntaxException
     {
+        setUp();
+
         // Create catalog
         UUID catalogId = UUID.randomUUID();
         Catalog originalCatalog = factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
@@ -233,8 +283,8 @@ class SqliteDaoTest
         originalCatalog.addHierarchy(hierarchy);
 
         // Save and load
-        sqliteDao.saveCatalog(originalCatalog);
-        Catalog loadedCatalog = sqliteDao.loadCatalog(catalogId);
+        postgresDao.saveCatalog(originalCatalog);
+        Catalog loadedCatalog = postgresDao.loadCatalog(catalogId);
 
         assertNotNull(loadedCatalog);
 
@@ -250,8 +300,10 @@ class SqliteDaoTest
     }
 
     @Test
-    void testSaveAndLoadCatalogWithAspectMapHierarchy() throws SQLException
+    void testSaveAndLoadCatalogWithAspectMapHierarchy() throws SQLException, IOException, URISyntaxException
     {
+        setUp();
+
         // Create AspectDef with properties
         AspectDef personAspectDef = factory.createMutableAspectDef("person");
 
@@ -273,9 +325,11 @@ class SqliteDaoTest
         hierarchy.put(person1, aspect1);
         hierarchy.put(person2, aspect2);
 
+        // Note: AspectMapHierarchy is automatically added to catalog when created
+
         // Save and load
-        sqliteDao.saveCatalog(originalCatalog);
-        Catalog loadedCatalog = sqliteDao.loadCatalog(catalogId);
+        postgresDao.saveCatalog(originalCatalog);
+        Catalog loadedCatalog = postgresDao.loadCatalog(catalogId);
 
         assertNotNull(loadedCatalog);
 
@@ -304,82 +358,100 @@ class SqliteDaoTest
     }
 
     @Test
-    void testDeleteCatalog() throws SQLException
+    void testDeleteCatalog() throws SQLException, IOException, URISyntaxException
     {
+        setUp();
+
         // Create and save catalog
         UUID catalogId = UUID.randomUUID();
         Catalog catalog = factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
-        sqliteDao.saveCatalog(catalog);
+        postgresDao.saveCatalog(catalog);
 
         // Verify it exists
-        assertTrue(sqliteDao.catalogExists(catalogId));
+        assertTrue(postgresDao.catalogExists(catalogId));
 
         // Delete it
-        boolean deleted = sqliteDao.deleteCatalog(catalogId);
+        boolean deleted = postgresDao.deleteCatalog(catalogId);
         assertTrue(deleted);
 
         // Verify it no longer exists
-        assertFalse(sqliteDao.catalogExists(catalogId));
-        assertNull(sqliteDao.loadCatalog(catalogId));
+        assertFalse(postgresDao.catalogExists(catalogId));
+        assertNull(postgresDao.loadCatalog(catalogId));
     }
 
     @Test
-    void testDeleteNonExistentCatalog() throws SQLException
+    void testDeleteNonExistentCatalog() throws SQLException, IOException, URISyntaxException
     {
+        setUp();
+
         UUID nonExistentId = UUID.randomUUID();
 
         // Delete non-existent catalog
-        boolean deleted = sqliteDao.deleteCatalog(nonExistentId);
+        boolean deleted = postgresDao.deleteCatalog(nonExistentId);
         assertFalse(deleted);
     }
 
     @Test
-    void testCatalogExists() throws SQLException
+    void testCatalogExists() throws SQLException, IOException, URISyntaxException
     {
+        setUp();
+
         UUID catalogId = UUID.randomUUID();
 
         // Should not exist initially
-        assertFalse(sqliteDao.catalogExists(catalogId));
+        assertFalse(postgresDao.catalogExists(catalogId));
 
         // Create and save catalog
         Catalog catalog = factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
-        sqliteDao.saveCatalog(catalog);
+        postgresDao.saveCatalog(catalog);
 
         // Should exist now
-        assertTrue(sqliteDao.catalogExists(catalogId));
+        assertTrue(postgresDao.catalogExists(catalogId));
     }
 
     @Test
-    void testLoadNonExistentCatalog() throws SQLException
+    void testLoadNonExistentCatalog() throws SQLException, IOException, URISyntaxException
     {
+        setUp();
+
         UUID nonExistentId = UUID.randomUUID();
-        Catalog catalog = sqliteDao.loadCatalog(nonExistentId);
+        Catalog catalog = postgresDao.loadCatalog(nonExistentId);
         assertNull(catalog);
     }
 
     @SuppressWarnings("DataFlowIssue")
     @Test
-    void testSaveNullCatalogThrowsException()
+    void testSaveNullCatalogThrowsException() throws SQLException, IOException, URISyntaxException
     {
+        setUp();
+
         assertThrows(IllegalArgumentException.class, () -> {
-            sqliteDao.saveCatalog(null);
+            postgresDao.saveCatalog(null);
         });
     }
 
     @Test
-    void testTransactionRollbackOnError() throws SQLException
+    void testTransactionRollbackOnError() throws SQLException, IOException, URISyntaxException
     {
+        setUp();
+
+        // This test would verify that failed saves don't leave partial data
+        // Due to the complexity of creating a controlled failure scenario,
+        // this is left as a placeholder for more advanced testing
+
         UUID catalogId = UUID.randomUUID();
         Catalog catalog = factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
 
         // Save should succeed
-        assertDoesNotThrow(() -> sqliteDao.saveCatalog(catalog));
-        assertTrue(sqliteDao.catalogExists(catalogId));
+        assertDoesNotThrow(() -> postgresDao.saveCatalog(catalog));
+        assertTrue(postgresDao.catalogExists(catalogId));
     }
 
     @Test
-    void testComplexCatalogRoundTrip() throws SQLException
+    void testComplexCatalogRoundTrip() throws SQLException, IOException, URISyntaxException
     {
+        setUp();
+
         // Create a complex catalog with multiple hierarchy types
         UUID catalogId = UUID.randomUUID();
         Catalog originalCatalog = factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
@@ -417,12 +489,13 @@ class SqliteDaoTest
         addressMap.put(entity1, address1Aspect);
 
         // Add all hierarchies to catalog
+        // Note: AspectMapHierarchies are automatically added to catalog when created
         originalCatalog.addHierarchy(entitySet);
         originalCatalog.addHierarchy(directory);
 
         // Save and load
-        sqliteDao.saveCatalog(originalCatalog);
-        Catalog loadedCatalog = sqliteDao.loadCatalog(catalogId);
+        postgresDao.saveCatalog(originalCatalog);
+        Catalog loadedCatalog = postgresDao.loadCatalog(catalogId);
 
         // Verify complex catalog structure
         assertNotNull(loadedCatalog);
@@ -455,8 +528,271 @@ class SqliteDaoTest
     }
 
     @Test
-    void testSaveAndLoadMultivaluedStringProperties() throws SQLException
+    void testAspectTableMapping() throws Exception
     {
+        setUp();
+
+        // Load AspectDef from test_aspect_mapping table (created by Flyway migration)
+        PostgresCatalog pgCatalog = new PostgresCatalog(dataSource);
+        AspectDef aspectDef = pgCatalog.loadTableDef("test_aspect_mapping");
+
+        // Create AspectTableMapping with property-to-column mappings
+        AspectTableMapping mapping = new AspectTableMapping(
+            "test_aspect_mapping",
+            "test_aspect_mapping",
+            java.util.Map.of(
+                "string_col", "string_col",
+                "integer_col", "integer_col",
+                "float_col", "float_col",
+                "date_col", "date_col",
+                "timestamp_col", "timestamp_col",
+                "boolean_col", "boolean_col",
+                "uuid_col", "uuid_col",
+                "blob_col", "blob_col"
+            )
+        );
+
+        // Add mapping to DAO
+        postgresDao.addAspectTableMapping(mapping);
+
+        // Create catalog with AspectMapHierarchy
+        UUID catalogId = UUID.randomUUID();
+        Catalog catalog = factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
+
+        // Create aspect map hierarchy
+        AspectMapHierarchy hierarchy = factory.createAspectMapHierarchy(catalog, aspectDef);
+
+        // Create test entities and aspects
+        UUID entityId1 = UUID.randomUUID();
+        UUID entityId2 = UUID.randomUUID();
+
+        Entity entity1 = factory.createEntity(entityId1);
+        Entity entity2 = factory.createEntity(entityId2);
+
+        Aspect aspect1 = factory.createPropertyMapAspect(entity1, aspectDef);
+        aspect1.put(factory.createProperty(aspectDef.propertyDef("string_col"), "test1"));
+        aspect1.put(factory.createProperty(aspectDef.propertyDef("integer_col"), 42L));
+        aspect1.put(factory.createProperty(aspectDef.propertyDef("float_col"), 3.14));
+        aspect1.put(factory.createProperty(aspectDef.propertyDef("boolean_col"), true));
+        aspect1.put(factory.createProperty(aspectDef.propertyDef("uuid_col"), UUID.fromString("550e8400-e29b-41d4-a716-446655440000")));
+
+        Aspect aspect2 = factory.createPropertyMapAspect(entity2, aspectDef);
+        aspect2.put(factory.createProperty(aspectDef.propertyDef("string_col"), "test2"));
+        aspect2.put(factory.createProperty(aspectDef.propertyDef("integer_col"), 99L));
+        aspect2.put(factory.createProperty(aspectDef.propertyDef("float_col"), 2.71));
+        aspect2.put(factory.createProperty(aspectDef.propertyDef("boolean_col"), false));
+        aspect2.put(factory.createProperty(aspectDef.propertyDef("uuid_col"), UUID.fromString("6ba7b810-9dad-11d1-80b4-00c04fd430c8")));
+
+        hierarchy.put(entity1, aspect1);
+        hierarchy.put(entity2, aspect2);
+
+        // Clear any existing data in the table from migrations
+        try (java.sql.Connection conn = dataSource.getConnection();
+             java.sql.Statement stmt = conn.createStatement()) {
+            stmt.execute("DELETE FROM test_aspect_mapping");
+        }
+
+        // Save catalog (should use mapped table for the hierarchy)
+        postgresDao.saveCatalog(catalog);
+
+        // Verify the data was saved to the mapped table by querying directly
+        try (java.sql.Connection conn = dataSource.getConnection();
+             java.sql.Statement stmt = conn.createStatement();
+             var rs = stmt.executeQuery("SELECT * FROM test_aspect_mapping ORDER BY string_col")) {
+
+            // Should have 2 rows
+            assertTrue(rs.next(), "Should have first row");
+            assertEquals(entityId1, rs.getObject("entity_id", UUID.class));
+            assertEquals("test1", rs.getString("string_col"));
+            assertEquals(42, rs.getInt("integer_col"));
+            assertEquals(3.14, rs.getDouble("float_col"), 0.001);
+            assertEquals(true, rs.getBoolean("boolean_col"));
+            assertEquals(UUID.fromString("550e8400-e29b-41d4-a716-446655440000"), rs.getObject("uuid_col", UUID.class));
+
+            assertTrue(rs.next(), "Should have second row");
+            assertEquals(entityId2, rs.getObject("entity_id", UUID.class));
+            assertEquals("test2", rs.getString("string_col"));
+            assertEquals(99, rs.getInt("integer_col"));
+            assertEquals(2.71, rs.getDouble("float_col"), 0.001);
+            assertEquals(false, rs.getBoolean("boolean_col"));
+            assertEquals(UUID.fromString("6ba7b810-9dad-11d1-80b4-00c04fd430c8"), rs.getObject("uuid_col", UUID.class));
+
+            assertFalse(rs.next(), "Should have exactly 2 rows");
+        }
+
+        // Also verify that the default aspect/property tables were NOT used
+        try (java.sql.Connection conn = dataSource.getConnection();
+             java.sql.PreparedStatement stmt = conn.prepareStatement(
+                 "SELECT COUNT(*) FROM aspect WHERE entity_id IN (?, ?)")) {
+            stmt.setObject(1, entityId1);
+            stmt.setObject(2, entityId2);
+            try (var rs = stmt.executeQuery()) {
+                assertTrue(rs.next());
+                assertEquals(0, rs.getInt(1), "Should not have saved to aspect table when using mapped table");
+            }
+        }
+    }
+
+    @Test
+    void testCreateAspectTableWithAllPropertyTypes() throws Exception
+    {
+        setUp();
+
+        // Create an AspectDef with one Property of each type
+        String aspectDefName = "all_types_aspect";
+
+        PropertyDef intProp = factory.createPropertyDef("int_prop", PropertyType.Integer, null, false, true, true, true, false, false);
+        PropertyDef floatProp = factory.createPropertyDef("float_prop", PropertyType.Float, null, false, true, true, true, false, false);
+        PropertyDef boolProp = factory.createPropertyDef("bool_prop", PropertyType.Boolean, null, false, true, true, true, false, false);
+        PropertyDef stringProp = factory.createPropertyDef("string_prop", PropertyType.String, null, false, true, true, true, false, false);
+        PropertyDef textProp = factory.createPropertyDef("text_prop", PropertyType.Text, null, false, true, true, true, false, false);
+        PropertyDef bigIntProp = factory.createPropertyDef("bigint_prop", PropertyType.BigInteger, null, false, true, true, true, false, false);
+        PropertyDef bigDecProp = factory.createPropertyDef("bigdec_prop", PropertyType.BigDecimal, null, false, true, true, true, false, false);
+        PropertyDef dateProp = factory.createPropertyDef("date_prop", PropertyType.DateTime, null, false, true, true, true, false, false);
+        PropertyDef uriProp = factory.createPropertyDef("uri_prop", PropertyType.URI, null, false, true, true, true, false, false);
+        PropertyDef uuidProp = factory.createPropertyDef("uuid_prop", PropertyType.UUID, null, false, true, true, true, false, false);
+        PropertyDef clobProp = factory.createPropertyDef("clob_prop", PropertyType.CLOB, null, false, true, true, true, false, false);
+        PropertyDef blobProp = factory.createPropertyDef("blob_prop", PropertyType.BLOB, null, false, true, true, true, false, false);
+
+        java.util.Map<String, PropertyDef> propDefs = new java.util.LinkedHashMap<>();
+        propDefs.put("int_prop", intProp);
+        propDefs.put("float_prop", floatProp);
+        propDefs.put("bool_prop", boolProp);
+        propDefs.put("string_prop", stringProp);
+        propDefs.put("text_prop", textProp);
+        propDefs.put("bigint_prop", bigIntProp);
+        propDefs.put("bigdec_prop", bigDecProp);
+        propDefs.put("date_prop", dateProp);
+        propDefs.put("uri_prop", uriProp);
+        propDefs.put("uuid_prop", uuidProp);
+        propDefs.put("clob_prop", clobProp);
+        propDefs.put("blob_prop", blobProp);
+
+        AspectDef aspectDef = factory.createImmutableAspectDef(aspectDefName, propDefs);
+
+        // Create the table using createAspectTable()
+        String tableName = "test_all_types";
+        postgresDao.createAspectTable(aspectDef, tableName);
+
+        // Create and register an AspectTableMapping
+        java.util.Map<String, String> columnMapping = new java.util.LinkedHashMap<>();
+        columnMapping.put("int_prop", "int_prop");
+        columnMapping.put("float_prop", "float_prop");
+        columnMapping.put("bool_prop", "bool_prop");
+        columnMapping.put("string_prop", "string_prop");
+        columnMapping.put("text_prop", "text_prop");
+        columnMapping.put("bigint_prop", "bigint_prop");
+        columnMapping.put("bigdec_prop", "bigdec_prop");
+        columnMapping.put("date_prop", "date_prop");
+        columnMapping.put("uri_prop", "uri_prop");
+        columnMapping.put("uuid_prop", "uuid_prop");
+        columnMapping.put("clob_prop", "clob_prop");
+        columnMapping.put("blob_prop", "blob_prop");
+
+        AspectTableMapping mapping = new AspectTableMapping(
+            aspectDefName,
+            tableName,
+            columnMapping
+        );
+        postgresDao.addAspectTableMapping(mapping);
+
+        // Create catalog with AspectMapHierarchy
+        UUID catalogId = UUID.randomUUID();
+        Catalog catalog = factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
+
+        // extend() automatically creates an AspectMapHierarchy with the AspectDef's name
+        catalog.extend(aspectDef);
+        AspectMapHierarchy hierarchy = (AspectMapHierarchy) catalog.hierarchy(aspectDefName);
+
+        // Create test entities and aspects with all property types
+        UUID entityId1 = UUID.randomUUID();
+        UUID entityId2 = UUID.randomUUID();
+
+        Entity entity1 = factory.createEntity(entityId1);
+        Entity entity2 = factory.createEntity(entityId2);
+
+        // Create first aspect with test values
+        Aspect aspect1 = factory.createPropertyMapAspect(entity1, aspectDef);
+        aspect1.put(factory.createProperty(intProp, 42L));
+        aspect1.put(factory.createProperty(floatProp, 3.14159));
+        aspect1.put(factory.createProperty(boolProp, true));
+        aspect1.put(factory.createProperty(stringProp, "Hello World"));
+        aspect1.put(factory.createProperty(textProp, "This is a long text field with lots of content"));
+        aspect1.put(factory.createProperty(bigIntProp, new java.math.BigInteger("12345678901234567890")));
+        aspect1.put(factory.createProperty(bigDecProp, new java.math.BigDecimal("123.456789012345678901234567890")));
+        aspect1.put(factory.createProperty(dateProp, java.time.ZonedDateTime.parse("2025-01-15T10:30:00Z")));
+        aspect1.put(factory.createProperty(uriProp, new java.net.URI("https://example.com/path")));
+        aspect1.put(factory.createProperty(uuidProp, UUID.fromString("550e8400-e29b-41d4-a716-446655440000")));
+        aspect1.put(factory.createProperty(clobProp, "CLOB content here"));
+        aspect1.put(factory.createProperty(blobProp, new byte[]{1, 2, 3, 4, 5}));
+
+        // Create second aspect with different test values
+        Aspect aspect2 = factory.createPropertyMapAspect(entity2, aspectDef);
+        aspect2.put(factory.createProperty(intProp, 99L));
+        aspect2.put(factory.createProperty(floatProp, 2.71828));
+        aspect2.put(factory.createProperty(boolProp, false));
+        aspect2.put(factory.createProperty(stringProp, "Goodbye World"));
+        aspect2.put(factory.createProperty(textProp, "Another long text field"));
+        aspect2.put(factory.createProperty(bigIntProp, new java.math.BigInteger("98765432109876543210")));
+        aspect2.put(factory.createProperty(bigDecProp, new java.math.BigDecimal("987.654321098765432109876543210")));
+        aspect2.put(factory.createProperty(dateProp, java.time.ZonedDateTime.parse("2025-12-31T23:59:59Z")));
+        aspect2.put(factory.createProperty(uriProp, new java.net.URI("https://example.org/another")));
+        aspect2.put(factory.createProperty(uuidProp, UUID.fromString("6ba7b810-9dad-11d1-80b4-00c04fd430c8")));
+        aspect2.put(factory.createProperty(clobProp, "Different CLOB content"));
+        aspect2.put(factory.createProperty(blobProp, new byte[]{10, 20, 30, 40, 50}));
+
+        hierarchy.put(entity1, aspect1);
+        hierarchy.put(entity2, aspect2);
+
+        // Save catalog (should use mapped table for the hierarchy)
+        postgresDao.saveCatalog(catalog);
+
+        // Load the catalog back
+        Catalog loadedCatalog = postgresDao.loadCatalog(catalogId);
+        assertNotNull(loadedCatalog);
+
+        // Get the loaded hierarchy
+        AspectMapHierarchy loadedHierarchy = (AspectMapHierarchy) loadedCatalog.hierarchy(aspectDefName);
+        assertNotNull(loadedHierarchy);
+
+        // Verify first aspect was correctly reconstituted
+        Entity loadedEntity1 = factory.getOrRegisterNewEntity(entityId1);
+        Aspect loadedAspect1 = loadedHierarchy.get(loadedEntity1);
+        assertNotNull(loadedAspect1);
+        assertEquals(42L, loadedAspect1.readObj("int_prop"));
+        assertEquals(3.14159, (Double) loadedAspect1.readObj("float_prop"), 0.00001);
+        assertEquals(true, loadedAspect1.readObj("bool_prop"));
+        assertEquals("Hello World", loadedAspect1.readObj("string_prop"));
+        assertEquals("This is a long text field with lots of content", loadedAspect1.readObj("text_prop"));
+        assertEquals(new java.math.BigInteger("12345678901234567890"), new java.math.BigInteger(loadedAspect1.readObj("bigint_prop").toString()));
+        assertEquals(new java.math.BigDecimal("123.456789012345678901234567890"), new java.math.BigDecimal(loadedAspect1.readObj("bigdec_prop").toString()));
+        assertEquals("https://example.com/path", loadedAspect1.readObj("uri_prop").toString());
+        assertEquals(UUID.fromString("550e8400-e29b-41d4-a716-446655440000"), loadedAspect1.readObj("uuid_prop"));
+        assertEquals("CLOB content here", loadedAspect1.readObj("clob_prop"));
+        assertArrayEquals(new byte[]{1, 2, 3, 4, 5}, (byte[]) loadedAspect1.readObj("blob_prop"));
+
+        // Verify second aspect was correctly reconstituted
+        Entity loadedEntity2 = factory.getOrRegisterNewEntity(entityId2);
+        Aspect loadedAspect2 = loadedHierarchy.get(loadedEntity2);
+        assertNotNull(loadedAspect2);
+        assertEquals(99L, loadedAspect2.readObj("int_prop"));
+        assertEquals(2.71828, (Double) loadedAspect2.readObj("float_prop"), 0.00001);
+        assertEquals(false, loadedAspect2.readObj("bool_prop"));
+        assertEquals("Goodbye World", loadedAspect2.readObj("string_prop"));
+        assertEquals("Another long text field", loadedAspect2.readObj("text_prop"));
+        assertEquals(new java.math.BigInteger("98765432109876543210"), new java.math.BigInteger(loadedAspect2.readObj("bigint_prop").toString()));
+        assertEquals(new java.math.BigDecimal("987.654321098765432109876543210"), new java.math.BigDecimal(loadedAspect2.readObj("bigdec_prop").toString()));
+        assertEquals("https://example.org/another", loadedAspect2.readObj("uri_prop").toString());
+        assertEquals(UUID.fromString("6ba7b810-9dad-11d1-80b4-00c04fd430c8"), loadedAspect2.readObj("uuid_prop"));
+        assertEquals("Different CLOB content", loadedAspect2.readObj("clob_prop"));
+        assertArrayEquals(new byte[]{10, 20, 30, 40, 50}, (byte[]) loadedAspect2.readObj("blob_prop"));
+    }
+
+    @Test
+    void testSaveAndLoadMultivaluedStringProperties() throws Exception
+    {
+        setUp();
+
         // Create AspectDef with multivalued String property
         PropertyDef tagsProp = factory.createPropertyDef("tags", PropertyType.String,
             true, true, true, true, true);
@@ -481,13 +817,13 @@ class SqliteDaoTest
         hierarchy.put(entity, aspect);
 
         // Save catalog
-        sqliteDao.saveCatalog(catalog);
+        postgresDao.saveCatalog(catalog);
 
         // Verify database rows - should have 3 rows for the multivalued property
         try (java.sql.Connection conn = dataSource.getConnection();
              java.sql.PreparedStatement stmt = conn.prepareStatement(
                  "SELECT value_text, value_index FROM property_value WHERE entity_id = ? AND property_name = ? ORDER BY value_index")) {
-            stmt.setString(1, entityId.toString());
+            stmt.setObject(1, entityId);
             stmt.setString(2, "tags");
             try (var rs = stmt.executeQuery()) {
                 assertTrue(rs.next());
@@ -507,7 +843,7 @@ class SqliteDaoTest
         }
 
         // Load catalog and verify multivalued property
-        Catalog loadedCatalog = sqliteDao.loadCatalog(catalogId);
+        Catalog loadedCatalog = postgresDao.loadCatalog(catalogId);
         AspectMapHierarchy loadedHierarchy = (AspectMapHierarchy) loadedCatalog.hierarchy("product");
         Entity loadedEntity = factory.getOrRegisterNewEntity(entityId);
         Aspect loadedAspect = loadedHierarchy.get(loadedEntity);
@@ -525,8 +861,10 @@ class SqliteDaoTest
     }
 
     @Test
-    void testSaveAndLoadMultivaluedIntegerProperties() throws SQLException
+    void testSaveAndLoadMultivaluedIntegerProperties() throws Exception
     {
+        setUp();
+
         // Create AspectDef with multivalued Integer property
         PropertyDef scoresProp = factory.createPropertyDef("scores", PropertyType.Integer,
             true, true, true, true, true);
@@ -551,8 +889,8 @@ class SqliteDaoTest
         hierarchy.put(entity, aspect);
 
         // Save and load
-        sqliteDao.saveCatalog(catalog);
-        Catalog loadedCatalog = sqliteDao.loadCatalog(catalogId);
+        postgresDao.saveCatalog(catalog);
+        Catalog loadedCatalog = postgresDao.loadCatalog(catalogId);
 
         // Verify loaded data
         AspectMapHierarchy loadedHierarchy = (AspectMapHierarchy) loadedCatalog.hierarchy("test_results");
@@ -569,8 +907,10 @@ class SqliteDaoTest
     }
 
     @Test
-    void testSaveAndLoadEmptyMultivaluedProperty() throws SQLException
+    void testSaveAndLoadEmptyMultivaluedProperty() throws Exception
     {
+        setUp();
+
         // Create AspectDef with multivalued property
         PropertyDef tagsProp = factory.createPropertyDef("tags", PropertyType.String,
             true, true, true, true, true);
@@ -595,13 +935,13 @@ class SqliteDaoTest
         hierarchy.put(entity, aspect);
 
         // Save catalog
-        sqliteDao.saveCatalog(catalog);
+        postgresDao.saveCatalog(catalog);
 
         // Verify no rows in database for empty list
         try (java.sql.Connection conn = dataSource.getConnection();
              java.sql.PreparedStatement stmt = conn.prepareStatement(
                  "SELECT COUNT(*) FROM property_value WHERE entity_id = ? AND property_name = ?")) {
-            stmt.setString(1, entityId.toString());
+            stmt.setObject(1, entityId);
             stmt.setString(2, "tags");
             try (var rs = stmt.executeQuery()) {
                 assertTrue(rs.next());
@@ -610,7 +950,7 @@ class SqliteDaoTest
         }
 
         // Load catalog and verify empty list is restored
-        Catalog loadedCatalog = sqliteDao.loadCatalog(catalogId);
+        Catalog loadedCatalog = postgresDao.loadCatalog(catalogId);
         AspectMapHierarchy loadedHierarchy = (AspectMapHierarchy) loadedCatalog.hierarchy("product");
         Entity loadedEntity = factory.getOrRegisterNewEntity(entityId);
         Aspect loadedAspect = loadedHierarchy.get(loadedEntity);
@@ -624,8 +964,10 @@ class SqliteDaoTest
     }
 
     @Test
-    void testSaveAndLoadNullMultivaluedProperty() throws SQLException
+    void testSaveAndLoadNullMultivaluedProperty() throws Exception
     {
+        setUp();
+
         // Create AspectDef with nullable multivalued property
         PropertyDef tagsProp = factory.createPropertyDef("tags", PropertyType.String,
             true, true, true, true, true);
@@ -649,13 +991,13 @@ class SqliteDaoTest
         hierarchy.put(entity, aspect);
 
         // Save and load
-        sqliteDao.saveCatalog(catalog);
+        postgresDao.saveCatalog(catalog);
 
         // Verify no rows in database (null multivalued is treated same as empty list)
         try (java.sql.Connection conn = dataSource.getConnection();
              java.sql.PreparedStatement stmt = conn.prepareStatement(
                  "SELECT COUNT(*) FROM property_value WHERE entity_id = ? AND property_name = ?")) {
-            stmt.setString(1, entityId.toString());
+            stmt.setObject(1, entityId);
             stmt.setString(2, "tags");
             try (var rs = stmt.executeQuery()) {
                 assertTrue(rs.next());
@@ -663,7 +1005,7 @@ class SqliteDaoTest
             }
         }
 
-        Catalog loadedCatalog = sqliteDao.loadCatalog(catalogId);
+        Catalog loadedCatalog = postgresDao.loadCatalog(catalogId);
         AspectMapHierarchy loadedHierarchy = (AspectMapHierarchy) loadedCatalog.hierarchy("product");
         Entity loadedEntity = factory.getOrRegisterNewEntity(entityId);
         Aspect loadedAspect = loadedHierarchy.get(loadedEntity);
@@ -678,8 +1020,10 @@ class SqliteDaoTest
     }
 
     @Test
-    void testSaveAndLoadMixedSingleAndMultivaluedProperties() throws SQLException
+    void testSaveAndLoadMixedSingleAndMultivaluedProperties() throws Exception
     {
+        setUp();
+
         // Create AspectDef with both single-valued and multivalued properties
         PropertyDef titleProp = factory.createPropertyDef("title", PropertyType.String,
             null, false, true, true, false, false, false);
@@ -713,13 +1057,13 @@ class SqliteDaoTest
         hierarchy.put(entity, aspect);
 
         // Save and load
-        sqliteDao.saveCatalog(catalog);
+        postgresDao.saveCatalog(catalog);
 
         // Verify database rows
         try (java.sql.Connection conn = dataSource.getConnection();
              java.sql.PreparedStatement stmt = conn.prepareStatement(
                  "SELECT property_name, COUNT(*) as row_count FROM property_value WHERE entity_id = ? GROUP BY property_name ORDER BY property_name")) {
-            stmt.setString(1, entityId.toString());
+            stmt.setObject(1, entityId);
             try (var rs = stmt.executeQuery()) {
                 assertTrue(rs.next());
                 assertEquals("prices", rs.getString("property_name"));
@@ -737,7 +1081,7 @@ class SqliteDaoTest
             }
         }
 
-        Catalog loadedCatalog = sqliteDao.loadCatalog(catalogId);
+        Catalog loadedCatalog = postgresDao.loadCatalog(catalogId);
         AspectMapHierarchy loadedHierarchy = (AspectMapHierarchy) loadedCatalog.hierarchy("product");
         Entity loadedEntity = factory.getOrRegisterNewEntity(entityId);
         Aspect loadedAspect = loadedHierarchy.get(loadedEntity);
@@ -762,8 +1106,10 @@ class SqliteDaoTest
     }
 
     @Test
-    void testSaveAndLoadMultivaluedBooleanAndUUIDProperties() throws SQLException
+    void testSaveAndLoadMultivaluedBooleanAndUUIDProperties() throws Exception
     {
+        setUp();
+
         // Create AspectDef with multivalued Boolean and UUID properties
         PropertyDef flagsProp = factory.createPropertyDef("flags", PropertyType.Boolean,
             true, true, true, true, true);
@@ -797,8 +1143,8 @@ class SqliteDaoTest
         hierarchy.put(entity, aspect);
 
         // Save and load
-        sqliteDao.saveCatalog(catalog);
-        Catalog loadedCatalog = sqliteDao.loadCatalog(catalogId);
+        postgresDao.saveCatalog(catalog);
+        Catalog loadedCatalog = postgresDao.loadCatalog(catalogId);
 
         // Verify loaded data
         AspectMapHierarchy loadedHierarchy = (AspectMapHierarchy) loadedCatalog.hierarchy("test_data");
@@ -824,8 +1170,10 @@ class SqliteDaoTest
     }
 
     @Test
-    void testUpdateMultivaluedPropertyWithDifferentLength() throws SQLException
+    void testUpdateMultivaluedPropertyWithDifferentLength() throws Exception
     {
+        setUp();
+
         // Create AspectDef with multivalued property
         PropertyDef tagsProp = factory.createPropertyDef("tags", PropertyType.String,
             true, true, true, true, true);
@@ -848,7 +1196,7 @@ class SqliteDaoTest
         hierarchy.put(entity, aspect);
 
         // Save catalog
-        sqliteDao.saveCatalog(catalog);
+        postgresDao.saveCatalog(catalog);
 
         // Update with list of 5 items
         Aspect updatedAspect = factory.createPropertyMapAspect(entity, productDef);
@@ -857,13 +1205,13 @@ class SqliteDaoTest
         hierarchy.put(entity, updatedAspect);
 
         // Save again
-        sqliteDao.saveCatalog(catalog);
+        postgresDao.saveCatalog(catalog);
 
         // Verify database has 5 rows (old rows should be deleted)
         try (java.sql.Connection conn = dataSource.getConnection();
              java.sql.PreparedStatement stmt = conn.prepareStatement(
                  "SELECT COUNT(*) FROM property_value WHERE entity_id = ? AND property_name = ?")) {
-            stmt.setString(1, entityId.toString());
+            stmt.setObject(1, entityId);
             stmt.setString(2, "tags");
             try (var rs = stmt.executeQuery()) {
                 assertTrue(rs.next());
@@ -872,7 +1220,7 @@ class SqliteDaoTest
         }
 
         // Load and verify new values
-        Catalog loadedCatalog = sqliteDao.loadCatalog(catalogId);
+        Catalog loadedCatalog = postgresDao.loadCatalog(catalogId);
         AspectMapHierarchy loadedHierarchy = (AspectMapHierarchy) loadedCatalog.hierarchy("product");
         Entity loadedEntity = factory.getOrRegisterNewEntity(entityId);
         Aspect loadedAspect = loadedHierarchy.get(loadedEntity);

@@ -14,7 +14,7 @@
  *  limitations under the License.
  */
 
-package net.netbeing.cheap.db;
+package net.netbeing.cheap.db.postgres;
 
 import io.zonky.test.db.postgres.embedded.FlywayPreparer;
 import io.zonky.test.db.postgres.junit5.EmbeddedPostgresExtension;
@@ -31,7 +31,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.List;

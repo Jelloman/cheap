@@ -14,8 +14,10 @@
  *  limitations under the License.
  */
 
-package net.netbeing.cheap.db;
+package net.netbeing.cheap.db.postgres;
 
+import net.netbeing.cheap.db.JdbcCatalogBase;
+import net.netbeing.cheap.db.sqlite.SqliteCatalog;
 import net.netbeing.cheap.impl.basic.*;
 import net.netbeing.cheap.model.*;
 import org.jetbrains.annotations.NotNull;

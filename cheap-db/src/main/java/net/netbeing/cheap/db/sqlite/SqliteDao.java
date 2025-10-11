@@ -14,8 +14,11 @@
  *  limitations under the License.
  */
 
-package net.netbeing.cheap.db;
+package net.netbeing.cheap.db.sqlite;
 
+import net.netbeing.cheap.db.AspectTableMapping;
+import net.netbeing.cheap.db.CatalogPersistence;
+import net.netbeing.cheap.db.postgres.PostgresDao;
 import net.netbeing.cheap.model.*;
 import net.netbeing.cheap.util.CheapFactory;
 import org.jetbrains.annotations.NotNull;
