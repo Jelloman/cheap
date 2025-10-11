@@ -32,6 +32,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * Jackson deserializer for {@link AspectDef} objects in the Cheap data model.
@@ -131,7 +132,7 @@ class AspectDefDeserializer extends JsonDeserializer<AspectDef>
             def = factory.createImmutableAspectDef(name, propertyDefMap);
         } else {
             // Mixed mutability - use FullAspectDefImpl
-            def = factory.createFullAspectDef(name, java.util.UUID.randomUUID(), propertyDefMap,
+            def = factory.createFullAspectDef(name, UUID.randomUUID(), propertyDefMap,
                 flags.isReadable, flags.isWritable, flags.canAddProperties, flags.canRemoveProperties);
         }
         AspectDef existingDef = factory.getAspectDef(name);

@@ -4,6 +4,7 @@ import net.netbeing.cheap.model.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.Map;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -207,7 +208,7 @@ class EntityTreeHierarchyImplTest
     {
         EntityTreeHierarchyImpl.LeafNodeImpl leaf = new EntityTreeHierarchyImpl.LeafNodeImpl(leafEntity);
         
-        Set<java.util.Map.Entry<String, EntityTreeHierarchy.Node>> entries = leaf.entrySet();
+        Set<Map.Entry<String, EntityTreeHierarchy.Node>> entries = leaf.entrySet();
         
         assertNotNull(entries);
         assertTrue(entries.isEmpty());

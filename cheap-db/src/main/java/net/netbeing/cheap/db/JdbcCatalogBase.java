@@ -27,6 +27,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * Base class for Catalog implementations that load database tables via JDBC.
@@ -257,7 +258,7 @@ public abstract class JdbcCatalogBase extends CatalogImpl
                 }
                 break;
             case UUID:
-                if (value instanceof java.util.UUID) {
+                if (value instanceof UUID) {
                     return value;
                 }
                 break;

@@ -1,5 +1,9 @@
 package net.netbeing.cheap.util;
 
+import net.netbeing.cheap.impl.basic.CachingEntityMultiCatalogImpl;
+import net.netbeing.cheap.impl.basic.CachingEntityOneCatalogImpl;
+import net.netbeing.cheap.impl.basic.LocalEntityMultiCatalogImpl;
+import net.netbeing.cheap.impl.basic.LocalEntityOneCatalogImpl;
 import net.netbeing.cheap.model.*;
 import org.junit.jupiter.api.Test;
 
@@ -373,28 +377,28 @@ class CheapFactoryTest
         LocalEntity defaultEntity = factory.createLocalEntity(catalog);
         assertNotNull(defaultEntity);
         // Verify it's the correct implementation type by checking behavior
-        assertTrue(defaultEntity instanceof net.netbeing.cheap.impl.basic.LocalEntityOneCatalogImpl);
+        assertTrue(defaultEntity instanceof LocalEntityOneCatalogImpl);
         
         // Test different LocalEntityType configurations
         CheapFactory singleFactory = new CheapFactory(LocalEntityType.SINGLE_CATALOG, null);
         LocalEntity singleEntity = singleFactory.createLocalEntity(catalog);
         assertNotNull(singleEntity);
-        assertTrue(singleEntity instanceof net.netbeing.cheap.impl.basic.LocalEntityOneCatalogImpl);
+        assertTrue(singleEntity instanceof LocalEntityOneCatalogImpl);
 
         CheapFactory multiFactory = new CheapFactory(LocalEntityType.MULTI_CATALOG, null);
         LocalEntity multiEntity = multiFactory.createLocalEntity(catalog);
         assertNotNull(multiEntity);
-        assertTrue(multiEntity instanceof net.netbeing.cheap.impl.basic.LocalEntityMultiCatalogImpl);
+        assertTrue(multiEntity instanceof LocalEntityMultiCatalogImpl);
 
         CheapFactory cachingSingleFactory = new CheapFactory(LocalEntityType.CACHING_SINGLE_CATALOG, null);
         LocalEntity cachingSingleEntity = cachingSingleFactory.createLocalEntity(catalog);
         assertNotNull(cachingSingleEntity);
-        assertTrue(cachingSingleEntity instanceof net.netbeing.cheap.impl.basic.CachingEntityOneCatalogImpl);
+        assertTrue(cachingSingleEntity instanceof CachingEntityOneCatalogImpl);
 
         CheapFactory cachingMultiFactory = new CheapFactory(LocalEntityType.CACHING_MULTI_CATALOG, null);
         LocalEntity cachingMultiEntity = cachingMultiFactory.createLocalEntity(catalog);
         assertNotNull(cachingMultiEntity);
-        assertTrue(cachingMultiEntity instanceof net.netbeing.cheap.impl.basic.CachingEntityMultiCatalogImpl);
+        assertTrue(cachingMultiEntity instanceof CachingEntityMultiCatalogImpl);
     }
 
     @Test
@@ -405,11 +409,11 @@ class CheapFactoryTest
         // Test creating entities with specific types
         LocalEntity singleEntity = factory.createLocalEntity(LocalEntityType.SINGLE_CATALOG, catalog);
         assertNotNull(singleEntity);
-        assertTrue(singleEntity instanceof net.netbeing.cheap.impl.basic.LocalEntityOneCatalogImpl);
+        assertTrue(singleEntity instanceof LocalEntityOneCatalogImpl);
         
         LocalEntity multiEntity = factory.createLocalEntity(LocalEntityType.MULTI_CATALOG, catalog);
         assertNotNull(multiEntity);
-        assertTrue(multiEntity instanceof net.netbeing.cheap.impl.basic.LocalEntityMultiCatalogImpl);
+        assertTrue(multiEntity instanceof LocalEntityMultiCatalogImpl);
         
         // Test with globalId for SINGLE_CATALOG (should work)
         UUID entityId = UUID.randomUUID();
@@ -421,20 +425,20 @@ class CheapFactoryTest
         LocalEntity multiWithId = factory.createLocalEntity(LocalEntityType.MULTI_CATALOG, entityId, catalog);
         assertNotNull(multiWithId);
         assertEquals(entityId, multiWithId.globalId());
-        assertTrue(multiWithId instanceof net.netbeing.cheap.impl.basic.LocalEntityMultiCatalogImpl);
+        assertTrue(multiWithId instanceof LocalEntityMultiCatalogImpl);
         
         // Test with globalId for CACHING types (should work now)
         UUID cachingSingleId = UUID.randomUUID();
         LocalEntity cachingSingleWithId = factory.createLocalEntity(LocalEntityType.CACHING_SINGLE_CATALOG, cachingSingleId, catalog);
         assertNotNull(cachingSingleWithId);
         assertEquals(cachingSingleId, cachingSingleWithId.globalId());
-        assertTrue(cachingSingleWithId instanceof net.netbeing.cheap.impl.basic.CachingEntityOneCatalogImpl);
+        assertTrue(cachingSingleWithId instanceof CachingEntityOneCatalogImpl);
         
         UUID cachingMultiId = UUID.randomUUID();
         LocalEntity cachingMultiWithId = factory.createLocalEntity(LocalEntityType.CACHING_MULTI_CATALOG, cachingMultiId, catalog);
         assertNotNull(cachingMultiWithId);
         assertEquals(cachingMultiId, cachingMultiWithId.globalId());
-        assertTrue(cachingMultiWithId instanceof net.netbeing.cheap.impl.basic.CachingEntityMultiCatalogImpl);
+        assertTrue(cachingMultiWithId instanceof CachingEntityMultiCatalogImpl);
     }
 
     @Test
@@ -446,44 +450,44 @@ class CheapFactoryTest
         // Test explicit single catalog entity creation
         LocalEntity singleEntity = factory.createSingleCatalogEntity(catalog);
         assertNotNull(singleEntity);
-        assertTrue(singleEntity instanceof net.netbeing.cheap.impl.basic.LocalEntityOneCatalogImpl);
+        assertTrue(singleEntity instanceof LocalEntityOneCatalogImpl);
         
         LocalEntity singleEntityWithId = factory.createSingleCatalogEntity(entityId, catalog);
         assertNotNull(singleEntityWithId);
         assertEquals(entityId, singleEntityWithId.globalId());
-        assertTrue(singleEntityWithId instanceof net.netbeing.cheap.impl.basic.LocalEntityOneCatalogImpl);
+        assertTrue(singleEntityWithId instanceof LocalEntityOneCatalogImpl);
         
         // Test explicit multi-catalog entity creation
         LocalEntity multiEntity = factory.createMultiCatalogEntity(catalog);
         assertNotNull(multiEntity);
-        assertTrue(multiEntity instanceof net.netbeing.cheap.impl.basic.LocalEntityMultiCatalogImpl);
+        assertTrue(multiEntity instanceof LocalEntityMultiCatalogImpl);
         
         UUID multiEntityId = UUID.randomUUID();
         LocalEntity multiEntityWithId = factory.createMultiCatalogEntity(multiEntityId, catalog);
         assertNotNull(multiEntityWithId);
         assertEquals(multiEntityId, multiEntityWithId.globalId());
-        assertTrue(multiEntityWithId instanceof net.netbeing.cheap.impl.basic.LocalEntityMultiCatalogImpl);
+        assertTrue(multiEntityWithId instanceof LocalEntityMultiCatalogImpl);
         
         // Test explicit caching entity creation
         LocalEntity cachingEntity = factory.createCachingEntity(catalog);
         assertNotNull(cachingEntity);
-        assertTrue(cachingEntity instanceof net.netbeing.cheap.impl.basic.CachingEntityOneCatalogImpl);
+        assertTrue(cachingEntity instanceof CachingEntityOneCatalogImpl);
         
         UUID cachingEntityId = UUID.randomUUID();
         LocalEntity cachingEntityWithId = factory.createCachingEntity(cachingEntityId, catalog);
         assertNotNull(cachingEntityWithId);
         assertEquals(cachingEntityId, cachingEntityWithId.globalId());
-        assertTrue(cachingEntityWithId instanceof net.netbeing.cheap.impl.basic.CachingEntityOneCatalogImpl);
+        assertTrue(cachingEntityWithId instanceof CachingEntityOneCatalogImpl);
         
         LocalEntity cachingMultiEntity = factory.createCachingMultiCatalogEntity(catalog);
         assertNotNull(cachingMultiEntity);
-        assertTrue(cachingMultiEntity instanceof net.netbeing.cheap.impl.basic.CachingEntityMultiCatalogImpl);
+        assertTrue(cachingMultiEntity instanceof CachingEntityMultiCatalogImpl);
         
         UUID cachingMultiEntityId = UUID.randomUUID();
         LocalEntity cachingMultiEntityWithId = factory.createCachingMultiCatalogEntity(cachingMultiEntityId, catalog);
         assertNotNull(cachingMultiEntityWithId);
         assertEquals(cachingMultiEntityId, cachingMultiEntityWithId.globalId());
-        assertTrue(cachingMultiEntityWithId instanceof net.netbeing.cheap.impl.basic.CachingEntityMultiCatalogImpl);
+        assertTrue(cachingMultiEntityWithId instanceof CachingEntityMultiCatalogImpl);
     }
 
     @Test
@@ -511,20 +515,20 @@ class CheapFactoryTest
             // Verify correct implementation type
             switch (type) {
                 case SINGLE_CATALOG -> {
-                    assertTrue(randomEntity instanceof net.netbeing.cheap.impl.basic.LocalEntityOneCatalogImpl);
-                    assertTrue(specificEntity instanceof net.netbeing.cheap.impl.basic.LocalEntityOneCatalogImpl);
+                    assertTrue(randomEntity instanceof LocalEntityOneCatalogImpl);
+                    assertTrue(specificEntity instanceof LocalEntityOneCatalogImpl);
                 }
                 case MULTI_CATALOG -> {
-                    assertTrue(randomEntity instanceof net.netbeing.cheap.impl.basic.LocalEntityMultiCatalogImpl);
-                    assertTrue(specificEntity instanceof net.netbeing.cheap.impl.basic.LocalEntityMultiCatalogImpl);
+                    assertTrue(randomEntity instanceof LocalEntityMultiCatalogImpl);
+                    assertTrue(specificEntity instanceof LocalEntityMultiCatalogImpl);
                 }
                 case CACHING_SINGLE_CATALOG -> {
-                    assertTrue(randomEntity instanceof net.netbeing.cheap.impl.basic.CachingEntityOneCatalogImpl);
-                    assertTrue(specificEntity instanceof net.netbeing.cheap.impl.basic.CachingEntityOneCatalogImpl);
+                    assertTrue(randomEntity instanceof CachingEntityOneCatalogImpl);
+                    assertTrue(specificEntity instanceof CachingEntityOneCatalogImpl);
                 }
                 case CACHING_MULTI_CATALOG -> {
-                    assertTrue(randomEntity instanceof net.netbeing.cheap.impl.basic.CachingEntityMultiCatalogImpl);
-                    assertTrue(specificEntity instanceof net.netbeing.cheap.impl.basic.CachingEntityMultiCatalogImpl);
+                    assertTrue(randomEntity instanceof CachingEntityMultiCatalogImpl);
+                    assertTrue(specificEntity instanceof CachingEntityMultiCatalogImpl);
                 }
             }
             

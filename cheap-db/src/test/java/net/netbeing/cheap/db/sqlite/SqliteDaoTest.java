@@ -17,6 +17,7 @@
 package net.netbeing.cheap.db.sqlite;
 
 import com.google.common.collect.ImmutableList;
+import net.netbeing.cheap.db.AspectTableMapping;
 import net.netbeing.cheap.model.*;
 import net.netbeing.cheap.util.CheapFactory;
 import org.junit.jupiter.api.AfterEach;
@@ -25,8 +26,18 @@ import org.junit.jupiter.api.Test;
 import org.sqlite.SQLiteDataSource;
 
 import javax.sql.DataSource;
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -460,7 +471,7 @@ class SqliteDaoTest
         PropertyDef tagsProp = factory.createPropertyDef("tags", PropertyType.String,
             true, true, true, true, true);
 
-        java.util.Map<String, PropertyDef> propDefs = java.util.Map.of("tags", tagsProp);
+        Map<String, PropertyDef> propDefs = Map.of("tags", tagsProp);
         AspectDef productDef = factory.createImmutableAspectDef("product", propDefs);
 
         // Create catalog with AspectMapHierarchy
@@ -474,7 +485,7 @@ class SqliteDaoTest
         Entity entity = factory.createEntity(entityId);
         Aspect aspect = factory.createPropertyMapAspect(entity, productDef);
 
-        java.util.List<String> tags = ImmutableList.of("electronics", "gadget", "popular");
+        List<String> tags = ImmutableList.of("electronics", "gadget", "popular");
         aspect.put(factory.createProperty(tagsProp, tags));
 
         hierarchy.put(entity, aspect);
@@ -483,8 +494,8 @@ class SqliteDaoTest
         sqliteDao.saveCatalog(catalog);
 
         // Verify database rows - should have 3 rows for the multivalued property
-        try (java.sql.Connection conn = dataSource.getConnection();
-             java.sql.PreparedStatement stmt = conn.prepareStatement(
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(
                  "SELECT value_text, value_index FROM property_value WHERE entity_id = ? AND property_name = ? ORDER BY value_index")) {
             stmt.setString(1, entityId.toString());
             stmt.setString(2, "tags");
@@ -513,10 +524,10 @@ class SqliteDaoTest
 
         assertNotNull(loadedAspect);
         Object loadedValue = loadedAspect.readObj("tags");
-        assertInstanceOf(java.util.List.class, loadedValue);
+        assertInstanceOf(List.class, loadedValue);
 
         @SuppressWarnings("unchecked")
-        java.util.List<String> loadedTags = (java.util.List<String>) loadedValue;
+        List<String> loadedTags = (List<String>) loadedValue;
         assertEquals(3, loadedTags.size());
         assertEquals("electronics", loadedTags.get(0));
         assertEquals("gadget", loadedTags.get(1));
@@ -530,7 +541,7 @@ class SqliteDaoTest
         PropertyDef scoresProp = factory.createPropertyDef("scores", PropertyType.Integer,
             true, true, true, true, true);
 
-        java.util.Map<String, PropertyDef> propDefs = java.util.Map.of("scores", scoresProp);
+        Map<String, PropertyDef> propDefs = Map.of("scores", scoresProp);
         AspectDef testDef = factory.createImmutableAspectDef("test_results", propDefs);
 
         // Create catalog
@@ -544,7 +555,7 @@ class SqliteDaoTest
         Entity entity = factory.createEntity(entityId);
         Aspect aspect = factory.createPropertyMapAspect(entity, testDef);
 
-        java.util.List<Long> scores = ImmutableList.of(100L, 95L, 87L, 92L);
+        List<Long> scores = ImmutableList.of(100L, 95L, 87L, 92L);
         aspect.put(factory.createProperty(scoresProp, scores));
 
         hierarchy.put(entity, aspect);
@@ -559,7 +570,7 @@ class SqliteDaoTest
         Aspect loadedAspect = loadedHierarchy.get(loadedEntity);
 
         @SuppressWarnings("unchecked")
-        java.util.List<Long> loadedScores = (java.util.List<Long>) loadedAspect.readObj("scores");
+        List<Long> loadedScores = (List<Long>) loadedAspect.readObj("scores");
         assertEquals(4, loadedScores.size());
         assertEquals(100L, loadedScores.get(0));
         assertEquals(95L, loadedScores.get(1));
@@ -574,7 +585,7 @@ class SqliteDaoTest
         PropertyDef tagsProp = factory.createPropertyDef("tags", PropertyType.String,
             true, true, true, true, true);
 
-        java.util.Map<String, PropertyDef> propDefs = java.util.Map.of("tags", tagsProp);
+        Map<String, PropertyDef> propDefs = Map.of("tags", tagsProp);
         AspectDef productDef = factory.createImmutableAspectDef("product", propDefs);
 
         // Create catalog
@@ -588,7 +599,7 @@ class SqliteDaoTest
         Entity entity = factory.createEntity(entityId);
         Aspect aspect = factory.createPropertyMapAspect(entity, productDef);
 
-        java.util.List<String> emptyTags = ImmutableList.of();
+        List<String> emptyTags = ImmutableList.of();
         aspect.put(factory.createProperty(tagsProp, emptyTags));
 
         hierarchy.put(entity, aspect);
@@ -597,8 +608,8 @@ class SqliteDaoTest
         sqliteDao.saveCatalog(catalog);
 
         // Verify no rows in database for empty list
-        try (java.sql.Connection conn = dataSource.getConnection();
-             java.sql.PreparedStatement stmt = conn.prepareStatement(
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(
                  "SELECT COUNT(*) FROM property_value WHERE entity_id = ? AND property_name = ?")) {
             stmt.setString(1, entityId.toString());
             stmt.setString(2, "tags");
@@ -615,10 +626,10 @@ class SqliteDaoTest
         Aspect loadedAspect = loadedHierarchy.get(loadedEntity);
 
         Object loadedValue = loadedAspect.readObj("tags");
-        assertInstanceOf(java.util.List.class, loadedValue);
+        assertInstanceOf(List.class, loadedValue);
 
         @SuppressWarnings("unchecked")
-        java.util.List<String> loadedTags = (java.util.List<String>) loadedValue;
+        List<String> loadedTags = (List<String>) loadedValue;
         assertTrue(loadedTags.isEmpty(), "Should load as empty list");
     }
 
@@ -629,7 +640,7 @@ class SqliteDaoTest
         PropertyDef tagsProp = factory.createPropertyDef("tags", PropertyType.String,
             true, true, true, true, true);
 
-        java.util.Map<String, PropertyDef> propDefs = java.util.Map.of("tags", tagsProp);
+        Map<String, PropertyDef> propDefs = Map.of("tags", tagsProp);
         AspectDef productDef = factory.createImmutableAspectDef("product", propDefs);
 
         // Create catalog
@@ -651,8 +662,8 @@ class SqliteDaoTest
         sqliteDao.saveCatalog(catalog);
 
         // Verify no rows in database (null multivalued is treated same as empty list)
-        try (java.sql.Connection conn = dataSource.getConnection();
-             java.sql.PreparedStatement stmt = conn.prepareStatement(
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(
                  "SELECT COUNT(*) FROM property_value WHERE entity_id = ? AND property_name = ?")) {
             stmt.setString(1, entityId.toString());
             stmt.setString(2, "tags");
@@ -670,9 +681,9 @@ class SqliteDaoTest
         // With the simplified schema, null and empty list are indistinguishable for multivalued properties
         // Both are represented by no rows, and both load as empty list
         Object loadedValue = loadedAspect.readObj("tags");
-        assertInstanceOf(java.util.List.class, loadedValue);
+        assertInstanceOf(List.class, loadedValue);
         @SuppressWarnings("unchecked")
-        java.util.List<String> loadedTags = (java.util.List<String>) loadedValue;
+        List<String> loadedTags = (List<String>) loadedValue;
         assertTrue(loadedTags.isEmpty(), "Null multivalued property should load as empty list");
     }
 
@@ -687,7 +698,7 @@ class SqliteDaoTest
         PropertyDef pricesProp = factory.createPropertyDef("prices", PropertyType.Float,
             true, true, true, true, true);
 
-        java.util.Map<String, PropertyDef> propDefs = new java.util.LinkedHashMap<>();
+        Map<String, PropertyDef> propDefs = new LinkedHashMap<>();
         propDefs.put("title", titleProp);
         propDefs.put("tags", tagsProp);
         propDefs.put("prices", pricesProp);
@@ -715,8 +726,8 @@ class SqliteDaoTest
         sqliteDao.saveCatalog(catalog);
 
         // Verify database rows
-        try (java.sql.Connection conn = dataSource.getConnection();
-             java.sql.PreparedStatement stmt = conn.prepareStatement(
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(
                  "SELECT property_name, COUNT(*) as row_count FROM property_value WHERE entity_id = ? GROUP BY property_name ORDER BY property_name")) {
             stmt.setString(1, entityId.toString());
             try (var rs = stmt.executeQuery()) {
@@ -746,14 +757,14 @@ class SqliteDaoTest
 
         // Verify multivalued String property
         @SuppressWarnings("unchecked")
-        java.util.List<String> loadedTags = (java.util.List<String>) loadedAspect.readObj("tags");
+        List<String> loadedTags = (List<String>) loadedAspect.readObj("tags");
         assertEquals(2, loadedTags.size());
         assertEquals("electronics", loadedTags.get(0));
         assertEquals("gadget", loadedTags.get(1));
 
         // Verify multivalued Float property
         @SuppressWarnings("unchecked")
-        java.util.List<Double> loadedPrices = (java.util.List<Double>) loadedAspect.readObj("prices");
+        List<Double> loadedPrices = (List<Double>) loadedAspect.readObj("prices");
         assertEquals(3, loadedPrices.size());
         assertEquals(199.99, loadedPrices.get(0), 0.01);
         assertEquals(249.99, loadedPrices.get(1), 0.01);
@@ -769,7 +780,7 @@ class SqliteDaoTest
         PropertyDef idsProp = factory.createPropertyDef("ids", PropertyType.UUID,
             true, true, true, true, true);
 
-        java.util.Map<String, PropertyDef> propDefs = new java.util.LinkedHashMap<>();
+        Map<String, PropertyDef> propDefs = new LinkedHashMap<>();
         propDefs.put("flags", flagsProp);
         propDefs.put("ids", idsProp);
 
@@ -806,7 +817,7 @@ class SqliteDaoTest
 
         // Verify Boolean list
         @SuppressWarnings("unchecked")
-        java.util.List<Boolean> loadedFlags = (java.util.List<Boolean>) loadedAspect.readObj("flags");
+        List<Boolean> loadedFlags = (List<Boolean>) loadedAspect.readObj("flags");
         assertEquals(4, loadedFlags.size());
         assertTrue(loadedFlags.get(0));
         assertFalse(loadedFlags.get(1));
@@ -815,7 +826,7 @@ class SqliteDaoTest
 
         // Verify UUID list
         @SuppressWarnings("unchecked")
-        java.util.List<UUID> loadedIds = (java.util.List<UUID>) loadedAspect.readObj("ids");
+        List<UUID> loadedIds = (List<UUID>) loadedAspect.readObj("ids");
         assertEquals(3, loadedIds.size());
         assertEquals(id1, loadedIds.get(0));
         assertEquals(id2, loadedIds.get(1));
@@ -829,7 +840,7 @@ class SqliteDaoTest
         PropertyDef tagsProp = factory.createPropertyDef("tags", PropertyType.String,
             true, true, true, true, true);
 
-        java.util.Map<String, PropertyDef> propDefs = java.util.Map.of("tags", tagsProp);
+        Map<String, PropertyDef> propDefs = Map.of("tags", tagsProp);
         AspectDef productDef = factory.createImmutableAspectDef("product", propDefs);
 
         // Create catalog
@@ -859,8 +870,8 @@ class SqliteDaoTest
         sqliteDao.saveCatalog(catalog);
 
         // Verify database has 5 rows (old rows should be deleted)
-        try (java.sql.Connection conn = dataSource.getConnection();
-             java.sql.PreparedStatement stmt = conn.prepareStatement(
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(
                  "SELECT COUNT(*) FROM property_value WHERE entity_id = ? AND property_name = ?")) {
             stmt.setString(1, entityId.toString());
             stmt.setString(2, "tags");
@@ -877,12 +888,200 @@ class SqliteDaoTest
         Aspect loadedAspect = loadedHierarchy.get(loadedEntity);
 
         @SuppressWarnings("unchecked")
-        java.util.List<String> loadedTags = (java.util.List<String>) loadedAspect.readObj("tags");
+        List<String> loadedTags = (List<String>) loadedAspect.readObj("tags");
         assertEquals(5, loadedTags.size());
         assertEquals("new1", loadedTags.get(0));
         assertEquals("new2", loadedTags.get(1));
         assertEquals("new3", loadedTags.get(2));
         assertEquals("new4", loadedTags.get(3));
         assertEquals("new5", loadedTags.get(4));
+    }
+
+    @Test
+    void testAspectTableMappingAllFourPatterns() throws Exception
+    {
+        // Load table creation SQL files and create tables
+        String[] sqlFiles = {
+            "/db/sqlite/test_aspect_mapping_no_key.sql",
+            "/db/sqlite/test_aspect_mapping_with_cat_id.sql",
+            "/db/sqlite/test_aspect_mapping_with_entity_id.sql",
+            "/db/sqlite/test_aspect_mapping_with_both_ids.sql"
+        };
+
+        for (String sqlFile : sqlFiles) {
+            String sql = loadResourceFile(sqlFile);
+            try (Connection conn = dataSource.getConnection();
+                 Statement stmt = conn.createStatement()) {
+                stmt.execute(sql);
+            }
+        }
+
+        // Load AspectDefs from test tables
+        SqliteCatalog sqliteCatalog = new SqliteCatalog(dataSource);
+        AspectDef noKeyAspectDef = sqliteCatalog.loadTableDef("test_aspect_mapping_no_key");
+        AspectDef catIdAspectDef = sqliteCatalog.loadTableDef("test_aspect_mapping_with_cat_id");
+        AspectDef entityIdAspectDef = sqliteCatalog.loadTableDef("test_aspect_mapping_with_entity_id");
+        AspectDef bothIdsAspectDef = sqliteCatalog.loadTableDef("test_aspect_mapping_with_both_ids");
+
+        // Create column mappings
+        Map<String, String> columnMapping = Map.of(
+            "string_col", "string_col",
+            "integer_col", "integer_col"
+        );
+
+        // Pattern 1: No IDs (no primary key, entity IDs generated on load)
+        AspectTableMapping noKeyMapping = new AspectTableMapping(
+            noKeyAspectDef, "test_aspect_mapping_no_key", columnMapping, false, false);
+
+        // Pattern 2: Catalog ID only (no primary key, catalog-scoped)
+        AspectTableMapping catIdMapping = new AspectTableMapping(
+            catIdAspectDef, "test_aspect_mapping_with_cat_id", columnMapping, true, false);
+
+        // Pattern 3: Entity ID only (PRIMARY KEY (entity_id))
+        AspectTableMapping entityIdMapping = new AspectTableMapping(
+            entityIdAspectDef, "test_aspect_mapping_with_entity_id", columnMapping, false, true);
+
+        // Pattern 4: Both IDs (PRIMARY KEY (catalog_id, entity_id))
+        AspectTableMapping bothIdsMapping = new AspectTableMapping(
+            bothIdsAspectDef, "test_aspect_mapping_with_both_ids", columnMapping, true, true);
+
+        // Register all mappings
+        sqliteDao.addAspectTableMapping(noKeyMapping);
+        sqliteDao.addAspectTableMapping(catIdMapping);
+        sqliteDao.addAspectTableMapping(entityIdMapping);
+        sqliteDao.addAspectTableMapping(bothIdsMapping);
+
+        // Create catalog
+        UUID catalogId = UUID.randomUUID();
+        Catalog catalog = factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
+
+        // Create hierarchies for each pattern
+        AspectMapHierarchy noKeyHierarchy = factory.createAspectMapHierarchy(catalog, noKeyAspectDef);
+        AspectMapHierarchy catIdHierarchy = factory.createAspectMapHierarchy(catalog, catIdAspectDef);
+        AspectMapHierarchy entityIdHierarchy = factory.createAspectMapHierarchy(catalog, entityIdAspectDef);
+        AspectMapHierarchy bothIdsHierarchy = factory.createAspectMapHierarchy(catalog, bothIdsAspectDef);
+
+        // Add test data to each hierarchy
+        // Pattern 1: No IDs - entities will be generated
+        Entity noKey1 = factory.createEntity();
+        Aspect noKeyAsp1 = factory.createPropertyMapAspect(noKey1, noKeyAspectDef);
+        noKeyAsp1.put(factory.createProperty(noKeyAspectDef.propertyDef("string_col"), "nokey1"));
+        noKeyAsp1.put(factory.createProperty(noKeyAspectDef.propertyDef("integer_col"), 100L));
+        noKeyHierarchy.put(noKey1, noKeyAsp1);
+
+        // Pattern 2: Catalog ID only - entities will be generated
+        Entity catId1 = factory.createEntity();
+        Aspect catIdAsp1 = factory.createPropertyMapAspect(catId1, catIdAspectDef);
+        catIdAsp1.put(factory.createProperty(catIdAspectDef.propertyDef("string_col"), "catid1"));
+        catIdAsp1.put(factory.createProperty(catIdAspectDef.propertyDef("integer_col"), 200L));
+        catIdHierarchy.put(catId1, catIdAsp1);
+
+        // Pattern 3: Entity ID only - entity IDs preserved
+        UUID entity3Id = UUID.randomUUID();
+        Entity entityId1 = factory.createEntity(entity3Id);
+        Aspect entityIdAsp1 = factory.createPropertyMapAspect(entityId1, entityIdAspectDef);
+        entityIdAsp1.put(factory.createProperty(entityIdAspectDef.propertyDef("string_col"), "entityid1"));
+        entityIdAsp1.put(factory.createProperty(entityIdAspectDef.propertyDef("integer_col"), 300L));
+        entityIdHierarchy.put(entityId1, entityIdAsp1);
+
+        // Pattern 4: Both IDs - entity IDs preserved, catalog-scoped
+        UUID entity4Id = UUID.randomUUID();
+        Entity bothIds1 = factory.createEntity(entity4Id);
+        Aspect bothIdsAsp1 = factory.createPropertyMapAspect(bothIds1, bothIdsAspectDef);
+        bothIdsAsp1.put(factory.createProperty(bothIdsAspectDef.propertyDef("string_col"), "bothids1"));
+        bothIdsAsp1.put(factory.createProperty(bothIdsAspectDef.propertyDef("integer_col"), 400L));
+        bothIdsHierarchy.put(bothIds1, bothIdsAsp1);
+
+        // Save catalog
+        sqliteDao.saveCatalog(catalog);
+
+        // Verify Pattern 1: No IDs - data saved, no ID columns
+        try (Connection conn = dataSource.getConnection();
+             Statement stmt = conn.createStatement();
+             var rs = stmt.executeQuery("SELECT string_col, integer_col FROM test_aspect_mapping_no_key")) {
+            assertTrue(rs.next());
+            assertEquals("nokey1", rs.getString("string_col"));
+            assertEquals(100, rs.getInt("integer_col"));
+            assertFalse(rs.next(), "Should have exactly 1 row");
+        }
+
+        // Verify Pattern 2: Catalog ID - data saved with catalog_id
+        try (Connection conn = dataSource.getConnection();
+             Statement stmt = conn.createStatement();
+             var rs = stmt.executeQuery("SELECT catalog_id, string_col, integer_col FROM test_aspect_mapping_with_cat_id")) {
+            assertTrue(rs.next());
+            assertEquals(catalogId.toString(), rs.getString("catalog_id"));
+            assertEquals("catid1", rs.getString("string_col"));
+            assertEquals(200, rs.getInt("integer_col"));
+            assertFalse(rs.next(), "Should have exactly 1 row");
+        }
+
+        // Verify Pattern 3: Entity ID - data saved with entity_id preserved
+        try (Connection conn = dataSource.getConnection();
+             Statement stmt = conn.createStatement();
+             var rs = stmt.executeQuery("SELECT entity_id, string_col, integer_col FROM test_aspect_mapping_with_entity_id")) {
+            assertTrue(rs.next());
+            assertEquals(entity3Id.toString(), rs.getString("entity_id"));
+            assertEquals("entityid1", rs.getString("string_col"));
+            assertEquals(300, rs.getInt("integer_col"));
+            assertFalse(rs.next(), "Should have exactly 1 row");
+        }
+
+        // Verify Pattern 4: Both IDs - data saved with both IDs
+        try (Connection conn = dataSource.getConnection();
+             Statement stmt = conn.createStatement();
+             var rs = stmt.executeQuery("SELECT catalog_id, entity_id, string_col, integer_col FROM test_aspect_mapping_with_both_ids")) {
+            assertTrue(rs.next());
+            assertEquals(catalogId.toString(), rs.getString("catalog_id"));
+            assertEquals(entity4Id.toString(), rs.getString("entity_id"));
+            assertEquals("bothids1", rs.getString("string_col"));
+            assertEquals(400, rs.getInt("integer_col"));
+            assertFalse(rs.next(), "Should have exactly 1 row");
+        }
+
+        // Load catalog back and verify
+        Catalog loadedCatalog = sqliteDao.loadCatalog(catalogId);
+        assertNotNull(loadedCatalog);
+
+        // Pattern 1: Entity IDs will be different (generated on load)
+        AspectMapHierarchy loadedNoKeyHierarchy = (AspectMapHierarchy) loadedCatalog.hierarchy(noKeyAspectDef.name());
+        assertEquals(1, loadedNoKeyHierarchy.size());
+        Entity loadedNoKeyEntity = loadedNoKeyHierarchy.keySet().iterator().next();
+        Aspect loadedNoKeyAsp = loadedNoKeyHierarchy.get(loadedNoKeyEntity);
+        assertEquals("nokey1", loadedNoKeyAsp.readObj("string_col"));
+        assertEquals(100L, loadedNoKeyAsp.readObj("integer_col"));
+
+        // Pattern 2: Entity IDs will be different (generated on load), but filtered by catalog
+        AspectMapHierarchy loadedCatIdHierarchy = (AspectMapHierarchy) loadedCatalog.hierarchy(catIdAspectDef.name());
+        assertEquals(1, loadedCatIdHierarchy.size());
+        Entity loadedCatIdEntity = loadedCatIdHierarchy.keySet().iterator().next();
+        Aspect loadedCatIdAsp = loadedCatIdHierarchy.get(loadedCatIdEntity);
+        assertEquals("catid1", loadedCatIdAsp.readObj("string_col"));
+        assertEquals(200L, loadedCatIdAsp.readObj("integer_col"));
+
+        // Pattern 3: Entity IDs preserved
+        AspectMapHierarchy loadedEntityIdHierarchy = (AspectMapHierarchy) loadedCatalog.hierarchy(entityIdAspectDef.name());
+        assertEquals(1, loadedEntityIdHierarchy.size());
+        Entity loadedEntity3 = factory.getOrRegisterNewEntity(entity3Id);
+        Aspect loadedEntityIdAsp = loadedEntityIdHierarchy.get(loadedEntity3);
+        assertNotNull(loadedEntityIdAsp);
+        assertEquals("entityid1", loadedEntityIdAsp.readObj("string_col"));
+        assertEquals(300L, loadedEntityIdAsp.readObj("integer_col"));
+
+        // Pattern 4: Entity IDs preserved, catalog-scoped
+        AspectMapHierarchy loadedBothIdsHierarchy = (AspectMapHierarchy) loadedCatalog.hierarchy(bothIdsAspectDef.name());
+        assertEquals(1, loadedBothIdsHierarchy.size());
+        Entity loadedEntity4 = factory.getOrRegisterNewEntity(entity4Id);
+        Aspect loadedBothIdsAsp = loadedBothIdsHierarchy.get(loadedEntity4);
+        assertNotNull(loadedBothIdsAsp);
+        assertEquals("bothids1", loadedBothIdsAsp.readObj("string_col"));
+        assertEquals(400L, loadedBothIdsAsp.readObj("integer_col"));
+    }
+
+    @SuppressWarnings("DataFlowIssue")
+    private String loadResourceFile(String resourcePath) throws IOException, URISyntaxException
+    {
+        Path path = Paths.get(getClass().getResource(resourcePath).toURI());
+        return Files.readString(path);
     }
 }

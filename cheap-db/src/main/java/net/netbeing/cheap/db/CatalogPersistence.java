@@ -93,5 +93,5 @@ public interface CatalogPersistence {
      * @param dataSource the data source to execute the DDL against
      * @throws SQLException if database operation fails
      */
-    void executeDropSchemaDdl(@NotNull javax.sql.DataSource dataSource) throws SQLException;
+    void executeDropSchemaDdl(@NotNull DataSource dataSource) throws SQLException;
 }

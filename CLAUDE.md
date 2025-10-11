@@ -173,6 +173,8 @@ A Property is a "field" of data within an Aspect. Each property:
 # Java code style
 - Put left brackets at the end of the line, except for class and function bodies where they should go on the next line
 - When using Cheap interfaces, prefer not to use methods named "unsafe*", except in unit tests that are specifically testing those unsafe* methods
+- Always import used classes instead of using fully-qualified class names, except where conflicts require it.
+- Never mark methods as deprecated unless explicitly directed to do so.
 
 ## Java unit testing
 - Comprehensive test coverage with JUnit Jupiter

@@ -16,6 +16,7 @@
 
 package net.netbeing.cheap.db;
 
+import net.netbeing.cheap.model.AspectDef;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collections;
@@ -27,39 +28,91 @@ import java.util.Map;
  * <p>
  * This class enables aspects to be stored in and loaded from custom database tables
  * rather than the standard aspect/property_value tables.
+ * </p>
+ *
+ * <h2>Table Structure Patterns</h2>
+ * <p>
+ * The mapping supports four different table structure patterns based on the presence
+ * of catalog_id and entity_id columns:
+ * </p>
+ * <ul>
+ *   <li><b>No IDs (hasCatalogId=false, hasEntityId=false):</b>
+ *       Generic lookup table with no primary key. Table is truncated before each save.
+ *       Entity IDs are generated on load.</li>
+ *   <li><b>Catalog ID only (hasCatalogId=true, hasEntityId=false):</b>
+ *       Catalog-scoped table with no primary key. Rows for the catalog are deleted before save.
+ *       Entity IDs are generated on load.</li>
+ *   <li><b>Entity ID only (hasCatalogId=false, hasEntityId=true):</b>
+ *       Entity-scoped table with PRIMARY KEY (entity_id). Standard behavior with
+ *       INSERT...ON CONFLICT. Entity IDs are preserved.</li>
+ *   <li><b>Both IDs (hasCatalogId=true, hasEntityId=true):</b>
+ *       Catalog+Entity scoped table with PRIMARY KEY (catalog_id, entity_id).
+ *       Entity IDs are preserved, queries filtered by catalog.</li>
+ * </ul>
+ *
+ * <h2>Important Notes</h2>
+ * <ul>
+ *   <li>The primary key is NEVER catalog_id alone</li>
+ *   <li>When hasEntityId=false, entity IDs are generated on each load and not preserved</li>
+ *   <li>This means entity references across hierarchies will not work for tables without entity_id</li>
+ * </ul>
  */
 public class AspectTableMapping
 {
-    private final String aspectDefName;
+    private final AspectDef aspectDef;
     private final String tableName;
     private final Map<String, String> propertyToColumnMap;
+    private final boolean hasCatalogId;
+    private final boolean hasEntityId;
 
     /**
-     * Creates a new AspectTableMapping.
+     * Creates a new AspectTableMapping with default flags (no catalog_id, has entity_id).
+     * This maintains backward compatibility with the original behavior.
      *
-     * @param aspectDefName the name of the AspectDef
+     * @param aspectDef the AspectDef to map
      * @param tableName the name of the database table
      * @param propertyToColumnMap map from property names to column names
      */
     public AspectTableMapping(
-        @NotNull String aspectDefName,
+        @NotNull AspectDef aspectDef,
         @NotNull String tableName,
         @NotNull Map<String, String> propertyToColumnMap)
     {
-        this.aspectDefName = aspectDefName;
-        this.tableName = tableName;
-        this.propertyToColumnMap = new LinkedHashMap<>(propertyToColumnMap);
+        this(aspectDef, tableName, propertyToColumnMap, false, true);
     }
 
     /**
-     * Gets the AspectDef name.
+     * Creates a new AspectTableMapping with explicit control over table structure.
      *
-     * @return the AspectDef name
+     * @param aspectDef the AspectDef to map
+     * @param tableName the name of the database table
+     * @param propertyToColumnMap map from property names to column names
+     * @param hasCatalogId whether the table has a catalog_id column
+     * @param hasEntityId whether the table has an entity_id column
+     */
+    public AspectTableMapping(
+        @NotNull AspectDef aspectDef,
+        @NotNull String tableName,
+        @NotNull Map<String, String> propertyToColumnMap,
+        boolean hasCatalogId,
+        boolean hasEntityId)
+    {
+        this.aspectDef = aspectDef;
+        this.tableName = tableName;
+        this.propertyToColumnMap = new LinkedHashMap<>(propertyToColumnMap);
+        this.hasCatalogId = hasCatalogId;
+        this.hasEntityId = hasEntityId;
+    }
+
+    /**
+     * Gets the AspectDef.
+     *
+     * @return the AspectDef
      */
     @NotNull
-    public String aspectDefName()
+    public AspectDef aspectDef()
     {
-        return aspectDefName;
+        return aspectDef;
     }
 
     /**
@@ -82,5 +135,25 @@ public class AspectTableMapping
     public Map<String, String> propertyToColumnMap()
     {
         return Collections.unmodifiableMap(propertyToColumnMap);
+    }
+
+    /**
+     * Returns whether the table has a catalog_id column.
+     *
+     * @return true if the table has a catalog_id column
+     */
+    public boolean hasCatalogId()
+    {
+        return hasCatalogId;
+    }
+
+    /**
+     * Returns whether the table has an entity_id column.
+     *
+     * @return true if the table has an entity_id column
+     */
+    public boolean hasEntityId()
+    {
+        return hasEntityId;
     }
 }

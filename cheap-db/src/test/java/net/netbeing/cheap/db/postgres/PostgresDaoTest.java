@@ -28,13 +28,21 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 import javax.sql.DataSource;
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.time.ZonedDateTime;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -80,8 +88,8 @@ class PostgresDaoTest
 
     private static void initializeSchema() throws SQLException, IOException, URISyntaxException
     {
-        String mainSchemaPath = "/db/schemas/postgres-cheap.sql";
-        String auditSchemaPath = "/db/schemas/postgres-cheap-audit.sql";
+        String mainSchemaPath = "/db/schemas/postgres/postgres-cheap.sql";
+        String auditSchemaPath = "/db/schemas/postgres/postgres-cheap-audit.sql";
 
         String mainDdl = loadResourceFile(mainSchemaPath);
         String auditDdl = loadResourceFile(auditSchemaPath);
@@ -102,7 +110,7 @@ class PostgresDaoTest
 
     private void truncateAllTables() throws SQLException, IOException, URISyntaxException
     {
-        String truncateSql = loadResourceFile("/db/schemas/postgres-cheap-truncate.sql");
+        String truncateSql = loadResourceFile("/db/schemas/postgres/postgres-cheap-truncate.sql");
 
         try (Connection connection = dataSource.getConnection();
              Statement statement = connection.createStatement()) {
@@ -425,9 +433,7 @@ class PostgresDaoTest
     {
         setUp();
 
-        assertThrows(IllegalArgumentException.class, () -> {
-            postgresDao.saveCatalog(null);
-        });
+        assertThrows(IllegalArgumentException.class, () -> postgresDao.saveCatalog(null));
     }
 
     @Test
@@ -528,112 +534,6 @@ class PostgresDaoTest
     }
 
     @Test
-    void testAspectTableMapping() throws Exception
-    {
-        setUp();
-
-        // Load AspectDef from test_aspect_mapping table (created by Flyway migration)
-        PostgresCatalog pgCatalog = new PostgresCatalog(dataSource);
-        AspectDef aspectDef = pgCatalog.loadTableDef("test_aspect_mapping");
-
-        // Create AspectTableMapping with property-to-column mappings
-        AspectTableMapping mapping = new AspectTableMapping(
-            "test_aspect_mapping",
-            "test_aspect_mapping",
-            java.util.Map.of(
-                "string_col", "string_col",
-                "integer_col", "integer_col",
-                "float_col", "float_col",
-                "date_col", "date_col",
-                "timestamp_col", "timestamp_col",
-                "boolean_col", "boolean_col",
-                "uuid_col", "uuid_col",
-                "blob_col", "blob_col"
-            )
-        );
-
-        // Add mapping to DAO
-        postgresDao.addAspectTableMapping(mapping);
-
-        // Create catalog with AspectMapHierarchy
-        UUID catalogId = UUID.randomUUID();
-        Catalog catalog = factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
-
-        // Create aspect map hierarchy
-        AspectMapHierarchy hierarchy = factory.createAspectMapHierarchy(catalog, aspectDef);
-
-        // Create test entities and aspects
-        UUID entityId1 = UUID.randomUUID();
-        UUID entityId2 = UUID.randomUUID();
-
-        Entity entity1 = factory.createEntity(entityId1);
-        Entity entity2 = factory.createEntity(entityId2);
-
-        Aspect aspect1 = factory.createPropertyMapAspect(entity1, aspectDef);
-        aspect1.put(factory.createProperty(aspectDef.propertyDef("string_col"), "test1"));
-        aspect1.put(factory.createProperty(aspectDef.propertyDef("integer_col"), 42L));
-        aspect1.put(factory.createProperty(aspectDef.propertyDef("float_col"), 3.14));
-        aspect1.put(factory.createProperty(aspectDef.propertyDef("boolean_col"), true));
-        aspect1.put(factory.createProperty(aspectDef.propertyDef("uuid_col"), UUID.fromString("550e8400-e29b-41d4-a716-446655440000")));
-
-        Aspect aspect2 = factory.createPropertyMapAspect(entity2, aspectDef);
-        aspect2.put(factory.createProperty(aspectDef.propertyDef("string_col"), "test2"));
-        aspect2.put(factory.createProperty(aspectDef.propertyDef("integer_col"), 99L));
-        aspect2.put(factory.createProperty(aspectDef.propertyDef("float_col"), 2.71));
-        aspect2.put(factory.createProperty(aspectDef.propertyDef("boolean_col"), false));
-        aspect2.put(factory.createProperty(aspectDef.propertyDef("uuid_col"), UUID.fromString("6ba7b810-9dad-11d1-80b4-00c04fd430c8")));
-
-        hierarchy.put(entity1, aspect1);
-        hierarchy.put(entity2, aspect2);
-
-        // Clear any existing data in the table from migrations
-        try (java.sql.Connection conn = dataSource.getConnection();
-             java.sql.Statement stmt = conn.createStatement()) {
-            stmt.execute("DELETE FROM test_aspect_mapping");
-        }
-
-        // Save catalog (should use mapped table for the hierarchy)
-        postgresDao.saveCatalog(catalog);
-
-        // Verify the data was saved to the mapped table by querying directly
-        try (java.sql.Connection conn = dataSource.getConnection();
-             java.sql.Statement stmt = conn.createStatement();
-             var rs = stmt.executeQuery("SELECT * FROM test_aspect_mapping ORDER BY string_col")) {
-
-            // Should have 2 rows
-            assertTrue(rs.next(), "Should have first row");
-            assertEquals(entityId1, rs.getObject("entity_id", UUID.class));
-            assertEquals("test1", rs.getString("string_col"));
-            assertEquals(42, rs.getInt("integer_col"));
-            assertEquals(3.14, rs.getDouble("float_col"), 0.001);
-            assertEquals(true, rs.getBoolean("boolean_col"));
-            assertEquals(UUID.fromString("550e8400-e29b-41d4-a716-446655440000"), rs.getObject("uuid_col", UUID.class));
-
-            assertTrue(rs.next(), "Should have second row");
-            assertEquals(entityId2, rs.getObject("entity_id", UUID.class));
-            assertEquals("test2", rs.getString("string_col"));
-            assertEquals(99, rs.getInt("integer_col"));
-            assertEquals(2.71, rs.getDouble("float_col"), 0.001);
-            assertEquals(false, rs.getBoolean("boolean_col"));
-            assertEquals(UUID.fromString("6ba7b810-9dad-11d1-80b4-00c04fd430c8"), rs.getObject("uuid_col", UUID.class));
-
-            assertFalse(rs.next(), "Should have exactly 2 rows");
-        }
-
-        // Also verify that the default aspect/property tables were NOT used
-        try (java.sql.Connection conn = dataSource.getConnection();
-             java.sql.PreparedStatement stmt = conn.prepareStatement(
-                 "SELECT COUNT(*) FROM aspect WHERE entity_id IN (?, ?)")) {
-            stmt.setObject(1, entityId1);
-            stmt.setObject(2, entityId2);
-            try (var rs = stmt.executeQuery()) {
-                assertTrue(rs.next());
-                assertEquals(0, rs.getInt(1), "Should not have saved to aspect table when using mapped table");
-            }
-        }
-    }
-
-    @Test
     void testCreateAspectTableWithAllPropertyTypes() throws Exception
     {
         setUp();
@@ -654,7 +554,7 @@ class PostgresDaoTest
         PropertyDef clobProp = factory.createPropertyDef("clob_prop", PropertyType.CLOB, null, false, true, true, true, false, false);
         PropertyDef blobProp = factory.createPropertyDef("blob_prop", PropertyType.BLOB, null, false, true, true, true, false, false);
 
-        java.util.Map<String, PropertyDef> propDefs = new java.util.LinkedHashMap<>();
+        Map<String, PropertyDef> propDefs = new LinkedHashMap<>();
         propDefs.put("int_prop", intProp);
         propDefs.put("float_prop", floatProp);
         propDefs.put("bool_prop", boolProp);
@@ -671,30 +571,8 @@ class PostgresDaoTest
         AspectDef aspectDef = factory.createImmutableAspectDef(aspectDefName, propDefs);
 
         // Create the table using createAspectTable()
-        String tableName = "test_all_types";
-        postgresDao.createAspectTable(aspectDef, tableName);
-
-        // Create and register an AspectTableMapping
-        java.util.Map<String, String> columnMapping = new java.util.LinkedHashMap<>();
-        columnMapping.put("int_prop", "int_prop");
-        columnMapping.put("float_prop", "float_prop");
-        columnMapping.put("bool_prop", "bool_prop");
-        columnMapping.put("string_prop", "string_prop");
-        columnMapping.put("text_prop", "text_prop");
-        columnMapping.put("bigint_prop", "bigint_prop");
-        columnMapping.put("bigdec_prop", "bigdec_prop");
-        columnMapping.put("date_prop", "date_prop");
-        columnMapping.put("uri_prop", "uri_prop");
-        columnMapping.put("uuid_prop", "uuid_prop");
-        columnMapping.put("clob_prop", "clob_prop");
-        columnMapping.put("blob_prop", "blob_prop");
-
-        AspectTableMapping mapping = new AspectTableMapping(
-            aspectDefName,
-            tableName,
-            columnMapping
-        );
-        postgresDao.addAspectTableMapping(mapping);
+        AspectTableMapping mapping = getAspectTableMapping(aspectDef);
+        postgresDao.createTable(mapping);
 
         // Create catalog with AspectMapHierarchy
         UUID catalogId = UUID.randomUUID();
@@ -718,10 +596,10 @@ class PostgresDaoTest
         aspect1.put(factory.createProperty(boolProp, true));
         aspect1.put(factory.createProperty(stringProp, "Hello World"));
         aspect1.put(factory.createProperty(textProp, "This is a long text field with lots of content"));
-        aspect1.put(factory.createProperty(bigIntProp, new java.math.BigInteger("12345678901234567890")));
-        aspect1.put(factory.createProperty(bigDecProp, new java.math.BigDecimal("123.456789012345678901234567890")));
-        aspect1.put(factory.createProperty(dateProp, java.time.ZonedDateTime.parse("2025-01-15T10:30:00Z")));
-        aspect1.put(factory.createProperty(uriProp, new java.net.URI("https://example.com/path")));
+        aspect1.put(factory.createProperty(bigIntProp, new BigInteger("12345678901234567890")));
+        aspect1.put(factory.createProperty(bigDecProp, new BigDecimal("123.456789012345678901234567890")));
+        aspect1.put(factory.createProperty(dateProp, ZonedDateTime.parse("2025-01-15T10:30:00Z")));
+        aspect1.put(factory.createProperty(uriProp, new URI("https://example.com/path")));
         aspect1.put(factory.createProperty(uuidProp, UUID.fromString("550e8400-e29b-41d4-a716-446655440000")));
         aspect1.put(factory.createProperty(clobProp, "CLOB content here"));
         aspect1.put(factory.createProperty(blobProp, new byte[]{1, 2, 3, 4, 5}));
@@ -733,10 +611,10 @@ class PostgresDaoTest
         aspect2.put(factory.createProperty(boolProp, false));
         aspect2.put(factory.createProperty(stringProp, "Goodbye World"));
         aspect2.put(factory.createProperty(textProp, "Another long text field"));
-        aspect2.put(factory.createProperty(bigIntProp, new java.math.BigInteger("98765432109876543210")));
-        aspect2.put(factory.createProperty(bigDecProp, new java.math.BigDecimal("987.654321098765432109876543210")));
-        aspect2.put(factory.createProperty(dateProp, java.time.ZonedDateTime.parse("2025-12-31T23:59:59Z")));
-        aspect2.put(factory.createProperty(uriProp, new java.net.URI("https://example.org/another")));
+        aspect2.put(factory.createProperty(bigIntProp, new BigInteger("98765432109876543210")));
+        aspect2.put(factory.createProperty(bigDecProp, new BigDecimal("987.654321098765432109876543210")));
+        aspect2.put(factory.createProperty(dateProp, ZonedDateTime.parse("2025-12-31T23:59:59Z")));
+        aspect2.put(factory.createProperty(uriProp, new URI("https://example.org/another")));
         aspect2.put(factory.createProperty(uuidProp, UUID.fromString("6ba7b810-9dad-11d1-80b4-00c04fd430c8")));
         aspect2.put(factory.createProperty(clobProp, "Different CLOB content"));
         aspect2.put(factory.createProperty(blobProp, new byte[]{10, 20, 30, 40, 50}));
@@ -764,8 +642,8 @@ class PostgresDaoTest
         assertEquals(true, loadedAspect1.readObj("bool_prop"));
         assertEquals("Hello World", loadedAspect1.readObj("string_prop"));
         assertEquals("This is a long text field with lots of content", loadedAspect1.readObj("text_prop"));
-        assertEquals(new java.math.BigInteger("12345678901234567890"), new java.math.BigInteger(loadedAspect1.readObj("bigint_prop").toString()));
-        assertEquals(new java.math.BigDecimal("123.456789012345678901234567890"), new java.math.BigDecimal(loadedAspect1.readObj("bigdec_prop").toString()));
+        assertEquals(new BigInteger("12345678901234567890"), new BigInteger(loadedAspect1.readObj("bigint_prop").toString()));
+        assertEquals(new BigDecimal("123.456789012345678901234567890"), new BigDecimal(loadedAspect1.readObj("bigdec_prop").toString()));
         assertEquals("https://example.com/path", loadedAspect1.readObj("uri_prop").toString());
         assertEquals(UUID.fromString("550e8400-e29b-41d4-a716-446655440000"), loadedAspect1.readObj("uuid_prop"));
         assertEquals("CLOB content here", loadedAspect1.readObj("clob_prop"));
@@ -780,12 +658,39 @@ class PostgresDaoTest
         assertEquals(false, loadedAspect2.readObj("bool_prop"));
         assertEquals("Goodbye World", loadedAspect2.readObj("string_prop"));
         assertEquals("Another long text field", loadedAspect2.readObj("text_prop"));
-        assertEquals(new java.math.BigInteger("98765432109876543210"), new java.math.BigInteger(loadedAspect2.readObj("bigint_prop").toString()));
-        assertEquals(new java.math.BigDecimal("987.654321098765432109876543210"), new java.math.BigDecimal(loadedAspect2.readObj("bigdec_prop").toString()));
+        assertEquals(new BigInteger("98765432109876543210"), new BigInteger(loadedAspect2.readObj("bigint_prop").toString()));
+        assertEquals(new BigDecimal("987.654321098765432109876543210"), new BigDecimal(loadedAspect2.readObj("bigdec_prop").toString()));
         assertEquals("https://example.org/another", loadedAspect2.readObj("uri_prop").toString());
         assertEquals(UUID.fromString("6ba7b810-9dad-11d1-80b4-00c04fd430c8"), loadedAspect2.readObj("uuid_prop"));
         assertEquals("Different CLOB content", loadedAspect2.readObj("clob_prop"));
         assertArrayEquals(new byte[]{10, 20, 30, 40, 50}, (byte[]) loadedAspect2.readObj("blob_prop"));
+    }
+
+    private static AspectTableMapping getAspectTableMapping(AspectDef aspectDef)
+    {
+        String tableName = "test_all_types";
+
+        // Create and register an AspectTableMapping
+        Map<String, String> columnMapping = new LinkedHashMap<>();
+        columnMapping.put("int_prop", "int_prop");
+        columnMapping.put("float_prop", "float_prop");
+        columnMapping.put("bool_prop", "bool_prop");
+        columnMapping.put("string_prop", "string_prop");
+        columnMapping.put("text_prop", "text_prop");
+        columnMapping.put("bigint_prop", "bigint_prop");
+        columnMapping.put("bigdec_prop", "bigdec_prop");
+        columnMapping.put("date_prop", "date_prop");
+        columnMapping.put("uri_prop", "uri_prop");
+        columnMapping.put("uuid_prop", "uuid_prop");
+        columnMapping.put("clob_prop", "clob_prop");
+        columnMapping.put("blob_prop", "blob_prop");
+
+        AspectTableMapping mapping = new AspectTableMapping(
+            aspectDef,
+            tableName,
+            columnMapping
+        );
+        return mapping;
     }
 
     @Test
@@ -797,7 +702,7 @@ class PostgresDaoTest
         PropertyDef tagsProp = factory.createPropertyDef("tags", PropertyType.String,
             true, true, true, true, true);
 
-        java.util.Map<String, PropertyDef> propDefs = java.util.Map.of("tags", tagsProp);
+        Map<String, PropertyDef> propDefs = Map.of("tags", tagsProp);
         AspectDef productDef = factory.createImmutableAspectDef("product", propDefs);
 
         // Create catalog with AspectMapHierarchy
@@ -811,7 +716,7 @@ class PostgresDaoTest
         Entity entity = factory.createEntity(entityId);
         Aspect aspect = factory.createPropertyMapAspect(entity, productDef);
 
-        java.util.List<String> tags = ImmutableList.of("electronics", "gadget", "popular");
+        List<String> tags = ImmutableList.of("electronics", "gadget", "popular");
         aspect.put(factory.createProperty(tagsProp, tags));
 
         hierarchy.put(entity, aspect);
@@ -820,8 +725,8 @@ class PostgresDaoTest
         postgresDao.saveCatalog(catalog);
 
         // Verify database rows - should have 3 rows for the multivalued property
-        try (java.sql.Connection conn = dataSource.getConnection();
-             java.sql.PreparedStatement stmt = conn.prepareStatement(
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(
                  "SELECT value_text, value_index FROM property_value WHERE entity_id = ? AND property_name = ? ORDER BY value_index")) {
             stmt.setObject(1, entityId);
             stmt.setString(2, "tags");
@@ -850,10 +755,10 @@ class PostgresDaoTest
 
         assertNotNull(loadedAspect);
         Object loadedValue = loadedAspect.readObj("tags");
-        assertInstanceOf(java.util.List.class, loadedValue);
+        assertInstanceOf(List.class, loadedValue);
 
         @SuppressWarnings("unchecked")
-        java.util.List<String> loadedTags = (java.util.List<String>) loadedValue;
+        List<String> loadedTags = (List<String>) loadedValue;
         assertEquals(3, loadedTags.size());
         assertEquals("electronics", loadedTags.get(0));
         assertEquals("gadget", loadedTags.get(1));
@@ -869,7 +774,7 @@ class PostgresDaoTest
         PropertyDef scoresProp = factory.createPropertyDef("scores", PropertyType.Integer,
             true, true, true, true, true);
 
-        java.util.Map<String, PropertyDef> propDefs = java.util.Map.of("scores", scoresProp);
+        Map<String, PropertyDef> propDefs = Map.of("scores", scoresProp);
         AspectDef testDef = factory.createImmutableAspectDef("test_results", propDefs);
 
         // Create catalog
@@ -883,7 +788,7 @@ class PostgresDaoTest
         Entity entity = factory.createEntity(entityId);
         Aspect aspect = factory.createPropertyMapAspect(entity, testDef);
 
-        java.util.List<Long> scores = ImmutableList.of(100L, 95L, 87L, 92L);
+        List<Long> scores = ImmutableList.of(100L, 95L, 87L, 92L);
         aspect.put(factory.createProperty(scoresProp, scores));
 
         hierarchy.put(entity, aspect);
@@ -898,7 +803,7 @@ class PostgresDaoTest
         Aspect loadedAspect = loadedHierarchy.get(loadedEntity);
 
         @SuppressWarnings("unchecked")
-        java.util.List<Long> loadedScores = (java.util.List<Long>) loadedAspect.readObj("scores");
+        List<Long> loadedScores = (List<Long>) loadedAspect.readObj("scores");
         assertEquals(4, loadedScores.size());
         assertEquals(100L, loadedScores.get(0));
         assertEquals(95L, loadedScores.get(1));
@@ -915,7 +820,7 @@ class PostgresDaoTest
         PropertyDef tagsProp = factory.createPropertyDef("tags", PropertyType.String,
             true, true, true, true, true);
 
-        java.util.Map<String, PropertyDef> propDefs = java.util.Map.of("tags", tagsProp);
+        Map<String, PropertyDef> propDefs = Map.of("tags", tagsProp);
         AspectDef productDef = factory.createImmutableAspectDef("product", propDefs);
 
         // Create catalog
@@ -929,7 +834,7 @@ class PostgresDaoTest
         Entity entity = factory.createEntity(entityId);
         Aspect aspect = factory.createPropertyMapAspect(entity, productDef);
 
-        java.util.List<String> emptyTags = ImmutableList.of();
+        List<String> emptyTags = ImmutableList.of();
         aspect.put(factory.createProperty(tagsProp, emptyTags));
 
         hierarchy.put(entity, aspect);
@@ -938,8 +843,8 @@ class PostgresDaoTest
         postgresDao.saveCatalog(catalog);
 
         // Verify no rows in database for empty list
-        try (java.sql.Connection conn = dataSource.getConnection();
-             java.sql.PreparedStatement stmt = conn.prepareStatement(
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(
                  "SELECT COUNT(*) FROM property_value WHERE entity_id = ? AND property_name = ?")) {
             stmt.setObject(1, entityId);
             stmt.setString(2, "tags");
@@ -956,10 +861,10 @@ class PostgresDaoTest
         Aspect loadedAspect = loadedHierarchy.get(loadedEntity);
 
         Object loadedValue = loadedAspect.readObj("tags");
-        assertInstanceOf(java.util.List.class, loadedValue);
+        assertInstanceOf(List.class, loadedValue);
 
         @SuppressWarnings("unchecked")
-        java.util.List<String> loadedTags = (java.util.List<String>) loadedValue;
+        List<String> loadedTags = (List<String>) loadedValue;
         assertTrue(loadedTags.isEmpty(), "Should load as empty list");
     }
 
@@ -972,7 +877,7 @@ class PostgresDaoTest
         PropertyDef tagsProp = factory.createPropertyDef("tags", PropertyType.String,
             true, true, true, true, true);
 
-        java.util.Map<String, PropertyDef> propDefs = java.util.Map.of("tags", tagsProp);
+        Map<String, PropertyDef> propDefs = Map.of("tags", tagsProp);
         AspectDef productDef = factory.createImmutableAspectDef("product", propDefs);
 
         // Create catalog
@@ -994,8 +899,8 @@ class PostgresDaoTest
         postgresDao.saveCatalog(catalog);
 
         // Verify no rows in database (null multivalued is treated same as empty list)
-        try (java.sql.Connection conn = dataSource.getConnection();
-             java.sql.PreparedStatement stmt = conn.prepareStatement(
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(
                  "SELECT COUNT(*) FROM property_value WHERE entity_id = ? AND property_name = ?")) {
             stmt.setObject(1, entityId);
             stmt.setString(2, "tags");
@@ -1013,9 +918,9 @@ class PostgresDaoTest
         // With the simplified schema, null and empty list are indistinguishable for multivalued properties
         // Both are represented by no rows, and both load as empty list
         Object loadedValue = loadedAspect.readObj("tags");
-        assertInstanceOf(java.util.List.class, loadedValue);
+        assertInstanceOf(List.class, loadedValue);
         @SuppressWarnings("unchecked")
-        java.util.List<String> loadedTags = (java.util.List<String>) loadedValue;
+        List<String> loadedTags = (List<String>) loadedValue;
         assertTrue(loadedTags.isEmpty(), "Null multivalued property should load as empty list");
     }
 
@@ -1032,7 +937,7 @@ class PostgresDaoTest
         PropertyDef pricesProp = factory.createPropertyDef("prices", PropertyType.Float,
             true, true, true, true, true);
 
-        java.util.Map<String, PropertyDef> propDefs = new java.util.LinkedHashMap<>();
+        Map<String, PropertyDef> propDefs = new LinkedHashMap<>();
         propDefs.put("title", titleProp);
         propDefs.put("tags", tagsProp);
         propDefs.put("prices", pricesProp);
@@ -1060,8 +965,8 @@ class PostgresDaoTest
         postgresDao.saveCatalog(catalog);
 
         // Verify database rows
-        try (java.sql.Connection conn = dataSource.getConnection();
-             java.sql.PreparedStatement stmt = conn.prepareStatement(
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(
                  "SELECT property_name, COUNT(*) as row_count FROM property_value WHERE entity_id = ? GROUP BY property_name ORDER BY property_name")) {
             stmt.setObject(1, entityId);
             try (var rs = stmt.executeQuery()) {
@@ -1091,14 +996,14 @@ class PostgresDaoTest
 
         // Verify multivalued String property
         @SuppressWarnings("unchecked")
-        java.util.List<String> loadedTags = (java.util.List<String>) loadedAspect.readObj("tags");
+        List<String> loadedTags = (List<String>) loadedAspect.readObj("tags");
         assertEquals(2, loadedTags.size());
         assertEquals("electronics", loadedTags.get(0));
         assertEquals("gadget", loadedTags.get(1));
 
         // Verify multivalued Float property
         @SuppressWarnings("unchecked")
-        java.util.List<Double> loadedPrices = (java.util.List<Double>) loadedAspect.readObj("prices");
+        List<Double> loadedPrices = (List<Double>) loadedAspect.readObj("prices");
         assertEquals(3, loadedPrices.size());
         assertEquals(199.99, loadedPrices.get(0), 0.01);
         assertEquals(249.99, loadedPrices.get(1), 0.01);
@@ -1116,7 +1021,7 @@ class PostgresDaoTest
         PropertyDef idsProp = factory.createPropertyDef("ids", PropertyType.UUID,
             true, true, true, true, true);
 
-        java.util.Map<String, PropertyDef> propDefs = new java.util.LinkedHashMap<>();
+        Map<String, PropertyDef> propDefs = new LinkedHashMap<>();
         propDefs.put("flags", flagsProp);
         propDefs.put("ids", idsProp);
 
@@ -1153,7 +1058,7 @@ class PostgresDaoTest
 
         // Verify Boolean list
         @SuppressWarnings("unchecked")
-        java.util.List<Boolean> loadedFlags = (java.util.List<Boolean>) loadedAspect.readObj("flags");
+        List<Boolean> loadedFlags = (List<Boolean>) loadedAspect.readObj("flags");
         assertEquals(4, loadedFlags.size());
         assertTrue(loadedFlags.get(0));
         assertFalse(loadedFlags.get(1));
@@ -1162,7 +1067,7 @@ class PostgresDaoTest
 
         // Verify UUID list
         @SuppressWarnings("unchecked")
-        java.util.List<UUID> loadedIds = (java.util.List<UUID>) loadedAspect.readObj("ids");
+        List<UUID> loadedIds = (List<UUID>) loadedAspect.readObj("ids");
         assertEquals(3, loadedIds.size());
         assertEquals(id1, loadedIds.get(0));
         assertEquals(id2, loadedIds.get(1));
@@ -1178,7 +1083,7 @@ class PostgresDaoTest
         PropertyDef tagsProp = factory.createPropertyDef("tags", PropertyType.String,
             true, true, true, true, true);
 
-        java.util.Map<String, PropertyDef> propDefs = java.util.Map.of("tags", tagsProp);
+        Map<String, PropertyDef> propDefs = Map.of("tags", tagsProp);
         AspectDef productDef = factory.createImmutableAspectDef("product", propDefs);
 
         // Create catalog
@@ -1208,8 +1113,8 @@ class PostgresDaoTest
         postgresDao.saveCatalog(catalog);
 
         // Verify database has 5 rows (old rows should be deleted)
-        try (java.sql.Connection conn = dataSource.getConnection();
-             java.sql.PreparedStatement stmt = conn.prepareStatement(
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(
                  "SELECT COUNT(*) FROM property_value WHERE entity_id = ? AND property_name = ?")) {
             stmt.setObject(1, entityId);
             stmt.setString(2, "tags");
@@ -1226,7 +1131,7 @@ class PostgresDaoTest
         Aspect loadedAspect = loadedHierarchy.get(loadedEntity);
 
         @SuppressWarnings("unchecked")
-        java.util.List<String> loadedTags = (java.util.List<String>) loadedAspect.readObj("tags");
+        List<String> loadedTags = (List<String>) loadedAspect.readObj("tags");
         assertEquals(5, loadedTags.size());
         assertEquals("new1", loadedTags.get(0));
         assertEquals("new2", loadedTags.get(1));
@@ -1234,4 +1139,181 @@ class PostgresDaoTest
         assertEquals("new4", loadedTags.get(3));
         assertEquals("new5", loadedTags.get(4));
     }
+
+    @Test
+    void testAspectTableMappingAllFourPatterns() throws Exception
+    {
+        setUp();
+
+        // Load AspectDefs from test tables created by Flyway V3 migration
+        PostgresCatalog pgCatalog = new PostgresCatalog(dataSource);
+        AspectDef noKeyAspectDef = pgCatalog.loadTableDef("test_aspect_mapping_no_key");
+        AspectDef catIdAspectDef = pgCatalog.loadTableDef("test_aspect_mapping_with_cat_id");
+        AspectDef entityIdAspectDef = pgCatalog.loadTableDef("test_aspect_mapping_with_entity_id");
+        AspectDef bothIdsAspectDef = pgCatalog.loadTableDef("test_aspect_mapping_with_both_ids");
+
+        // Create column mappings
+        Map<String, String> columnMapping = Map.of(
+            "string_col", "string_col",
+            "integer_col", "integer_col"
+        );
+
+        // Pattern 1: No IDs (no primary key, entity IDs generated on load)
+        AspectTableMapping noKeyMapping = new AspectTableMapping(
+            noKeyAspectDef, "test_aspect_mapping_no_key", columnMapping, false, false);
+
+        // Pattern 2: Catalog ID only (no primary key, catalog-scoped)
+        AspectTableMapping catIdMapping = new AspectTableMapping(
+            catIdAspectDef, "test_aspect_mapping_with_cat_id", columnMapping, true, false);
+
+        // Pattern 3: Entity ID only (PRIMARY KEY (entity_id))
+        AspectTableMapping entityIdMapping = new AspectTableMapping(
+            entityIdAspectDef, "test_aspect_mapping_with_entity_id", columnMapping, false, true);
+
+        // Pattern 4: Both IDs (PRIMARY KEY (catalog_id, entity_id))
+        AspectTableMapping bothIdsMapping = new AspectTableMapping(
+            bothIdsAspectDef, "test_aspect_mapping_with_both_ids", columnMapping, true, true);
+
+        // Register all mappings
+        postgresDao.addAspectTableMapping(noKeyMapping);
+        postgresDao.addAspectTableMapping(catIdMapping);
+        postgresDao.addAspectTableMapping(entityIdMapping);
+        postgresDao.addAspectTableMapping(bothIdsMapping);
+
+        // Create catalog
+        UUID catalogId = UUID.randomUUID();
+        Catalog catalog = factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
+
+        // Create hierarchies for each pattern
+        AspectMapHierarchy noKeyHierarchy = factory.createAspectMapHierarchy(catalog, noKeyAspectDef);
+        AspectMapHierarchy catIdHierarchy = factory.createAspectMapHierarchy(catalog, catIdAspectDef);
+        AspectMapHierarchy entityIdHierarchy = factory.createAspectMapHierarchy(catalog, entityIdAspectDef);
+        AspectMapHierarchy bothIdsHierarchy = factory.createAspectMapHierarchy(catalog, bothIdsAspectDef);
+
+        // Add test data to each hierarchy
+        // Pattern 1: No IDs - entities will be generated
+        Entity noKey1 = factory.createEntity();
+        Aspect noKeyAsp1 = factory.createPropertyMapAspect(noKey1, noKeyAspectDef);
+        noKeyAsp1.put(factory.createProperty(noKeyAspectDef.propertyDef("string_col"), "nokey1"));
+        noKeyAsp1.put(factory.createProperty(noKeyAspectDef.propertyDef("integer_col"), 100L));
+        noKeyHierarchy.put(noKey1, noKeyAsp1);
+
+        // Pattern 2: Catalog ID only - entities will be generated
+        Entity catId1 = factory.createEntity();
+        Aspect catIdAsp1 = factory.createPropertyMapAspect(catId1, catIdAspectDef);
+        catIdAsp1.put(factory.createProperty(catIdAspectDef.propertyDef("string_col"), "catid1"));
+        catIdAsp1.put(factory.createProperty(catIdAspectDef.propertyDef("integer_col"), 200L));
+        catIdHierarchy.put(catId1, catIdAsp1);
+
+        // Pattern 3: Entity ID only - entity IDs preserved
+        UUID entity3Id = UUID.randomUUID();
+        Entity entityId1 = factory.createEntity(entity3Id);
+        Aspect entityIdAsp1 = factory.createPropertyMapAspect(entityId1, entityIdAspectDef);
+        entityIdAsp1.put(factory.createProperty(entityIdAspectDef.propertyDef("string_col"), "entityid1"));
+        entityIdAsp1.put(factory.createProperty(entityIdAspectDef.propertyDef("integer_col"), 300L));
+        entityIdHierarchy.put(entityId1, entityIdAsp1);
+
+        // Pattern 4: Both IDs - entity IDs preserved, catalog-scoped
+        UUID entity4Id = UUID.randomUUID();
+        Entity bothIds1 = factory.createEntity(entity4Id);
+        Aspect bothIdsAsp1 = factory.createPropertyMapAspect(bothIds1, bothIdsAspectDef);
+        bothIdsAsp1.put(factory.createProperty(bothIdsAspectDef.propertyDef("string_col"), "bothids1"));
+        bothIdsAsp1.put(factory.createProperty(bothIdsAspectDef.propertyDef("integer_col"), 400L));
+        bothIdsHierarchy.put(bothIds1, bothIdsAsp1);
+
+        // Clear existing test data from V3 migration
+        try (Connection conn = dataSource.getConnection();
+             Statement stmt = conn.createStatement()) {
+            stmt.execute("DELETE FROM test_aspect_mapping_no_key");
+            stmt.execute("DELETE FROM test_aspect_mapping_with_cat_id");
+            stmt.execute("DELETE FROM test_aspect_mapping_with_entity_id");
+            stmt.execute("DELETE FROM test_aspect_mapping_with_both_ids");
+        }
+
+        // Save catalog
+        postgresDao.saveCatalog(catalog);
+
+        // Verify Pattern 1: No IDs - data saved, no ID columns
+        try (Connection conn = dataSource.getConnection();
+             Statement stmt = conn.createStatement();
+             var rs = stmt.executeQuery("SELECT string_col, integer_col FROM test_aspect_mapping_no_key")) {
+            assertTrue(rs.next());
+            assertEquals("nokey1", rs.getString("string_col"));
+            assertEquals(100, rs.getInt("integer_col"));
+            assertFalse(rs.next(), "Should have exactly 1 row");
+        }
+
+        // Verify Pattern 2: Catalog ID - data saved with catalog_id
+        try (Connection conn = dataSource.getConnection();
+             Statement stmt = conn.createStatement();
+             var rs = stmt.executeQuery("SELECT catalog_id, string_col, integer_col FROM test_aspect_mapping_with_cat_id")) {
+            assertTrue(rs.next());
+            assertEquals(catalogId, rs.getObject("catalog_id", UUID.class));
+            assertEquals("catid1", rs.getString("string_col"));
+            assertEquals(200, rs.getInt("integer_col"));
+            assertFalse(rs.next(), "Should have exactly 1 row");
+        }
+
+        // Verify Pattern 3: Entity ID - data saved with entity_id preserved
+        try (Connection conn = dataSource.getConnection();
+             Statement stmt = conn.createStatement();
+             var rs = stmt.executeQuery("SELECT entity_id, string_col, integer_col FROM test_aspect_mapping_with_entity_id")) {
+            assertTrue(rs.next());
+            assertEquals(entity3Id, rs.getObject("entity_id", UUID.class));
+            assertEquals("entityid1", rs.getString("string_col"));
+            assertEquals(300, rs.getInt("integer_col"));
+            assertFalse(rs.next(), "Should have exactly 1 row");
+        }
+
+        // Verify Pattern 4: Both IDs - data saved with both IDs
+        try (Connection conn = dataSource.getConnection();
+             Statement stmt = conn.createStatement();
+             var rs = stmt.executeQuery("SELECT catalog_id, entity_id, string_col, integer_col FROM test_aspect_mapping_with_both_ids")) {
+            assertTrue(rs.next());
+            assertEquals(catalogId, rs.getObject("catalog_id", UUID.class));
+            assertEquals(entity4Id, rs.getObject("entity_id", UUID.class));
+            assertEquals("bothids1", rs.getString("string_col"));
+            assertEquals(400, rs.getInt("integer_col"));
+            assertFalse(rs.next(), "Should have exactly 1 row");
+        }
+
+        // Load catalog back and verify
+        Catalog loadedCatalog = postgresDao.loadCatalog(catalogId);
+        assertNotNull(loadedCatalog);
+
+        // Pattern 1: Entity IDs will be different (generated on load)
+        AspectMapHierarchy loadedNoKeyHierarchy = (AspectMapHierarchy) loadedCatalog.hierarchy(noKeyAspectDef.name());
+        assertEquals(1, loadedNoKeyHierarchy.size());
+        Entity loadedNoKeyEntity = loadedNoKeyHierarchy.keySet().iterator().next();
+        Aspect loadedNoKeyAsp = loadedNoKeyHierarchy.get(loadedNoKeyEntity);
+        assertEquals("nokey1", loadedNoKeyAsp.readObj("string_col"));
+        assertEquals(100L, loadedNoKeyAsp.readObj("integer_col"));
+
+        // Pattern 2: Entity IDs will be different (generated on load), but filtered by catalog
+        AspectMapHierarchy loadedCatIdHierarchy = (AspectMapHierarchy) loadedCatalog.hierarchy(catIdAspectDef.name());
+        assertEquals(1, loadedCatIdHierarchy.size());
+        Entity loadedCatIdEntity = loadedCatIdHierarchy.keySet().iterator().next();
+        Aspect loadedCatIdAsp = loadedCatIdHierarchy.get(loadedCatIdEntity);
+        assertEquals("catid1", loadedCatIdAsp.readObj("string_col"));
+        assertEquals(200L, loadedCatIdAsp.readObj("integer_col"));
+
+        // Pattern 3: Entity IDs preserved
+        AspectMapHierarchy loadedEntityIdHierarchy = (AspectMapHierarchy) loadedCatalog.hierarchy(entityIdAspectDef.name());
+        assertEquals(1, loadedEntityIdHierarchy.size());
+        Entity loadedEntity3 = factory.getOrRegisterNewEntity(entity3Id);
+        Aspect loadedEntityIdAsp = loadedEntityIdHierarchy.get(loadedEntity3);
+        assertNotNull(loadedEntityIdAsp);
+        assertEquals("entityid1", loadedEntityIdAsp.readObj("string_col"));
+        assertEquals(300L, loadedEntityIdAsp.readObj("integer_col"));
+
+        // Pattern 4: Entity IDs preserved, catalog-scoped
+        AspectMapHierarchy loadedBothIdsHierarchy = (AspectMapHierarchy) loadedCatalog.hierarchy(bothIdsAspectDef.name());
+        assertEquals(1, loadedBothIdsHierarchy.size());
+        Entity loadedEntity4 = factory.getOrRegisterNewEntity(entity4Id);
+        Aspect loadedBothIdsAsp = loadedBothIdsHierarchy.get(loadedEntity4);
+        assertNotNull(loadedBothIdsAsp);
+        assertEquals("bothids1", loadedBothIdsAsp.readObj("string_col"));
+        assertEquals(400L, loadedBothIdsAsp.readObj("integer_col"));
+    }
 }
+

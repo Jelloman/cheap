@@ -5,6 +5,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.Collection;
+import java.util.Map;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -196,7 +197,7 @@ class EntityDirectoryHierarchyImplTest
         entityDirectory.put("entity1", entity1);
         entityDirectory.put("entity2", entity2);
         
-        Set<java.util.Map.Entry<String, Entity>> entries = entityDirectory.entrySet();
+        Set<Map.Entry<String, Entity>> entries = entityDirectory.entrySet();
         
         assertEquals(2, entries.size());
         assertTrue(entries.stream().anyMatch(e -> e.getKey().equals("entity1") && e.getValue().equals(entity1)));
