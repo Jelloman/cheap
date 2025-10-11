@@ -75,8 +75,8 @@ class PostgresPostgresDaoJsonRoundtripTest
 
     private static void initializeSchema() throws SQLException, IOException, URISyntaxException
     {
-        String mainSchemaPath = "/db/schemas/postgres-cheap.sql";
-        String auditSchemaPath = "/db/schemas/postgres-cheap-audit.sql";
+        String mainSchemaPath = "/db/schemas/postgres/postgres-cheap.sql";
+        String auditSchemaPath = "/db/schemas/postgres/postgres-cheap-audit.sql";
 
         String mainDdl = loadResourceFile(mainSchemaPath);
         String auditDdl = loadResourceFile(auditSchemaPath);
@@ -97,7 +97,7 @@ class PostgresPostgresDaoJsonRoundtripTest
 
     private void truncateAllTables() throws SQLException, IOException, URISyntaxException
     {
-        String truncateSql = loadResourceFile("/db/schemas/postgres-cheap-truncate.sql");
+        String truncateSql = loadResourceFile("/db/schemas/postgres/postgres-cheap-truncate.sql");
 
         try (Connection connection = dataSource.getConnection();
              Statement statement = connection.createStatement()) {

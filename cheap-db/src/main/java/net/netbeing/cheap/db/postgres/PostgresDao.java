@@ -1612,7 +1612,7 @@ public class PostgresDao implements CatalogPersistence
      */
     public void executeMainSchemaDdl(@NotNull DataSource dataSource) throws SQLException
     {
-        String ddlContent = loadDdlResource("/db/schemas/postgres-cheap.sql");
+        String ddlContent = loadDdlResource("/db/schemas/postgres/postgres-cheap.sql");
         executeDdl(dataSource, ddlContent);
     }
 
@@ -1625,7 +1625,7 @@ public class PostgresDao implements CatalogPersistence
      */
     public void executeAuditSchemaDdl(@NotNull DataSource dataSource) throws SQLException
     {
-        String ddlContent = loadDdlResource("/db/schemas/postgres-cheap-audit.sql");
+        String ddlContent = loadDdlResource("/db/schemas/postgres/postgres-cheap-audit.sql");
         executeDdl(dataSource, ddlContent);
     }
 
@@ -1638,7 +1638,7 @@ public class PostgresDao implements CatalogPersistence
      */
     public void executeDropSchemaDdl(@NotNull DataSource dataSource) throws SQLException
     {
-        String ddlContent = loadDdlResource("/db/schemas/postgres-cheap-drop.sql");
+        String ddlContent = loadDdlResource("/db/schemas/postgres/postgres-cheap-drop.sql");
         executeDdl(dataSource, ddlContent);
     }
 
@@ -1652,7 +1652,7 @@ public class PostgresDao implements CatalogPersistence
      */
     public void executeTruncateSchemaDdl(@NotNull DataSource dataSource) throws SQLException
     {
-        String ddlContent = loadDdlResource("/db/schemas/postgres-cheap-truncate.sql");
+        String ddlContent = loadDdlResource("/db/schemas/postgres/postgres-cheap-truncate.sql");
         executeDdl(dataSource, ddlContent);
     }
 }

@@ -1732,7 +1732,7 @@ public class SqliteDao implements CatalogPersistence
      */
     public void executeMainSchemaDdl(@NotNull DataSource dataSource) throws SQLException
     {
-        String ddlContent = loadDdlResource("/db/schemas/sqlite-cheap.sql");
+        String ddlContent = loadDdlResource("/db/schemas/sqlite/sqlite-cheap.sql");
         executeDdl(dataSource, ddlContent);
     }
 
@@ -1745,7 +1745,7 @@ public class SqliteDao implements CatalogPersistence
      */
     public void executeAuditSchemaDdl(@NotNull DataSource dataSource) throws SQLException
     {
-        String ddlContent = loadDdlResource("/db/schemas/sqlite-cheap-audit.sql");
+        String ddlContent = loadDdlResource("/db/schemas/sqlite/sqlite-cheap-audit.sql");
         executeDdl(dataSource, ddlContent);
     }
 
@@ -1758,7 +1758,7 @@ public class SqliteDao implements CatalogPersistence
      */
     public void executeDropSchemaDdl(@NotNull DataSource dataSource) throws SQLException
     {
-        String ddlContent = loadDdlResource("/db/schemas/sqlite-cheap-drop.sql");
+        String ddlContent = loadDdlResource("/db/schemas/sqlite/sqlite-cheap-drop.sql");
         executeDdl(dataSource, ddlContent);
     }
 
@@ -1772,7 +1772,7 @@ public class SqliteDao implements CatalogPersistence
      */
     public void executeTruncateSchemaDdl(@NotNull DataSource dataSource) throws SQLException
     {
-        String ddlContent = loadDdlResource("/db/schemas/sqlite-cheap-truncate.sql");
+        String ddlContent = loadDdlResource("/db/schemas/sqlite/sqlite-cheap-truncate.sql");
         executeDdl(dataSource, ddlContent);
     }
 
@@ -1790,7 +1790,7 @@ public class SqliteDao implements CatalogPersistence
      */
     public void executeMainSchemaDdl(@NotNull Connection connection) throws SQLException
     {
-        String ddlContent = loadDdlResource("/db/schemas/sqlite-cheap.sql");
+        String ddlContent = loadDdlResource("/db/schemas/sqlite/sqlite-cheap.sql");
         executeDdl(connection, ddlContent);
     }
 
@@ -1806,7 +1806,7 @@ public class SqliteDao implements CatalogPersistence
      */
     public void executeAuditSchemaDdl(@NotNull Connection connection) throws SQLException
     {
-        String ddlContent = loadDdlResource("/db/schemas/sqlite-cheap-audit.sql");
+        String ddlContent = loadDdlResource("/db/schemas/sqlite/sqlite-cheap-audit.sql");
         executeDdl(connection, ddlContent);
     }
 
@@ -1822,7 +1822,7 @@ public class SqliteDao implements CatalogPersistence
      */
     public void executeDropSchemaDdl(@NotNull Connection connection) throws SQLException
     {
-        String ddlContent = loadDdlResource("/db/schemas/sqlite-cheap-drop.sql");
+        String ddlContent = loadDdlResource("/db/schemas/sqlite/sqlite-cheap-drop.sql");
         executeDdl(connection, ddlContent);
     }
 
@@ -1839,7 +1839,7 @@ public class SqliteDao implements CatalogPersistence
      */
     public void executeTruncateSchemaDdl(@NotNull Connection connection) throws SQLException
     {
-        String ddlContent = loadDdlResource("/db/schemas/sqlite-cheap-truncate.sql");
+        String ddlContent = loadDdlResource("/db/schemas/sqlite/sqlite-cheap-truncate.sql");
         executeDdl(connection, ddlContent);
     }
 }

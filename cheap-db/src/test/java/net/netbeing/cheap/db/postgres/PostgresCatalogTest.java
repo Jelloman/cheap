@@ -61,8 +61,8 @@ class PostgresCatalogTest
             return;
         }
 
-        String mainSchemaPath = "/db/schemas/postgres-cheap.sql";
-        String auditSchemaPath = "/db/schemas/postgres-cheap-audit.sql";
+        String mainSchemaPath = "/db/schemas/postgres/postgres-cheap.sql";
+        String auditSchemaPath = "/db/schemas/postgres/postgres-cheap-audit.sql";
 
         String mainDdl = loadResourceFile(mainSchemaPath);
         String auditDdl = loadResourceFile(auditSchemaPath);
