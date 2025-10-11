@@ -16,6 +16,7 @@
 
 package net.netbeing.cheap.db.sqlite;
 
+import net.netbeing.cheap.db.CheapTestFactory;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -34,6 +35,7 @@ class SqliteCheapSchemaTest {
 
     private DataSource dataSource;
     private Connection connection;
+    private CheapTestFactory testFactory;
 
     @BeforeEach
     void setUp() throws SQLException {
@@ -43,6 +45,7 @@ class SqliteCheapSchemaTest {
         this.dataSource = ds;
         // Keep connection open to prevent in-memory database deletion
         this.connection = ds.getConnection();
+        this.testFactory = new CheapTestFactory();
     }
 
     @AfterEach
@@ -145,71 +148,11 @@ class SqliteCheapSchemaTest {
 
         Connection conn = connection;
             // Populate all tables with at least 1 row
+            UUID catalogId = UUID.randomUUID();
+            testFactory.populateAllHierarchyTypes(conn, catalogId);
 
-            // Insert into entity
-            String entityId = UUID.randomUUID().toString();
-            executeUpdate(conn, "INSERT INTO entity (entity_id) VALUES (?)", entityId);
-
-            // Insert into aspect_def
-            String aspectDefId = UUID.randomUUID().toString();
-            executeUpdate(conn, "INSERT INTO aspect_def (aspect_def_id, name, hash_version, is_readable, is_writable, can_add_properties, can_remove_properties) VALUES (?, ?, ?, ?, ?, ?, ?)",
-                aspectDefId, "test_aspect", "hash123", 1, 1, 0, 0);
-
-            // Insert into property_def
-            executeUpdate(conn, "INSERT INTO property_def (aspect_def_id, name, property_type, default_value, has_default_value, is_readable, is_writable, is_nullable, is_removable, is_multivalued) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                aspectDefId, "test_prop", "STR", null, 0, 1, 1, 1, 0, 0);
-
-            // Insert into catalog
-            String catalogId = UUID.randomUUID().toString();
-            executeUpdate(conn, "INSERT INTO catalog (catalog_id, species, uri, upstream_catalog_id, version_number) VALUES (?, ?, ?, ?, ?)",
-                catalogId, "SINK", null, null, 1L);
-
-            // Insert into catalog_aspect_def
-            executeUpdate(conn, "INSERT INTO catalog_aspect_def (catalog_id, aspect_def_id) VALUES (?, ?)",
-                catalogId, aspectDefId);
-
-            // Insert into hierarchy
-            executeUpdate(conn, "INSERT INTO hierarchy (catalog_id, name, hierarchy_type, version_number) VALUES (?, ?, ?, ?)",
-                catalogId, "test_hierarchy", "EL", 1L);
-
-            // Insert into aspect
-            executeUpdate(conn, "INSERT INTO aspect (entity_id, aspect_def_id, catalog_id, hierarchy_name) VALUES (?, ?, ?, ?)",
-                entityId, aspectDefId, catalogId, "test_hierarchy");
-
-            // Insert into property_value
-            executeUpdate(conn, "INSERT INTO property_value (entity_id, aspect_def_id, catalog_id, property_name, value_text, value_binary) VALUES (?, ?, ?, ?, ?, ?)",
-                entityId, aspectDefId, catalogId, "test_prop", "test_value", null);
-
-            // Insert into hierarchy_entity_list
-            executeUpdate(conn, "INSERT INTO hierarchy_entity_list (catalog_id, hierarchy_name, entity_id, list_order) VALUES (?, ?, ?, ?)",
-                catalogId, "test_hierarchy", entityId, 0);
-
-            // Insert into hierarchy_entity_set
-            String entityId2 = UUID.randomUUID().toString();
-            executeUpdate(conn, "INSERT INTO entity (entity_id) VALUES (?)", entityId2);
-            executeUpdate(conn, "INSERT INTO hierarchy (catalog_id, name, hierarchy_type, version_number) VALUES (?, ?, ?, ?)",
-                catalogId, "test_set", "ES", 1L);
-            executeUpdate(conn, "INSERT INTO hierarchy_entity_set (catalog_id, hierarchy_name, entity_id, set_order) VALUES (?, ?, ?, ?)",
-                catalogId, "test_set", entityId2, 0);
-
-            // Insert into hierarchy_entity_directory
-            executeUpdate(conn, "INSERT INTO hierarchy (catalog_id, name, hierarchy_type, version_number) VALUES (?, ?, ?, ?)",
-                catalogId, "test_dir", "ED", 1L);
-            executeUpdate(conn, "INSERT INTO hierarchy_entity_directory (catalog_id, hierarchy_name, entity_key, entity_id, dir_order) VALUES (?, ?, ?, ?, ?)",
-                catalogId, "test_dir", "key1", entityId, 0);
-
-            // Insert into hierarchy_entity_tree_node
-            executeUpdate(conn, "INSERT INTO hierarchy (catalog_id, name, hierarchy_type, version_number) VALUES (?, ?, ?, ?)",
-                catalogId, "test_tree", "ET", 1L);
-            String nodeId = UUID.randomUUID().toString();
-            executeUpdate(conn, "INSERT INTO hierarchy_entity_tree_node (node_id, catalog_id, hierarchy_name, parent_node_id, node_key, entity_id, node_path, tree_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-                nodeId, catalogId, "test_tree", null, "", entityId, "", 0);
-
-            // Insert into hierarchy_aspect_map
-            executeUpdate(conn, "INSERT INTO hierarchy (catalog_id, name, hierarchy_type, version_number) VALUES (?, ?, ?, ?)",
-                catalogId, "test_aspect", "AM", 1L);
-            executeUpdate(conn, "INSERT INTO hierarchy_aspect_map (catalog_id, hierarchy_name, entity_id, aspect_def_id, map_order) VALUES (?, ?, ?, ?, ?)",
-                catalogId, "test_aspect", entityId, aspectDefId, 0);
+            String entityIdStr = catalogId.toString();
+            String aspectDefIdStr = catalogId.toString();
 
             // Verify all tables have at least 1 row
             assertTrue(getRowCount(conn, "entity") >= 1, "entity should have at least 1 row");
@@ -243,15 +186,6 @@ class SqliteCheapSchemaTest {
         assertEquals(0, getRowCount(conn, "hierarchy_entity_directory"), "hierarchy_entity_directory should be empty after truncate");
         assertEquals(0, getRowCount(conn, "hierarchy_entity_tree_node"), "hierarchy_entity_tree_node should be empty after truncate");
         assertEquals(0, getRowCount(conn, "hierarchy_aspect_map"), "hierarchy_aspect_map should be empty after truncate");
-    }
-
-    private void executeUpdate(Connection conn, String sql, Object... params) throws SQLException {
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-            for (int i = 0; i < params.length; i++) {
-                stmt.setObject(i + 1, params[i]);
-            }
-            stmt.executeUpdate();
-        }
     }
 
     private int getRowCount(Connection conn, String tableName) throws SQLException {
