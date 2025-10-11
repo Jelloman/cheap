@@ -16,14 +16,10 @@
 
 package net.netbeing.cheap.db.mariadb;
 
-import ch.vorburger.mariadb4j.DB;
-import ch.vorburger.mariadb4j.DBConfigurationBuilder;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.mariadb.jdbc.MariaDbDataSource;
 
-import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -32,45 +28,34 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class MariaDbCheapSchemaTest {
-
-    private static DB mariaDB;
-    private static DataSource dataSource;
+class MariaDbCheapSchemaTest
+{
+    static final String DB_NAME = "cheap";
+    volatile static MariaDbTestDb db;
 
     @BeforeAll
-    static void setUpClass() throws Exception {
-        // Create embedded MariaDB instance
-        DBConfigurationBuilder configBuilder = DBConfigurationBuilder.newBuilder();
-        configBuilder.setPort(0); // Use random available port
-        mariaDB = DB.newEmbeddedDB(configBuilder.build());
-        mariaDB.start();
-
-        // Create database
-        mariaDB.createDB("cheapdb");
-
-        // Create data source
-        MariaDbDataSource ds = new MariaDbDataSource();
-        ds.setUrl("jdbc:mariadb://localhost:" + mariaDB.getConfiguration().getPort() + "/cheapdb");
-        ds.setUser("root");
-        ds.setPassword("");
-        dataSource = ds;
-    }
-
-    @AfterAll
-    static void tearDownClass() throws Exception {
-        if (mariaDB != null) {
-            mariaDB.stop();
+    static void setUp() throws Exception
+    {
+        if (db == null) {
+            db = new MariaDbTestDb(DB_NAME);
         }
     }
 
+    @AfterAll
+    static void tearDown() throws Exception
+    {
+        db.tearDown();
+    }
+
     @Test
-    void testAllSchemaExecution() throws SQLException {
+    void testAllSchemaExecution() throws SQLException
+    {
         MariaDbCheapSchema schema = new MariaDbCheapSchema();
 
         // Execute the main schema DDL using MariaDbCheapSchema
-        schema.executeMainSchemaDdl(dataSource);
+        schema.executeMainSchemaDdl(db.dataSource);
 
-        try (Connection connection = dataSource.getConnection()) {
+        try (Connection connection = db.dataSource.getConnection()) {
 
             // Verify that key tables were created
             assertTrue(tableExists(connection, "aspect_def"), "aspect_def table should exist");
@@ -85,9 +70,9 @@ class MariaDbCheapSchemaTest {
         }
 
         // Execute the audit schema DDL using MariaDbCheapSchema
-        schema.executeAuditSchemaDdl(dataSource);
+        schema.executeAuditSchemaDdl(db.dataSource);
 
-        try (Connection connection = dataSource.getConnection()) {
+        try (Connection connection = db.dataSource.getConnection()) {
 
             // Verify that audit columns were added to key tables
             assertTrue(columnExists(connection, "aspect_def", "created_at"), "aspect_def should have created_at column");
@@ -102,9 +87,9 @@ class MariaDbCheapSchemaTest {
         }
 
         // Execute the drop schema DDL using MariaDbCheapSchema
-        schema.executeDropSchemaDdl(dataSource);
+        schema.executeDropSchemaDdl(db.dataSource);
 
-        try (Connection connection = dataSource.getConnection()) {
+        try (Connection connection = db.dataSource.getConnection()) {
 
             // Verify that key tables have been dropped
             assertFalse(tableExists(connection, "aspect_def"), "aspect_def table should be dropped");
@@ -125,26 +110,29 @@ class MariaDbCheapSchemaTest {
         }
     }
 
-    private boolean tableExists(Connection connection, String tableName) throws SQLException {
+    private boolean tableExists(Connection connection, String tableName) throws SQLException
+    {
         try (var rs = connection.getMetaData().getTables(null, null, tableName, null)) {
             return rs.next();
         }
     }
 
-    private boolean columnExists(Connection connection, String tableName, String columnName) throws SQLException {
+    private boolean columnExists(Connection connection, String tableName, String columnName) throws SQLException
+    {
         try (var rs = connection.getMetaData().getColumns(null, null, tableName, columnName)) {
             return rs.next();
         }
     }
 
     @Test
-    void testTruncateAllTables() throws SQLException {
+    void testTruncateAllTables() throws SQLException
+    {
         MariaDbCheapSchema schema = new MariaDbCheapSchema();
 
         // Execute the main schema DDL
-        schema.executeMainSchemaDdl(dataSource);
+        schema.executeMainSchemaDdl(db.dataSource);
 
-        try (Connection conn = dataSource.getConnection()) {
+        try (Connection conn = db.dataSource.getConnection()) {
             // Populate all tables with at least 1 row
 
             // Insert into entity
@@ -228,7 +216,7 @@ class MariaDbCheapSchemaTest {
             assertTrue(getRowCount(conn, "hierarchy_aspect_map") >= 1, "hierarchy_aspect_map should have at least 1 row");
 
             // Execute truncate script
-            schema.executeTruncateSchemaDdl(dataSource);
+            schema.executeTruncateSchemaDdl(db.dataSource);
 
             // Verify all tables are empty
             assertEquals(0, getRowCount(conn, "entity"), "entity should be empty after truncate");
@@ -247,7 +235,8 @@ class MariaDbCheapSchemaTest {
         }
     }
 
-    private void executeUpdate(Connection conn, String sql, Object... params) throws SQLException {
+    private void executeUpdate(Connection conn, String sql, Object... params) throws SQLException
+    {
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             for (int i = 0; i < params.length; i++) {
                 stmt.setObject(i + 1, params[i]);
@@ -256,7 +245,8 @@ class MariaDbCheapSchemaTest {
         }
     }
 
-    private int getRowCount(Connection conn, String tableName) throws SQLException {
+    private int getRowCount(Connection conn, String tableName) throws SQLException
+    {
         String sql = "SELECT COUNT(*) FROM " + tableName;
         try (PreparedStatement stmt = conn.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {

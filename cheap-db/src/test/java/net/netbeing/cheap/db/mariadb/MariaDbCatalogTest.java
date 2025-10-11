@@ -16,139 +16,109 @@
 
 package net.netbeing.cheap.db.mariadb;
 
-import ch.vorburger.mariadb4j.DB;
-import ch.vorburger.mariadb4j.DBConfigurationBuilder;
-import net.netbeing.cheap.model.*;
+import net.netbeing.cheap.model.Aspect;
+import net.netbeing.cheap.model.AspectDef;
+import net.netbeing.cheap.model.AspectMapHierarchy;
+import net.netbeing.cheap.model.HierarchyType;
+import net.netbeing.cheap.model.Property;
+import net.netbeing.cheap.model.PropertyDef;
+import net.netbeing.cheap.model.PropertyType;
 import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mariadb.jdbc.MariaDbDataSource;
 
-import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.List;
-import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 
 class MariaDbCatalogTest
 {
-    private static DB mariaDB;
-    private static DataSource dataSource;
-    private MariaDbCatalog catalog;
+    static final int EXPECTED_TABLE_COUNT = 1;
 
-    static final int EXPECTED_TABLE_COUNT = 6;
+    static final String DB_NAME = "cheap";
+    volatile static MariaDbTestDb db;
 
     @BeforeAll
-    static void setUpClass() throws Exception {
-        // Create embedded MariaDB instance
-        DBConfigurationBuilder configBuilder = DBConfigurationBuilder.newBuilder();
-        configBuilder.setPort(0); // Use random available port
-        mariaDB = DB.newEmbeddedDB(configBuilder.build());
-        mariaDB.start();
-
-        // Create database
-        mariaDB.createDB("cheapdb");
-
-        // Create data source
-        MariaDbDataSource ds = new MariaDbDataSource();
-        ds.setUrl("jdbc:mariadb://localhost:" + mariaDB.getConfiguration().getPort() + "/cheapdb");
-        ds.setUser("root");
-        ds.setPassword("");
-        dataSource = ds;
-
-        // Initialize test schema and data
-        initializeTestData();
-    }
-
-    @AfterAll
-    static void tearDownClass() throws Exception {
-        if (mariaDB != null) {
-            mariaDB.stop();
+    static void setUpAll() throws Exception
+    {
+        if (db == null) {
+            db = new MariaDbTestDb(DB_NAME);
         }
     }
 
-    private static void initializeTestData() throws SQLException {
-        try (Connection connection = dataSource.getConnection();
+    @AfterAll
+    static void tearDownAll() throws Exception
+    {
+        db.tearDown();
+    }
+
+    private MariaDbCatalog catalog;
+
+    @BeforeEach
+    void setUp() throws SQLException
+    {
+        catalog = new MariaDbCatalog(db.dataSource);
+        initializeTestData();
+    }
+
+    @AfterEach
+    void tearDown() throws SQLException
+    {
+        catalog = null;
+        clearTestData();
+    }
+
+    private static void initializeTestData() throws SQLException
+    {
+        try (Connection connection = db.dataSource.getConnection();
              Statement statement = connection.createStatement()) {
 
             // Create test_table
             statement.execute(
-                "CREATE TABLE test_table (" +
-                "    id INT PRIMARY KEY AUTO_INCREMENT," +
-                "    string_col VARCHAR(100)," +
-                "    integer_col INTEGER," +
-                "    float_col DOUBLE," +
-                "    date_col DATE," +
-                "    timestamp_col TIMESTAMP," +
-                "    boolean_col BOOLEAN," +
-                "    uuid_col CHAR(36)," +
-                "    blob_col BLOB" +
-                ")"
+                "CREATE TABLE IF NOT EXISTS test_table (" +
+                    "    id INT PRIMARY KEY AUTO_INCREMENT," +
+                    "    string_col VARCHAR(100)," +
+                    "    integer_col INTEGER," +
+                    "    float_col DOUBLE," +
+                    "    date_col DATE," +
+                    "    timestamp_col TIMESTAMP," +
+                    "    boolean_col BOOLEAN," +
+                    "    uuid_col CHAR(36)," +
+                    "    blob_col BLOB" +
+                    ")"
             );
 
             // Insert test data
             statement.execute(
                 "INSERT INTO test_table " +
-                "(id, string_col, integer_col, float_col, date_col, timestamp_col, boolean_col, uuid_col, blob_col) " +
-                "VALUES(1, 'string1', 1, 1.5, '2025-01-01', '2025-01-11 18:18:18.018', true, " +
-                "'4186bfb6-b135-48af-9236-95cacdb20327', UNHEX('48F308FB637E67EC3B27B09400914BEA'))"
+                    "(id, string_col, integer_col, float_col, date_col, timestamp_col, boolean_col, uuid_col, blob_col) " +
+                    "VALUES(1, 'string1', 1, 1.5, '2025-01-01', '2025-01-11 18:18:18.018', true, " +
+                    "'4186bfb6-b135-48af-9236-95cacdb20327', UNHEX('48F308FB637E67EC3B27B09400914BEA'))"
             );
 
             statement.execute(
                 "INSERT INTO test_table " +
-                "(id, string_col, integer_col, float_col, date_col, timestamp_col, boolean_col, uuid_col, blob_col) " +
-                "VALUES(2, 'string2', 2, 2.5, '2025-02-02', '2025-02-02 02:02:02.002', false, " +
-                "'655a99b9-af7c-4f2f-afa8-c4801986b9d4', UNHEX('013D7D16D7AE67EC3B27B95B765C8CEB'))"
-            );
-
-            // Create additional test tables for aspect mapping tests
-            statement.execute(
-                "CREATE TABLE test_aspect_mapping_no_key (" +
-                "    id INT," +
-                "    value VARCHAR(50)" +
-                ")"
-            );
-
-            statement.execute(
-                "CREATE TABLE test_aspect_mapping_composite_key (" +
-                "    id1 INT," +
-                "    id2 INT," +
-                "    value VARCHAR(50)," +
-                "    PRIMARY KEY (id1, id2)" +
-                ")"
-            );
-
-            statement.execute(
-                "CREATE TABLE test_aspect_mapping_uuid_key (" +
-                "    id CHAR(36) PRIMARY KEY," +
-                "    value VARCHAR(50)" +
-                ")"
-            );
-
-            statement.execute(
-                "CREATE TABLE test_aspect_mapping_text_key (" +
-                "    id VARCHAR(50) PRIMARY KEY," +
-                "    value VARCHAR(50)" +
-                ")"
-            );
-
-            statement.execute(
-                "CREATE TABLE test_aspect_mapping_bigint_key (" +
-                "    id BIGINT PRIMARY KEY," +
-                "    value VARCHAR(50)" +
-                ")"
+                    "(id, string_col, integer_col, float_col, date_col, timestamp_col, boolean_col, uuid_col, blob_col) " +
+                    "VALUES(2, 'string2', 2, 2.5, '2025-02-02', '2025-02-02 02:02:02.002', false, " +
+                    "'655a99b9-af7c-4f2f-afa8-c4801986b9d4', UNHEX('013D7D16D7AE67EC3B27B95B765C8CEB'))"
             );
         }
     }
 
-    @BeforeEach
-    void setUp() {
-        catalog = new MariaDbCatalog(dataSource);
+    private static void clearTestData() throws SQLException
+    {
+        try (Connection connection = db.dataSource.getConnection();
+             Statement statement = connection.createStatement()) {
+
+            // Create test_table
+            statement.execute("TRUNCATE TABLE test_table");
+        }
     }
 
     @Test
@@ -158,23 +128,21 @@ class MariaDbCatalogTest
 
         List<String> tables = catalog.getTables();
         assertNotNull(tables, "Tables list should not be null");
-        assertEquals(EXPECTED_TABLE_COUNT, tables.size(), "Should have six tables");
+        assertEquals(EXPECTED_TABLE_COUNT, tables.size(), "Should have one table");
         assertTrue(tables.contains("test_table"), "Should contain test_table");
-        assertTrue(tables.contains("test_aspect_mapping_no_key"), "Should contain test_table");
     }
 
     @Test
     void testLoadDbStaticMethod()
     {
-        MariaDbCatalog staticCatalog = new MariaDbCatalog(dataSource);
+        MariaDbCatalog staticCatalog = new MariaDbCatalog(db.dataSource);
 
         assertNotNull(staticCatalog, "Catalog should not be null");
 
         List<String> tables = staticCatalog.getTables();
         assertNotNull(tables, "Tables list should not be null");
-        assertEquals(EXPECTED_TABLE_COUNT, tables.size(), "Should have six tables");
+        assertEquals(EXPECTED_TABLE_COUNT, tables.size(), "Should have one table");
         assertTrue(tables.contains("test_table"), "Should contain test_table");
-        assertTrue(tables.contains("test_aspect_mapping_no_key"), "Should contain test_table");
     }
 
     @Test
