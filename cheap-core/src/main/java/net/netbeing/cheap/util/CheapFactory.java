@@ -889,14 +889,17 @@ public class CheapFactory
 
     /**
      * Creates a new property with the specified value.
+     * The value will be coerced to the type specified in the PropertyDef if necessary.
      *
      * @param def the property definition for this property
      * @param value the value to store in this property
      * @return a new Property instance
+     * @throws IllegalArgumentException if the value cannot be coerced to the required type
      */
     public @NotNull Property createProperty(@NotNull PropertyDef def, Object value)
     {
-        return new PropertyImpl(def, value);
+        Object coercedValue = def.type().coerce(value);
+        return new PropertyImpl(def, coercedValue);
     }
 
 

@@ -23,6 +23,8 @@ import net.netbeing.cheap.util.CheapFactory;
 import org.jetbrains.annotations.NotNull;
 
 import javax.sql.DataSource;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
@@ -198,7 +200,7 @@ public class PostgresDao implements CatalogPersistence
      */
     public void addAspectTableMapping(@NotNull AspectTableMapping mapping)
     {
-        aspectTableMappings.put(mapping.aspectDefName(), mapping);
+        aspectTableMappings.put(mapping.aspectDef().name(), mapping);
     }
 
     /**
@@ -213,34 +215,68 @@ public class PostgresDao implements CatalogPersistence
     }
 
     /**
-     * Creates a database table for storing aspects based on an AspectDef.
-     * The table will have an entity_id column as the primary key, plus columns
-     * for each property in the AspectDef.
+     * Creates a database table for storing aspects based on an AspectTableMapping.
+     * The table structure is determined by the mapping's hasCatalogId and hasEntityId flags:
+     * <ul>
+     *   <li>hasCatalogId=false, hasEntityId=false: No primary key, no ID columns</li>
+     *   <li>hasCatalogId=true, hasEntityId=false: catalog_id column, no primary key</li>
+     *   <li>hasCatalogId=false, hasEntityId=true: entity_id column with PRIMARY KEY (entity_id)</li>
+     *   <li>hasCatalogId=true, hasEntityId=true: Both columns with PRIMARY KEY (catalog_id, entity_id)</li>
+     * </ul>
      *
-     * @param aspectDef the AspectDef defining the table structure
-     * @param tableName the name of the table to create
+     * @param mapping the AspectTableMapping defining the table structure
      * @throws SQLException if table creation fails
      */
-    public void createAspectTable(@NotNull AspectDef aspectDef, @NotNull String tableName) throws SQLException
+    public void createTable(@NotNull AspectTableMapping mapping) throws SQLException
     {
         StringBuilder sql = new StringBuilder();
-        sql.append("CREATE TABLE ").append(tableName).append(" (\n");
-        sql.append("    entity_id UUID NOT NULL PRIMARY KEY");
+        sql.append("CREATE TABLE IF NOT EXISTS ").append(mapping.tableName()).append(" (\n");
 
-        for (PropertyDef propDef : aspectDef.propertyDefs()) {
-            sql.append(",\n    ");
-            sql.append(propDef.name()).append(" ");
-            sql.append(mapPropertyTypeToSqlType(propDef.type()));
-            if (!propDef.isNullable()) {
-                sql.append(" NOT NULL");
+        boolean hasColumns = false;
+
+        // Add catalog_id column if needed
+        if (mapping.hasCatalogId()) {
+            sql.append("    catalog_id UUID NOT NULL");
+            hasColumns = true;
+        }
+
+        // Add entity_id column if needed
+        if (mapping.hasEntityId()) {
+            if (hasColumns) sql.append(",\n");
+            sql.append("    entity_id UUID NOT NULL");
+            hasColumns = true;
+        }
+
+        // Add property columns
+        for (PropertyDef propDef : mapping.aspectDef().propertyDefs()) {
+            // Only add columns that are in the mapping
+            String columnName = mapping.propertyToColumnMap().get(propDef.name());
+            if (columnName != null) {
+                if (hasColumns) sql.append(",\n");
+                sql.append("    ").append(columnName).append(" ");
+                sql.append(mapPropertyTypeToSqlType(propDef.type()));
+                if (!propDef.isNullable()) {
+                    sql.append(" NOT NULL");
+                }
+                hasColumns = true;
             }
         }
+
+        // Add primary key constraint
+        if (mapping.hasEntityId() && mapping.hasCatalogId()) {
+            sql.append(",\n    PRIMARY KEY (catalog_id, entity_id)");
+        } else if (mapping.hasEntityId()) {
+            sql.append(",\n    PRIMARY KEY (entity_id)");
+        }
+        // No primary key if !hasEntityId
 
         sql.append("\n)");
 
         try (Connection conn = dataSource.getConnection(); Statement stmt = conn.createStatement()) {
             stmt.execute(sql.toString());
         }
+
+        addAspectTableMapping(mapping);
     }
 
     /**
@@ -626,26 +662,74 @@ public class PostgresDao implements CatalogPersistence
 
     private void saveAspectMapContentToMappedTable(Connection conn, UUID catalogId, String hierarchyName, AspectMapHierarchy hierarchy, AspectTableMapping mapping) throws SQLException
     {
+        // Pre-save cleanup based on flags
+        if (!mapping.hasEntityId() && !mapping.hasCatalogId()) {
+            // No IDs: TRUNCATE the entire table
+            try (Statement stmt = conn.createStatement()) {
+                stmt.execute("TRUNCATE TABLE " + mapping.tableName());
+            }
+        } else if (!mapping.hasEntityId() && mapping.hasCatalogId()) {
+            // Catalog ID only: DELETE rows for this catalog
+            String deleteSql = "DELETE FROM " + mapping.tableName() + " WHERE catalog_id = ?";
+            try (PreparedStatement stmt = conn.prepareStatement(deleteSql)) {
+                stmt.setObject(1, catalogId);
+                stmt.executeUpdate();
+            }
+        }
+        // If hasEntityId, no pre-save cleanup needed (will use ON CONFLICT)
+
         // Build column list and placeholders for INSERT
-        StringBuilder columns = new StringBuilder("entity_id");
-        StringBuilder placeholders = new StringBuilder("?");
+        StringBuilder columns = new StringBuilder();
+        StringBuilder placeholders = new StringBuilder();
+        boolean firstCol = true;
 
-        for (Map.Entry<String, String> entry : mapping.propertyToColumnMap().entrySet()) {
-            columns.append(", ").append(entry.getValue());
-            placeholders.append(", ?");
+        if (mapping.hasCatalogId()) {
+            columns.append("catalog_id");
+            placeholders.append("?");
+            firstCol = false;
         }
 
+        if (mapping.hasEntityId()) {
+            if (!firstCol) {
+                columns.append(", ");
+                placeholders.append(", ");
+            }
+            columns.append("entity_id");
+            placeholders.append("?");
+            firstCol = false;
+        }
+
+        for (String columnName : mapping.propertyToColumnMap().values()) {
+            if (!firstCol) {
+                columns.append(", ");
+                placeholders.append(", ");
+            }
+            columns.append(columnName);
+            placeholders.append("?");
+            firstCol = false;
+        }
+
+        // Build SQL with appropriate ON CONFLICT clause
         StringBuilder sql = new StringBuilder("INSERT INTO " + mapping.tableName()
-            + " (" + columns + ") VALUES (" + placeholders + ") " +
-            "ON CONFLICT (entity_id) DO UPDATE SET ");
+            + " (" + columns + ") VALUES (" + placeholders + ")");
 
-        // Build UPDATE clause
-        boolean first = true;
-        for (Map.Entry<String, String> entry : mapping.propertyToColumnMap().entrySet()) {
-            if (!first) sql.append(", ");
-            sql.append(entry.getValue()).append(" = EXCLUDED.").append(entry.getValue());
-            first = false;
+        if (mapping.hasEntityId()) {
+            // Only add ON CONFLICT when we have a primary key
+            if (mapping.hasCatalogId()) {
+                sql.append(" ON CONFLICT (catalog_id, entity_id) DO UPDATE SET ");
+            } else {
+                sql.append(" ON CONFLICT (entity_id) DO UPDATE SET ");
+            }
+
+            // Build UPDATE clause
+            boolean first = true;
+            for (String columnName : mapping.propertyToColumnMap().values()) {
+                if (!first) sql.append(", ");
+                sql.append(columnName).append(" = EXCLUDED.").append(columnName);
+                first = false;
+            }
         }
+        // No ON CONFLICT clause if !hasEntityId (simple INSERT after cleanup)
 
         try (PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
             for (Entity entity : hierarchy.keySet()) {
@@ -654,7 +738,14 @@ public class PostgresDao implements CatalogPersistence
                 Aspect aspect = hierarchy.get(entity);
                 if (aspect != null) {
                     int paramIndex = 1;
-                    stmt.setObject(paramIndex++, entity.globalId());
+
+                    if (mapping.hasCatalogId()) {
+                        stmt.setObject(paramIndex++, catalogId);
+                    }
+
+                    if (mapping.hasEntityId()) {
+                        stmt.setObject(paramIndex++, entity.globalId());
+                    }
 
                     for (Map.Entry<String, String> entry : mapping.propertyToColumnMap().entrySet()) {
                         String propName = entry.getKey();
@@ -1065,36 +1156,67 @@ public class PostgresDao implements CatalogPersistence
     private void loadAspectMapContentFromMappedTable(Connection conn, UUID catalogId, String hierarchyName, AspectMapHierarchy hierarchy, AspectTableMapping mapping) throws SQLException
     {
         // Build column list for SELECT
-        StringBuilder columns = new StringBuilder("entity_id");
-        for (String columnName : mapping.propertyToColumnMap().values()) {
-            columns.append(", ").append(columnName);
+        StringBuilder columns = new StringBuilder();
+        boolean firstCol = true;
+
+        if (mapping.hasCatalogId()) {
+            columns.append("catalog_id");
+            firstCol = false;
         }
 
-        String sql = "SELECT " + columns + " FROM " + mapping.tableName();
+        if (mapping.hasEntityId()) {
+            if (!firstCol) columns.append(", ");
+            columns.append("entity_id");
+            firstCol = false;
+        }
 
-        try (PreparedStatement stmt = conn.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
+        for (String columnName : mapping.propertyToColumnMap().values()) {
+            if (!firstCol) columns.append(", ");
+            columns.append(columnName);
+            firstCol = false;
+        }
 
-            while (rs.next()) {
-                UUID entityId = rs.getObject("entity_id", UUID.class);
-                Entity entity = factory.getOrRegisterNewEntity(entityId);
+        // Build SQL with WHERE clause for catalog_id if present
+        StringBuilder sql = new StringBuilder("SELECT " + columns + " FROM " + mapping.tableName());
+        if (mapping.hasCatalogId()) {
+            sql.append(" WHERE catalog_id = ?");
+        }
 
-                Aspect aspect = factory.createPropertyMapAspect(entity, hierarchy.aspectDef());
+        try (PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
+            if (mapping.hasCatalogId()) {
+                stmt.setObject(1, catalogId);
+            }
 
-                // Load properties from mapped columns
-                for (Map.Entry<String, String> entry : mapping.propertyToColumnMap().entrySet()) {
-                    String propName = entry.getKey();
-                    String columnName = entry.getValue();
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    Entity entity;
 
-                    PropertyDef propDef = hierarchy.aspectDef().propertyDef(propName);
-                    if (propDef != null) {
-                        Object value = rs.getObject(columnName);
-                        Property property = factory.createProperty(propDef, value);
-                        aspect.put(property);
+                    if (mapping.hasEntityId()) {
+                        // Entity ID is in the table - use it
+                        UUID entityId = rs.getObject("entity_id", UUID.class);
+                        entity = factory.getOrRegisterNewEntity(entityId);
+                    } else {
+                        // No entity ID in table - generate a new one
+                        entity = factory.createEntity();
                     }
-                }
 
-                hierarchy.put(entity, aspect);
+                    Aspect aspect = factory.createPropertyMapAspect(entity, hierarchy.aspectDef());
+
+                    // Load properties from mapped columns
+                    for (Map.Entry<String, String> entry : mapping.propertyToColumnMap().entrySet()) {
+                        String propName = entry.getKey();
+                        String columnName = entry.getValue();
+
+                        PropertyDef propDef = hierarchy.aspectDef().propertyDef(propName);
+                        if (propDef != null) {
+                            Object value = rs.getObject(columnName);
+                            Property property = factory.createProperty(propDef, value);
+                            aspect.put(property);
+                        }
+                    }
+
+                    hierarchy.put(entity, aspect);
+                }
             }
         }
     }
@@ -1216,8 +1338,8 @@ public class PostgresDao implements CatalogPersistence
             case Float -> Double.parseDouble(valueText);
             case Boolean -> Boolean.parseBoolean(valueText);
             case String, Text, CLOB -> valueText;
-            case BigInteger -> new java.math.BigInteger(valueText);
-            case BigDecimal -> new java.math.BigDecimal(valueText);
+            case BigInteger -> new BigInteger(valueText);
+            case BigDecimal -> new BigDecimal(valueText);
             case DateTime -> java.sql.Timestamp.valueOf(valueText);
             case URI -> {
                 try {

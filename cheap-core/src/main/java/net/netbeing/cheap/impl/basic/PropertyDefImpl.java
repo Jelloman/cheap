@@ -93,13 +93,13 @@ public final class PropertyDefImpl implements PropertyDef
     }
 
     @Override
-    public String name()
+    public @NotNull String name()
     {
         return name;
     }
 
     @Override
-    public PropertyType type()
+    public @NotNull PropertyType type()
     {
         return type;
     }
