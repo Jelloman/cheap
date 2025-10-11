@@ -606,7 +606,7 @@ class PostgresDaoTest
             assertEquals("test1", rs.getString("string_col"));
             assertEquals(42, rs.getInt("integer_col"));
             assertEquals(3.14, rs.getDouble("float_col"), 0.001);
-            assertEquals(true, rs.getBoolean("boolean_col"));
+            assertTrue(rs.getBoolean("boolean_col"));
             assertEquals(UUID.fromString("550e8400-e29b-41d4-a716-446655440000"), rs.getObject("uuid_col", UUID.class));
 
             assertTrue(rs.next(), "Should have second row");
@@ -614,7 +614,7 @@ class PostgresDaoTest
             assertEquals("test2", rs.getString("string_col"));
             assertEquals(99, rs.getInt("integer_col"));
             assertEquals(2.71, rs.getDouble("float_col"), 0.001);
-            assertEquals(false, rs.getBoolean("boolean_col"));
+            assertFalse(rs.getBoolean("boolean_col"));
             assertEquals(UUID.fromString("6ba7b810-9dad-11d1-80b4-00c04fd430c8"), rs.getObject("uuid_col", UUID.class));
 
             assertFalse(rs.next(), "Should have exactly 2 rows");
