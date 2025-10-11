@@ -29,7 +29,7 @@ import java.util.*;
  * <p>
  * Subclasses should implement the mutability methods (canAddProperties, canRemoveProperties)
  * and any modification operations (add, remove) as appropriate.
- * 
+ *
  * @see AspectDef
  * @see ImmutableAspectDefImpl
  * @see MutableAspectDefImpl
@@ -42,6 +42,9 @@ public abstract class AspectDefBase extends EntityImpl implements AspectDef
 
     /** Map of property names to property definitions. */
     final Map<String, PropertyDef> propertyDefs;
+
+    /** Cached hash value (0 means not yet computed). */
+    private volatile long cachedHash = 0;
 
     /**
      * Creates a new AspectDefBase with the specified name and empty property definitions.
@@ -121,5 +124,38 @@ public abstract class AspectDefBase extends EntityImpl implements AspectDef
     public PropertyDef propertyDef(@NotNull String propName)
     {
         return propertyDefs.get(propName);
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p>
+     * This implementation caches the computed hash value for improved performance.
+     * The cache uses a volatile long variable with 0 as the sentinel value indicating
+     * "not yet computed". This is safe because the FNV-1a hash algorithm never produces
+     * a hash value of 0 for any non-empty input.
+     * <p>
+     * Note: For mutable AspectDef implementations, the cached hash may become stale
+     * if properties are added or removed. Subclasses that allow modification should
+     * call {@link #invalidateHashCache()} when the aspect definition is modified.
+     */
+    @Override
+    public long hash()
+    {
+        long result = cachedHash;
+        if (result == 0) {
+            // Compute hash using default implementation from AspectDef interface
+            result = AspectDef.super.hash();
+            cachedHash = result;
+        }
+        return result;
+    }
+
+    /**
+     * Invalidates the cached hash value, forcing it to be recomputed on the next call to hash().
+     * This should be called by mutable subclasses whenever the aspect definition is modified.
+     */
+    protected void invalidateHashCache()
+    {
+        cachedHash = 0;
     }
 }

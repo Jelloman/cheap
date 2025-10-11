@@ -144,7 +144,7 @@ class PostgresCheapSchemaTest {
             // Insert into aspect_def
             UUID aspectDefId = UUID.randomUUID();
             executeUpdate(conn, "INSERT INTO aspect_def (aspect_def_id, name, hash_version, is_readable, is_writable, can_add_properties, can_remove_properties) VALUES (?, ?, ?, ?, ?, ?, ?)",
-                aspectDefId, "test_aspect", "hash123", true, true, false, false);
+                aspectDefId, "test_aspect", 123L, true, true, false, false);
 
             // Insert into property_def
             executeUpdate(conn, "INSERT INTO property_def (aspect_def_id, name, property_type, default_value, has_default_value, is_readable, is_writable, is_nullable, is_removable, is_multivalued) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",

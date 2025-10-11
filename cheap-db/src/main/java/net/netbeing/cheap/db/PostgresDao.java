@@ -348,7 +348,7 @@ public class PostgresDao implements CatalogPersistence
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setObject(1, UUID.randomUUID());
             stmt.setString(2, aspectDef.name());
-            stmt.setString(3, aspectDef.hash().toString());
+            stmt.setLong(3, aspectDef.hash());
             stmt.setBoolean(4, aspectDef.isReadable());
             stmt.setBoolean(5, aspectDef.isWritable());
             stmt.setBoolean(6, aspectDef.canAddProperties());
@@ -1246,14 +1246,14 @@ public class PostgresDao implements CatalogPersistence
         String aspectSql = "SELECT hash_version, is_readable, is_writable, can_add_properties, can_remove_properties " +
             "FROM aspect_def WHERE name = ?";
 
-        String hashVersion = null;
+        long hashVersion;
         boolean isReadable = true, isWritable = true, canAddProperties = false, canRemoveProperties = false;
 
         try (PreparedStatement stmt = conn.prepareStatement(aspectSql)) {
             stmt.setString(1, aspectDefName);
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
-                    hashVersion = rs.getString("hash_version");
+                    hashVersion = rs.getLong("hash_version");
                     isReadable = rs.getBoolean("is_readable");
                     isWritable = rs.getBoolean("is_writable");
                     canAddProperties = rs.getBoolean("can_add_properties");

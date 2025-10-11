@@ -17,7 +17,7 @@ CREATE TABLE entity (
 CREATE TABLE aspect_def (
     aspect_def_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     name TEXT NOT NULL UNIQUE,
-    hash_version TEXT, -- Hash-based version (implicit, based on content)
+    hash_version BIGINT, -- Hash-based version (implicit, based on content)
     is_readable BOOLEAN NOT NULL DEFAULT true,
     is_writable BOOLEAN NOT NULL DEFAULT true,
     can_add_properties BOOLEAN NOT NULL DEFAULT false,

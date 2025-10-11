@@ -16,11 +16,9 @@
 
 package net.netbeing.cheap.model;
 
-import com.google.common.hash.*;
+import net.netbeing.cheap.util.CheapHasher;
 
 import java.util.Objects;
-
-import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  * Defines the metadata and characteristics of a hierarchy within the Cheap data model.
@@ -50,34 +48,20 @@ public interface HierarchyDef
     HierarchyType type();
 
     /**
-     * Generate a Cheap-specific SHA-256 hash of this HierarchyDef.
+     * Generate a Cheap-specific FNV-1a hash of this HierarchyDef.
      * This hash should be consistent across all Cheap implementations.
      *
      * <P>Implementations of this interface should probably cache the result of this
      * default method for improved performance.</P>
      *
-     * @return a HashCode
+     * @return a 64-bit hash value
      */
-    @SuppressWarnings("UnstableApiUsage")
-    default HashCode hash()
+    default long hash()
     {
-        //TODO: replace use of Hasher with language-independent algo
-        Hasher hasher = Hashing.sha256().newHasher();
-        hasher.putObject(this, FUNNEL);
-        return hasher.hash();
-    }
-
-    static Funneler FUNNEL = new Funneler();
-
-    @SuppressWarnings("UnstableApiUsage")
-    class Funneler implements Funnel<HierarchyDef>
-    {
-        @Override
-        public void funnel(HierarchyDef def, PrimitiveSink sink)
-        {
-            sink.putString(Objects.requireNonNull(def).name(), UTF_8);
-            sink.putString(def.type().typeCode(), UTF_8);
-        }
+        CheapHasher hasher = new CheapHasher();
+        hasher.update(name());
+        hasher.update(type().typeCode());
+        return hasher.getHash();
     }
 
 }

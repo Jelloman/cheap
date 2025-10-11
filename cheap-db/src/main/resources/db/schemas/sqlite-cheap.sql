@@ -19,7 +19,7 @@ CREATE TABLE entity (
 CREATE TABLE aspect_def (
     aspect_def_id TEXT PRIMARY KEY,
     name TEXT NOT NULL UNIQUE,
-    hash_version TEXT, -- Hash-based version (implicit, based on content)
+    hash_version BIGINT, -- Hash-based version (implicit, based on content)
     is_readable INTEGER NOT NULL DEFAULT 1 CHECK (is_readable IN (0, 1)),
     is_writable INTEGER NOT NULL DEFAULT 1 CHECK (is_writable IN (0, 1)),
     can_add_properties INTEGER NOT NULL DEFAULT 0 CHECK (can_add_properties IN (0, 1)),
