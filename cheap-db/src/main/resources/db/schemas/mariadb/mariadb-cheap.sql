@@ -6,12 +6,12 @@
 
 -- Entity: Represents entities with only global ID (conceptual objects)
 CREATE TABLE entity (
-    entity_id CHAR(36) PRIMARY KEY DEFAULT (UUID())
+    entity_id CHAR(36) PRIMARY KEY
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- AspectDef: First-class entity defining aspect structure and metadata
 CREATE TABLE aspect_def (
-    aspect_def_id CHAR(36) PRIMARY KEY DEFAULT (UUID()),
+    aspect_def_id CHAR(36) PRIMARY KEY,
     name TEXT NOT NULL,
     hash_version BIGINT, -- Hash-based version (implicit, based on content)
     is_readable BOOLEAN NOT NULL DEFAULT true,
@@ -44,7 +44,7 @@ CREATE TABLE property_def (
 
 -- Catalog: Extends Entity, represents catalog instances
 CREATE TABLE catalog (
-    catalog_id CHAR(36) PRIMARY KEY DEFAULT (UUID()),
+    catalog_id CHAR(36) PRIMARY KEY,
     species VARCHAR(10) NOT NULL CHECK (species IN ('SOURCE', 'SINK', 'MIRROR', 'CACHE', 'CLONE', 'FORK')),
     uri TEXT,
     upstream_catalog_id CHAR(36),
@@ -153,7 +153,7 @@ CREATE TABLE hierarchy_entity_directory (
 
 -- Entity Tree Hierarchy: Tree structure with named nodes
 CREATE TABLE hierarchy_entity_tree_node (
-    node_id CHAR(36) PRIMARY KEY DEFAULT (UUID()),
+    node_id CHAR(36) PRIMARY KEY,
     catalog_id CHAR(36) NOT NULL,
     hierarchy_name TEXT NOT NULL,
     parent_node_id CHAR(36),
