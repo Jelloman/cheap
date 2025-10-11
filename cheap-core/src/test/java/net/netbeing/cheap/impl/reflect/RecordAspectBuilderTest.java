@@ -1,8 +1,7 @@
 package net.netbeing.cheap.impl.reflect;
 
-import com.google.common.collect.ImmutableMap;
 import net.netbeing.cheap.impl.basic.EntityImpl;
-import net.netbeing.cheap.impl.basic.PropertyDefImpl;
+import net.netbeing.cheap.impl.basic.PropertyDefBuilder;
 import net.netbeing.cheap.impl.basic.PropertyImpl;
 import net.netbeing.cheap.model.*;
 import org.junit.jupiter.api.BeforeEach;
@@ -133,7 +132,7 @@ class RecordAspectBuilderTest
     @Test
     void property_WithPropertyObject_AddsProperty()
     {
-        PropertyDef propDef = new PropertyDefImpl("name", PropertyType.String);
+        PropertyDef propDef = new PropertyDefBuilder().setName("name").setType(PropertyType.String).build();
         Property property = new PropertyImpl(propDef, "test-value");
 
         AspectBuilder result = builder.property(property);
@@ -172,7 +171,7 @@ class RecordAspectBuilderTest
     @Test
     void build_WithPropertyObject_CreatesRecordAspect()
     {
-        PropertyDef propDef = new PropertyDefImpl("name", PropertyType.String);
+        PropertyDef propDef = new PropertyDefBuilder().setName("name").setType(PropertyType.String).build();
         Property property = new PropertyImpl(propDef, "Jane Smith");
 
         Aspect result = builder
@@ -355,7 +354,7 @@ class RecordAspectBuilderTest
     @Test
     void fluentInterface_ChainsMethods()
     {
-        PropertyDef propDef = new PropertyDefImpl("name", PropertyType.String);
+        PropertyDef propDef = new PropertyDefBuilder().setName("name").setType(PropertyType.String).build();
         Property property = new PropertyImpl(propDef, "prop-value");
 
         Aspect result = builder

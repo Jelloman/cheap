@@ -20,9 +20,9 @@ class MutableAspectDefImplTest
     @BeforeEach
     void setUp()
     {
-        propDef1 = new PropertyDefImpl("prop1", PropertyType.String);
-        propDef2 = new PropertyDefImpl("prop2", PropertyType.Integer);
-        propDef3 = new PropertyDefImpl("prop3", PropertyType.Boolean);
+        propDef1 = new PropertyDefBuilder().setName("prop1").setType(PropertyType.String).build();
+        propDef2 = new PropertyDefBuilder().setName("prop2").setType(PropertyType.Integer).build();
+        propDef3 = new PropertyDefBuilder().setName("prop3").setType(PropertyType.Boolean).build();
         
         propertyDefs = new HashMap<>();
         propertyDefs.put("prop1", propDef1);
@@ -81,7 +81,7 @@ class MutableAspectDefImplTest
     void add_ExistingPropertyName_ReturnsOldProperty()
     {
         MutableAspectDefImpl aspectDef = new MutableAspectDefImpl("testAspect", propertyDefs);
-        PropertyDef newProp = new PropertyDefImpl("prop1", PropertyType.Boolean);
+        PropertyDef newProp = new PropertyDefBuilder().setName("prop1").setType(PropertyType.Boolean).build();
         
         PropertyDef result = aspectDef.add(newProp);
         
@@ -141,7 +141,7 @@ class MutableAspectDefImplTest
     void remove_PropertyWithSameName_RemovesCorrectProperty()
     {
         MutableAspectDefImpl aspectDef = new MutableAspectDefImpl("testAspect", propertyDefs);
-        PropertyDef differentPropSameName = new PropertyDefImpl("prop1", PropertyType.Float);
+        PropertyDef differentPropSameName = new PropertyDefBuilder().setName("prop1").setType(PropertyType.Float).build();
         
         PropertyDef result = aspectDef.remove(differentPropSameName);
         
@@ -285,7 +285,7 @@ class MutableAspectDefImplTest
     void add_PropertyWithSpecialName_HandlesCorrectly()
     {
         MutableAspectDefImpl aspectDef = new MutableAspectDefImpl("testAspect");
-        PropertyDef specialProp = new PropertyDefImpl("_special_", PropertyType.String); // Special but valid name
+        PropertyDef specialProp = new PropertyDefBuilder().setName("_special_").setType(PropertyType.String).build(); // Special but valid name
         
         PropertyDef result = aspectDef.add(specialProp);
         
@@ -298,7 +298,7 @@ class MutableAspectDefImplTest
     void remove_PropertyWithSpecialName_HandlesCorrectly()
     {
         MutableAspectDefImpl aspectDef = new MutableAspectDefImpl("testAspect");
-        PropertyDef specialProp = new PropertyDefImpl("_special_", PropertyType.String); // Special but valid name
+        PropertyDef specialProp = new PropertyDefBuilder().setName("_special_").setType(PropertyType.String).build(); // Special but valid name
         aspectDef.add(specialProp);
         
         PropertyDef result = aspectDef.remove(specialProp);
@@ -315,7 +315,7 @@ class MutableAspectDefImplTest
         // Add many properties
         PropertyDef[] props = new PropertyDef[1000];
         for (int i = 0; i < 1000; i++) {
-            props[i] = new PropertyDefImpl("prop" + i, PropertyType.String);
+            props[i] = new PropertyDefBuilder().setName("prop" + i).setType(PropertyType.String).build();
             aspectDef.add(props[i]);
         }
         
@@ -338,12 +338,12 @@ class MutableAspectDefImplTest
     void fullyEquals_IdenticalInstancesConstructedSeparately_ReturnsFalse()
     {
         Map<String, PropertyDef> propertyDefs1 = ImmutableMap.of(
-            "prop1", new PropertyDefImpl("prop1", PropertyType.String),
-            "prop2", new PropertyDefImpl("prop2", PropertyType.Integer)
+            "prop1", new PropertyDefBuilder().setName("prop1").setType(PropertyType.String).build(),
+            "prop2", new PropertyDefBuilder().setName("prop2").setType(PropertyType.Integer).build()
         );
         Map<String, PropertyDef> propertyDefs2 = ImmutableMap.of(
-            "prop1", new PropertyDefImpl("prop1", PropertyType.String),
-            "prop2", new PropertyDefImpl("prop2", PropertyType.Integer)
+            "prop1", new PropertyDefBuilder().setName("prop1").setType(PropertyType.String).build(),
+            "prop2", new PropertyDefBuilder().setName("prop2").setType(PropertyType.Integer).build()
         );
 
         MutableAspectDefImpl aspectDef1 = new MutableAspectDefImpl("testAspect", propertyDefs1);
@@ -358,8 +358,8 @@ class MutableAspectDefImplTest
     void fullyEquals_SameInstance_ReturnsTrue()
     {
         Map<String, PropertyDef> propertyDefs = ImmutableMap.of(
-            "prop1", new PropertyDefImpl("prop1", PropertyType.String),
-            "prop2", new PropertyDefImpl("prop2", PropertyType.Integer)
+            "prop1", new PropertyDefBuilder().setName("prop1").setType(PropertyType.String).build(),
+            "prop2", new PropertyDefBuilder().setName("prop2").setType(PropertyType.Integer).build()
         );
 
         MutableAspectDefImpl aspectDef = new MutableAspectDefImpl("testAspect", propertyDefs);
@@ -371,8 +371,8 @@ class MutableAspectDefImplTest
     void fullyEquals_DifferentNames_ReturnsFalse()
     {
         Map<String, PropertyDef> propertyDefs = ImmutableMap.of(
-            "prop1", new PropertyDefImpl("prop1", PropertyType.String),
-            "prop2", new PropertyDefImpl("prop2", PropertyType.Integer)
+            "prop1", new PropertyDefBuilder().setName("prop1").setType(PropertyType.String).build(),
+            "prop2", new PropertyDefBuilder().setName("prop2").setType(PropertyType.Integer).build()
         );
 
         MutableAspectDefImpl aspectDef1 = new MutableAspectDefImpl("testAspect1", propertyDefs);
@@ -385,12 +385,12 @@ class MutableAspectDefImplTest
     void hash_IdenticalInstancesConstructedSeparately_ReturnsDifferentHash()
     {
         Map<String, PropertyDef> propertyDefs1 = ImmutableMap.of(
-            "prop1", new PropertyDefImpl("prop1", PropertyType.String),
-            "prop2", new PropertyDefImpl("prop2", PropertyType.Integer)
+            "prop1", new PropertyDefBuilder().setName("prop1").setType(PropertyType.String).build(),
+            "prop2", new PropertyDefBuilder().setName("prop2").setType(PropertyType.Integer).build()
         );
         Map<String, PropertyDef> propertyDefs2 = ImmutableMap.of(
-            "prop1", new PropertyDefImpl("prop1", PropertyType.String),
-            "prop2", new PropertyDefImpl("prop2", PropertyType.Integer)
+            "prop1", new PropertyDefBuilder().setName("prop1").setType(PropertyType.String).build(),
+            "prop2", new PropertyDefBuilder().setName("prop2").setType(PropertyType.Integer).build()
         );
 
         MutableAspectDefImpl aspectDef1 = new MutableAspectDefImpl("testAspect", propertyDefs1);
@@ -404,8 +404,8 @@ class MutableAspectDefImplTest
     void hash_SameInstance_ReturnsSameHash()
     {
         Map<String, PropertyDef> propertyDefs = ImmutableMap.of(
-            "prop1", new PropertyDefImpl("prop1", PropertyType.String),
-            "prop2", new PropertyDefImpl("prop2", PropertyType.Integer)
+            "prop1", new PropertyDefBuilder().setName("prop1").setType(PropertyType.String).build(),
+            "prop2", new PropertyDefBuilder().setName("prop2").setType(PropertyType.Integer).build()
         );
 
         MutableAspectDefImpl aspectDef = new MutableAspectDefImpl("testAspect", propertyDefs);
@@ -417,12 +417,12 @@ class MutableAspectDefImplTest
     void hash_DifferentPropertyOrder_ReturnsDifferentHash()
     {
         Map<String, PropertyDef> propertyDefs1 = new LinkedHashMap<>();
-        propertyDefs1.put("prop1", new PropertyDefImpl("prop1", PropertyType.String));
-        propertyDefs1.put("prop2", new PropertyDefImpl("prop2", PropertyType.Integer));
+        propertyDefs1.put("prop1", new PropertyDefBuilder().setName("prop1").setType(PropertyType.String).build());
+        propertyDefs1.put("prop2", new PropertyDefBuilder().setName("prop2").setType(PropertyType.Integer).build());
 
         Map<String, PropertyDef> propertyDefs2 = new LinkedHashMap<>();
-        propertyDefs2.put("prop2", new PropertyDefImpl("prop2", PropertyType.Integer));
-        propertyDefs2.put("prop1", new PropertyDefImpl("prop1", PropertyType.String));
+        propertyDefs2.put("prop2", new PropertyDefBuilder().setName("prop2").setType(PropertyType.Integer).build());
+        propertyDefs2.put("prop1", new PropertyDefBuilder().setName("prop1").setType(PropertyType.String).build());
 
         MutableAspectDefImpl aspectDef1 = new MutableAspectDefImpl("testAspect", propertyDefs1);
         MutableAspectDefImpl aspectDef2 = new MutableAspectDefImpl("testAspect", propertyDefs2);

@@ -138,7 +138,7 @@ public abstract class JdbcCatalogBase extends CatalogImpl
                     boolean isNullable = columns.getInt("NULLABLE") == DatabaseMetaData.columnNullable;
 
                     PropertyType propertyType = mapDbTypeToPropertyType(dbTypeName);
-                    PropertyDefImpl propertyDef = new PropertyDefImpl(columnName, propertyType, true, true, isNullable, true, false);
+                    PropertyDefImpl propertyDef = new PropertyDefBuilder().setName(columnName).setType(propertyType).setIsReadable(true).setIsWritable(true).setIsNullable(isNullable).setIsRemovable(true).setIsMultivalued(false).build();
 
                     aspectDef.add(propertyDef);
                 }

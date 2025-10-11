@@ -147,54 +147,13 @@ public final class PropertyDefImpl implements PropertyDef
     }
 
     /**
-     * Creates a PropertyDefImpl with default settings (no default value, readable,
-     * writable, nullable, removable, single-valued).
-     * 
-     * @param name the name of the property
-     * @param type the data type of the property
-     */
-    public PropertyDefImpl(String name, PropertyType type)
-    {
-        this(name, type, null, false, true, true, true, true, false);
-    }
-
-    /**
-     * Creates a PropertyDefImpl with the specified properties and no default value.
-     *
-     * @param name the name of the property
-     * @param type the data type of the property
-     * @param isNullable whether the property accepts null values
-     * @param isRemovable whether the property can be removed
-     */
-    public PropertyDefImpl(String name, PropertyType type, boolean isReadable, boolean isWritable,
-                           boolean isNullable, boolean isRemovable, boolean isMultivalued
-    )
-    {
-        this(name, type, null, false, isReadable, isWritable, isNullable, isRemovable, isMultivalued);
-    }
-
-    /**
-     * Creates a read-only PropertyDefImpl with specified nullable and removable settings,
-     * defaulting to (no default value, readable, writable, and single-valued)
-     *
-     * @param name the name of the property
-     * @param type the data type of the property
-     * @param isNullable whether the property accepts null values
-     * @param isRemovable whether the property can be removed
-     * @return a new read-only PropertyDefImpl instance
-     */
-    public static @NotNull PropertyDefImpl readOnly(String name, PropertyType type, boolean isNullable, boolean isRemovable)
-    {
-        return new PropertyDefImpl(name, type, null, false, true, false, isNullable, isRemovable, false);
-    }
-
-    /**
      * Tests whether this is equal to another object. True if the other is a PropertyDef
      * and has the same name.
      *
      * @param other the reference object with which to compare.
      * @return true if the other is a PropertyDef and has the same name
      */
+    @SuppressWarnings("StringEquality")
     @Override
     public boolean equals(Object other)
     {
