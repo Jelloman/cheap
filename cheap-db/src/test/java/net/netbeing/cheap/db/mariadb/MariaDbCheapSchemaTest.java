@@ -16,6 +16,7 @@
 
 package net.netbeing.cheap.db.mariadb;
 
+import net.netbeing.cheap.db.CheapTestFactory;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -134,71 +135,9 @@ class MariaDbCheapSchemaTest
 
         try (Connection conn = db.dataSource.getConnection()) {
             // Populate all tables with at least 1 row
-
-            // Insert into entity
-            UUID entityId = UUID.randomUUID();
-            executeUpdate(conn, "INSERT INTO entity (entity_id) VALUES (?)", entityId.toString());
-
-            // Insert into aspect_def
-            UUID aspectDefId = UUID.randomUUID();
-            executeUpdate(conn, "INSERT INTO aspect_def (aspect_def_id, name, hash_version, is_readable, is_writable, can_add_properties, can_remove_properties) VALUES (?, ?, ?, ?, ?, ?, ?)",
-                aspectDefId.toString(), "test_aspect", 123L, true, true, false, false);
-
-            // Insert into property_def
-            executeUpdate(conn, "INSERT INTO property_def (aspect_def_id, name, property_type, default_value, has_default_value, is_readable, is_writable, is_nullable, is_removable, is_multivalued) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                aspectDefId.toString(), "test_prop", "STR", null, false, true, true, true, false, false);
-
-            // Insert into catalog
+            CheapTestFactory testFactory = new CheapTestFactory();
             UUID catalogId = UUID.randomUUID();
-            executeUpdate(conn, "INSERT INTO catalog (catalog_id, species, uri, upstream_catalog_id, version_number) VALUES (?, ?, ?, ?, ?)",
-                catalogId.toString(), "SINK", null, null, 1L);
-
-            // Insert into catalog_aspect_def
-            executeUpdate(conn, "INSERT INTO catalog_aspect_def (catalog_id, aspect_def_id) VALUES (?, ?)",
-                catalogId.toString(), aspectDefId.toString());
-
-            // Insert into hierarchy
-            executeUpdate(conn, "INSERT INTO hierarchy (catalog_id, name, hierarchy_type, version_number) VALUES (?, ?, ?, ?)",
-                catalogId.toString(), "test_hierarchy", "EL", 1L);
-
-            // Insert into aspect
-            executeUpdate(conn, "INSERT INTO aspect (entity_id, aspect_def_id, catalog_id, hierarchy_name) VALUES (?, ?, ?, ?)",
-                entityId.toString(), aspectDefId.toString(), catalogId.toString(), "test_hierarchy");
-
-            // Insert into property_value
-            executeUpdate(conn, "INSERT INTO property_value (entity_id, aspect_def_id, catalog_id, property_name, value_text, value_binary) VALUES (?, ?, ?, ?, ?, ?)",
-                entityId.toString(), aspectDefId.toString(), catalogId.toString(), "test_prop", "test_value", null);
-
-            // Insert into hierarchy_entity_list
-            executeUpdate(conn, "INSERT INTO hierarchy_entity_list (catalog_id, hierarchy_name, entity_id, list_order) VALUES (?, ?, ?, ?)",
-                catalogId.toString(), "test_hierarchy", entityId.toString(), 0);
-
-            // Insert into hierarchy_entity_set
-            UUID entityId2 = UUID.randomUUID();
-            executeUpdate(conn, "INSERT INTO entity (entity_id) VALUES (?)", entityId2.toString());
-            executeUpdate(conn, "INSERT INTO hierarchy (catalog_id, name, hierarchy_type, version_number) VALUES (?, ?, ?, ?)",
-                catalogId.toString(), "test_set", "ES", 1L);
-            executeUpdate(conn, "INSERT INTO hierarchy_entity_set (catalog_id, hierarchy_name, entity_id, set_order) VALUES (?, ?, ?, ?)",
-                catalogId.toString(), "test_set", entityId2.toString(), 0);
-
-            // Insert into hierarchy_entity_directory
-            executeUpdate(conn, "INSERT INTO hierarchy (catalog_id, name, hierarchy_type, version_number) VALUES (?, ?, ?, ?)",
-                catalogId.toString(), "test_dir", "ED", 1L);
-            executeUpdate(conn, "INSERT INTO hierarchy_entity_directory (catalog_id, hierarchy_name, entity_key, entity_id, dir_order) VALUES (?, ?, ?, ?, ?)",
-                catalogId.toString(), "test_dir", "key1", entityId.toString(), 0);
-
-            // Insert into hierarchy_entity_tree_node
-            executeUpdate(conn, "INSERT INTO hierarchy (catalog_id, name, hierarchy_type, version_number) VALUES (?, ?, ?, ?)",
-                catalogId.toString(), "test_tree", "ET", 1L);
-            UUID nodeId = UUID.randomUUID();
-            executeUpdate(conn, "INSERT INTO hierarchy_entity_tree_node (node_id, catalog_id, hierarchy_name, parent_node_id, node_key, entity_id, node_path, tree_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-                nodeId.toString(), catalogId.toString(), "test_tree", null, "", entityId.toString(), "", 0);
-
-            // Insert into hierarchy_aspect_map
-            executeUpdate(conn, "INSERT INTO hierarchy (catalog_id, name, hierarchy_type, version_number) VALUES (?, ?, ?, ?)",
-                catalogId.toString(), "test_aspect", "AM", 1L);
-            executeUpdate(conn, "INSERT INTO hierarchy_aspect_map (catalog_id, hierarchy_name, entity_id, aspect_def_id, map_order) VALUES (?, ?, ?, ?, ?)",
-                catalogId.toString(), "test_aspect", entityId.toString(), aspectDefId.toString(), 0);
+            CheapTestFactory.EntityIds ids = testFactory.populateAllHierarchyTypes(conn, catalogId);
 
             // Verify all tables have at least 1 row
             assertTrue(getRowCount(conn, "entity") >= 1, "entity should have at least 1 row");
@@ -232,16 +171,6 @@ class MariaDbCheapSchemaTest
             assertEquals(0, getRowCount(conn, "hierarchy_entity_directory"), "hierarchy_entity_directory should be empty after truncate");
             assertEquals(0, getRowCount(conn, "hierarchy_entity_tree_node"), "hierarchy_entity_tree_node should be empty after truncate");
             assertEquals(0, getRowCount(conn, "hierarchy_aspect_map"), "hierarchy_aspect_map should be empty after truncate");
-        }
-    }
-
-    private void executeUpdate(Connection conn, String sql, Object... params) throws SQLException
-    {
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-            for (int i = 0; i < params.length; i++) {
-                stmt.setObject(i + 1, params[i]);
-            }
-            stmt.executeUpdate();
         }
     }
 
