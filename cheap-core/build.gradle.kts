@@ -21,7 +21,8 @@ dependencies {
     testRuntimeOnly(libs.junit.jupiter)
 
     api(libs.commons.math3)
-    api(libs.guava)
+
+    implementation(libs.guava)
 
     compileOnly(libs.jetbrains.annotations)
 

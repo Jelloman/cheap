@@ -16,14 +16,11 @@
 
 package net.netbeing.cheap.model;
 
-import com.google.common.hash.*;
+import net.netbeing.cheap.util.CheapHasher;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
 import java.util.Objects;
-import java.util.UUID;
-
-import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  * Defines the structure and metadata for an aspect type within the Cheap data model.
@@ -140,41 +137,27 @@ public interface AspectDef extends Entity
     }
 
     /**
-     * Generate a Cheap-specific SHA-256 hash of this AspectDef.
+     * Generate a Cheap-specific FNV-1a hash of this AspectDef.
      * This hash should be consistent across all Cheap implementations.
      *
      * <P>Implementations of this interface should probably cache the result of this
      * default method for improved performance.</P>
      *
-     * @return a HashCode
+     * @return a 64-bit hash value
      */
-    @SuppressWarnings("UnstableApiUsage")
-    default HashCode hash()
+    default long hash()
     {
-        //TODO: replace use of Hasher with language-independent algo
-        Hasher hasher = Hashing.sha256().newHasher();
-        hasher.putObject(this, FUNNEL);
-        return hasher.hash();
-    }
-
-    Funneler FUNNEL = new Funneler();
-
-    @SuppressWarnings("UnstableApiUsage")
-    class Funneler implements Funnel<AspectDef>
-    {
-        @Override
-        public void funnel(AspectDef def, PrimitiveSink sink)
-        {
-            sink.putBoolean(Objects.requireNonNull(def).isReadable());
-            sink.putBoolean(def.isWritable());
-            sink.putBoolean(def.canAddProperties());
-            sink.putBoolean(def.canRemoveProperties());
-            sink.putString(def.name(), UTF_8);
-            sink.putString(def.globalId().toString(), UTF_8);
-            for (PropertyDef pDef : def.propertyDefs()) {
-                PropertyDef.FUNNEL.funnel(pDef, sink);
-            }
+        CheapHasher hasher = new CheapHasher();
+        hasher.update(isReadable());
+        hasher.update(isWritable());
+        hasher.update(canAddProperties());
+        hasher.update(canRemoveProperties());
+        hasher.update(name());
+        hasher.update(globalId());
+        for (PropertyDef pDef : propertyDefs()) {
+            hasher.update(pDef.hash());
         }
+        return hasher.getHash();
     }
 
 }

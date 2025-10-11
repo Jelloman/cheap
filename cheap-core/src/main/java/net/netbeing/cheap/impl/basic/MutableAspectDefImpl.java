@@ -109,23 +109,27 @@ public class MutableAspectDefImpl extends AspectDefBase implements MutableAspect
 
     /**
      * Adds a property definition to this mutable aspect definition.
-     * 
+     * Invalidates the cached hash value since the aspect definition has changed.
+     *
      * @param prop the property definition to add
      * @return the previous property definition with the same name, or {@code null} if none existed
      */
     public PropertyDef add(@NotNull PropertyDef prop)
     {
+        invalidateHashCache();
         return propertyDefs.put(prop.name(), prop);
     }
 
     /**
      * Removes a property definition from this mutable aspect definition.
-     * 
+     * Invalidates the cached hash value since the aspect definition has changed.
+     *
      * @param prop the property definition to remove
      * @return the removed property definition, or {@code null} if it wasn't present
      */
     public PropertyDef remove(@NotNull PropertyDef prop)
     {
+        invalidateHashCache();
         return propertyDefs.remove(prop.name());
     }
 

@@ -16,13 +16,11 @@
 
 package net.netbeing.cheap.model;
 
-import com.google.common.hash.*;
+import net.netbeing.cheap.util.CheapHasher;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 import java.util.Objects;
-
-import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  * Defines the metadata and constraints for a property within the Cheap data model.
@@ -137,42 +135,28 @@ public interface PropertyDef
     }
 
     /**
-     * Generate a Cheap-specific SHA-256 hash of this PropertyDef.
+     * Generate a Cheap-specific FNV-1a hash of this PropertyDef.
      * This hash should be consistent across all Cheap implementations.
      *
      * <P>Implementations of this interface should probably cache the result of this
      * default method for improved performance.</P>
      *
-     * @return a HashCode
+     * @return a 64-bit hash value
      */
-    @SuppressWarnings("UnstableApiUsage")
-    default HashCode hash()
+    default long hash()
     {
-        //TODO: replace use of Hasher with language-independent algo
-        Hasher hasher = Hashing.sha256().newHasher();
-        hasher.putObject(this, FUNNEL);
-        return hasher.hash();
-    }
-
-    static Funneler FUNNEL = new Funneler();
-
-    @SuppressWarnings("UnstableApiUsage")
-    class Funneler implements Funnel<PropertyDef>
-    {
-        @Override
-        public void funnel(PropertyDef def, PrimitiveSink into)
-        {
-            into.putBoolean(Objects.requireNonNull(def).isReadable());
-            into.putBoolean(def.isWritable());
-            into.putBoolean(def.isNullable());
-            into.putBoolean(def.isRemovable());
-            into.putBoolean(def.hasDefaultValue());
-            if (def.hasDefaultValue() && def.defaultValue() != null) {
-                into.putInt(def.defaultValue().hashCode());
-            }
-            into.putString(def.type().typeCode(), UTF_8);
-            into.putString(def.name(), UTF_8);
+        CheapHasher hasher = new CheapHasher();
+        hasher.update(isReadable());
+        hasher.update(isWritable());
+        hasher.update(isNullable());
+        hasher.update(isRemovable());
+        hasher.update(hasDefaultValue());
+        if (hasDefaultValue() && defaultValue() != null) {
+            hasher.update((long) defaultValue().hashCode());
         }
+        hasher.update(type().typeCode());
+        hasher.update(name());
+        return hasher.getHash();
     }
 
     /**

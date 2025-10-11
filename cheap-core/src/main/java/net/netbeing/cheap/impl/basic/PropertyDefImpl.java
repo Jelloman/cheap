@@ -23,51 +23,127 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Objects;
 
 /**
- * Record-based implementation of PropertyDef that defines the structure and
+ * Implementation of PropertyDef that defines the structure and
  * constraints of a property in the Cheap system.
  * <p>
- * This implementation uses Java records to provide an immutable property
- * definition with automatic equals, hashCode, and toString implementations.
+ * This implementation provides an immutable property definition with
+ * cached hash computation for improved performance.
  * Property definitions specify type information, access permissions, and
  * value constraints.
- * 
- * @param name the name of the property
- * @param type the data type of the property
- * @param isReadable whether the property can be read
- * @param isWritable whether the property can be written
- * @param isNullable whether the property accepts null values
- * @param isRemovable whether the property can be removed
- * @param isMultivalued whether the property can hold multiple values
- * 
+ *
  * @see PropertyDef
  * @see PropertyType
  * @see PropertyImpl
  */
-public record PropertyDefImpl(
-        String name,
-        PropertyType type,
-        Object defaultValue,
-        boolean hasDefaultValue,
-        boolean isReadable,
-        boolean isWritable,
-        boolean isNullable,
-        boolean isRemovable,
-        boolean isMultivalued
-) implements PropertyDef
+public final class PropertyDefImpl implements PropertyDef
 {
+    private final String name;
+    private final PropertyType type;
+    private final Object defaultValue;
+    private final boolean hasDefaultValue;
+    private final boolean isReadable;
+    private final boolean isWritable;
+    private final boolean isNullable;
+    private final boolean isRemovable;
+    private final boolean isMultivalued;
+
+    /** Cached hash value (0 means not yet computed). */
+    private volatile long cachedHash = 0;
+
     /**
-     * Compact constructor that validates the property definition parameters.
-     * 
+     * Primary constructor that creates a PropertyDefImpl with all parameters.
+     *
+     * @param name the name of the property
+     * @param type the data type of the property
+     * @param defaultValue the default value for the property
+     * @param hasDefaultValue whether the property has a default value
+     * @param isReadable whether the property can be read
+     * @param isWritable whether the property can be written
+     * @param isNullable whether the property accepts null values
+     * @param isRemovable whether the property can be removed
+     * @param isMultivalued whether the property can hold multiple values
+     *
      * @throws IllegalArgumentException if the name is empty
      * @throws NullPointerException if the type is null
      */
-    public PropertyDefImpl
+    public PropertyDefImpl(
+            String name,
+            PropertyType type,
+            Object defaultValue,
+            boolean hasDefaultValue,
+            boolean isReadable,
+            boolean isWritable,
+            boolean isNullable,
+            boolean isRemovable,
+            boolean isMultivalued)
     {
         Objects.requireNonNull(type);
         if (name.isEmpty()) {
             throw new IllegalArgumentException("Property names must have at least 1 character.");
         }
-        name = name.intern();
+        this.name = name.intern();
+        this.type = type;
+        this.defaultValue = defaultValue;
+        this.hasDefaultValue = hasDefaultValue;
+        this.isReadable = isReadable;
+        this.isWritable = isWritable;
+        this.isNullable = isNullable;
+        this.isRemovable = isRemovable;
+        this.isMultivalued = isMultivalued;
+    }
+
+    @Override
+    public String name()
+    {
+        return name;
+    }
+
+    @Override
+    public PropertyType type()
+    {
+        return type;
+    }
+
+    @Override
+    public Object defaultValue()
+    {
+        return defaultValue;
+    }
+
+    @Override
+    public boolean hasDefaultValue()
+    {
+        return hasDefaultValue;
+    }
+
+    @Override
+    public boolean isReadable()
+    {
+        return isReadable;
+    }
+
+    @Override
+    public boolean isWritable()
+    {
+        return isWritable;
+    }
+
+    @Override
+    public boolean isNullable()
+    {
+        return isNullable;
+    }
+
+    @Override
+    public boolean isRemovable()
+    {
+        return isRemovable;
+    }
+
+    @Override
+    public boolean isMultivalued()
+    {
+        return isMultivalued;
     }
 
     /**
@@ -119,6 +195,7 @@ public record PropertyDefImpl(
      * @param other the reference object with which to compare.
      * @return true if the other is a PropertyDef and has the same name
      */
+    @Override
     public boolean equals(Object other)
     {
         return (other instanceof PropertyDef) && name == ((PropertyDef) other).name();
@@ -133,5 +210,41 @@ public record PropertyDefImpl(
     public int hashCode()
     {
         return name.hashCode();
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p>
+     * This implementation caches the computed hash value for improved performance.
+     * The cache uses a volatile long variable with 0 as the sentinel value indicating
+     * "not yet computed". This is safe because the FNV-1a hash algorithm never produces
+     * a hash value of 0 for any non-empty input.
+     */
+    @Override
+    public long hash()
+    {
+        long result = cachedHash;
+        if (result == 0) {
+            // Compute hash using default implementation from PropertyDef interface
+            result = PropertyDef.super.hash();
+            cachedHash = result;
+        }
+        return result;
+    }
+
+    @Override
+    public String toString()
+    {
+        return "PropertyDefImpl[" +
+                "name=" + name +
+                ", type=" + type +
+                ", defaultValue=" + defaultValue +
+                ", hasDefaultValue=" + hasDefaultValue +
+                ", isReadable=" + isReadable +
+                ", isWritable=" + isWritable +
+                ", isNullable=" + isNullable +
+                ", isRemovable=" + isRemovable +
+                ", isMultivalued=" + isMultivalued +
+                ']';
     }
 }

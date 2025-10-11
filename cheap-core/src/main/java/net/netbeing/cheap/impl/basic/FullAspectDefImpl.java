@@ -124,6 +124,7 @@ public class FullAspectDefImpl extends AspectDefBase implements MutableAspectDef
 
     /**
      * Adds a property definition to this aspect definition.
+     * Invalidates the cached hash value since the aspect definition has changed.
      *
      * @param prop the property definition to add
      * @return the previous property definition with the same name, or {@code null} if none existed
@@ -136,11 +137,13 @@ public class FullAspectDefImpl extends AspectDefBase implements MutableAspectDef
             throw new UnsupportedOperationException(
                 "Cannot add properties to AspectDef '" + name + "' (canAddProperties=false).");
         }
+        invalidateHashCache();
         return propertyDefs.put(prop.name(), prop);
     }
 
     /**
      * Removes a property definition from this aspect definition.
+     * Invalidates the cached hash value since the aspect definition has changed.
      *
      * @param prop the property definition to remove
      * @return the removed property definition, or {@code null} if it wasn't present
@@ -153,6 +156,7 @@ public class FullAspectDefImpl extends AspectDefBase implements MutableAspectDef
             throw new UnsupportedOperationException(
                 "Cannot remove properties from AspectDef '" + name + "' (canRemoveProperties=false).");
         }
+        invalidateHashCache();
         return propertyDefs.remove(prop.name());
     }
 }

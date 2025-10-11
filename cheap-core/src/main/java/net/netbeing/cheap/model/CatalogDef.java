@@ -16,15 +16,10 @@
 
 package net.netbeing.cheap.model;
 
-import com.google.common.hash.*;
+import net.netbeing.cheap.util.CheapHasher;
 import org.jetbrains.annotations.NotNull;
 
-import java.net.URI;
-import java.util.Collection;
 import java.util.Objects;
-import java.util.UUID;
-
-import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  * A CatalogDef defines the structure and properties of a catalog.
@@ -70,38 +65,24 @@ public interface CatalogDef
     AspectDef aspectDef(String name);
 
     /**
-     * Generate a Cheap-specific SHA-256 hash of this CatalogDef.
+     * Generate a Cheap-specific FNV-1a hash of this CatalogDef.
      * This hash should be consistent across all Cheap implementations.
      *
      * <P>Implementations of this interface should probably cache the result of this
      * default method for improved performance.</P>
      *
-     * @return a HashCode
+     * @return a 64-bit hash value
      */
-    @SuppressWarnings("UnstableApiUsage")
-    default HashCode hash()
+    default long hash()
     {
-        //TODO: replace use of Hasher with language-independent algo
-        Hasher hasher = Hashing.sha256().newHasher();
-        hasher.putObject(this, FUNNEL);
-        return hasher.hash();
-    }
-
-    static Funneler FUNNEL = new Funneler();
-
-    @SuppressWarnings("UnstableApiUsage")
-    class Funneler implements Funnel<CatalogDef>
-    {
-        @Override
-        public void funnel(CatalogDef def, @NotNull PrimitiveSink sink)
-        {
-            for (AspectDef aDef : Objects.requireNonNull(def).aspectDefs()) {
-                AspectDef.FUNNEL.funnel(aDef, sink);
-            }
-            for (HierarchyDef hDef : def.hierarchyDefs()) {
-                HierarchyDef.FUNNEL.funnel(hDef, sink);
-            }
+        CheapHasher hasher = new CheapHasher();
+        for (AspectDef aDef : aspectDefs()) {
+            hasher.update(aDef.hash());
         }
+        for (HierarchyDef hDef : hierarchyDefs()) {
+            hasher.update(hDef.hash());
+        }
+        return hasher.getHash();
     }
 
 }

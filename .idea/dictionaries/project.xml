@@ -37,6 +37,7 @@
       <w>regtype</w>
       <w>roundtrip</w>
       <w>smallserial</w>
+      <w>substr</w>
       <w>timestamptz</w>
       <w>tsquery</w>
       <w>tsrange</w>
