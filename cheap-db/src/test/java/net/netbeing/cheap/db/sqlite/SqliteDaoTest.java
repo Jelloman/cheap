@@ -27,6 +27,9 @@ import org.sqlite.SQLiteDataSource;
 
 import javax.sql.DataSource;
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -35,6 +38,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.time.ZonedDateTime;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -1077,6 +1081,164 @@ class SqliteDaoTest
         assertNotNull(loadedBothIdsAsp);
         assertEquals("bothids1", loadedBothIdsAsp.readObj("string_col"));
         assertEquals(400L, loadedBothIdsAsp.readObj("integer_col"));
+    }
+
+    @Test
+    void testCreateAspectTableWithAllPropertyTypes() throws Exception
+    {
+        // Create an AspectDef with one Property of each type
+        String aspectDefName = "all_types_aspect";
+
+        PropertyDef intProp = factory.createPropertyDef("int_prop", PropertyType.Integer, null, false, true, true, true, false, false);
+        PropertyDef floatProp = factory.createPropertyDef("float_prop", PropertyType.Float, null, false, true, true, true, false, false);
+        PropertyDef boolProp = factory.createPropertyDef("bool_prop", PropertyType.Boolean, null, false, true, true, true, false, false);
+        PropertyDef stringProp = factory.createPropertyDef("string_prop", PropertyType.String, null, false, true, true, true, false, false);
+        PropertyDef textProp = factory.createPropertyDef("text_prop", PropertyType.Text, null, false, true, true, true, false, false);
+        PropertyDef bigIntProp = factory.createPropertyDef("bigint_prop", PropertyType.BigInteger, null, false, true, true, true, false, false);
+        PropertyDef bigDecProp = factory.createPropertyDef("bigdec_prop", PropertyType.BigDecimal, null, false, true, true, true, false, false);
+        PropertyDef dateProp = factory.createPropertyDef("date_prop", PropertyType.DateTime, null, false, true, true, true, false, false);
+        PropertyDef uriProp = factory.createPropertyDef("uri_prop", PropertyType.URI, null, false, true, true, true, false, false);
+        PropertyDef uuidProp = factory.createPropertyDef("uuid_prop", PropertyType.UUID, null, false, true, true, true, false, false);
+        PropertyDef clobProp = factory.createPropertyDef("clob_prop", PropertyType.CLOB, null, false, true, true, true, false, false);
+        PropertyDef blobProp = factory.createPropertyDef("blob_prop", PropertyType.BLOB, null, false, true, true, true, false, false);
+
+        Map<String, PropertyDef> propDefs = new LinkedHashMap<>();
+        propDefs.put("int_prop", intProp);
+        propDefs.put("float_prop", floatProp);
+        propDefs.put("bool_prop", boolProp);
+        propDefs.put("string_prop", stringProp);
+        propDefs.put("text_prop", textProp);
+        propDefs.put("bigint_prop", bigIntProp);
+        propDefs.put("bigdec_prop", bigDecProp);
+        propDefs.put("date_prop", dateProp);
+        propDefs.put("uri_prop", uriProp);
+        propDefs.put("uuid_prop", uuidProp);
+        propDefs.put("clob_prop", clobProp);
+        propDefs.put("blob_prop", blobProp);
+
+        AspectDef aspectDef = factory.createImmutableAspectDef(aspectDefName, propDefs);
+
+        // Create the table using createAspectTable()
+        AspectTableMapping mapping = getAspectTableMapping(aspectDef);
+        sqliteDao.createTable(mapping);
+
+        // Create catalog with AspectMapHierarchy
+        UUID catalogId = UUID.randomUUID();
+        Catalog catalog = factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
+
+        // extend() automatically creates an AspectMapHierarchy with the AspectDef's name
+        catalog.extend(aspectDef);
+        AspectMapHierarchy hierarchy = (AspectMapHierarchy) catalog.hierarchy(aspectDefName);
+
+        // Create test entities and aspects with all property types
+        UUID entityId1 = UUID.randomUUID();
+        UUID entityId2 = UUID.randomUUID();
+
+        Entity entity1 = factory.createEntity(entityId1);
+        Entity entity2 = factory.createEntity(entityId2);
+
+        // Create first aspect with test values
+        Aspect aspect1 = factory.createPropertyMapAspect(entity1, aspectDef);
+        aspect1.put(factory.createProperty(intProp, 42L));
+        aspect1.put(factory.createProperty(floatProp, 3.14159));
+        aspect1.put(factory.createProperty(boolProp, true));
+        aspect1.put(factory.createProperty(stringProp, "Hello World"));
+        aspect1.put(factory.createProperty(textProp, "This is a long text field with lots of content"));
+        aspect1.put(factory.createProperty(bigIntProp, new BigInteger("12345678901234567890")));
+        aspect1.put(factory.createProperty(bigDecProp, new BigDecimal("123.456789012345678901234567890")));
+        aspect1.put(factory.createProperty(dateProp, ZonedDateTime.parse("2025-01-15T10:30:00Z")));
+        aspect1.put(factory.createProperty(uriProp, new URI("https://example.com/path")));
+        aspect1.put(factory.createProperty(uuidProp, UUID.fromString("550e8400-e29b-41d4-a716-446655440000")));
+        aspect1.put(factory.createProperty(clobProp, "CLOB content here"));
+        aspect1.put(factory.createProperty(blobProp, new byte[]{1, 2, 3, 4, 5}));
+
+        // Create second aspect with different test values
+        Aspect aspect2 = factory.createPropertyMapAspect(entity2, aspectDef);
+        aspect2.put(factory.createProperty(intProp, 99L));
+        aspect2.put(factory.createProperty(floatProp, 2.71828));
+        aspect2.put(factory.createProperty(boolProp, false));
+        aspect2.put(factory.createProperty(stringProp, "Goodbye World"));
+        aspect2.put(factory.createProperty(textProp, "Another long text field"));
+        aspect2.put(factory.createProperty(bigIntProp, new BigInteger("98765432109876543210")));
+        aspect2.put(factory.createProperty(bigDecProp, new BigDecimal("987.654321098765432109876543210")));
+        aspect2.put(factory.createProperty(dateProp, ZonedDateTime.parse("2025-12-31T23:59:59Z")));
+        aspect2.put(factory.createProperty(uriProp, new URI("https://example.org/another")));
+        aspect2.put(factory.createProperty(uuidProp, UUID.fromString("6ba7b810-9dad-11d1-80b4-00c04fd430c8")));
+        aspect2.put(factory.createProperty(clobProp, "Different CLOB content"));
+        aspect2.put(factory.createProperty(blobProp, new byte[]{10, 20, 30, 40, 50}));
+
+        hierarchy.put(entity1, aspect1);
+        hierarchy.put(entity2, aspect2);
+
+        // Save catalog (should use mapped table for the hierarchy)
+        sqliteDao.saveCatalog(catalog);
+
+        // Load the catalog back
+        Catalog loadedCatalog = sqliteDao.loadCatalog(catalogId);
+        assertNotNull(loadedCatalog);
+
+        // Get the loaded hierarchy
+        AspectMapHierarchy loadedHierarchy = (AspectMapHierarchy) loadedCatalog.hierarchy(aspectDefName);
+        assertNotNull(loadedHierarchy);
+
+        // Verify first aspect was correctly reconstituted
+        Entity loadedEntity1 = factory.getOrRegisterNewEntity(entityId1);
+        Aspect loadedAspect1 = loadedHierarchy.get(loadedEntity1);
+        assertNotNull(loadedAspect1);
+        assertEquals(42L, loadedAspect1.readObj("int_prop"));
+        assertEquals(3.14159, (Double) loadedAspect1.readObj("float_prop"), 0.00001);
+        assertEquals(true, loadedAspect1.readObj("bool_prop"));
+        assertEquals("Hello World", loadedAspect1.readObj("string_prop"));
+        assertEquals("This is a long text field with lots of content", loadedAspect1.readObj("text_prop"));
+        assertEquals(new BigInteger("12345678901234567890"), new BigInteger(loadedAspect1.readObj("bigint_prop").toString()));
+        assertEquals(new BigDecimal("123.456789012345678901234567890"), new BigDecimal(loadedAspect1.readObj("bigdec_prop").toString()));
+        assertEquals("https://example.com/path", loadedAspect1.readObj("uri_prop").toString());
+        assertEquals(UUID.fromString("550e8400-e29b-41d4-a716-446655440000"), loadedAspect1.readObj("uuid_prop"));
+        assertEquals("CLOB content here", loadedAspect1.readObj("clob_prop"));
+        assertArrayEquals(new byte[]{1, 2, 3, 4, 5}, (byte[]) loadedAspect1.readObj("blob_prop"));
+
+        // Verify second aspect was correctly reconstituted
+        Entity loadedEntity2 = factory.getOrRegisterNewEntity(entityId2);
+        Aspect loadedAspect2 = loadedHierarchy.get(loadedEntity2);
+        assertNotNull(loadedAspect2);
+        assertEquals(99L, loadedAspect2.readObj("int_prop"));
+        assertEquals(2.71828, (Double) loadedAspect2.readObj("float_prop"), 0.00001);
+        assertEquals(false, loadedAspect2.readObj("bool_prop"));
+        assertEquals("Goodbye World", loadedAspect2.readObj("string_prop"));
+        assertEquals("Another long text field", loadedAspect2.readObj("text_prop"));
+        assertEquals(new BigInteger("98765432109876543210"), new BigInteger(loadedAspect2.readObj("bigint_prop").toString()));
+        assertEquals(new BigDecimal("987.654321098765432109876543210"), new BigDecimal(loadedAspect2.readObj("bigdec_prop").toString()));
+        assertEquals("https://example.org/another", loadedAspect2.readObj("uri_prop").toString());
+        assertEquals(UUID.fromString("6ba7b810-9dad-11d1-80b4-00c04fd430c8"), loadedAspect2.readObj("uuid_prop"));
+        assertEquals("Different CLOB content", loadedAspect2.readObj("clob_prop"));
+        assertArrayEquals(new byte[]{10, 20, 30, 40, 50}, (byte[]) loadedAspect2.readObj("blob_prop"));
+    }
+
+    private static AspectTableMapping getAspectTableMapping(AspectDef aspectDef)
+    {
+        String tableName = "test_all_types";
+
+        // Create and register an AspectTableMapping
+        Map<String, String> columnMapping = new LinkedHashMap<>();
+        columnMapping.put("int_prop", "int_prop");
+        columnMapping.put("float_prop", "float_prop");
+        columnMapping.put("bool_prop", "bool_prop");
+        columnMapping.put("string_prop", "string_prop");
+        columnMapping.put("text_prop", "text_prop");
+        columnMapping.put("bigint_prop", "bigint_prop");
+        columnMapping.put("bigdec_prop", "bigdec_prop");
+        columnMapping.put("date_prop", "date_prop");
+        columnMapping.put("uri_prop", "uri_prop");
+        columnMapping.put("uuid_prop", "uuid_prop");
+        columnMapping.put("clob_prop", "clob_prop");
+        columnMapping.put("blob_prop", "blob_prop");
+
+        AspectTableMapping mapping = new AspectTableMapping(
+            aspectDef,
+            tableName,
+            columnMapping
+        );
+        return mapping;
     }
 
     @SuppressWarnings("DataFlowIssue")
