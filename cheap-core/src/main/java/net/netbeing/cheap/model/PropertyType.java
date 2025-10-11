@@ -20,9 +20,13 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Reader;
 import java.io.Writer;
+import java.lang.reflect.Array;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.net.URI;
+import java.sql.Timestamp;
+import java.time.Instant;
+import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -210,10 +214,10 @@ public enum PropertyType
 
         // Handle arrays (except byte[]) - coerce each element
         if (value.getClass().isArray()) {
-            int length = java.lang.reflect.Array.getLength(value);
+            int length = Array.getLength(value);
             List<Object> coercedList = new ArrayList<>(length);
             for (int i = 0; i < length; i++) {
-                Object element = java.lang.reflect.Array.get(value, i);
+                Object element = Array.get(value, i);
                 coercedList.add(coerceSingleValue(element));
             }
             return coercedList;
@@ -333,11 +337,11 @@ public enum PropertyType
         if (value instanceof java.lang.String str) {
             return ZonedDateTime.parse(str);
         }
-        if (value instanceof java.sql.Timestamp timestamp) {
-            return ZonedDateTime.ofInstant(timestamp.toInstant(), java.time.ZoneId.systemDefault());
+        if (value instanceof Timestamp timestamp) {
+            return ZonedDateTime.ofInstant(timestamp.toInstant(), ZoneId.systemDefault());
         }
-        if (value instanceof java.time.Instant instant) {
-            return ZonedDateTime.ofInstant(instant, java.time.ZoneId.systemDefault());
+        if (value instanceof Instant instant) {
+            return ZonedDateTime.ofInstant(instant, ZoneId.systemDefault());
         }
         throw new IllegalArgumentException("Cannot coerce to ZonedDateTime");
     }

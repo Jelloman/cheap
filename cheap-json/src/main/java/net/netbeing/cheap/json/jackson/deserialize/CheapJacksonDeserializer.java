@@ -24,6 +24,7 @@ import net.netbeing.cheap.util.CheapFactory;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
+import java.io.Reader;
 
 /**
  * Jackson-based JSON deserializer for Cheap data model objects.
@@ -102,7 +103,7 @@ public class CheapJacksonDeserializer
      * @return the deserialized Catalog
      * @throws IOException if the JSON is invalid or cannot be deserialized
      */
-    public @NotNull Catalog fromJson(@NotNull java.io.Reader reader) throws IOException
+    public @NotNull Catalog fromJson(@NotNull Reader reader) throws IOException
     {
         return mapper.readValue(reader, Catalog.class);
     }

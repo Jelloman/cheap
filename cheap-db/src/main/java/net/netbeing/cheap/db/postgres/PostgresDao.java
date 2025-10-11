@@ -1340,11 +1340,11 @@ public class PostgresDao implements CatalogPersistence
             case String, Text, CLOB -> valueText;
             case BigInteger -> new BigInteger(valueText);
             case BigDecimal -> new BigDecimal(valueText);
-            case DateTime -> java.sql.Timestamp.valueOf(valueText);
+            case DateTime -> Timestamp.valueOf(valueText);
             case URI -> {
                 try {
-                    yield new java.net.URI(valueText);
-                } catch (java.net.URISyntaxException e) {
+                    yield new URI(valueText);
+                } catch (URISyntaxException e) {
                     throw new SQLException("Invalid URI value: " + valueText, e);
                 }
             }

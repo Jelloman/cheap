@@ -51,7 +51,7 @@ import java.util.Map;
  * @see GenericGetterSetter
  * @see GetterSetterSignature
  * @see MethodDef
- * @see java.lang.invoke.LambdaMetafactory
+ * @see LambdaMetafactory
  */
 public final class ReflectionWrapper
 {

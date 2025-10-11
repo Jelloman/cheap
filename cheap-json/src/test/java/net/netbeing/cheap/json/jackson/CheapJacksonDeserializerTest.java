@@ -26,6 +26,7 @@ import org.junit.jupiter.api.Test;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -331,7 +332,7 @@ public class CheapJacksonDeserializerTest
         assertEquals("Smart Watch", product1.readObj("title"));
 
         @SuppressWarnings("unchecked")
-        java.util.List<String> tags1 = (java.util.List<String>) product1.readObj("tags");
+        List<String> tags1 = (List<String>) product1.readObj("tags");
         assertNotNull(tags1);
         assertEquals(3, tags1.size());
         assertEquals("electronics", tags1.get(0));
@@ -339,7 +340,7 @@ public class CheapJacksonDeserializerTest
         assertEquals("popular", tags1.get(2));
 
         @SuppressWarnings("unchecked")
-        java.util.List<Long> scores1 = (java.util.List<Long>) product1.readObj("scores");
+        List<Long> scores1 = (List<Long>) product1.readObj("scores");
         assertNotNull(scores1);
         assertEquals(3, scores1.size());
         assertEquals(100L, scores1.get(0));
@@ -347,7 +348,7 @@ public class CheapJacksonDeserializerTest
         assertEquals(87L, scores1.get(2));
 
         @SuppressWarnings("unchecked")
-        java.util.List<Double> ratings1 = (java.util.List<Double>) product1.readObj("ratings");
+        List<Double> ratings1 = (List<Double>) product1.readObj("ratings");
         assertNotNull(ratings1);
         assertEquals(3, ratings1.size());
         assertEquals(4.5, ratings1.get(0), 0.01);
@@ -362,7 +363,7 @@ public class CheapJacksonDeserializerTest
         assertEquals("Office Suite", product2.readObj("title"));
 
         @SuppressWarnings("unchecked")
-        java.util.List<String> tags2 = (java.util.List<String>) product2.readObj("tags");
+        List<String> tags2 = (List<String>) product2.readObj("tags");
         assertEquals(2, tags2.size());
         assertEquals("software", tags2.get(0));
         assertEquals("productivity", tags2.get(1));
@@ -387,7 +388,7 @@ public class CheapJacksonDeserializerTest
         Aspect product1 = productAspects.get(entity1);
 
         @SuppressWarnings("unchecked")
-        java.util.List<String> tags = (java.util.List<String>) product1.readObj("tags");
+        List<String> tags = (List<String>) product1.readObj("tags");
         assertEquals(3, tags.size());
         assertEquals("electronics", tags.get(0));
     }

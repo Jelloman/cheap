@@ -5,12 +5,15 @@
       <w>aspectdefdir</w>
       <w>aspectdefdirhierarchy</w>
       <w>aspectmaphierarchy</w>
+      <w>bigdec</w>
       <w>bigserial</w>
       <w>bpchar</w>
       <w>catalogdef</w>
+      <w>catid</w>
       <w>cheapd</w>
       <w>daterange</w>
       <w>entitydirectoryhierarchy</w>
+      <w>entityid</w>
       <w>entitylisthierarchy</w>
       <w>entitysethierarchy</w>
       <w>entitytreehierarchy</w>
@@ -21,6 +24,7 @@
       <w>hierarchydir</w>
       <w>lseg</w>
       <w>macaddr</w>
+      <w>nokey</w>
       <w>numrange</w>
       <w>ossp</w>
       <w>plpgsql</w>
