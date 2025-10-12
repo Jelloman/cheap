@@ -23,6 +23,7 @@ import org.jetbrains.annotations.NotNull;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.TimeZone;
 import java.util.UUID;
 
 /**
@@ -47,7 +48,9 @@ public class CheapFactory
     private final Map<String, AspectDef> aspectDefs = new HashMap<>();
     private final Map<String, HierarchyDef> hierarchyDefs = new HashMap<>();
     private final Map<UUID, Entity> entities = new HashMap<>();
+    private final PropertyValueAdapter propertyAdapter = new PropertyValueAdapter();
     private Catalog catalog = null;
+    private TimeZone timeZone;
 
     /**
      * Creates a new CheapFactory with the defaults of LocalEntityType.SINGLE_CATALOG
@@ -70,6 +73,17 @@ public class CheapFactory
     {
         this.defaultLocalEntityType = defaultLocalEntityType != null ? defaultLocalEntityType : LocalEntityType.SINGLE_CATALOG;
         this.aspectBuilderClass = aspectBuilderClass != null ? aspectBuilderClass : AspectObjectMapBuilder.class;
+    }
+
+    public TimeZone getTimeZone()
+    {
+        return timeZone;
+    }
+
+    public void setTimeZone(TimeZone timeZone)
+    {
+        this.timeZone = timeZone;
+        propertyAdapter.setTimeZone(timeZone);
     }
 
     /**
@@ -134,6 +148,7 @@ public class CheapFactory
      * @param aspectDef the aspectDef to register
      * @return the existing AspectDef registered under that name, if any
      */
+    @SuppressWarnings("UnusedReturnValue")
     public AspectDef registerAspectDef(AspectDef aspectDef)
     {
         return aspectDefs.put(aspectDef.name(), aspectDef);
@@ -157,6 +172,7 @@ public class CheapFactory
      * @param hierarchyDef the hierarchyDef to register
      * @return the existing HierarchyDef registered under that name, if any
      */
+    @SuppressWarnings("UnusedReturnValue")
     public HierarchyDef registerHierarchyDef(HierarchyDef hierarchyDef)
     {
         return hierarchyDefs.put(hierarchyDef.name(), hierarchyDef);
@@ -898,7 +914,7 @@ public class CheapFactory
      */
     public @NotNull Property createProperty(@NotNull PropertyDef def, Object value)
     {
-        Object coercedValue = def.type().coerce(value);
+        Object coercedValue = propertyAdapter.coerce(def, value);
         return new PropertyImpl(def, coercedValue);
     }
 
