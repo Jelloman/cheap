@@ -90,7 +90,7 @@ public class PropertyValueAdapter
                 if (coerced != element) {
                     List<Object> coercedList = new ArrayList<>(coll.size());
                     for (Object element2 : coll) {
-                        coercedList.add(coerceSingleValue(propDef.type(), element));
+                        coercedList.add(coerceSingleValue(propDef.type(), element2));
                     }
                     return coercedList;
                 }
