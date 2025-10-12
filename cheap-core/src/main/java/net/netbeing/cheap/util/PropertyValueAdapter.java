@@ -28,6 +28,7 @@ import java.time.Instant;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HexFormat;
 import java.util.List;
 import java.util.TimeZone;
 import java.util.UUID;
@@ -244,7 +245,7 @@ public class PropertyValueAdapter
     public URI coerceToURI(Object value)
     {
         if (value instanceof String str) {
-            return java.net.URI.create(str);
+            return URI.create(str);
         }
         throw illegalArgument(PropertyType.URI, value);
     }
@@ -260,7 +261,7 @@ public class PropertyValueAdapter
     public byte[] coerceToByteArray(Object value)
     {
         if (value instanceof String str) {
-            return str.getBytes();
+            return HexFormat.of().parseHex(str);
         }
         throw illegalArgument(PropertyType.BLOB, value);
     }

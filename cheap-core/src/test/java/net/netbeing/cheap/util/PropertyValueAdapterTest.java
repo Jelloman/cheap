@@ -240,8 +240,9 @@ class PropertyValueAdapterTest
     @Test
     void testCoerceToByteArray_fromString()
     {
-        String input = "hello";
-        assertArrayEquals(input.getBytes(), adapter.coerceToByteArray(input));
+        String input = "0102ABCD";
+        byte[] expectedBytes = new byte[] { 1, 2, (byte) 171, (byte) 205 };
+        assertArrayEquals(expectedBytes, adapter.coerceToByteArray(input));
     }
 
     @Test
@@ -411,7 +412,8 @@ class PropertyValueAdapterTest
 
         // BLOB
         PropertyDef blobProp = new PropertyDefImpl("blob", PropertyType.BLOB);
-        assertArrayEquals("hello".getBytes(), (byte[]) adapter.coerce(blobProp, "hello"));
+        byte[] expectedBytes = new byte[] { 1, 2, (byte) 171, (byte) 205 };
+        assertArrayEquals(expectedBytes, (byte[]) adapter.coerce(blobProp, "0102ABCD"));
     }
 
     // Test TimeZone getter/setter
