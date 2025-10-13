@@ -309,7 +309,7 @@ public class MariaDbDao implements CheapPersistenceModule
         try (Connection conn = dataSource.getConnection()) {
             conn.setAutoCommit(false);
             try {
-                saveCatalogWithTransaction(conn, catalog);
+                saveCatalog(conn, catalog);
                 conn.commit();
             } catch (SQLException e) {
                 conn.rollback();
@@ -318,7 +318,7 @@ public class MariaDbDao implements CheapPersistenceModule
         }
     }
 
-    private void saveCatalogWithTransaction(Connection conn, Catalog catalog) throws SQLException
+    private void saveCatalog(Connection conn, Catalog catalog) throws SQLException
     {
         // Save the Catalog entity itself first and foremost
         saveEntity(conn, catalog);
@@ -330,7 +330,7 @@ public class MariaDbDao implements CheapPersistenceModule
         for (AspectDef aspectDef : catalog.aspectDefs()) {
             saveAspectDef(conn, aspectDef);
             // Link the AspectDef to this Catalog
-            linkCatalogToAspectDef(conn, catalog.globalId(), aspectDef);
+            linkCatalogToAspectDef(conn, catalog, aspectDef);
         }
 
         // Save all entities, aspects, and properties from hierarchies
@@ -340,13 +340,13 @@ public class MariaDbDao implements CheapPersistenceModule
         }
     }
 
-    private void linkCatalogToAspectDef(Connection conn, UUID catalogId, AspectDef aspectDef) throws SQLException
+    private void linkCatalogToAspectDef(Connection conn, Catalog catalog, AspectDef aspectDef) throws SQLException
     {
         UUID aspectDefId = getAspectDefId(conn, aspectDef.name());
         String sql = "INSERT INTO catalog_aspect_def (catalog_id, aspect_def_id) " +
             "VALUES (?, ?) ON DUPLICATE KEY UPDATE catalog_id=VALUES(catalog_id)";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, catalogId.toString());
+            stmt.setString(1, catalog.globalId().toString());
             stmt.setString(2, aspectDefId.toString());
             stmt.executeUpdate();
         }
@@ -401,7 +401,7 @@ public class MariaDbDao implements CheapPersistenceModule
             stmt.setString(1, aspectDefId.toString());
             stmt.setString(2, propDef.name());
             stmt.setString(3, propDef.type().typeCode());
-            stmt.setString(4, propDef.hasDefaultValue() ? propDef.defaultValue().toString() : null);
+            stmt.setString(4, propDef.hasDefaultValue() && propDef.defaultValue() != null ? propDef.defaultValue().toString() : null);
             stmt.setBoolean(5, propDef.hasDefaultValue());
             stmt.setBoolean(6, propDef.isReadable());
             stmt.setBoolean(7, propDef.isWritable());
@@ -461,20 +461,18 @@ public class MariaDbDao implements CheapPersistenceModule
 
     private void saveHierarchyContent(Connection conn, Hierarchy hierarchy) throws SQLException
     {
-        UUID catalogId = hierarchy.catalog().globalId();
-        String hierarchyName = hierarchy.name();
-
         switch (hierarchy.type()) {
-            case ENTITY_LIST -> saveEntityListContent(conn, catalogId, hierarchyName, (EntityListHierarchy) hierarchy);
-            case ENTITY_SET -> saveEntitySetContent(conn, catalogId, hierarchyName, (EntitySetHierarchy) hierarchy);
-            case ENTITY_DIR -> saveEntityDirectoryContent(conn, catalogId, hierarchyName, (EntityDirectoryHierarchy) hierarchy);
-            case ENTITY_TREE -> saveEntityTreeContent(conn, catalogId, hierarchyName, (EntityTreeHierarchy) hierarchy);
-            case ASPECT_MAP -> saveAspectMapContent(conn, catalogId, hierarchyName, (AspectMapHierarchy) hierarchy);
+            case ENTITY_LIST -> saveEntityListContent(conn, (EntityListHierarchy) hierarchy);
+            case ENTITY_SET -> saveEntitySetContent(conn, (EntitySetHierarchy) hierarchy);
+            case ENTITY_DIR -> saveEntityDirectoryContent(conn, (EntityDirectoryHierarchy) hierarchy);
+            case ENTITY_TREE -> saveEntityTreeContent(conn, (EntityTreeHierarchy) hierarchy);
+            case ASPECT_MAP -> saveAspectMapContent(conn, (AspectMapHierarchy) hierarchy);
         }
     }
 
-    private void saveEntityListContent(Connection conn, UUID catalogId, String hierarchyName, EntityListHierarchy hierarchy) throws SQLException
+    private void saveEntityListContent(Connection conn, EntityListHierarchy hierarchy) throws SQLException
     {
+        final String catalogId = hierarchy.catalog().globalId().toString();
         String sql = "INSERT INTO hierarchy_entity_list (catalog_id, hierarchy_name, entity_id, list_order) " +
             "VALUES (?, ?, ?, ?) " +
             "ON DUPLICATE KEY UPDATE " +
@@ -483,8 +481,8 @@ public class MariaDbDao implements CheapPersistenceModule
             int order = 0;
             for (Entity entity : hierarchy) {
                 saveEntity(conn, entity);
-                stmt.setString(1, catalogId.toString());
-                stmt.setString(2, hierarchyName);
+                stmt.setString(1, catalogId);
+                stmt.setString(2, hierarchy.name());
                 stmt.setString(3, entity.globalId().toString());
                 stmt.setInt(4, order++);
                 stmt.addBatch();
@@ -493,8 +491,9 @@ public class MariaDbDao implements CheapPersistenceModule
         }
     }
 
-    private void saveEntitySetContent(Connection conn, UUID catalogId, String hierarchyName, EntitySetHierarchy hierarchy) throws SQLException
+    private void saveEntitySetContent(Connection conn, EntitySetHierarchy hierarchy) throws SQLException
     {
+        final String catalogId = hierarchy.catalog().globalId().toString();
         String sql = "INSERT INTO hierarchy_entity_set (catalog_id, hierarchy_name, entity_id, set_order) " +
             "VALUES (?, ?, ?, ?) " +
             "ON DUPLICATE KEY UPDATE " +
@@ -503,8 +502,8 @@ public class MariaDbDao implements CheapPersistenceModule
             int order = 0;
             for (Entity entity : hierarchy) {
                 saveEntity(conn, entity);
-                stmt.setString(1, catalogId.toString());
-                stmt.setString(2, hierarchyName);
+                stmt.setString(1, catalogId);
+                stmt.setString(2, hierarchy.name());
                 stmt.setString(3, entity.globalId().toString());
                 stmt.setInt(4, order++);
                 stmt.addBatch();
@@ -513,8 +512,9 @@ public class MariaDbDao implements CheapPersistenceModule
         }
     }
 
-    private void saveEntityDirectoryContent(Connection conn, UUID catalogId, String hierarchyName, EntityDirectoryHierarchy hierarchy) throws SQLException
+    private void saveEntityDirectoryContent(Connection conn, EntityDirectoryHierarchy hierarchy) throws SQLException
     {
+        final String catalogId = hierarchy.catalog().globalId().toString();
         String sql = "INSERT INTO hierarchy_entity_directory (catalog_id, hierarchy_name, entity_key, entity_id, dir_order) " +
             "VALUES (?, ?, ?, ?, ?) " +
             "ON DUPLICATE KEY UPDATE " +
@@ -526,8 +526,8 @@ public class MariaDbDao implements CheapPersistenceModule
                 Entity entity = hierarchy.get(key);
                 if (entity != null) {
                     saveEntity(conn, entity);
-                    stmt.setString(1, catalogId.toString());
-                    stmt.setString(2, hierarchyName);
+                    stmt.setString(1, catalogId);
+                    stmt.setString(2, hierarchy.name());
                     stmt.setString(3, key);
                     stmt.setString(4, entity.globalId().toString());
                     stmt.setInt(5, order++);
@@ -538,15 +538,16 @@ public class MariaDbDao implements CheapPersistenceModule
         }
     }
 
-    private void saveEntityTreeContent(Connection conn, UUID catalogId, String hierarchyName, EntityTreeHierarchy hierarchy) throws SQLException
+    private void saveEntityTreeContent(Connection conn, EntityTreeHierarchy hierarchy) throws SQLException
     {
         // Save tree nodes recursively
-        saveTreeNode(conn, catalogId, hierarchyName, hierarchy.root(), "", "", null, 0);
+        saveTreeNode(conn, hierarchy, hierarchy.root(), "", "", null, 0);
     }
 
-    private void saveTreeNode(Connection conn, UUID catalogId, String hierarchyName, EntityTreeHierarchy.Node node,
+    private void saveTreeNode(Connection conn, EntityTreeHierarchy hierarchy, EntityTreeHierarchy.Node node,
                               String nodeKey, String nodePath, UUID parentNodeId, int order) throws SQLException
     {
+        final String catalogId = hierarchy.catalog().globalId().toString();
         UUID nodeId = UUID.randomUUID();
         UUID entityId = node.value() == null ? null : node.value().globalId();
 
@@ -559,8 +560,8 @@ public class MariaDbDao implements CheapPersistenceModule
             "tree_order = VALUES(tree_order)";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, nodeId.toString());
-            stmt.setString(2, catalogId.toString());
-            stmt.setString(3, hierarchyName);
+            stmt.setString(2, catalogId);
+            stmt.setString(3, hierarchy.name());
             stmt.setString(4, parentNodeId != null ? parentNodeId.toString() : null);
             stmt.setString(5, nodeKey);
             stmt.setString(6, entityId != null ? entityId.toString() : null);
@@ -577,26 +578,27 @@ public class MariaDbDao implements CheapPersistenceModule
                 String childPath = nodePath + '/' + name;
                 EntityTreeHierarchy.Node child = entry.getValue();
                 if (child != null) {
-                    saveTreeNode(conn, catalogId, hierarchyName, child, name, childPath, nodeId, childOrder++);
+                    saveTreeNode(conn, hierarchy, child, name, childPath, nodeId, childOrder++);
                 }
             }
         }
     }
 
-    private void saveAspectMapContent(Connection conn, UUID catalogId, String hierarchyName, AspectMapHierarchy hierarchy) throws SQLException
+    private void saveAspectMapContent(Connection conn, AspectMapHierarchy hierarchy) throws SQLException
     {
         // Check if this AspectDef has a table mapping
         AspectTableMapping mapping = getAspectTableMapping(hierarchy.aspectDef().name());
 
         if (mapping != null) {
-            saveAspectMapContentToMappedTable(conn, catalogId, hierarchyName, hierarchy, mapping);
+            saveAspectMapContentToMappedTable(conn, hierarchy, mapping);
         } else {
-            saveAspectMapContentToDefaultTables(conn, catalogId, hierarchyName, hierarchy);
+            saveAspectMapContentToDefaultTables(conn, hierarchy);
         }
     }
 
-    private void saveAspectMapContentToDefaultTables(Connection conn, UUID catalogId, String hierarchyName, AspectMapHierarchy hierarchy) throws SQLException
+    private void saveAspectMapContentToDefaultTables(Connection conn, AspectMapHierarchy hierarchy) throws SQLException
     {
+        final String catalogId = hierarchy.catalog().globalId().toString();
         String aspectSql = "INSERT INTO aspect (entity_id, aspect_def_id, catalog_id, hierarchy_name) " +
             "VALUES (?, ?, ?, ?) " +
             "ON DUPLICATE KEY UPDATE " +
@@ -619,15 +621,15 @@ public class MariaDbDao implements CheapPersistenceModule
                 try (PreparedStatement aspectStmt = conn.prepareStatement(aspectSql)) {
                     aspectStmt.setString(1, entity.globalId().toString());
                     aspectStmt.setString(2, aspectDefId.toString());
-                    aspectStmt.setString(3, catalogId.toString());
-                    aspectStmt.setString(4, hierarchyName);
+                    aspectStmt.setString(3, catalogId);
+                    aspectStmt.setString(4, hierarchy.name());
                     aspectStmt.executeUpdate();
                 }
 
                 // Save hierarchy mapping
                 try (PreparedStatement mapStmt = conn.prepareStatement(hierarchyMapSql)) {
-                    mapStmt.setString(1, catalogId.toString());
-                    mapStmt.setString(2, hierarchyName);
+                    mapStmt.setString(1, catalogId);
+                    mapStmt.setString(2, hierarchy.name());
                     mapStmt.setString(3, entity.globalId().toString());
                     mapStmt.setString(4, aspectDefId.toString());
                     mapStmt.setInt(5, order++);
@@ -635,13 +637,14 @@ public class MariaDbDao implements CheapPersistenceModule
                 }
 
                 // Save properties
-                saveAspectProperties(conn, entity.globalId(), aspectDefId, catalogId, aspect);
+                saveAspectProperties(conn, entity.globalId(), aspectDefId, hierarchy.catalog().globalId(), aspect);
             }
         }
     }
 
-    private void saveAspectMapContentToMappedTable(Connection conn, UUID catalogId, String hierarchyName, AspectMapHierarchy hierarchy, AspectTableMapping mapping) throws SQLException
+    private void saveAspectMapContentToMappedTable(Connection conn, AspectMapHierarchy hierarchy, AspectTableMapping mapping) throws SQLException
     {
+        final String catalogId = hierarchy.catalog().globalId().toString();
         // Pre-save cleanup based on flags
         if (!mapping.hasEntityId() && !mapping.hasCatalogId()) {
             // No IDs: TRUNCATE the entire table
@@ -652,7 +655,7 @@ public class MariaDbDao implements CheapPersistenceModule
             // Catalog ID only: DELETE rows for this catalog
             String deleteSql = "DELETE FROM " + mapping.tableName() + " WHERE catalog_id = ?";
             try (PreparedStatement stmt = conn.prepareStatement(deleteSql)) {
-                stmt.setString(1, catalogId.toString());
+                stmt.setString(1, catalogId);
                 stmt.executeUpdate();
             }
         }
@@ -716,7 +719,7 @@ public class MariaDbDao implements CheapPersistenceModule
                     int paramIndex = 1;
 
                     if (mapping.hasCatalogId()) {
-                        stmt.setString(paramIndex++, catalogId.toString());
+                        stmt.setString(paramIndex++, catalogId);
                     }
 
                     if (mapping.hasEntityId()) {
@@ -937,13 +940,12 @@ public class MariaDbDao implements CheapPersistenceModule
 
     private void loadExistingHierarchyContent(Connection conn, UUID catalogId, Hierarchy hierarchy, HierarchyType type) throws SQLException
     {
-        String hierarchyName = hierarchy.name();
         switch (type) {
-            case ENTITY_LIST -> loadEntityListContent(conn, catalogId, hierarchyName, (EntityListHierarchy) hierarchy);
-            case ENTITY_SET -> loadEntitySetContent(conn, catalogId, hierarchyName, (EntitySetHierarchy) hierarchy);
-            case ENTITY_DIR -> loadEntityDirectoryContent(conn, catalogId, hierarchyName, (EntityDirectoryHierarchy) hierarchy);
-            case ENTITY_TREE -> loadEntityTreeContent(conn, catalogId, hierarchyName, (EntityTreeHierarchy) hierarchy);
-            case ASPECT_MAP -> loadAspectMapContent(conn, catalogId, hierarchyName, (AspectMapHierarchy) hierarchy);
+            case ENTITY_LIST -> loadEntityListContent(conn, catalogId, hierarchy.name(), (EntityListHierarchy) hierarchy);
+            case ENTITY_SET -> loadEntitySetContent(conn, catalogId, hierarchy.name(), (EntitySetHierarchy) hierarchy);
+            case ENTITY_DIR -> loadEntityDirectoryContent(conn, catalogId, hierarchy.name(), (EntityDirectoryHierarchy) hierarchy);
+            case ENTITY_TREE -> loadEntityTreeContent(conn, catalogId, hierarchy.name(), (EntityTreeHierarchy) hierarchy);
+            case ASPECT_MAP -> loadAspectMapContent(conn, catalogId, hierarchy.name(), (AspectMapHierarchy) hierarchy);
             default -> throw new IllegalArgumentException("Unknown hierarchy type: " + type);
         }
     }

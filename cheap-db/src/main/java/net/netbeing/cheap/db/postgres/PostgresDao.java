@@ -401,7 +401,7 @@ public class PostgresDao implements CheapPersistenceModule
             stmt.setObject(1, aspectDefId);
             stmt.setString(2, propDef.name());
             stmt.setString(3, propDef.type().typeCode());
-            stmt.setString(4, propDef.hasDefaultValue() ? propDef.defaultValue().toString() : null);
+            stmt.setString(4, propDef.hasDefaultValue() && propDef.defaultValue() != null ? propDef.defaultValue().toString() : null);
             stmt.setBoolean(5, propDef.hasDefaultValue());
             stmt.setBoolean(6, propDef.isReadable());
             stmt.setBoolean(7, propDef.isWritable());

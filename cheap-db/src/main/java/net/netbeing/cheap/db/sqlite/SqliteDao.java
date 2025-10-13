@@ -314,7 +314,7 @@ public class SqliteDao implements CheapPersistenceModule
             stmt.setString(1, aspectDefId);
             stmt.setString(2, propDef.name());
             stmt.setString(3, propDef.type().typeCode());
-            stmt.setString(4, propDef.hasDefaultValue() ? propDef.defaultValue().toString() : null);
+            stmt.setString(4, propDef.hasDefaultValue() && propDef.defaultValue() != null ? propDef.defaultValue().toString() : null);
             stmt.setInt(5, propDef.hasDefaultValue() ? 1 : 0);
             stmt.setInt(6, propDef.isReadable() ? 1 : 0);
             stmt.setInt(7, propDef.isWritable() ? 1 : 0);
