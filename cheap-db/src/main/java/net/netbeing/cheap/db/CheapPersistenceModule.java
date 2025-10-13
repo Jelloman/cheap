@@ -19,7 +19,6 @@ package net.netbeing.cheap.db;
 import net.netbeing.cheap.model.Catalog;
 import org.jetbrains.annotations.NotNull;
 
-import javax.sql.DataSource;
 import java.sql.SQLException;
 import java.util.UUID;
 
@@ -28,7 +27,8 @@ import java.util.UUID;
  * Provides operations to persist the entire Cheap model structure including
  * definitions, entities, aspects, properties, and hierarchies.
  */
-public interface CatalogPersistence {
+public interface CheapPersistenceModule
+{
 
     /**
      * Saves a complete catalog to the database, including all its definitions,

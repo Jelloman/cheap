@@ -17,7 +17,7 @@
 package net.netbeing.cheap.db.postgres;
 
 import net.netbeing.cheap.db.AspectTableMapping;
-import net.netbeing.cheap.db.CatalogPersistence;
+import net.netbeing.cheap.db.CheapPersistenceModule;
 import net.netbeing.cheap.model.*;
 import net.netbeing.cheap.util.CheapFactory;
 import org.jetbrains.annotations.NotNull;
@@ -27,7 +27,6 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -155,13 +154,13 @@ import java.util.UUID;
  *   <li>BLOB → BYTEA / BLB</li>
  * </ul>
  *
- * @see CatalogPersistence
+ * @see CheapPersistenceModule
  * @see AspectTableMapping
  * @see CheapFactory
  * @see Catalog
  */
 @SuppressWarnings("DuplicateBranchesInSwitch")
-public class PostgresDao implements CatalogPersistence
+public class PostgresDao implements CheapPersistenceModule
 {
     private final DataSource dataSource;
     private final CheapFactory factory;
