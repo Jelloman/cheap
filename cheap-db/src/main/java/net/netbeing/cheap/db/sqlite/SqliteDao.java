@@ -313,7 +313,7 @@ public class SqliteDao implements CheapPersistenceModule
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, aspectDefId);
             stmt.setString(2, propDef.name());
-            stmt.setString(3, mapPropertyTypeToDbType(propDef.type()));
+            stmt.setString(3, propDef.type().typeCode());
             stmt.setString(4, propDef.hasDefaultValue() ? propDef.defaultValue().toString() : null);
             stmt.setInt(5, propDef.hasDefaultValue() ? 1 : 0);
             stmt.setInt(6, propDef.isReadable() ? 1 : 0);
@@ -366,7 +366,7 @@ public class SqliteDao implements CheapPersistenceModule
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, catalogId);
             stmt.setString(2, hierarchy.name());
-            stmt.setString(3, mapHierarchyTypeToDbType(hierarchy.type()));
+            stmt.setString(3, hierarchy.type().typeCode());
             stmt.setLong(4, hierarchy.version());
             stmt.executeUpdate();
         }
@@ -690,14 +690,8 @@ public class SqliteDao implements CheapPersistenceModule
                         stmt.setString(3, catalogId);
                         stmt.setString(4, propName);
                         stmt.setInt(5, 0); // value_index
-
-                        if (type == PropertyType.BLOB) {
-                            stmt.setString(6, null); // value_text
-                            stmt.setBytes(7, null);  // value_binary
-                        } else {
-                            stmt.setString(6, null); // value_text
-                            stmt.setBytes(7, null);  // value_binary
-                        }
+                        stmt.setString(6, null); // value_text
+                        stmt.setBytes(7, null);  // value_binary
                         stmt.addBatch();
                     }
                 } else if (propDef.isMultivalued() && value instanceof List) {
@@ -749,7 +743,7 @@ public class SqliteDao implements CheapPersistenceModule
     /**
      * Converts a property value to its string representation for storage in value_text column.
      */
-    private String convertValueToString(Object value, PropertyType type) throws SQLException
+    private String convertValueToString(Object value, PropertyType type)
     {
         return switch (type) {
             case DateTime -> convertToTimestamp(value).toString();
@@ -839,7 +833,7 @@ public class SqliteDao implements CheapPersistenceModule
                     String name = rs.getString("name");
                     String typeStr = rs.getString("hierarchy_type");
                     long version = rs.getLong("version_number");
-                    HierarchyType type = mapDbTypeToHierarchyType(typeStr);
+                    HierarchyType type = HierarchyType.fromTypeCode(typeStr);
 
                     // Check if hierarchy already exists (it may have been created by extend())
                     Hierarchy existingHierarchy = catalog.hierarchy(name);
@@ -1302,7 +1296,7 @@ public class SqliteDao implements CheapPersistenceModule
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
                     String propName = rs.getString("name");
-                    PropertyType type = mapDbTypeToPropertyType(rs.getString("property_type"));
+                    PropertyType type = PropertyType.fromTypeCode(rs.getString("property_type"));
                     String defaultValue = rs.getString("default_value");
                     boolean hasDefaultValue = rs.getInt("has_default_value") == 1;
                     boolean propReadable = rs.getInt("is_readable") == 1;
@@ -1390,80 +1384,6 @@ public class SqliteDao implements CheapPersistenceModule
             }
         }
         throw new SQLException("AspectDef not found: " + name);
-    }
-
-    // ===== Type Mapping Methods =====
-
-    /**
-     * Maps a PropertyType to the internal 3-letter database type code.
-     */
-    private String mapPropertyTypeToDbType(PropertyType type)
-    {
-        return switch (type) {
-            case Integer -> "INT";
-            case Float -> "FLT";
-            case Boolean -> "BLN";
-            case String -> "STR";
-            case Text -> "TXT";
-            case BigInteger -> "BGI";
-            case BigDecimal -> "BGF";
-            case DateTime -> "DAT";
-            case URI -> "URI";
-            case UUID -> "UID";
-            case CLOB -> "CLB";
-            case BLOB -> "BLB";
-        };
-    }
-
-    /**
-     * Maps a database type code to the corresponding PropertyType.
-     */
-    private PropertyType mapDbTypeToPropertyType(String dbType)
-    {
-        return switch (dbType) {
-            case "INT" -> PropertyType.Integer;
-            case "FLT" -> PropertyType.Float;
-            case "BLN" -> PropertyType.Boolean;
-            case "STR" -> PropertyType.String;
-            case "TXT" -> PropertyType.Text;
-            case "BGI" -> PropertyType.BigInteger;
-            case "BGF" -> PropertyType.BigDecimal;
-            case "DAT" -> PropertyType.DateTime;
-            case "URI" -> PropertyType.URI;
-            case "UID" -> PropertyType.UUID;
-            case "CLB" -> PropertyType.CLOB;
-            case "BLB" -> PropertyType.BLOB;
-            default -> PropertyType.Text;
-        };
-    }
-
-    /**
-     * Maps a HierarchyType to the internal 2-letter database type code.
-     */
-    private String mapHierarchyTypeToDbType(HierarchyType type)
-    {
-        return switch (type) {
-            case ENTITY_LIST -> "EL";
-            case ENTITY_SET -> "ES";
-            case ENTITY_DIR -> "ED";
-            case ENTITY_TREE -> "ET";
-            case ASPECT_MAP -> "AM";
-        };
-    }
-
-    /**
-     * Maps a database type code to the corresponding HierarchyType.
-     */
-    private HierarchyType mapDbTypeToHierarchyType(String dbType)
-    {
-        return switch (dbType) {
-            case "EL" -> HierarchyType.ENTITY_LIST;
-            case "ES" -> HierarchyType.ENTITY_SET;
-            case "ED" -> HierarchyType.ENTITY_DIR;
-            case "ET" -> HierarchyType.ENTITY_TREE;
-            case "AM" -> HierarchyType.ASPECT_MAP;
-            default -> throw new IllegalArgumentException("Unknown hierarchy type: " + dbType);
-        };
     }
 
     // ===== Value Conversion Methods =====

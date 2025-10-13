@@ -16,6 +16,8 @@
 
 package net.netbeing.cheap.model;
 
+import com.google.common.collect.Maps;
+
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Reader;
@@ -29,7 +31,9 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -123,24 +127,6 @@ public enum PropertyType
     BLOB("BLB", byte[].class)
     ;
 
-    /**
-     * Container for CLOB stream operations, providing both input (Reader) and
-     * output (Writer) stream access for character-based large object data.
-     * 
-     * @param reader stream for reading character data from the CLOB
-     * @param writer stream for writing character data to the CLOB
-     */
-    public record ReaderWriter(Reader reader, Writer writer) {}
-
-    /**
-     * Container for BLOB stream operations, providing both input (InputStream) and
-     * output (OutputStream) stream access for binary large object data.
-     * 
-     * @param input stream for reading binary data from the BLOB
-     * @param output stream for writing binary data to the BLOB
-     */
-    public record InputOutput(InputStream input, OutputStream output) {}
-
     private final String typeCode;
     private final Class<?> javaClass;
 
@@ -170,6 +156,20 @@ public enum PropertyType
     public Class<?> getJavaClass()
     {
         return javaClass;
+    }
+
+    private static final Map<String, PropertyType> LOOKUP = Maps.uniqueIndex(Arrays.asList(values()), PropertyType::typeCode);
+
+    /**
+     * Convert a type code string to a PropertyType.
+     *
+     * @param typeCode a 3-letter string code
+     * @return the corresponding PropertyType
+     * @throws IllegalArgumentException if the code is not recognized
+     */
+    public static PropertyType fromTypeCode(String typeCode)
+    {
+        return LOOKUP.get(typeCode.toUpperCase());
     }
 
     public String toString()

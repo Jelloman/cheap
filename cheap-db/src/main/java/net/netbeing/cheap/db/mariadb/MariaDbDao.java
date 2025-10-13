@@ -400,7 +400,7 @@ public class MariaDbDao implements CheapPersistenceModule
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, aspectDefId.toString());
             stmt.setString(2, propDef.name());
-            stmt.setString(3, mapPropertyTypeToDbType(propDef.type()));
+            stmt.setString(3, propDef.type().typeCode());
             stmt.setString(4, propDef.hasDefaultValue() ? propDef.defaultValue().toString() : null);
             stmt.setBoolean(5, propDef.hasDefaultValue());
             stmt.setBoolean(6, propDef.isReadable());
@@ -453,7 +453,7 @@ public class MariaDbDao implements CheapPersistenceModule
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, catalogId.toString());
             stmt.setString(2, hierarchy.name());
-            stmt.setString(3, mapHierarchyTypeToDbType(hierarchy.type()));
+            stmt.setString(3, hierarchy.type().typeCode());
             stmt.setLong(4, hierarchy.version());
             stmt.executeUpdate();
         }
@@ -918,7 +918,7 @@ public class MariaDbDao implements CheapPersistenceModule
                     String name = rs.getString("name");
                     String typeStr = rs.getString("hierarchy_type");
                     long version = rs.getLong("version_number");
-                    HierarchyType type = mapDbTypeToHierarchyType(typeStr);
+                    HierarchyType type = HierarchyType.fromTypeCode(typeStr);
 
                     // Check if hierarchy already exists (it may have been created by extend())
                     Hierarchy existingHierarchy = catalog.hierarchy(name);
@@ -1389,7 +1389,7 @@ public class MariaDbDao implements CheapPersistenceModule
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
                     String propName = rs.getString("name");
-                    PropertyType type = mapDbTypeToPropertyType(rs.getString("property_type"));
+                    PropertyType type = PropertyType.fromTypeCode(rs.getString("property_type"));
                     String defaultValue = rs.getString("default_value");
                     boolean hasDefaultValue = rs.getBoolean("has_default_value");
                     boolean propReadable = rs.getBoolean("is_readable");
@@ -1429,6 +1429,7 @@ public class MariaDbDao implements CheapPersistenceModule
         try (Connection conn = dataSource.getConnection()) {
             conn.setAutoCommit(false);
             try {
+                // Cascading deletes should also delete all child DB entities.
                 String sql = "DELETE FROM catalog WHERE catalog_id = ?";
                 try (PreparedStatement stmt = conn.prepareStatement(sql)) {
                     stmt.setString(1, catalogId.toString());
@@ -1475,80 +1476,6 @@ public class MariaDbDao implements CheapPersistenceModule
         throw new SQLException("AspectDef not found: " + name);
     }
 
-    // ===== Type Mapping Methods =====
-
-    /**
-     * Maps a PropertyType to the internal 3-letter database type code.
-     */
-    private String mapPropertyTypeToDbType(PropertyType type)
-    {
-        return switch (type) {
-            case Integer -> "INT";
-            case Float -> "FLT";
-            case Boolean -> "BLN";
-            case String -> "STR";
-            case Text -> "TXT";
-            case BigInteger -> "BGI";
-            case BigDecimal -> "BGF";
-            case DateTime -> "DAT";
-            case URI -> "URI";
-            case UUID -> "UID";
-            case CLOB -> "CLB";
-            case BLOB -> "BLB";
-        };
-    }
-
-    /**
-     * Maps a database type code to the corresponding PropertyType.
-     */
-    private PropertyType mapDbTypeToPropertyType(String dbType)
-    {
-        return switch (dbType) {
-            case "INT" -> PropertyType.Integer;
-            case "FLT" -> PropertyType.Float;
-            case "BLN" -> PropertyType.Boolean;
-            case "STR" -> PropertyType.String;
-            case "TXT" -> PropertyType.Text;
-            case "BGI" -> PropertyType.BigInteger;
-            case "BGF" -> PropertyType.BigDecimal;
-            case "DAT" -> PropertyType.DateTime;
-            case "URI" -> PropertyType.URI;
-            case "UID" -> PropertyType.UUID;
-            case "CLB" -> PropertyType.CLOB;
-            case "BLB" -> PropertyType.BLOB;
-            default -> PropertyType.Text;
-        };
-    }
-
-    /**
-     * Maps a HierarchyType to the internal 2-letter database type code.
-     */
-    private String mapHierarchyTypeToDbType(HierarchyType type)
-    {
-        return switch (type) {
-            case ENTITY_LIST -> "EL";
-            case ENTITY_SET -> "ES";
-            case ENTITY_DIR -> "ED";
-            case ENTITY_TREE -> "ET";
-            case ASPECT_MAP -> "AM";
-        };
-    }
-
-    /**
-     * Maps a database type code to the corresponding HierarchyType.
-     */
-    private HierarchyType mapDbTypeToHierarchyType(String dbType)
-    {
-        return switch (dbType) {
-            case "EL" -> HierarchyType.ENTITY_LIST;
-            case "ES" -> HierarchyType.ENTITY_SET;
-            case "ED" -> HierarchyType.ENTITY_DIR;
-            case "ET" -> HierarchyType.ENTITY_TREE;
-            case "AM" -> HierarchyType.ASPECT_MAP;
-            default -> throw new IllegalArgumentException("Unknown hierarchy type: " + dbType);
-        };
-    }
-
     // ===== Value Conversion Methods =====
 
     /**
@@ -1586,7 +1513,7 @@ public class MariaDbDao implements CheapPersistenceModule
             case Float -> stmt.setDouble(paramIndex, ((Number) value).doubleValue());
             case Boolean -> stmt.setBoolean(paramIndex, (Boolean) value);
             case DateTime -> stmt.setTimestamp(paramIndex, convertToTimestamp(value));
-            case UUID -> stmt.setString(paramIndex, value instanceof UUID ? value.toString() : value.toString());
+            case UUID -> stmt.setString(paramIndex, value.toString());
             case BLOB -> stmt.setBytes(paramIndex, (byte[]) value);
             default -> stmt.setString(paramIndex, value.toString());
         }
