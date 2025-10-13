@@ -256,7 +256,7 @@ public class SqliteDao implements CheapPersistenceModule
 
     private void linkCatalogToAspectDef(Connection conn, UUID catalogId, AspectDef aspectDef) throws SQLException
     {
-        String aspectDefId = getAspectDefId(conn, aspectDef.name());
+        String aspectDefId = aspectDef.globalId().toString();
         String sql = "INSERT OR IGNORE INTO catalog_aspect_def (catalog_id, aspect_def_id) VALUES (?, ?)";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, catalogId.toString());
@@ -277,7 +277,7 @@ public class SqliteDao implements CheapPersistenceModule
                 "can_add_properties = excluded.can_add_properties, " +
                 "can_remove_properties = excluded.can_remove_properties";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, UUID.randomUUID().toString());
+            stmt.setString(1,aspectDef.globalId().toString());
             stmt.setString(2, aspectDef.name());
             stmt.setLong(3, aspectDef.hash());
             stmt.setInt(4, aspectDef.isReadable() ? 1 : 0);
@@ -295,8 +295,7 @@ public class SqliteDao implements CheapPersistenceModule
 
     private void savePropertyDef(Connection conn, AspectDef aspectDef, PropertyDef propDef) throws SQLException
     {
-        // First get the aspect_def_id
-        String aspectDefId = getAspectDefId(conn, aspectDef.name());
+        String aspectDefId = aspectDef.globalId().toString();
 
         String sql = "INSERT INTO property_def (aspect_def_id, name, property_type, default_value, " +
             "has_default_value, is_readable, is_writable, is_nullable, is_removable, is_multivalued) " +
@@ -520,7 +519,7 @@ public class SqliteDao implements CheapPersistenceModule
             "aspect_def_id = excluded.aspect_def_id, " +
             "map_order = excluded.map_order";
 
-        String aspectDefId = getAspectDefId(conn, hierarchy.aspectDef().name());
+        String aspectDefId = hierarchy.aspectDef().globalId().toString();
 
         int order = 0;
         for (Entity entity : hierarchy.keySet()) {
@@ -1127,7 +1126,7 @@ public class SqliteDao implements CheapPersistenceModule
             "WHERE entity_id = ? AND aspect_def_id = ? AND catalog_id = ? " +
             "ORDER BY property_name, value_index";
 
-        String aspectDefId = getAspectDefId(conn, aspectDef.name());
+        String aspectDefId = aspectDef.globalId().toString();
 
         // Track which properties we've loaded from the database
         Set<String> loadedProperties = new HashSet<>();
@@ -1264,21 +1263,25 @@ public class SqliteDao implements CheapPersistenceModule
     private AspectDef loadAspectDef(Connection conn, String aspectDefName) throws SQLException
     {
         // First load the AspectDef basic info including hash_version
-        String aspectSql = "SELECT hash_version, is_readable, is_writable, can_add_properties, can_remove_properties " +
+        String aspectSql = "SELECT aspect_def_id, hash_version, is_readable, is_writable, can_add_properties, can_remove_properties " +
             "FROM aspect_def WHERE name = ?";
 
         long hashVersion;
+        UUID aspectDefId;
         boolean isReadable = true, isWritable = true, canAddProperties = false, canRemoveProperties = false;
 
         try (PreparedStatement stmt = conn.prepareStatement(aspectSql)) {
             stmt.setString(1, aspectDefName);
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
+                    aspectDefId = UUID.fromString(rs.getString("aspect_def_id"));
                     hashVersion = rs.getLong("hash_version");
                     isReadable = rs.getInt("is_readable") == 1;
                     isWritable = rs.getInt("is_writable") == 1;
                     canAddProperties = rs.getInt("can_add_properties") == 1;
                     canRemoveProperties = rs.getInt("can_remove_properties") == 1;
+                } else {
+                    throw new SQLException("Unable to load AspectDef " + aspectDefName);
                 }
             }
         }
@@ -1287,12 +1290,12 @@ public class SqliteDao implements CheapPersistenceModule
         String propSql = "SELECT pd.name, pd.property_type, pd.default_value, pd.has_default_value, " +
             "pd.is_readable, pd.is_writable, pd.is_nullable, pd.is_removable, pd.is_multivalued " +
             "FROM property_def pd JOIN aspect_def ad ON pd.aspect_def_id = ad.aspect_def_id " +
-            "WHERE ad.name = ?";
+            "WHERE ad.aspect_def_id = ?";
 
         Map<String, PropertyDef> propertyDefMap = new LinkedHashMap<>();
 
         try (PreparedStatement stmt = conn.prepareStatement(propSql)) {
-            stmt.setString(1, aspectDefName);
+            stmt.setString(1, aspectDefId.toString());
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
                     String propName = rs.getString("name");
@@ -1317,13 +1320,13 @@ public class SqliteDao implements CheapPersistenceModule
         AspectDef aspectDef;
         if (canAddProperties && canRemoveProperties) {
             // Fully mutable - use MutableAspectDefImpl
-            aspectDef = factory.createMutableAspectDef(aspectDefName, propertyDefMap);
+            aspectDef = factory.createMutableAspectDef(aspectDefName, aspectDefId, propertyDefMap);
         } else if (!canAddProperties && !canRemoveProperties) {
             // Fully immutable - use ImmutableAspectDefImpl
-            aspectDef = factory.createImmutableAspectDef(aspectDefName, propertyDefMap);
+            aspectDef = factory.createImmutableAspectDef(aspectDefName, aspectDefId, propertyDefMap);
         } else {
             // Mixed mutability - use FullAspectDefImpl
-            aspectDef = factory.createFullAspectDef(aspectDefName, UUID.randomUUID(), propertyDefMap,
+            aspectDef = factory.createFullAspectDef(aspectDefName, aspectDefId, propertyDefMap,
                 isReadable, isWritable, canAddProperties, canRemoveProperties);
         }
 
@@ -1365,25 +1368,6 @@ public class SqliteDao implements CheapPersistenceModule
                 return rs.next();
             }
         }
-    }
-
-    // ===== Helper Methods =====
-
-    /**
-     * Looks up the UUID string for an AspectDef by name.
-     */
-    private String getAspectDefId(Connection conn, String name) throws SQLException
-    {
-        String sql = "SELECT aspect_def_id FROM aspect_def WHERE name = ?";
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, name);
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getString("aspect_def_id");
-                }
-            }
-        }
-        throw new SQLException("AspectDef not found: " + name);
     }
 
     // ===== Value Conversion Methods =====

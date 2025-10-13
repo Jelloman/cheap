@@ -18,9 +18,12 @@ package net.netbeing.cheap.db.postgres;
 
 import net.netbeing.cheap.db.AspectTableMapping;
 import net.netbeing.cheap.db.CheapPersistenceModule;
+import net.netbeing.cheap.db.mariadb.MariaDbDao;
 import net.netbeing.cheap.model.*;
 import net.netbeing.cheap.util.CheapFactory;
 import org.jetbrains.annotations.NotNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.sql.DataSource;
 import java.math.BigDecimal;
@@ -162,6 +165,8 @@ import java.util.UUID;
 @SuppressWarnings("DuplicateBranchesInSwitch")
 public class PostgresDao implements CheapPersistenceModule
 {
+    private static final Logger logger = LoggerFactory.getLogger(PostgresDao.class);
+
     private final DataSource dataSource;
     private final CheapFactory factory;
     private final Map<String, AspectTableMapping> aspectTableMappings = new LinkedHashMap<>();
@@ -342,7 +347,7 @@ public class PostgresDao implements CheapPersistenceModule
 
     private void linkCatalogToAspectDef(Connection conn, UUID catalogId, AspectDef aspectDef) throws SQLException
     {
-        UUID aspectDefId = getAspectDefId(conn, aspectDef.name());
+        UUID aspectDefId = aspectDef.globalId();
         String sql = "INSERT INTO catalog_aspect_def (catalog_id, aspect_def_id) " +
             "VALUES (?, ?) ON CONFLICT (catalog_id, aspect_def_id) DO NOTHING";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -364,7 +369,7 @@ public class PostgresDao implements CheapPersistenceModule
                 "can_add_properties = EXCLUDED.can_add_properties, " +
                 "can_remove_properties = EXCLUDED.can_remove_properties";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setObject(1, UUID.randomUUID());
+            stmt.setObject(1, aspectDef.globalId());
             stmt.setString(2, aspectDef.name());
             stmt.setLong(3, aspectDef.hash());
             stmt.setBoolean(4, aspectDef.isReadable());
@@ -383,7 +388,7 @@ public class PostgresDao implements CheapPersistenceModule
     private void savePropertyDef(Connection conn, AspectDef aspectDef, PropertyDef propDef) throws SQLException
     {
         // First get the aspect_def_id
-        UUID aspectDefId = getAspectDefId(conn, aspectDef.name());
+        UUID aspectDefId = aspectDef.globalId();
 
         String sql = "INSERT INTO property_def (aspect_def_id, name, property_type, default_value, " +
             "has_default_value, is_readable, is_writable, is_nullable, is_removable, is_multivalued) " +
@@ -607,7 +612,7 @@ public class PostgresDao implements CheapPersistenceModule
             "aspect_def_id = EXCLUDED.aspect_def_id, " +
             "map_order = EXCLUDED.map_order";
 
-        UUID aspectDefId = getAspectDefId(conn, hierarchy.aspectDef().name());
+        UUID aspectDefId = hierarchy.aspectDef().globalId();
 
         int order = 0;
         for (Entity entity : hierarchy.keySet()) {
@@ -1210,7 +1215,7 @@ public class PostgresDao implements CheapPersistenceModule
             "WHERE entity_id = ? AND aspect_def_id = ? AND catalog_id = ? " +
             "ORDER BY property_name, value_index";
 
-        UUID aspectDefId = getAspectDefId(conn, aspectDef.name());
+        UUID aspectDefId = aspectDef.globalId();
 
         // Track which properties we've loaded from the database
         Set<String> loadedProperties = new HashSet<>();
@@ -1344,24 +1349,29 @@ public class PostgresDao implements CheapPersistenceModule
         }
     }
 
+    // FIXME: catalog_id needs to be included
     private AspectDef loadAspectDef(Connection conn, String aspectDefName) throws SQLException
     {
         // First load the AspectDef basic info including hash_version
-        String aspectSql = "SELECT hash_version, is_readable, is_writable, can_add_properties, can_remove_properties " +
+        String aspectSql = "SELECT aspect_def_id, hash_version, is_readable, is_writable, can_add_properties, can_remove_properties " +
             "FROM aspect_def WHERE name = ?";
 
         long hashVersion;
+        UUID aspectDefId;
         boolean isReadable = true, isWritable = true, canAddProperties = false, canRemoveProperties = false;
 
         try (PreparedStatement stmt = conn.prepareStatement(aspectSql)) {
             stmt.setString(1, aspectDefName);
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
+                    aspectDefId = rs.getObject("aspect_def_id", UUID.class);
                     hashVersion = rs.getLong("hash_version");
                     isReadable = rs.getBoolean("is_readable");
                     isWritable = rs.getBoolean("is_writable");
                     canAddProperties = rs.getBoolean("can_add_properties");
                     canRemoveProperties = rs.getBoolean("can_remove_properties");
+                } else {
+                    throw new SQLException("Unable to load AspectDef " + aspectDefName);
                 }
             }
         }
@@ -1370,12 +1380,12 @@ public class PostgresDao implements CheapPersistenceModule
         String propSql = "SELECT pd.name, pd.property_type, pd.default_value, pd.has_default_value, " +
             "pd.is_readable, pd.is_writable, pd.is_nullable, pd.is_removable, pd.is_multivalued " +
             "FROM property_def pd JOIN aspect_def ad ON pd.aspect_def_id = ad.aspect_def_id " +
-            "WHERE ad.name = ?";
+            "WHERE ad.aspect_def_id = ?";
 
         Map<String, PropertyDef> propertyDefMap = new LinkedHashMap<>();
 
         try (PreparedStatement stmt = conn.prepareStatement(propSql)) {
-            stmt.setString(1, aspectDefName);
+            stmt.setObject(1, aspectDefId);
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
                     String propName = rs.getString("name");
@@ -1400,13 +1410,13 @@ public class PostgresDao implements CheapPersistenceModule
         AspectDef aspectDef;
         if (canAddProperties && canRemoveProperties) {
             // Fully mutable - use MutableAspectDefImpl
-            aspectDef = factory.createMutableAspectDef(aspectDefName, propertyDefMap);
+            aspectDef = factory.createMutableAspectDef(aspectDefName, aspectDefId, propertyDefMap);
         } else if (!canAddProperties && !canRemoveProperties) {
             // Fully immutable - use ImmutableAspectDefImpl
-            aspectDef = factory.createImmutableAspectDef(aspectDefName, propertyDefMap);
+            aspectDef = factory.createImmutableAspectDef(aspectDefName, aspectDefId, propertyDefMap);
         } else {
             // Mixed mutability - use FullAspectDefImpl
-            aspectDef = factory.createFullAspectDef(aspectDefName, UUID.randomUUID(), propertyDefMap,
+            aspectDef = factory.createFullAspectDef(aspectDefName, aspectDefId, propertyDefMap,
                 isReadable, isWritable, canAddProperties, canRemoveProperties);
         }
 
@@ -1443,25 +1453,6 @@ public class PostgresDao implements CheapPersistenceModule
                 return rs.next();
             }
         }
-    }
-
-    // ===== Helper Methods =====
-
-    /**
-     * Looks up the UUID for an AspectDef by name.
-     */
-    private UUID getAspectDefId(Connection conn, String name) throws SQLException
-    {
-        String sql = "SELECT aspect_def_id FROM aspect_def WHERE name = ?";
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, name);
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getObject("aspect_def_id", UUID.class);
-                }
-            }
-        }
-        throw new SQLException("AspectDef not found: " + name);
     }
 
     // ===== Value Conversion Methods =====
