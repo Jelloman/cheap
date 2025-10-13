@@ -365,7 +365,7 @@ public class MariaDbDao implements CatalogPersistence
                 "can_add_properties = VALUES(can_add_properties), " +
                 "can_remove_properties = VALUES(can_remove_properties)";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, UUID.randomUUID().toString());
+            stmt.setString(1, aspectDef.globalId().toString());
             stmt.setString(2, aspectDef.name());
             stmt.setLong(3, aspectDef.hash());
             stmt.setBoolean(4, aspectDef.isReadable());
@@ -1354,21 +1354,25 @@ public class MariaDbDao implements CatalogPersistence
     private AspectDef loadAspectDef(Connection conn, String aspectDefName) throws SQLException
     {
         // First load the AspectDef basic info including hash_version
-        String aspectSql = "SELECT hash_version, is_readable, is_writable, can_add_properties, can_remove_properties " +
+        String aspectSql = "SELECT aspect_def_id, hash_version, is_readable, is_writable, can_add_properties, can_remove_properties " +
             "FROM aspect_def WHERE name = ?";
 
         long hashVersion;
+        UUID aspectDefId;
         boolean isReadable = true, isWritable = true, canAddProperties = false, canRemoveProperties = false;
 
         try (PreparedStatement stmt = conn.prepareStatement(aspectSql)) {
             stmt.setString(1, aspectDefName);
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
+                    aspectDefId = UUID.fromString(rs.getString("aspect_def_id"));
                     hashVersion = rs.getLong("hash_version");
                     isReadable = rs.getBoolean("is_readable");
                     isWritable = rs.getBoolean("is_writable");
                     canAddProperties = rs.getBoolean("can_add_properties");
                     canRemoveProperties = rs.getBoolean("can_remove_properties");
+                } else {
+                    throw new SQLException("Unable to load AspectDef " + aspectDefName);
                 }
             }
         }
@@ -1377,12 +1381,12 @@ public class MariaDbDao implements CatalogPersistence
         String propSql = "SELECT pd.name, pd.property_type, pd.default_value, pd.has_default_value, " +
             "pd.is_readable, pd.is_writable, pd.is_nullable, pd.is_removable, pd.is_multivalued " +
             "FROM property_def pd JOIN aspect_def ad ON pd.aspect_def_id = ad.aspect_def_id " +
-            "WHERE ad.name = ?";
+            "WHERE ad.aspect_def_id = ?";
 
         Map<String, PropertyDef> propertyDefMap = new LinkedHashMap<>();
 
         try (PreparedStatement stmt = conn.prepareStatement(propSql)) {
-            stmt.setString(1, aspectDefName);
+            stmt.setString(1, aspectDefId.toString());
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
                     String propName = rs.getString("name");
@@ -1407,13 +1411,13 @@ public class MariaDbDao implements CatalogPersistence
         AspectDef aspectDef;
         if (canAddProperties && canRemoveProperties) {
             // Fully mutable - use MutableAspectDefImpl
-            aspectDef = factory.createMutableAspectDef(aspectDefName, propertyDefMap);
+            aspectDef = factory.createMutableAspectDef(aspectDefName, aspectDefId, propertyDefMap);
         } else if (!canAddProperties && !canRemoveProperties) {
             // Fully immutable - use ImmutableAspectDefImpl
-            aspectDef = factory.createImmutableAspectDef(aspectDefName, propertyDefMap);
+            aspectDef = factory.createImmutableAspectDef(aspectDefName, aspectDefId, propertyDefMap);
         } else {
             // Mixed mutability - use FullAspectDefImpl
-            aspectDef = factory.createFullAspectDef(aspectDefName, UUID.randomUUID(), propertyDefMap,
+            aspectDef = factory.createFullAspectDef(aspectDefName, aspectDefId, propertyDefMap,
                 isReadable, isWritable, canAddProperties, canRemoveProperties);
         }
 
