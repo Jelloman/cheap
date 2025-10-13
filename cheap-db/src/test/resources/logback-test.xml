@@ -28,14 +28,19 @@
         </encoder>
     </appender>
 
-    <root level="DEBUG">
+    <root level="INFO">
         <appender-ref ref="CONSOLE"/>
         <appender-ref ref="FILE"/>
     </root>
 
-    <logger name="org.mariadb.jdbc.client.impl.StandardClient" level="trace" additivity="false">
+    <logger name="net.netbeing.cheap" level="DEBUG">
         <appender-ref ref="CONSOLE"/>
         <appender-ref ref="FILE"/>
     </logger>
+
+    <!--logger name="org.mariadb.jdbc.client.impl.StandardClient" level="trace" additivity="false">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="FILE"/>
+    </logger-->
 
 </configuration>

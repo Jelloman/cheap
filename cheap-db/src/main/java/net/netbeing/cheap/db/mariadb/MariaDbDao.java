@@ -18,9 +18,12 @@ package net.netbeing.cheap.db.mariadb;
 
 import net.netbeing.cheap.db.AspectTableMapping;
 import net.netbeing.cheap.db.CheapPersistenceModule;
+import net.netbeing.cheap.db.postgres.PostgresDao;
 import net.netbeing.cheap.model.*;
 import net.netbeing.cheap.util.CheapFactory;
 import org.jetbrains.annotations.NotNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.sql.DataSource;
 import java.math.BigDecimal;
@@ -159,9 +162,11 @@ import java.util.UUID;
  * @see CheapFactory
  * @see Catalog
  */
-@SuppressWarnings("DuplicateBranchesInSwitch")
+@SuppressWarnings({"DuplicateBranchesInSwitch", "LoggingSimilarMessage"})
 public class MariaDbDao implements CheapPersistenceModule
 {
+    private static final Logger logger = LoggerFactory.getLogger(MariaDbDao.class);
+
     private final DataSource dataSource;
     private final CheapFactory factory;
     private final Map<String, AspectTableMapping> aspectTableMappings = new LinkedHashMap<>();
@@ -342,12 +347,13 @@ public class MariaDbDao implements CheapPersistenceModule
 
     private void linkCatalogToAspectDef(Connection conn, Catalog catalog, AspectDef aspectDef) throws SQLException
     {
-        UUID aspectDefId = getAspectDefId(conn, aspectDef.name());
+        final String aspectDefId = aspectDef.globalId().toString();
+
         String sql = "INSERT INTO catalog_aspect_def (catalog_id, aspect_def_id) " +
             "VALUES (?, ?) ON DUPLICATE KEY UPDATE catalog_id=VALUES(catalog_id)";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, catalog.globalId().toString());
-            stmt.setString(2, aspectDefId.toString());
+            stmt.setString(2, aspectDefId);
             stmt.executeUpdate();
         }
     }
@@ -382,8 +388,7 @@ public class MariaDbDao implements CheapPersistenceModule
 
     private void savePropertyDef(Connection conn, AspectDef aspectDef, PropertyDef propDef) throws SQLException
     {
-        // First get the aspect_def_id
-        UUID aspectDefId = getAspectDefId(conn, aspectDef.name());
+        final String aspectDefId = aspectDef.globalId().toString();
 
         String sql = "INSERT INTO property_def (aspect_def_id, name, property_type, default_value, " +
             "has_default_value, is_readable, is_writable, is_nullable, is_removable, is_multivalued) " +
@@ -398,7 +403,7 @@ public class MariaDbDao implements CheapPersistenceModule
             "is_removable = VALUES(is_removable), " +
             "is_multivalued = VALUES(is_multivalued)";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, aspectDefId.toString());
+            stmt.setString(1, aspectDefId);
             stmt.setString(2, propDef.name());
             stmt.setString(3, propDef.type().typeCode());
             stmt.setString(4, propDef.hasDefaultValue() && propDef.defaultValue() != null ? propDef.defaultValue().toString() : null);
@@ -609,7 +614,7 @@ public class MariaDbDao implements CheapPersistenceModule
             "aspect_def_id = VALUES(aspect_def_id), " +
             "map_order = VALUES(map_order)";
 
-        UUID aspectDefId = getAspectDefId(conn, hierarchy.aspectDef().name());
+        final String aspectDefId = hierarchy.aspectDef().globalId().toString();
 
         int order = 0;
         for (Entity entity : hierarchy.keySet()) {
@@ -620,7 +625,7 @@ public class MariaDbDao implements CheapPersistenceModule
                 // Save aspect
                 try (PreparedStatement aspectStmt = conn.prepareStatement(aspectSql)) {
                     aspectStmt.setString(1, entity.globalId().toString());
-                    aspectStmt.setString(2, aspectDefId.toString());
+                    aspectStmt.setString(2, aspectDefId);
                     aspectStmt.setString(3, catalogId);
                     aspectStmt.setString(4, hierarchy.name());
                     aspectStmt.executeUpdate();
@@ -631,13 +636,13 @@ public class MariaDbDao implements CheapPersistenceModule
                     mapStmt.setString(1, catalogId);
                     mapStmt.setString(2, hierarchy.name());
                     mapStmt.setString(3, entity.globalId().toString());
-                    mapStmt.setString(4, aspectDefId.toString());
+                    mapStmt.setString(4, aspectDefId);
                     mapStmt.setInt(5, order++);
                     mapStmt.executeUpdate();
                 }
 
                 // Save properties
-                saveAspectProperties(conn, entity.globalId(), aspectDefId, hierarchy.catalog().globalId(), aspect);
+                saveAspectProperties(conn, entity.globalId(), hierarchy.aspectDef().globalId(), hierarchy.catalog().globalId(), aspect);
             }
         }
     }
@@ -1218,14 +1223,14 @@ public class MariaDbDao implements CheapPersistenceModule
             "WHERE entity_id = ? AND aspect_def_id = ? AND catalog_id = ? " +
             "ORDER BY property_name, value_index";
 
-        UUID aspectDefId = getAspectDefId(conn, aspectDef.name());
+        final String aspectDefId = aspectDef.globalId().toString();
 
         // Track which properties we've loaded from the database
         Set<String> loadedProperties = new HashSet<>();
 
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, entity.globalId().toString());
-            stmt.setString(2, aspectDefId.toString());
+            stmt.setString(2, aspectDefId);
             stmt.setString(3, catalogId.toString());
             try (ResultSet rs = stmt.executeQuery()) {
                 String currentPropertyName = null;
@@ -1456,26 +1461,6 @@ public class MariaDbDao implements CheapPersistenceModule
                 return rs.next();
             }
         }
-    }
-
-    // ===== Helper Methods =====
-
-    /**
-     * Looks up the UUID for an AspectDef by name.
-     */
-    private UUID getAspectDefId(Connection conn, String name) throws SQLException
-    {
-        String sql = "SELECT aspect_def_id FROM aspect_def WHERE name = ?";
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, name);
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    String aspectDefIdStr = rs.getString("aspect_def_id");
-                    return UUID.fromString(aspectDefIdStr);
-                }
-            }
-        }
-        throw new SQLException("AspectDef not found: " + name);
     }
 
     // ===== Value Conversion Methods =====

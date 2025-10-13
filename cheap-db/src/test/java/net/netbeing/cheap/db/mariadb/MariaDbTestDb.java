@@ -94,4 +94,11 @@ class MariaDbTestDb
         schema.executeAuditSchemaDdl(dataSource);
     }
 
+    void truncateAllTables() throws SQLException
+    {
+        // Use MariaDbCheapSchema to execute DDL
+        MariaDbCheapSchema schema = new MariaDbCheapSchema();
+        schema.executeTruncateSchemaDdl(dataSource);
+    }
+
 }

@@ -20,6 +20,7 @@ import com.google.common.collect.ImmutableList;
 import net.netbeing.cheap.db.AspectTableMapping;
 import net.netbeing.cheap.model.*;
 import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -61,6 +62,12 @@ class MariaDbDaoTest
     static void tearDown() throws Exception
     {
         db.tearDown();
+    }
+
+    @AfterEach
+    void reset() throws Exception
+    {
+        db.truncateAllTables();
     }
 
     @Test
