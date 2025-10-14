@@ -2,10 +2,15 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/cheap.iml" filepath="$PROJECT_DIR$/.idea/modules/cheap.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/cheap-core/cheap.cheap-core.main.iml" filepath="$PROJECT_DIR$/.idea/modules/cheap-core/cheap.cheap-core.main.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/cheap-core/cheap.cheap-core.test.iml" filepath="$PROJECT_DIR$/.idea/modules/cheap-core/cheap.cheap-core.test.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/cheap-db/cheap.cheap-db.main.iml" filepath="$PROJECT_DIR$/.idea/modules/cheap-db/cheap.cheap-db.main.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/cheap-db/cheap.cheap-db.test.iml" filepath="$PROJECT_DIR$/.idea/modules/cheap-db/cheap.cheap-db.test.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/cheap-db-mariadb/cheap.cheap-db-mariadb.main.iml" filepath="$PROJECT_DIR$/.idea/modules/cheap-db-mariadb/cheap.cheap-db-mariadb.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/cheap-db-mariadb/cheap.cheap-db-mariadb.test.iml" filepath="$PROJECT_DIR$/.idea/modules/cheap-db-mariadb/cheap.cheap-db-mariadb.test.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/cheap-db-postgres/cheap.cheap-db-postgres.main.iml" filepath="$PROJECT_DIR$/.idea/modules/cheap-db-postgres/cheap.cheap-db-postgres.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/cheap-db-postgres/cheap.cheap-db-postgres.test.iml" filepath="$PROJECT_DIR$/.idea/modules/cheap-db-postgres/cheap.cheap-db-postgres.test.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/cheap-db-sqlite/cheap.cheap-db-sqlite.main.iml" filepath="$PROJECT_DIR$/.idea/modules/cheap-db-sqlite/cheap.cheap-db-sqlite.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/cheap-db-sqlite/cheap.cheap-db-sqlite.test.iml" filepath="$PROJECT_DIR$/.idea/modules/cheap-db-sqlite/cheap.cheap-db-sqlite.test.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/cheap-json/cheap.cheap-json.main.iml" filepath="$PROJECT_DIR$/.idea/modules/cheap-json/cheap.cheap-json.main.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/cheap-json/cheap.cheap-json.test.iml" filepath="$PROJECT_DIR$/.idea/modules/cheap-json/cheap.cheap-json.test.iml" />
     </modules>

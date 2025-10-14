@@ -14,11 +14,6 @@
  *  limitations under the License.
  */
 
-/*
- * Build configuration for cheap-json module.
- * This module contains JSON schemas and utilities for the Cheap data model.
- */
-
 plugins {
     // Apply the java-library plugin for API and implementation separation.
     `java-library`
@@ -30,21 +25,30 @@ group = "net.netbeing"
 version = "0.1"
 
 repositories {
-    // Use Maven Central for resolving dependencies.
     mavenCentral()
 }
 
 dependencies {
     api(project(":cheap-core"))
 
-    implementation(libs.guava)
-    implementation(libs.jackson.core)
-    implementation(libs.jackson.databind)
+    implementation(libs.sqlite.jdbc)
+    implementation(libs.postgresql)
+    implementation(libs.mariaDB)
+    implementation(libs.slf4j)
+    implementation(libs.logback.core)
+    implementation(libs.logback.classic)
 
     compileOnly(libs.jetbrains.annotations)
 
+    testImplementation(platform("org.junit:junit-bom:5.10.0"))
     testImplementation(libs.junit.jupiter)
     testRuntimeOnly(libs.junit.platform.launcher)
+    testImplementation(libs.mariaDB4j)
+    testImplementation(libs.embedded.postgres)
+    testImplementation(libs.flyway)
+    testImplementation(libs.flyway.pg)
+    testImplementation(project(":cheap-json"))
+    testImplementation(libs.guava)
 }
 
 // Apply a specific Java toolchain to ease working on different environments.
@@ -60,12 +64,14 @@ idea {
     }
 }
 tasks.named<Test>("test") {
-    // Use JUnit Platform for unit tests.
     useJUnitPlatform()
+    jvmArgs(
+        "--enable-native-access=ALL-UNNAMED"
+    )
 }
-
 gradle.projectsEvaluated {
     tasks.withType<JavaCompile> {
         options.compilerArgs.addAll(listOf("-Xlint:unchecked"))
+        //options.compilerArgs.addAll(listOf("-Xlint:unchecked", "--sun-misc-unsafe-memory-access=allow"))
     }
 }
