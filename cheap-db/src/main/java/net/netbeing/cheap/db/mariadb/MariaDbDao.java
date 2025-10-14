@@ -18,7 +18,6 @@ package net.netbeing.cheap.db.mariadb;
 
 import net.netbeing.cheap.db.AspectTableMapping;
 import net.netbeing.cheap.db.CheapPersistenceModule;
-import net.netbeing.cheap.db.postgres.PostgresDao;
 import net.netbeing.cheap.model.*;
 import net.netbeing.cheap.util.CheapFactory;
 import org.jetbrains.annotations.NotNull;
@@ -286,7 +285,8 @@ public class MariaDbDao implements CheapPersistenceModule
     /**
      * Maps a PropertyType to the corresponding MariaDB column type.
      */
-    private String mapPropertyTypeToSqlType(PropertyType type)
+    @Override
+    public String mapPropertyTypeToSqlType(@NotNull PropertyType type)
     {
         return switch (type) {
             case Integer -> "BIGINT";
@@ -323,7 +323,8 @@ public class MariaDbDao implements CheapPersistenceModule
         }
     }
 
-    private void saveCatalog(Connection conn, Catalog catalog) throws SQLException
+    @Override
+    public void saveCatalog(@NotNull Connection conn, @NotNull Catalog catalog) throws SQLException
     {
         // Save the Catalog entity itself first and foremost
         saveEntity(conn, catalog);
@@ -358,7 +359,8 @@ public class MariaDbDao implements CheapPersistenceModule
         }
     }
 
-    private void saveAspectDef(Connection conn, AspectDef aspectDef) throws SQLException
+    @Override
+    public void saveAspectDef(Connection conn, AspectDef aspectDef) throws SQLException
     {
         String sql =
             "INSERT INTO aspect_def (aspect_def_id, name, hash_version, is_readable, is_writable, can_add_properties, can_remove_properties) " +
@@ -418,7 +420,8 @@ public class MariaDbDao implements CheapPersistenceModule
     }
 
 
-    private void saveEntity(Connection conn, Entity entity) throws SQLException
+    @Override
+    public void saveEntity(Connection conn, Entity entity) throws SQLException
     {
         String sql = "INSERT INTO entity (entity_id) VALUES (?) ON DUPLICATE KEY UPDATE entity_id=VALUES(entity_id)";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -446,7 +449,8 @@ public class MariaDbDao implements CheapPersistenceModule
         }
     }
 
-    private void saveHierarchy(Connection conn, Hierarchy hierarchy) throws SQLException
+    @Override
+    public void saveHierarchy(Connection conn, Hierarchy hierarchy) throws SQLException
     {
         UUID catalogId = hierarchy.catalog().globalId();
 
@@ -840,7 +844,8 @@ public class MariaDbDao implements CheapPersistenceModule
     /**
      * Converts a property value to its string representation for storage in value_text column.
      */
-    private String convertValueToString(Object value, PropertyType type) throws SQLException
+    @Override
+    public String convertValueToString(Object value, PropertyType type) throws SQLException
     {
         return switch (type) {
             case DateTime -> convertToTimestamp(value).toString();

@@ -16,9 +16,14 @@
 
 package net.netbeing.cheap.db;
 
+import net.netbeing.cheap.model.AspectDef;
 import net.netbeing.cheap.model.Catalog;
+import net.netbeing.cheap.model.Entity;
+import net.netbeing.cheap.model.Hierarchy;
+import net.netbeing.cheap.model.PropertyType;
 import org.jetbrains.annotations.NotNull;
 
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.UUID;
 
@@ -29,6 +34,22 @@ import java.util.UUID;
  */
 public interface CheapPersistenceModule
 {
+    /**
+     * Checks if a catalog exists in the database.
+     *
+     * @param catalogId the global ID of the catalog to check
+     * @return true if the catalog exists, false otherwise
+     * @throws SQLException if database operation fails
+     */
+    boolean catalogExists(@NotNull UUID catalogId) throws SQLException;
+
+    void addAspectTableMapping(@NotNull AspectTableMapping mapping);
+
+    AspectTableMapping getAspectTableMapping(@NotNull String aspectDefName);
+
+    void createTable(@NotNull AspectTableMapping mapping) throws SQLException;
+
+    String mapPropertyTypeToSqlType(@NotNull PropertyType type);
 
     /**
      * Saves a complete catalog to the database, including all its definitions,
@@ -39,6 +60,16 @@ public interface CheapPersistenceModule
      * @throws IllegalArgumentException if catalog is null or has invalid state
      */
     void saveCatalog(@NotNull Catalog catalog) throws SQLException;
+
+    void saveCatalog(@NotNull Connection conn, @NotNull Catalog catalog) throws SQLException;
+
+    void saveAspectDef(Connection conn, AspectDef aspectDef) throws SQLException;
+
+    void saveEntity(Connection conn, Entity entity) throws SQLException;
+
+    void saveHierarchy(Connection conn, Hierarchy hierarchy) throws SQLException;
+
+    String convertValueToString(Object value, PropertyType type) throws SQLException;
 
     /**
      * Loads a complete catalog from the database by its global ID.
@@ -58,13 +89,4 @@ public interface CheapPersistenceModule
      * @throws SQLException if database operation fails
      */
     boolean deleteCatalog(@NotNull UUID catalogId) throws SQLException;
-
-    /**
-     * Checks if a catalog exists in the database.
-     *
-     * @param catalogId the global ID of the catalog to check
-     * @return true if the catalog exists, false otherwise
-     * @throws SQLException if database operation fails
-     */
-    boolean catalogExists(@NotNull UUID catalogId) throws SQLException;
 }

@@ -18,7 +18,6 @@ package net.netbeing.cheap.db.postgres;
 
 import net.netbeing.cheap.db.AspectTableMapping;
 import net.netbeing.cheap.db.CheapPersistenceModule;
-import net.netbeing.cheap.db.mariadb.MariaDbDao;
 import net.netbeing.cheap.model.*;
 import net.netbeing.cheap.util.CheapFactory;
 import org.jetbrains.annotations.NotNull;
@@ -202,6 +201,7 @@ public class PostgresDao implements CheapPersistenceModule
      *
      * @param mapping the AspectTableMapping to add
      */
+    @Override
     public void addAspectTableMapping(@NotNull AspectTableMapping mapping)
     {
         aspectTableMappings.put(mapping.aspectDef().name(), mapping);
@@ -213,6 +213,7 @@ public class PostgresDao implements CheapPersistenceModule
      * @param aspectDefName the AspectDef name
      * @return the AspectTableMapping, or null if not mapped
      */
+    @Override
     public AspectTableMapping getAspectTableMapping(@NotNull String aspectDefName)
     {
         return aspectTableMappings.get(aspectDefName);
@@ -231,6 +232,7 @@ public class PostgresDao implements CheapPersistenceModule
      * @param mapping the AspectTableMapping defining the table structure
      * @throws SQLException if table creation fails
      */
+    @Override
     public void createTable(@NotNull AspectTableMapping mapping) throws SQLException
     {
         StringBuilder sql = new StringBuilder();
@@ -286,7 +288,8 @@ public class PostgresDao implements CheapPersistenceModule
     /**
      * Maps a PropertyType to the corresponding PostgreSQL column type.
      */
-    private String mapPropertyTypeToSqlType(PropertyType type)
+    @Override
+    public String mapPropertyTypeToSqlType(@NotNull PropertyType type)
     {
         return switch (type) {
             case Integer -> "BIGINT";
@@ -314,7 +317,7 @@ public class PostgresDao implements CheapPersistenceModule
         try (Connection conn = dataSource.getConnection()) {
             conn.setAutoCommit(false);
             try {
-                saveCatalogWithTransaction(conn, catalog);
+                saveCatalog(conn, catalog);
                 conn.commit();
             } catch (SQLException e) {
                 conn.rollback();
@@ -323,7 +326,8 @@ public class PostgresDao implements CheapPersistenceModule
         }
     }
 
-    private void saveCatalogWithTransaction(Connection conn, Catalog catalog) throws SQLException
+    @Override
+    public void saveCatalog(@NotNull Connection conn, @NotNull Catalog catalog) throws SQLException
     {
         // Save the Catalog entity itself first and foremost
         saveEntity(conn, catalog);
@@ -335,7 +339,7 @@ public class PostgresDao implements CheapPersistenceModule
         for (AspectDef aspectDef : catalog.aspectDefs()) {
             saveAspectDef(conn, aspectDef);
             // Link the AspectDef to this Catalog
-            linkCatalogToAspectDef(conn, catalog.globalId(), aspectDef);
+            linkCatalogToAspectDef(conn, catalog, aspectDef);
         }
 
         // Save all entities, aspects, and properties from hierarchies
@@ -345,19 +349,20 @@ public class PostgresDao implements CheapPersistenceModule
         }
     }
 
-    private void linkCatalogToAspectDef(Connection conn, UUID catalogId, AspectDef aspectDef) throws SQLException
+    private void linkCatalogToAspectDef(Connection conn, Catalog catalog, AspectDef aspectDef) throws SQLException
     {
         UUID aspectDefId = aspectDef.globalId();
         String sql = "INSERT INTO catalog_aspect_def (catalog_id, aspect_def_id) " +
             "VALUES (?, ?) ON CONFLICT (catalog_id, aspect_def_id) DO NOTHING";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setObject(1, catalogId);
+            stmt.setObject(1, catalog.globalId());
             stmt.setObject(2, aspectDefId);
             stmt.executeUpdate();
         }
     }
 
-    private void saveAspectDef(Connection conn, AspectDef aspectDef) throws SQLException
+    @Override
+    public void saveAspectDef(Connection conn, AspectDef aspectDef) throws SQLException
     {
         String sql =
             "INSERT INTO aspect_def (aspect_def_id, name, hash_version, is_readable, is_writable, can_add_properties, can_remove_properties) " +
@@ -418,7 +423,8 @@ public class PostgresDao implements CheapPersistenceModule
     }
 
 
-    private void saveEntity(Connection conn, Entity entity) throws SQLException
+    @Override
+    public void saveEntity(Connection conn, Entity entity) throws SQLException
     {
         String sql = "INSERT INTO entity (entity_id) VALUES (?) ON CONFLICT (entity_id) DO NOTHING";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -446,7 +452,8 @@ public class PostgresDao implements CheapPersistenceModule
         }
     }
 
-    private void saveHierarchy(Connection conn, Hierarchy hierarchy) throws SQLException
+    @Override
+    public void saveHierarchy(Connection conn, Hierarchy hierarchy) throws SQLException
     {
         UUID catalogId = hierarchy.catalog().globalId();
 
@@ -470,15 +477,15 @@ public class PostgresDao implements CheapPersistenceModule
         String hierarchyName = hierarchy.name();
 
         switch (hierarchy.type()) {
-            case ENTITY_LIST -> saveEntityListContent(conn, catalogId, hierarchyName, (EntityListHierarchy) hierarchy);
-            case ENTITY_SET -> saveEntitySetContent(conn, catalogId, hierarchyName, (EntitySetHierarchy) hierarchy);
-            case ENTITY_DIR -> saveEntityDirectoryContent(conn, catalogId, hierarchyName, (EntityDirectoryHierarchy) hierarchy);
-            case ENTITY_TREE -> saveEntityTreeContent(conn, catalogId, hierarchyName, (EntityTreeHierarchy) hierarchy);
-            case ASPECT_MAP -> saveAspectMapContent(conn, catalogId, hierarchyName, (AspectMapHierarchy) hierarchy);
+            case ENTITY_LIST -> saveEntityListContent(conn, (EntityListHierarchy) hierarchy);
+            case ENTITY_SET -> saveEntitySetContent(conn, (EntitySetHierarchy) hierarchy);
+            case ENTITY_DIR -> saveEntityDirectoryContent(conn, (EntityDirectoryHierarchy) hierarchy);
+            case ENTITY_TREE -> saveEntityTreeContent(conn, (EntityTreeHierarchy) hierarchy);
+            case ASPECT_MAP -> saveAspectMapContent(conn, (AspectMapHierarchy) hierarchy);
         }
     }
 
-    private void saveEntityListContent(Connection conn, UUID catalogId, String hierarchyName, EntityListHierarchy hierarchy) throws SQLException
+    private void saveEntityListContent(Connection conn, EntityListHierarchy hierarchy) throws SQLException
     {
         String sql = "INSERT INTO hierarchy_entity_list (catalog_id, hierarchy_name, entity_id, list_order) " +
             "VALUES (?, ?, ?, ?) " +
@@ -488,8 +495,8 @@ public class PostgresDao implements CheapPersistenceModule
             int order = 0;
             for (Entity entity : hierarchy) {
                 saveEntity(conn, entity);
-                stmt.setObject(1, catalogId);
-                stmt.setString(2, hierarchyName);
+                stmt.setObject(1, hierarchy.catalog().globalId());
+                stmt.setString(2, hierarchy.name());
                 stmt.setObject(3, entity.globalId());
                 stmt.setInt(4, order++);
                 stmt.addBatch();
@@ -498,7 +505,7 @@ public class PostgresDao implements CheapPersistenceModule
         }
     }
 
-    private void saveEntitySetContent(Connection conn, UUID catalogId, String hierarchyName, EntitySetHierarchy hierarchy) throws SQLException
+    private void saveEntitySetContent(Connection conn, EntitySetHierarchy hierarchy) throws SQLException
     {
         String sql = "INSERT INTO hierarchy_entity_set (catalog_id, hierarchy_name, entity_id, set_order) " +
             "VALUES (?, ?, ?, ?) " +
@@ -508,8 +515,8 @@ public class PostgresDao implements CheapPersistenceModule
             int order = 0;
             for (Entity entity : hierarchy) {
                 saveEntity(conn, entity);
-                stmt.setObject(1, catalogId);
-                stmt.setString(2, hierarchyName);
+                stmt.setObject(1, hierarchy.catalog().globalId());
+                stmt.setString(2, hierarchy.name());
                 stmt.setObject(3, entity.globalId());
                 stmt.setInt(4, order++);
                 stmt.addBatch();
@@ -518,7 +525,7 @@ public class PostgresDao implements CheapPersistenceModule
         }
     }
 
-    private void saveEntityDirectoryContent(Connection conn, UUID catalogId, String hierarchyName, EntityDirectoryHierarchy hierarchy) throws SQLException
+    private void saveEntityDirectoryContent(Connection conn, EntityDirectoryHierarchy hierarchy) throws SQLException
     {
         String sql = "INSERT INTO hierarchy_entity_directory (catalog_id, hierarchy_name, entity_key, entity_id, dir_order) " +
             "VALUES (?, ?, ?, ?, ?) " +
@@ -531,8 +538,8 @@ public class PostgresDao implements CheapPersistenceModule
                 Entity entity = hierarchy.get(key);
                 if (entity != null) {
                     saveEntity(conn, entity);
-                    stmt.setObject(1, catalogId);
-                    stmt.setString(2, hierarchyName);
+                    stmt.setObject(1, hierarchy.catalog().globalId());
+                    stmt.setString(2, hierarchy.name());
                     stmt.setString(3, key);
                     stmt.setObject(4, entity.globalId());
                     stmt.setInt(5, order++);
@@ -543,13 +550,13 @@ public class PostgresDao implements CheapPersistenceModule
         }
     }
 
-    private void saveEntityTreeContent(Connection conn, UUID catalogId, String hierarchyName, EntityTreeHierarchy hierarchy) throws SQLException
+    private void saveEntityTreeContent(Connection conn, EntityTreeHierarchy hierarchy) throws SQLException
     {
         // Save tree nodes recursively
-        saveTreeNode(conn, catalogId, hierarchyName, hierarchy.root(), "", "", null, 0);
+        saveTreeNode(conn, hierarchy, hierarchy.root(), "", "", null, 0);
     }
 
-    private void saveTreeNode(Connection conn, UUID catalogId, String hierarchyName, EntityTreeHierarchy.Node node,
+    private void saveTreeNode(Connection conn, EntityTreeHierarchy hierarchy, EntityTreeHierarchy.Node node,
                               String nodeKey, String nodePath, UUID parentNodeId, int order) throws SQLException
     {
         UUID nodeId = UUID.randomUUID();
@@ -564,8 +571,8 @@ public class PostgresDao implements CheapPersistenceModule
             "tree_order = EXCLUDED.tree_order";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setObject(1, nodeId);
-            stmt.setObject(2, catalogId);
-            stmt.setString(3, hierarchyName);
+            stmt.setObject(2, hierarchy.catalog().globalId());
+            stmt.setString(3, hierarchy.name());
             stmt.setObject(4, parentNodeId);
             stmt.setString(5, nodeKey);
             stmt.setObject(6, entityId);
@@ -582,25 +589,25 @@ public class PostgresDao implements CheapPersistenceModule
                 String childPath = nodePath + '/' + name;
                 EntityTreeHierarchy.Node child = entry.getValue();
                 if (child != null) {
-                    saveTreeNode(conn, catalogId, hierarchyName, child, name, childPath, nodeId, childOrder++);
+                    saveTreeNode(conn, hierarchy, child, name, childPath, nodeId, childOrder++);
                 }
             }
         }
     }
 
-    private void saveAspectMapContent(Connection conn, UUID catalogId, String hierarchyName, AspectMapHierarchy hierarchy) throws SQLException
+    private void saveAspectMapContent(Connection conn, AspectMapHierarchy hierarchy) throws SQLException
     {
         // Check if this AspectDef has a table mapping
         AspectTableMapping mapping = getAspectTableMapping(hierarchy.aspectDef().name());
 
         if (mapping != null) {
-            saveAspectMapContentToMappedTable(conn, catalogId, hierarchyName, hierarchy, mapping);
+            saveAspectMapContentToMappedTable(conn, hierarchy, mapping);
         } else {
-            saveAspectMapContentToDefaultTables(conn, catalogId, hierarchyName, hierarchy);
+            saveAspectMapContentToDefaultTables(conn, hierarchy);
         }
     }
 
-    private void saveAspectMapContentToDefaultTables(Connection conn, UUID catalogId, String hierarchyName, AspectMapHierarchy hierarchy) throws SQLException
+    private void saveAspectMapContentToDefaultTables(Connection conn, AspectMapHierarchy hierarchy) throws SQLException
     {
         String aspectSql = "INSERT INTO aspect (entity_id, aspect_def_id, catalog_id, hierarchy_name) " +
             "VALUES (?, ?, ?, ?) " +
@@ -624,15 +631,15 @@ public class PostgresDao implements CheapPersistenceModule
                 try (PreparedStatement aspectStmt = conn.prepareStatement(aspectSql)) {
                     aspectStmt.setObject(1, entity.globalId());
                     aspectStmt.setObject(2, aspectDefId);
-                    aspectStmt.setObject(3, catalogId);
-                    aspectStmt.setString(4, hierarchyName);
+                    aspectStmt.setObject(3, hierarchy.catalog().globalId());
+                    aspectStmt.setString(4, hierarchy.name());
                     aspectStmt.executeUpdate();
                 }
 
                 // Save hierarchy mapping
                 try (PreparedStatement mapStmt = conn.prepareStatement(hierarchyMapSql)) {
-                    mapStmt.setObject(1, catalogId);
-                    mapStmt.setString(2, hierarchyName);
+                    mapStmt.setObject(1, hierarchy.catalog().globalId());
+                    mapStmt.setString(2, hierarchy.name());
                     mapStmt.setObject(3, entity.globalId());
                     mapStmt.setObject(4, aspectDefId);
                     mapStmt.setInt(5, order++);
@@ -640,12 +647,12 @@ public class PostgresDao implements CheapPersistenceModule
                 }
 
                 // Save properties
-                saveAspectProperties(conn, entity.globalId(), aspectDefId, catalogId, aspect);
+                saveAspectProperties(conn, entity.globalId(), aspectDefId, hierarchy.catalog().globalId(), aspect);
             }
         }
     }
 
-    private void saveAspectMapContentToMappedTable(Connection conn, UUID catalogId, String hierarchyName, AspectMapHierarchy hierarchy, AspectTableMapping mapping) throws SQLException
+    private void saveAspectMapContentToMappedTable(Connection conn, AspectMapHierarchy hierarchy, AspectTableMapping mapping) throws SQLException
     {
         // Pre-save cleanup based on flags
         if (!mapping.hasEntityId() && !mapping.hasCatalogId()) {
@@ -657,7 +664,7 @@ public class PostgresDao implements CheapPersistenceModule
             // Catalog ID only: DELETE rows for this catalog
             String deleteSql = "DELETE FROM " + mapping.tableName() + " WHERE catalog_id = ?";
             try (PreparedStatement stmt = conn.prepareStatement(deleteSql)) {
-                stmt.setObject(1, catalogId);
+                stmt.setObject(1, hierarchy.catalog().globalId());
                 stmt.executeUpdate();
             }
         }
@@ -725,7 +732,7 @@ public class PostgresDao implements CheapPersistenceModule
                     int paramIndex = 1;
 
                     if (mapping.hasCatalogId()) {
-                        stmt.setObject(paramIndex++, catalogId);
+                        stmt.setObject(paramIndex++, hierarchy.catalog().globalId());
                     }
 
                     if (mapping.hasEntityId()) {
@@ -841,7 +848,8 @@ public class PostgresDao implements CheapPersistenceModule
     /**
      * Converts a property value to its string representation for storage in value_text column.
      */
-    private String convertValueToString(Object value, PropertyType type) throws SQLException
+    @Override
+    public String convertValueToString(Object value, PropertyType type) throws SQLException
     {
         return switch (type) {
             case DateTime -> convertToTimestamp(value).toString();

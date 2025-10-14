@@ -190,7 +190,8 @@ public class SqliteDao implements CheapPersistenceModule
     /**
      * Maps a PropertyType to the corresponding SQLite column type.
      */
-    private String mapPropertyTypeToSqlType(PropertyType type)
+    @Override
+    public String mapPropertyTypeToSqlType(@NotNull PropertyType type)
     {
         return switch (type) {
             case Integer -> "INTEGER";
@@ -216,19 +217,25 @@ public class SqliteDao implements CheapPersistenceModule
         }
 
         try (Connection conn = dataSource.getConnection()) {
-            // Enable foreign keys
-            try (Statement stmt = conn.createStatement()) {
-                stmt.execute("PRAGMA foreign_keys = ON");
-            }
+            saveCatalog(conn, catalog);
+        }
+    }
 
-            conn.setAutoCommit(false);
-            try {
-                saveCatalogWithTransaction(conn, catalog);
-                conn.commit();
-            } catch (SQLException e) {
-                conn.rollback();
-                throw e;
-            }
+    @Override
+    public void saveCatalog(@NotNull Connection conn, @NotNull Catalog catalog) throws SQLException
+    {
+        // Enable foreign keys
+        try (Statement stmt = conn.createStatement()) {
+            stmt.execute("PRAGMA foreign_keys = ON");
+        }
+
+        conn.setAutoCommit(false);
+        try {
+            saveCatalogWithTransaction(conn, catalog);
+            conn.commit();
+        } catch (SQLException e) {
+            conn.rollback();
+            throw e;
         }
     }
 
@@ -265,7 +272,8 @@ public class SqliteDao implements CheapPersistenceModule
         }
     }
 
-    private void saveAspectDef(Connection conn, AspectDef aspectDef) throws SQLException
+    @Override
+    public void saveAspectDef(Connection conn, AspectDef aspectDef) throws SQLException
     {
         String sql =
             "INSERT INTO aspect_def (aspect_def_id, name, hash_version, is_readable, is_writable, can_add_properties, can_remove_properties) " +
@@ -325,7 +333,8 @@ public class SqliteDao implements CheapPersistenceModule
     }
 
 
-    private void saveEntity(Connection conn, Entity entity) throws SQLException
+    @Override
+    public void saveEntity(Connection conn, Entity entity) throws SQLException
     {
         String sql = "INSERT OR IGNORE INTO entity (entity_id) VALUES (?)";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -353,7 +362,8 @@ public class SqliteDao implements CheapPersistenceModule
         }
     }
 
-    private void saveHierarchy(Connection conn, Hierarchy hierarchy) throws SQLException
+    @Override
+    public void saveHierarchy(Connection conn, Hierarchy hierarchy) throws SQLException
     {
         String catalogId = hierarchy.catalog().globalId().toString();
 
@@ -742,11 +752,11 @@ public class SqliteDao implements CheapPersistenceModule
     /**
      * Converts a property value to its string representation for storage in value_text column.
      */
-    private String convertValueToString(Object value, PropertyType type)
+    @Override
+    public String convertValueToString(Object value, PropertyType type)
     {
         return switch (type) {
             case DateTime -> convertToTimestamp(value).toString();
-            case UUID -> value.toString();
             default -> value.toString();
         };
     }
