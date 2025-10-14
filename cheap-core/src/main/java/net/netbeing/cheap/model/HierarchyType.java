@@ -16,6 +16,11 @@
 
 package net.netbeing.cheap.model;
 
+import com.google.common.collect.Maps;
+
+import java.util.Arrays;
+import java.util.Map;
+
 /**
  * Defines the different types of hierarchies supported in the Cheap data model.
  * Each hierarchy type serves a specific organizational purpose and has unique
@@ -74,23 +79,18 @@ public enum HierarchyType
         return typeCode;
     }
 
+    private static final Map<String, HierarchyType> LOOKUP = Maps.uniqueIndex(Arrays.asList(values()), HierarchyType::typeCode);
+
     /**
-     * Convert a type code string to a TypeCode.
+     * Convert a type code string to a HierarchyType.
      *
      * @param typeCode a 2-letter string code
-     * @return the corresponding TypeCode
+     * @return the corresponding HierarchyType
      * @throws IllegalArgumentException if the code is not recognized
      */
     public static HierarchyType fromTypeCode(String typeCode)
     {
-        return switch (typeCode.toUpperCase()) {
-            case "EL" -> HierarchyType.ENTITY_LIST;
-            case "ES" -> HierarchyType.ENTITY_SET;
-            case "ED" -> HierarchyType.ENTITY_DIR;
-            case "ET" -> HierarchyType.ENTITY_TREE;
-            case "AM" -> HierarchyType.ASPECT_MAP;
-            default -> throw new IllegalArgumentException("Unknown hierarchy type code: " + typeCode);
-        };
+        return LOOKUP.get(typeCode.toUpperCase());
     }
 
 }

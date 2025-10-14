@@ -788,9 +788,23 @@ public class CheapFactory
      * @return a new mutable AspectDef instance
      */
     public @NotNull MutableAspectDef createMutableAspectDef(@NotNull String name,
-                                                           @NotNull Map<String, PropertyDef> propertyDefs)
+                                                            @NotNull Map<String, PropertyDef> propertyDefs)
     {
         return new MutableAspectDefImpl(name, propertyDefs);
+    }
+
+    /**
+     * Creates a new mutable aspect definition with property definitions.
+     *
+     * @param name the name of this aspect definition
+     * @param aspectDefId the global ID of this aspect definition
+     * @param propertyDefs the map of property names to property definitions
+     * @return a new mutable AspectDef instance
+     */
+    public @NotNull MutableAspectDef createMutableAspectDef(@NotNull String name, @NotNull UUID aspectDefId,
+                                                            @NotNull Map<String, PropertyDef> propertyDefs)
+    {
+        return new MutableAspectDefImpl(name, aspectDefId, propertyDefs);
     }
 
     /**
@@ -804,6 +818,20 @@ public class CheapFactory
                                                        @NotNull Map<String, ? extends PropertyDef> propertyDefs)
     {
         return new ImmutableAspectDefImpl(name, propertyDefs);
+    }
+
+    /**
+     * Creates a new mutable aspect definition with property definitions.
+     *
+     * @param name the name of this aspect definition
+     * @param aspectDefId the global ID of this aspect definition
+     * @param propertyDefs the map of property names to property definitions
+     * @return a new mutable AspectDef instance
+     */
+    public @NotNull AspectDef createImmutableAspectDef(@NotNull String name, @NotNull UUID aspectDefId,
+                                                       @NotNull Map<String, PropertyDef> propertyDefs)
+    {
+        return new ImmutableAspectDefImpl(name, aspectDefId, propertyDefs);
     }
 
     /**

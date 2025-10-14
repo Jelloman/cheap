@@ -30,7 +30,6 @@ Cheap is a work in progress. I'll add a roadmap soon, for now here are the broad
 * Better testing for large properties such as Text, CLOB, BLOB, BigDecimal, BigInteger
 * Streaming/chunking methods for reading and writing multivalued properties, and Text/CLOB/BLOB
   * Decide whether Text and CLOB are both needed; probably not
-* MySQL/MariaDB support
 * cheap-net and cheapd modules (see [Modules](#modules) below)
 * Convenience Hierarchy types, such as an AspectTree that marries an EntityTree and AspectMap to
   provide tree-based access to a specific Aspect type.
