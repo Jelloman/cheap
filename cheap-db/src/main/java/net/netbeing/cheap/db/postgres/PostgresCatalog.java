@@ -17,7 +17,6 @@
 package net.netbeing.cheap.db.postgres;
 
 import net.netbeing.cheap.db.JdbcCatalogBase;
-import net.netbeing.cheap.db.sqlite.SqliteCatalog;
 import net.netbeing.cheap.impl.basic.*;
 import net.netbeing.cheap.model.*;
 import org.jetbrains.annotations.NotNull;
@@ -80,7 +79,6 @@ import static java.util.Map.entry;
  * }</pre>
  *
  * @see JdbcCatalogBase
- * @see SqliteCatalog
  * @see PostgresDao
  */
 public class PostgresCatalog extends JdbcCatalogBase
