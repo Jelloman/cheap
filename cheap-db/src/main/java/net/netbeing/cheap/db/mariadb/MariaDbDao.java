@@ -862,7 +862,8 @@ public class MariaDbDao implements CheapPersistenceModule
         }
     }
 
-    private Catalog loadCatalogWithConnection(Connection conn, UUID catalogId) throws SQLException
+    @Override
+    public Catalog loadCatalogWithConnection(Connection conn, UUID catalogId) throws SQLException
     {
         // Load catalog basic info
         String sql = "SELECT catalog_id, species, uri, upstream_catalog_id, version_number FROM catalog WHERE catalog_id = ?";
@@ -937,7 +938,7 @@ public class MariaDbDao implements CheapPersistenceModule
                     Hierarchy existingHierarchy = catalog.hierarchy(name);
                     if (existingHierarchy != null) {
                         // Hierarchy already exists, load content into it based on type
-                        loadExistingHierarchyContent(conn, catalog.globalId(), existingHierarchy, type);
+                        loadExistingHierarchyContent(conn, existingHierarchy);
                     } else {
                         // Create and load new hierarchy
                         Hierarchy hierarchy = createAndLoadHierarchy(conn, catalog, type, name, version);
@@ -948,58 +949,59 @@ public class MariaDbDao implements CheapPersistenceModule
         }
     }
 
-    private void loadExistingHierarchyContent(Connection conn, UUID catalogId, Hierarchy hierarchy, HierarchyType type) throws SQLException
+    private void loadExistingHierarchyContent(Connection conn, Hierarchy hierarchy) throws SQLException
     {
-        switch (type) {
-            case ENTITY_LIST -> loadEntityListContent(conn, catalogId, hierarchy.name(), (EntityListHierarchy) hierarchy);
-            case ENTITY_SET -> loadEntitySetContent(conn, catalogId, hierarchy.name(), (EntitySetHierarchy) hierarchy);
-            case ENTITY_DIR -> loadEntityDirectoryContent(conn, catalogId, hierarchy.name(), (EntityDirectoryHierarchy) hierarchy);
-            case ENTITY_TREE -> loadEntityTreeContent(conn, catalogId, hierarchy.name(), (EntityTreeHierarchy) hierarchy);
-            case ASPECT_MAP -> loadAspectMapContent(conn, catalogId, hierarchy.name(), (AspectMapHierarchy) hierarchy);
-            default -> throw new IllegalArgumentException("Unknown hierarchy type: " + type);
+        switch (hierarchy.type()) {
+            case ENTITY_LIST -> loadEntityListContent(conn, (EntityListHierarchy) hierarchy);
+            case ENTITY_SET -> loadEntitySetContent(conn, (EntitySetHierarchy) hierarchy);
+            case ENTITY_DIR -> loadEntityDirectoryContent(conn, (EntityDirectoryHierarchy) hierarchy);
+            case ENTITY_TREE -> loadEntityTreeContent(conn, (EntityTreeHierarchy) hierarchy);
+            case ASPECT_MAP -> loadAspectMapContent(conn, (AspectMapHierarchy) hierarchy);
+            default -> throw new IllegalArgumentException("Unknown hierarchy type: " + hierarchy.type());
         }
     }
 
-    private Hierarchy createAndLoadHierarchy(Connection conn, Catalog catalog, HierarchyType type, String hierarchyName, long version) throws SQLException
+    @Override
+    public Hierarchy createAndLoadHierarchy(Connection conn, Catalog catalog, HierarchyType type, String hierarchyName, long version) throws SQLException
     {
         switch (type) {
             case ENTITY_LIST -> {
                 EntityListHierarchy hierarchy = factory.createEntityListHierarchy(catalog, hierarchyName, version);
-                loadEntityListContent(conn, catalog.globalId(), hierarchyName, hierarchy);
+                loadEntityListContent(conn, hierarchy);
                 return hierarchy;
             }
             case ENTITY_SET -> {
                 EntitySetHierarchy hierarchy = factory.createEntitySetHierarchy(catalog, hierarchyName, version);
-                loadEntitySetContent(conn, catalog.globalId(), hierarchyName, hierarchy);
+                loadEntitySetContent(conn, hierarchy);
                 return hierarchy;
             }
             case ENTITY_DIR -> {
                 EntityDirectoryHierarchy hierarchy = factory.createEntityDirectoryHierarchy(catalog, hierarchyName, version);
-                loadEntityDirectoryContent(conn, catalog.globalId(), hierarchyName, hierarchy);
+                loadEntityDirectoryContent(conn, hierarchy);
                 return hierarchy;
             }
             case ENTITY_TREE -> {
                 Entity rootEntity = factory.createEntity();
                 EntityTreeHierarchy hierarchy = factory.createEntityTreeHierarchy(catalog, hierarchyName, rootEntity);
-                loadEntityTreeContent(conn, catalog.globalId(), hierarchyName, hierarchy);
+                loadEntityTreeContent(conn, hierarchy);
                 return hierarchy;
             }
             case ASPECT_MAP -> {
                 AspectDef aspectDef = loadAspectDefForHierarchy(conn, catalog.globalId(), hierarchyName);
                 AspectMapHierarchy hierarchy = factory.createAspectMapHierarchy(catalog, aspectDef, version);
-                loadAspectMapContent(conn, catalog.globalId(), hierarchyName, hierarchy);
+                loadAspectMapContent(conn, hierarchy);
                 return hierarchy;
             }
             default -> throw new IllegalArgumentException("Unknown hierarchy type: " + type);
         }
     }
 
-    private void loadEntityListContent(Connection conn, UUID catalogId, String hierarchyName, EntityListHierarchy hierarchy) throws SQLException
+    private void loadEntityListContent(Connection conn, EntityListHierarchy hierarchy) throws SQLException
     {
         String sql = "SELECT entity_id, list_order FROM hierarchy_entity_list WHERE catalog_id = ? AND hierarchy_name = ? ORDER BY list_order";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, catalogId.toString());
-            stmt.setString(2, hierarchyName);
+            stmt.setString(1, hierarchy.catalog().globalId().toString());
+            stmt.setString(2, hierarchy.name());
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
                     String entityIdStr = rs.getString("entity_id");
@@ -1011,12 +1013,12 @@ public class MariaDbDao implements CheapPersistenceModule
         }
     }
 
-    private void loadEntitySetContent(Connection conn, UUID catalogId, String hierarchyName, EntitySetHierarchy hierarchy) throws SQLException
+    private void loadEntitySetContent(Connection conn, EntitySetHierarchy hierarchy) throws SQLException
     {
         String sql = "SELECT entity_id FROM hierarchy_entity_set WHERE catalog_id = ? AND hierarchy_name = ? ORDER BY set_order";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, catalogId.toString());
-            stmt.setString(2, hierarchyName);
+            stmt.setString(1, hierarchy.catalog().globalId().toString());
+            stmt.setString(2, hierarchy.name());
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
                     String entityIdStr = rs.getString("entity_id");
@@ -1028,13 +1030,13 @@ public class MariaDbDao implements CheapPersistenceModule
         }
     }
 
-    private void loadEntityDirectoryContent(Connection conn, UUID catalogId, String hierarchyName, EntityDirectoryHierarchy hierarchy) throws SQLException
+    private void loadEntityDirectoryContent(Connection conn, EntityDirectoryHierarchy hierarchy) throws SQLException
     {
         String sql = "SELECT entity_key, entity_id FROM hierarchy_entity_directory " +
             "WHERE catalog_id = ? AND hierarchy_name = ? ORDER BY dir_order";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, catalogId.toString());
-            stmt.setString(2, hierarchyName);
+            stmt.setString(1, hierarchy.catalog().globalId().toString());
+            stmt.setString(2, hierarchy.name());
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
                     String key = rs.getString("entity_key");
@@ -1047,7 +1049,7 @@ public class MariaDbDao implements CheapPersistenceModule
         }
     }
 
-    private void loadEntityTreeContent(Connection conn, UUID catalogId, String hierarchyName, EntityTreeHierarchy hierarchy) throws SQLException
+    private void loadEntityTreeContent(Connection conn, EntityTreeHierarchy hierarchy) throws SQLException
     {
         // Load all tree nodes into a map for efficient parent-child relationship building
         Map<UUID, NodeRecord> nodeMap = new HashMap<>();
@@ -1059,8 +1061,8 @@ public class MariaDbDao implements CheapPersistenceModule
             "ORDER BY node_path, tree_order";
 
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, catalogId.toString());
-            stmt.setString(2, hierarchyName);
+            stmt.setString(1, hierarchy.catalog().globalId().toString());
+            stmt.setString(2, hierarchy.name());
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
                     String nodeIdStr = rs.getString("node_id");
@@ -1118,39 +1120,39 @@ public class MariaDbDao implements CheapPersistenceModule
         EntityTreeHierarchy.Node node
     ) {}
 
-    private void loadAspectMapContent(Connection conn, UUID catalogId, String hierarchyName, AspectMapHierarchy hierarchy) throws SQLException
+    private void loadAspectMapContent(Connection conn, AspectMapHierarchy hierarchy) throws SQLException
     {
         // Check if this AspectDef has a table mapping
         AspectTableMapping mapping = getAspectTableMapping(hierarchy.aspectDef().name());
 
         if (mapping != null) {
-            loadAspectMapContentFromMappedTable(conn, catalogId, hierarchyName, hierarchy, mapping);
+            loadAspectMapContentFromMappedTable(conn, hierarchy, mapping);
         } else {
-            loadAspectMapContentFromDefaultTables(conn, catalogId, hierarchyName, hierarchy);
+            loadAspectMapContentFromDefaultTables(conn, hierarchy);
         }
     }
 
-    private void loadAspectMapContentFromDefaultTables(Connection conn, UUID catalogId, String hierarchyName, AspectMapHierarchy hierarchy) throws SQLException
+    private void loadAspectMapContentFromDefaultTables(Connection conn, AspectMapHierarchy hierarchy) throws SQLException
     {
         String sql = "SELECT entity_id FROM hierarchy_aspect_map " +
             "WHERE catalog_id = ? AND hierarchy_name = ? ORDER BY map_order";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, catalogId.toString());
-            stmt.setString(2, hierarchyName);
+            stmt.setString(1, hierarchy.catalog().globalId().toString());
+            stmt.setString(2, hierarchy.name());
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
                     String entityIdStr = rs.getString("entity_id");
                     UUID entityId = UUID.fromString(entityIdStr);
 
                     Entity entity = factory.getOrRegisterNewEntity(entityId);
-                    Aspect aspect = loadAspect(conn, entity, hierarchy.aspectDef(), catalogId);
+                    Aspect aspect = loadAspect(conn, entity, hierarchy.aspectDef(), hierarchy.catalog());
                     hierarchy.put(entity, aspect);
                 }
             }
         }
     }
 
-    private void loadAspectMapContentFromMappedTable(Connection conn, UUID catalogId, String hierarchyName, AspectMapHierarchy hierarchy, AspectTableMapping mapping) throws SQLException
+    private void loadAspectMapContentFromMappedTable(Connection conn, AspectMapHierarchy hierarchy, AspectTableMapping mapping) throws SQLException
     {
         // Build column list for SELECT
         StringBuilder columns = new StringBuilder();
@@ -1181,7 +1183,7 @@ public class MariaDbDao implements CheapPersistenceModule
 
         try (PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
             if (mapping.hasCatalogId()) {
-                stmt.setString(1, catalogId.toString());
+                stmt.setString(1, hierarchy.catalog().globalId().toString());
             }
 
             try (ResultSet rs = stmt.executeQuery()) {
@@ -1219,7 +1221,8 @@ public class MariaDbDao implements CheapPersistenceModule
         }
     }
 
-    private Aspect loadAspect(Connection conn, Entity entity, AspectDef aspectDef, UUID catalogId) throws SQLException
+    @Override
+    public Aspect loadAspect(Connection conn, Entity entity, AspectDef aspectDef, Catalog catalog) throws SQLException
     {
         Aspect aspect = factory.createPropertyMapAspect(entity, aspectDef);
 
@@ -1236,7 +1239,7 @@ public class MariaDbDao implements CheapPersistenceModule
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, entity.globalId().toString());
             stmt.setString(2, aspectDefId);
-            stmt.setString(3, catalogId.toString());
+            stmt.setString(3, catalog.globalId().toString());
             try (ResultSet rs = stmt.executeQuery()) {
                 String currentPropertyName = null;
                 List<Object> multivaluedValues = new ArrayList<>();
@@ -1362,7 +1365,8 @@ public class MariaDbDao implements CheapPersistenceModule
         }
     }
 
-    private AspectDef loadAspectDef(Connection conn, String aspectDefName) throws SQLException
+    @Override
+    public AspectDef loadAspectDef(Connection conn, String aspectDefName) throws SQLException
     {
         // First load the AspectDef basic info including hash_version
         String aspectSql = "SELECT aspect_def_id, hash_version, is_readable, is_writable, can_add_properties, can_remove_properties " +
@@ -1478,7 +1482,8 @@ public class MariaDbDao implements CheapPersistenceModule
      * @return a Timestamp suitable for database storage
      * @throws IllegalStateException if the value type is not supported
      */
-    private Timestamp convertToTimestamp(Object value)
+    @Override
+    public Timestamp convertToTimestamp(Object value)
     {
         return switch (value) {
             case Timestamp timestamp -> timestamp;

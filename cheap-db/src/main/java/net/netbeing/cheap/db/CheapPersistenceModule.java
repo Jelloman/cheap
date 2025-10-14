@@ -16,15 +16,19 @@
 
 package net.netbeing.cheap.db;
 
+import net.netbeing.cheap.model.Aspect;
 import net.netbeing.cheap.model.AspectDef;
 import net.netbeing.cheap.model.Catalog;
 import net.netbeing.cheap.model.Entity;
 import net.netbeing.cheap.model.Hierarchy;
+import net.netbeing.cheap.model.HierarchyType;
 import net.netbeing.cheap.model.PropertyType;
 import org.jetbrains.annotations.NotNull;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.sql.Statement;
+import java.sql.Timestamp;
 import java.util.UUID;
 
 /**
@@ -71,14 +75,15 @@ public interface CheapPersistenceModule
 
     String convertValueToString(Object value, PropertyType type) throws SQLException;
 
-    /**
-     * Loads a complete catalog from the database by its global ID.
-     *
-     * @param catalogId the global ID of the catalog to load
-     * @return the loaded catalog, or null if not found
-     * @throws SQLException if database operation fails
-     */
     Catalog loadCatalog(@NotNull UUID catalogId) throws SQLException;
+
+    Catalog loadCatalogWithConnection(Connection conn, UUID catalogId) throws SQLException;
+
+    Hierarchy createAndLoadHierarchy(Connection conn, Catalog catalog, HierarchyType type, String hierarchyName, long version) throws SQLException;
+
+    Aspect loadAspect(Connection conn, Entity entity, AspectDef aspectDef, Catalog catalog) throws SQLException;
+
+    AspectDef loadAspectDef(Connection conn, String aspectDefName) throws SQLException;
 
     /**
      * Deletes a catalog and all its associated data from the database.
@@ -89,4 +94,6 @@ public interface CheapPersistenceModule
      * @throws SQLException if database operation fails
      */
     boolean deleteCatalog(@NotNull UUID catalogId) throws SQLException;
+
+    Timestamp convertToTimestamp(Object value);
 }
