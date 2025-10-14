@@ -15,22 +15,17 @@ repositories {
 }
 
 dependencies {
+    implementation(libs.guava)
+    implementation(libs.slf4j)
+    implementation(libs.logback.core)
+    implementation(libs.logback.classic)
+
+    compileOnly(libs.jetbrains.annotations)
+
     testImplementation(libs.junit.jupiter)
     testImplementation(libs.tempus.fugit)
     testRuntimeOnly(libs.junit.platform.launcher)
     testRuntimeOnly(libs.junit.jupiter)
-
-    api(libs.commons.math3)
-
-    implementation(libs.guava)
-
-    compileOnly(libs.jetbrains.annotations)
-
-    // Lombok
-    //compileOnly("org.projectlombok:lombok:1.18.38")
-    //annotationProcessor("org.projectlombok:lombok:1.18.38")
-    //testCompileOnly("org.projectlombok:lombok:1.18.38")
-    //testAnnotationProcessor("org.projectlombok:lombok:1.18.38")
 }
 
 // Apply a specific Java toolchain to ease working on different environments.

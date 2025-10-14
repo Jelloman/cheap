@@ -150,9 +150,13 @@ fabric.properties
 
 # End of https://www.toptal.com/developers/gitignore/api/intellij
 
+### ----------- END gitignore.io GENERATED SECTION ------------
+
+### ----------- USER SECTION ------------
 
 **/target/
 **/.aider-desk/
 **/.gradle/
 **/build/
 CLAUDE.md
+**/*.log

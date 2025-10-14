@@ -29,7 +29,6 @@ repositories {
 }
 
 dependencies {
-    // This dependency is exported to consumers, that is to say found on their compile classpath.
     api(project(":cheap-core"))
 
     implementation(libs.sqlite.jdbc)
