@@ -13,6 +13,6 @@ plugins {
 rootProject.name = "cheap"
 include("cheap-core")
 include("cheap-json")
-include("cheap-db")
+include("cheap-db-postgres")
 include("cheap-db-sqlite")
 include("cheap-db-mariadb")
