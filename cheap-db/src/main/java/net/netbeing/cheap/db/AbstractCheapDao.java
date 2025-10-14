@@ -16,17 +16,7 @@
 
 package net.netbeing.cheap.db;
 
-import net.netbeing.cheap.model.AspectDef;
-import net.netbeing.cheap.model.AspectMapHierarchy;
-import net.netbeing.cheap.model.Catalog;
-import net.netbeing.cheap.model.Entity;
-import net.netbeing.cheap.model.EntityDirectoryHierarchy;
-import net.netbeing.cheap.model.EntityListHierarchy;
-import net.netbeing.cheap.model.EntitySetHierarchy;
-import net.netbeing.cheap.model.EntityTreeHierarchy;
-import net.netbeing.cheap.model.Hierarchy;
-import net.netbeing.cheap.model.HierarchyType;
-import net.netbeing.cheap.model.PropertyType;
+import net.netbeing.cheap.model.*;
 import net.netbeing.cheap.util.CheapFactory;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -34,6 +24,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.Instant;
@@ -134,7 +125,41 @@ public abstract class AbstractCheapDao implements CheapDao
 
     protected abstract void saveCatalogRecord(Connection conn, Catalog catalog) throws SQLException;
 
-    protected abstract void saveHierarchyContent(Connection conn, Hierarchy hierarchy) throws SQLException;
+    protected void saveHierarchyContent(Connection conn, Hierarchy hierarchy) throws SQLException
+    {
+        switch (hierarchy.type()) {
+            case ENTITY_LIST -> saveEntityListContent(conn, (EntityListHierarchy) hierarchy);
+            case ENTITY_SET -> saveEntitySetContent(conn, (EntitySetHierarchy) hierarchy);
+            case ENTITY_DIR -> saveEntityDirectoryContent(conn, (EntityDirectoryHierarchy) hierarchy);
+            case ENTITY_TREE -> saveEntityTreeContent(conn, (EntityTreeHierarchy) hierarchy);
+            case ASPECT_MAP -> saveAspectMapContent(conn, (AspectMapHierarchy) hierarchy);
+        }
+    }
+
+
+    protected abstract void saveEntityListContent(Connection conn, EntityListHierarchy hierarchy) throws SQLException;
+
+    protected abstract void saveEntitySetContent(Connection conn, EntitySetHierarchy hierarchy) throws SQLException;
+
+    protected abstract void saveEntityDirectoryContent(Connection conn, EntityDirectoryHierarchy hierarchy) throws SQLException;
+
+    protected abstract void saveEntityTreeContent(Connection conn, EntityTreeHierarchy hierarchy) throws SQLException;
+
+    protected void saveAspectMapContent(Connection conn, AspectMapHierarchy hierarchy) throws SQLException
+    {
+        // Check if this AspectDef has a table mapping
+        AspectTableMapping mapping = getAspectTableMapping(hierarchy.aspectDef().name());
+
+        if (mapping != null) {
+            saveAspectMapContentToMappedTable(conn, hierarchy, mapping);
+        } else {
+            saveAspectMapContentToDefaultTables(conn, hierarchy);
+        }
+    }
+
+    protected abstract void saveAspectMapContentToDefaultTables(Connection conn, AspectMapHierarchy hierarchy) throws SQLException;
+
+    protected abstract void saveAspectMapContentToMappedTable(Connection conn, AspectMapHierarchy hierarchy, AspectTableMapping mapping) throws SQLException;
 
     /**
      * Converts a property value to its string representation for storage in value_text column.

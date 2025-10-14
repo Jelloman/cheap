@@ -352,7 +352,6 @@ public class MariaDbDao extends AbstractCheapDao
         }
     }
 
-
     @Override
     public void saveEntity(Connection conn, Entity entity) throws SQLException
     {
@@ -403,18 +402,7 @@ public class MariaDbDao extends AbstractCheapDao
     }
 
     @Override
-    public void saveHierarchyContent(Connection conn, Hierarchy hierarchy) throws SQLException
-    {
-        switch (hierarchy.type()) {
-            case ENTITY_LIST -> saveEntityListContent(conn, (EntityListHierarchy) hierarchy);
-            case ENTITY_SET -> saveEntitySetContent(conn, (EntitySetHierarchy) hierarchy);
-            case ENTITY_DIR -> saveEntityDirectoryContent(conn, (EntityDirectoryHierarchy) hierarchy);
-            case ENTITY_TREE -> saveEntityTreeContent(conn, (EntityTreeHierarchy) hierarchy);
-            case ASPECT_MAP -> saveAspectMapContent(conn, (AspectMapHierarchy) hierarchy);
-        }
-    }
-
-    private void saveEntityListContent(Connection conn, EntityListHierarchy hierarchy) throws SQLException
+    protected void saveEntityListContent(Connection conn, EntityListHierarchy hierarchy) throws SQLException
     {
         final String catalogId = hierarchy.catalog().globalId().toString();
         String sql = "INSERT INTO hierarchy_entity_list (catalog_id, hierarchy_name, entity_id, list_order) " +
@@ -435,7 +423,8 @@ public class MariaDbDao extends AbstractCheapDao
         }
     }
 
-    private void saveEntitySetContent(Connection conn, EntitySetHierarchy hierarchy) throws SQLException
+    @Override
+    protected void saveEntitySetContent(Connection conn, EntitySetHierarchy hierarchy) throws SQLException
     {
         final String catalogId = hierarchy.catalog().globalId().toString();
         String sql = "INSERT INTO hierarchy_entity_set (catalog_id, hierarchy_name, entity_id, set_order) " +
@@ -456,7 +445,8 @@ public class MariaDbDao extends AbstractCheapDao
         }
     }
 
-    private void saveEntityDirectoryContent(Connection conn, EntityDirectoryHierarchy hierarchy) throws SQLException
+    @Override
+    protected void saveEntityDirectoryContent(Connection conn, EntityDirectoryHierarchy hierarchy) throws SQLException
     {
         final String catalogId = hierarchy.catalog().globalId().toString();
         String sql = "INSERT INTO hierarchy_entity_directory (catalog_id, hierarchy_name, entity_key, entity_id, dir_order) " +
@@ -482,7 +472,8 @@ public class MariaDbDao extends AbstractCheapDao
         }
     }
 
-    private void saveEntityTreeContent(Connection conn, EntityTreeHierarchy hierarchy) throws SQLException
+    @Override
+    protected void saveEntityTreeContent(Connection conn, EntityTreeHierarchy hierarchy) throws SQLException
     {
         // Save tree nodes recursively
         saveTreeNode(conn, hierarchy, hierarchy.root(), "", "", null, 0);
@@ -528,7 +519,8 @@ public class MariaDbDao extends AbstractCheapDao
         }
     }
 
-    private void saveAspectMapContent(Connection conn, AspectMapHierarchy hierarchy) throws SQLException
+    @Override
+    protected void saveAspectMapContent(Connection conn, AspectMapHierarchy hierarchy) throws SQLException
     {
         // Check if this AspectDef has a table mapping
         AspectTableMapping mapping = getAspectTableMapping(hierarchy.aspectDef().name());
@@ -540,7 +532,8 @@ public class MariaDbDao extends AbstractCheapDao
         }
     }
 
-    private void saveAspectMapContentToDefaultTables(Connection conn, AspectMapHierarchy hierarchy) throws SQLException
+    @Override
+    protected void saveAspectMapContentToDefaultTables(Connection conn, AspectMapHierarchy hierarchy) throws SQLException
     {
         final String catalogId = hierarchy.catalog().globalId().toString();
         String aspectSql = "INSERT INTO aspect (entity_id, aspect_def_id, catalog_id, hierarchy_name) " +
@@ -586,7 +579,8 @@ public class MariaDbDao extends AbstractCheapDao
         }
     }
 
-    private void saveAspectMapContentToMappedTable(Connection conn, AspectMapHierarchy hierarchy, AspectTableMapping mapping) throws SQLException
+    @Override
+    protected void saveAspectMapContentToMappedTable(Connection conn, AspectMapHierarchy hierarchy, AspectTableMapping mapping) throws SQLException
     {
         final String catalogId = hierarchy.catalog().globalId().toString();
         // Pre-save cleanup based on flags
