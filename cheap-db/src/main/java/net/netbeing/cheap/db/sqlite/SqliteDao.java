@@ -16,12 +16,15 @@
 
 package net.netbeing.cheap.db.sqlite;
 
+import net.netbeing.cheap.db.AbstractCheapDao;
 import net.netbeing.cheap.db.AspectTableMapping;
-import net.netbeing.cheap.db.CheapPersistenceModule;
+import net.netbeing.cheap.db.CheapDao;
 import net.netbeing.cheap.db.postgres.PostgresDao;
 import net.netbeing.cheap.model.*;
 import net.netbeing.cheap.util.CheapFactory;
 import org.jetbrains.annotations.NotNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.sql.DataSource;
 import java.math.BigDecimal;
@@ -34,11 +37,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
-import java.time.Instant;
-import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -64,18 +64,16 @@ import java.util.UUID;
  *   <li><b>Foreign Keys:</b> Must be explicitly enabled per connection</li>
  * </ul>
  *
- * @see CheapPersistenceModule
+ * @see CheapDao
  * @see PostgresDao
  * @see AspectTableMapping
  * @see CheapFactory
  * @see Catalog
  */
 @SuppressWarnings("DuplicateBranchesInSwitch")
-public class SqliteDao implements CheapPersistenceModule
+public class SqliteDao extends AbstractCheapDao
 {
-    private final DataSource dataSource;
-    private final CheapFactory factory;
-    private final Map<String, AspectTableMapping> aspectTableMappings = new LinkedHashMap<>();
+    private static final Logger logger = LoggerFactory.getLogger(SqliteDao.class);
 
     /**
      * Constructs a new SqliteDao with the given data source.
@@ -85,8 +83,7 @@ public class SqliteDao implements CheapPersistenceModule
      */
     public SqliteDao(@NotNull DataSource dataSource)
     {
-        this.dataSource = dataSource;
-        this.factory = new CheapFactory();
+        super(dataSource, new CheapFactory(), logger);
     }
 
     /**
@@ -99,29 +96,7 @@ public class SqliteDao implements CheapPersistenceModule
      */
     public SqliteDao(@NotNull DataSource dataSource, @NotNull CheapFactory factory)
     {
-        this.dataSource = dataSource;
-        this.factory = factory;
-    }
-
-    /**
-     * Adds an AspectTableMapping to enable aspects to be saved/loaded from a custom table.
-     *
-     * @param mapping the AspectTableMapping to add
-     */
-    public void addAspectTableMapping(@NotNull AspectTableMapping mapping)
-    {
-        aspectTableMappings.put(mapping.aspectDef().name(), mapping);
-    }
-
-    /**
-     * Gets the AspectTableMapping for the given AspectDef name, if one exists.
-     *
-     * @param aspectDefName the AspectDef name
-     * @return the AspectTableMapping, or null if not mapped
-     */
-    public AspectTableMapping getAspectTableMapping(@NotNull String aspectDefName)
-    {
-        return aspectTableMappings.get(aspectDefName);
+        super(dataSource, factory, logger);
     }
 
     /**
@@ -210,63 +185,36 @@ public class SqliteDao implements CheapPersistenceModule
     }
 
     @Override
-    public void saveCatalog(@NotNull Catalog catalog) throws SQLException
-    {
-        if (catalog == null) {
-            throw new IllegalArgumentException("Catalog cannot be null");
-        }
-
-        try (Connection conn = dataSource.getConnection()) {
-            saveCatalog(conn, catalog);
-        }
-    }
-
-    @Override
     public void saveCatalog(@NotNull Connection conn, @NotNull Catalog catalog) throws SQLException
     {
         // Enable foreign keys
         try (Statement stmt = conn.createStatement()) {
             stmt.execute("PRAGMA foreign_keys = ON");
         }
-
-        conn.setAutoCommit(false);
+        boolean auto = conn.getAutoCommit();
+        if (auto) {
+            conn.setAutoCommit(false);
+        }
         try {
-            saveCatalogWithTransaction(conn, catalog);
+            super.saveCatalog(conn, catalog);
             conn.commit();
         } catch (SQLException e) {
             conn.rollback();
             throw e;
+        } finally {
+            if (auto) {
+                conn.setAutoCommit(true);
+            }
         }
     }
 
-    private void saveCatalogWithTransaction(Connection conn, Catalog catalog) throws SQLException
-    {
-        // Save the Catalog entity itself first and foremost
-        saveEntity(conn, catalog);
-
-        // Save the Catalog table record (must be before linking aspect defs due to FK constraint)
-        saveCatalogRecord(conn, catalog);
-
-        // Save AspectDefs
-        for (AspectDef aspectDef : catalog.aspectDefs()) {
-            saveAspectDef(conn, aspectDef);
-            // Link the AspectDef to this Catalog
-            linkCatalogToAspectDef(conn, catalog.globalId(), aspectDef);
-        }
-
-        // Save all entities, aspects, and properties from hierarchies
-        for (Hierarchy hierarchy : catalog.hierarchies()) {
-            saveHierarchy(conn, hierarchy);
-            saveHierarchyContent(conn, hierarchy);
-        }
-    }
-
-    private void linkCatalogToAspectDef(Connection conn, UUID catalogId, AspectDef aspectDef) throws SQLException
+    @Override
+    protected void linkCatalogToAspectDef(Connection conn, Catalog catalog, AspectDef aspectDef) throws SQLException
     {
         String aspectDefId = aspectDef.globalId().toString();
         String sql = "INSERT OR IGNORE INTO catalog_aspect_def (catalog_id, aspect_def_id) VALUES (?, ?)";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, catalogId.toString());
+            stmt.setString(1, catalog.globalId().toString());
             stmt.setString(2, aspectDefId);
             stmt.executeUpdate();
         }
@@ -343,7 +291,8 @@ public class SqliteDao implements CheapPersistenceModule
         }
     }
 
-    private void saveCatalogRecord(Connection conn, Catalog catalog) throws SQLException
+    @Override
+    protected void saveCatalogRecord(Connection conn, Catalog catalog) throws SQLException
     {
         String sql = "INSERT INTO catalog (catalog_id, species, uri, upstream_catalog_id, version_number) "
             + "VALUES (?, ?, ?, ?, ?) " +
@@ -381,21 +330,19 @@ public class SqliteDao implements CheapPersistenceModule
         }
     }
 
-    private void saveHierarchyContent(Connection conn, Hierarchy hierarchy) throws SQLException
+    @Override
+    protected void saveHierarchyContent(Connection conn, Hierarchy hierarchy) throws SQLException
     {
-        String catalogId = hierarchy.catalog().globalId().toString();
-        String hierarchyName = hierarchy.name();
-
         switch (hierarchy.type()) {
-            case ENTITY_LIST -> saveEntityListContent(conn, catalogId, hierarchyName, (EntityListHierarchy) hierarchy);
-            case ENTITY_SET -> saveEntitySetContent(conn, catalogId, hierarchyName, (EntitySetHierarchy) hierarchy);
-            case ENTITY_DIR -> saveEntityDirectoryContent(conn, catalogId, hierarchyName, (EntityDirectoryHierarchy) hierarchy);
-            case ENTITY_TREE -> saveEntityTreeContent(conn, catalogId, hierarchyName, (EntityTreeHierarchy) hierarchy);
-            case ASPECT_MAP -> saveAspectMapContent(conn, catalogId, hierarchyName, (AspectMapHierarchy) hierarchy);
+            case ENTITY_LIST -> saveEntityListContent(conn, (EntityListHierarchy) hierarchy);
+            case ENTITY_SET -> saveEntitySetContent(conn, (EntitySetHierarchy) hierarchy);
+            case ENTITY_DIR -> saveEntityDirectoryContent(conn, (EntityDirectoryHierarchy) hierarchy);
+            case ENTITY_TREE -> saveEntityTreeContent(conn, (EntityTreeHierarchy) hierarchy);
+            case ASPECT_MAP -> saveAspectMapContent(conn, (AspectMapHierarchy) hierarchy);
         }
     }
 
-    private void saveEntityListContent(Connection conn, String catalogId, String hierarchyName, EntityListHierarchy hierarchy) throws SQLException
+    private void saveEntityListContent(Connection conn, EntityListHierarchy hierarchy) throws SQLException
     {
         String sql = "INSERT INTO hierarchy_entity_list (catalog_id, hierarchy_name, entity_id, list_order) " +
             "VALUES (?, ?, ?, ?) " +
@@ -405,8 +352,8 @@ public class SqliteDao implements CheapPersistenceModule
             int order = 0;
             for (Entity entity : hierarchy) {
                 saveEntity(conn, entity);
-                stmt.setString(1, catalogId);
-                stmt.setString(2, hierarchyName);
+                stmt.setString(1, hierarchy.catalog().globalId().toString());
+                stmt.setString(2, hierarchy.name());
                 stmt.setString(3, entity.globalId().toString());
                 stmt.setInt(4, order++);
                 stmt.addBatch();
@@ -415,7 +362,7 @@ public class SqliteDao implements CheapPersistenceModule
         }
     }
 
-    private void saveEntitySetContent(Connection conn, String catalogId, String hierarchyName, EntitySetHierarchy hierarchy) throws SQLException
+    private void saveEntitySetContent(Connection conn, EntitySetHierarchy hierarchy) throws SQLException
     {
         String sql = "INSERT INTO hierarchy_entity_set (catalog_id, hierarchy_name, entity_id, set_order) " +
             "VALUES (?, ?, ?, ?) " +
@@ -425,8 +372,8 @@ public class SqliteDao implements CheapPersistenceModule
             int order = 0;
             for (Entity entity : hierarchy) {
                 saveEntity(conn, entity);
-                stmt.setString(1, catalogId);
-                stmt.setString(2, hierarchyName);
+                stmt.setString(1, hierarchy.catalog().globalId().toString());
+                stmt.setString(2, hierarchy.name());
                 stmt.setString(3, entity.globalId().toString());
                 stmt.setInt(4, order++);
                 stmt.addBatch();
@@ -435,7 +382,7 @@ public class SqliteDao implements CheapPersistenceModule
         }
     }
 
-    private void saveEntityDirectoryContent(Connection conn, String catalogId, String hierarchyName, EntityDirectoryHierarchy hierarchy) throws SQLException
+    private void saveEntityDirectoryContent(Connection conn, EntityDirectoryHierarchy hierarchy) throws SQLException
     {
         String sql = "INSERT INTO hierarchy_entity_directory (catalog_id, hierarchy_name, entity_key, entity_id, dir_order) " +
             "VALUES (?, ?, ?, ?, ?) " +
@@ -448,8 +395,8 @@ public class SqliteDao implements CheapPersistenceModule
                 Entity entity = hierarchy.get(key);
                 if (entity != null) {
                     saveEntity(conn, entity);
-                    stmt.setString(1, catalogId);
-                    stmt.setString(2, hierarchyName);
+                    stmt.setString(1, hierarchy.catalog().globalId().toString());
+                    stmt.setString(2, hierarchy.name());
                     stmt.setString(3, key);
                     stmt.setString(4, entity.globalId().toString());
                     stmt.setInt(5, order++);
@@ -460,13 +407,13 @@ public class SqliteDao implements CheapPersistenceModule
         }
     }
 
-    private void saveEntityTreeContent(Connection conn, String catalogId, String hierarchyName, EntityTreeHierarchy hierarchy) throws SQLException
+    private void saveEntityTreeContent(Connection conn, EntityTreeHierarchy hierarchy) throws SQLException
     {
         // Save tree nodes recursively
-        saveTreeNode(conn, catalogId, hierarchyName, hierarchy.root(), "", "", null, 0);
+        saveTreeNode(conn, hierarchy, hierarchy.root(), "", "", null, 0);
     }
 
-    private void saveTreeNode(Connection conn, String catalogId, String hierarchyName, EntityTreeHierarchy.Node node,
+    private void saveTreeNode(Connection conn, EntityTreeHierarchy hierarchy, EntityTreeHierarchy.Node node,
                               String nodeKey, String nodePath, String parentNodeId, int order) throws SQLException
     {
         String nodeId = UUID.randomUUID().toString();
@@ -481,8 +428,8 @@ public class SqliteDao implements CheapPersistenceModule
             "tree_order = excluded.tree_order";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, nodeId);
-            stmt.setString(2, catalogId);
-            stmt.setString(3, hierarchyName);
+            stmt.setString(2, hierarchy.catalog().globalId().toString());
+            stmt.setString(3, hierarchy.name());
             stmt.setString(4, parentNodeId);
             stmt.setString(5, nodeKey);
             stmt.setString(6, entityId);
@@ -499,25 +446,25 @@ public class SqliteDao implements CheapPersistenceModule
                 String childPath = nodePath + '/' + name;
                 EntityTreeHierarchy.Node child = entry.getValue();
                 if (child != null) {
-                    saveTreeNode(conn, catalogId, hierarchyName, child, name, childPath, nodeId, childOrder++);
+                    saveTreeNode(conn, hierarchy, child, name, childPath, nodeId, childOrder++);
                 }
             }
         }
     }
 
-    private void saveAspectMapContent(Connection conn, String catalogId, String hierarchyName, AspectMapHierarchy hierarchy) throws SQLException
+    private void saveAspectMapContent(Connection conn, AspectMapHierarchy hierarchy) throws SQLException
     {
         // Check if this AspectDef has a table mapping
         AspectTableMapping mapping = getAspectTableMapping(hierarchy.aspectDef().name());
 
         if (mapping != null) {
-            saveAspectMapContentToMappedTable(conn, catalogId, hierarchyName, hierarchy, mapping);
+            saveAspectMapContentToMappedTable(conn, hierarchy, mapping);
         } else {
-            saveAspectMapContentToDefaultTables(conn, catalogId, hierarchyName, hierarchy);
+            saveAspectMapContentToDefaultTables(conn, hierarchy);
         }
     }
 
-    private void saveAspectMapContentToDefaultTables(Connection conn, String catalogId, String hierarchyName, AspectMapHierarchy hierarchy) throws SQLException
+    private void saveAspectMapContentToDefaultTables(Connection conn, AspectMapHierarchy hierarchy) throws SQLException
     {
         String aspectSql = "INSERT INTO aspect (entity_id, aspect_def_id, catalog_id, hierarchy_name) " +
             "VALUES (?, ?, ?, ?) " +
@@ -541,15 +488,15 @@ public class SqliteDao implements CheapPersistenceModule
                 try (PreparedStatement aspectStmt = conn.prepareStatement(aspectSql)) {
                     aspectStmt.setString(1, entity.globalId().toString());
                     aspectStmt.setString(2, aspectDefId);
-                    aspectStmt.setString(3, catalogId);
-                    aspectStmt.setString(4, hierarchyName);
+                    aspectStmt.setString(3, hierarchy.catalog().globalId().toString());
+                    aspectStmt.setString(4, hierarchy.name());
                     aspectStmt.executeUpdate();
                 }
 
                 // Save hierarchy mapping
                 try (PreparedStatement mapStmt = conn.prepareStatement(hierarchyMapSql)) {
-                    mapStmt.setString(1, catalogId);
-                    mapStmt.setString(2, hierarchyName);
+                    mapStmt.setString(1, hierarchy.catalog().globalId().toString());
+                    mapStmt.setString(2, hierarchy.name());
                     mapStmt.setString(3, entity.globalId().toString());
                     mapStmt.setString(4, aspectDefId);
                     mapStmt.setInt(5, order++);
@@ -557,12 +504,12 @@ public class SqliteDao implements CheapPersistenceModule
                 }
 
                 // Save properties
-                saveAspectProperties(conn, entity.globalId().toString(), aspectDefId, catalogId, aspect);
+                saveAspectProperties(conn, entity.globalId().toString(), aspectDefId, hierarchy.catalog().globalId().toString(), aspect);
             }
         }
     }
 
-    private void saveAspectMapContentToMappedTable(Connection conn, String catalogId, String hierarchyName, AspectMapHierarchy hierarchy, AspectTableMapping mapping) throws SQLException
+    private void saveAspectMapContentToMappedTable(Connection conn, AspectMapHierarchy hierarchy, AspectTableMapping mapping) throws SQLException
     {
         // Pre-save cleanup based on flags
         if (!mapping.hasEntityId() && !mapping.hasCatalogId()) {
@@ -574,7 +521,7 @@ public class SqliteDao implements CheapPersistenceModule
             // Catalog ID only: DELETE rows for this catalog
             String deleteSql = "DELETE FROM " + mapping.tableName() + " WHERE catalog_id = ?";
             try (PreparedStatement stmt = conn.prepareStatement(deleteSql)) {
-                stmt.setString(1, catalogId);
+                stmt.setString(1, hierarchy.catalog().globalId().toString());
                 stmt.executeUpdate();
             }
         }
@@ -642,7 +589,7 @@ public class SqliteDao implements CheapPersistenceModule
                     int paramIndex = 1;
 
                     if (mapping.hasCatalogId()) {
-                        stmt.setString(paramIndex++, catalogId);
+                        stmt.setString(paramIndex++, hierarchy.catalog().globalId().toString());
                     }
 
                     if (mapping.hasEntityId()) {
@@ -749,26 +696,6 @@ public class SqliteDao implements CheapPersistenceModule
         }
     }
 
-    /**
-     * Converts a property value to its string representation for storage in value_text column.
-     */
-    @Override
-    public String convertValueToString(Object value, PropertyType type)
-    {
-        return switch (type) {
-            case DateTime -> convertToTimestamp(value).toString();
-            default -> value.toString();
-        };
-    }
-
-    @Override
-    public Catalog loadCatalog(@NotNull UUID catalogId) throws SQLException
-    {
-        try (Connection conn = dataSource.getConnection()) {
-            return loadCatalogWithConnection(conn, catalogId);
-        }
-    }
-
     @Override
     public Catalog loadCatalogWithConnection(Connection conn, UUID catalogId) throws SQLException
     {
@@ -869,41 +796,7 @@ public class SqliteDao implements CheapPersistenceModule
     }
 
     @Override
-    public Hierarchy createAndLoadHierarchy(Connection conn, Catalog catalog, HierarchyType type, String hierarchyName, long version) throws SQLException
-    {
-        switch (type) {
-            case ENTITY_LIST -> {
-                EntityListHierarchy hierarchy = factory.createEntityListHierarchy(catalog, hierarchyName, version);
-                loadEntityListContent(conn, hierarchy);
-                return hierarchy;
-            }
-            case ENTITY_SET -> {
-                EntitySetHierarchy hierarchy = factory.createEntitySetHierarchy(catalog, hierarchyName, version);
-                loadEntitySetContent(conn, hierarchy);
-                return hierarchy;
-            }
-            case ENTITY_DIR -> {
-                EntityDirectoryHierarchy hierarchy = factory.createEntityDirectoryHierarchy(catalog, hierarchyName, version);
-                loadEntityDirectoryContent(conn, hierarchy);
-                return hierarchy;
-            }
-            case ENTITY_TREE -> {
-                Entity rootEntity = factory.createEntity();
-                EntityTreeHierarchy hierarchy = factory.createEntityTreeHierarchy(catalog, hierarchyName, rootEntity);
-                loadEntityTreeContent(conn, hierarchy);
-                return hierarchy;
-            }
-            case ASPECT_MAP -> {
-                AspectDef aspectDef = loadAspectDefForHierarchy(conn, catalog.globalId().toString(), hierarchyName);
-                AspectMapHierarchy hierarchy = factory.createAspectMapHierarchy(catalog, aspectDef, version);
-                loadAspectMapContent(conn, hierarchy);
-                return hierarchy;
-            }
-            default -> throw new IllegalArgumentException("Unknown hierarchy type: " + type);
-        }
-    }
-
-    private void loadEntityListContent(Connection conn, EntityListHierarchy hierarchy) throws SQLException
+    protected void loadEntityListContent(Connection conn, EntityListHierarchy hierarchy) throws SQLException
     {
         String sql = "SELECT entity_id, list_order FROM hierarchy_entity_list WHERE catalog_id = ? AND hierarchy_name = ? ORDER BY list_order";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -919,7 +812,8 @@ public class SqliteDao implements CheapPersistenceModule
         }
     }
 
-    private void loadEntitySetContent(Connection conn, EntitySetHierarchy hierarchy) throws SQLException
+    @Override
+    protected void loadEntitySetContent(Connection conn, EntitySetHierarchy hierarchy) throws SQLException
     {
         String sql = "SELECT entity_id FROM hierarchy_entity_set WHERE catalog_id = ? AND hierarchy_name = ? ORDER BY set_order";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -935,7 +829,8 @@ public class SqliteDao implements CheapPersistenceModule
         }
     }
 
-    private void loadEntityDirectoryContent(Connection conn, EntityDirectoryHierarchy hierarchy) throws SQLException
+    @Override
+    protected void loadEntityDirectoryContent(Connection conn, EntityDirectoryHierarchy hierarchy) throws SQLException
     {
         String sql = "SELECT entity_key, entity_id FROM hierarchy_entity_directory " +
             "WHERE catalog_id = ? AND hierarchy_name = ? ORDER BY dir_order";
@@ -953,7 +848,8 @@ public class SqliteDao implements CheapPersistenceModule
         }
     }
 
-    private void loadEntityTreeContent(Connection conn, EntityTreeHierarchy hierarchy) throws SQLException
+    @Override
+    protected void loadEntityTreeContent(Connection conn, EntityTreeHierarchy hierarchy) throws SQLException
     {
         // Load all tree nodes into a map for efficient parent-child relationship building
         Map<String, NodeRecord> nodeMap = new HashMap<>();
@@ -1021,7 +917,8 @@ public class SqliteDao implements CheapPersistenceModule
         EntityTreeHierarchy.Node node
     ) {}
 
-    private void loadAspectMapContent(Connection conn, AspectMapHierarchy hierarchy) throws SQLException
+    @Override
+    protected void loadAspectMapContent(Connection conn, AspectMapHierarchy hierarchy) throws SQLException
     {
         // Check if this AspectDef has a table mapping
         AspectTableMapping mapping = getAspectTableMapping(hierarchy.aspectDef().name());
@@ -1033,7 +930,8 @@ public class SqliteDao implements CheapPersistenceModule
         }
     }
 
-    private void loadAspectMapContentFromDefaultTables(Connection conn, AspectMapHierarchy hierarchy) throws SQLException
+    @Override
+    protected void loadAspectMapContentFromDefaultTables(Connection conn, AspectMapHierarchy hierarchy) throws SQLException
     {
         String sql = "SELECT entity_id FROM hierarchy_aspect_map " +
             "WHERE catalog_id = ? AND hierarchy_name = ? ORDER BY map_order";
@@ -1052,7 +950,8 @@ public class SqliteDao implements CheapPersistenceModule
         }
     }
 
-    private void loadAspectMapContentFromMappedTable(Connection conn, AspectMapHierarchy hierarchy, AspectTableMapping mapping) throws SQLException
+    @Override
+    protected void loadAspectMapContentFromMappedTable(Connection conn, AspectMapHierarchy hierarchy, AspectTableMapping mapping) throws SQLException
     {
         // Build column list for SELECT
         StringBuilder columns = new StringBuilder();
@@ -1257,7 +1156,8 @@ public class SqliteDao implements CheapPersistenceModule
         };
     }
 
-    private AspectDef loadAspectDefForHierarchy(Connection conn, String catalogId, String hierarchyName) throws SQLException
+    @Override
+    protected AspectDef loadAspectDefForHierarchy(Connection conn, UUID catalogId, String hierarchyName) throws SQLException
     {
         // For AspectMap hierarchies, the hierarchy name matches the AspectDef name
         // Try to load the AspectDef directly by name
@@ -1380,26 +1280,6 @@ public class SqliteDao implements CheapPersistenceModule
     }
 
     // ===== Value Conversion Methods =====
-
-    /**
-     * Converts a DateTime value to a Timestamp for database storage.
-     * Handles various date/time types including Timestamp, Date, Instant, and ZonedDateTime.
-     *
-     * @param value the date/time value
-     * @return a Timestamp suitable for database storage
-     * @throws IllegalStateException if the value type is not supported
-     */
-    @Override
-    public Timestamp convertToTimestamp(Object value)
-    {
-        return switch (value) {
-            case Timestamp timestamp -> timestamp;
-            case Date date -> new Timestamp(date.getTime());
-            case Instant instant -> Timestamp.from(instant);
-            case ZonedDateTime zonedDateTime -> Timestamp.from(zonedDateTime.toInstant());
-            default -> throw new IllegalStateException("Unexpected value class for DateTime: " + value.getClass());
-        };
-    }
 
     /**
      * Sets a property value in a PreparedStatement, handling type conversions.

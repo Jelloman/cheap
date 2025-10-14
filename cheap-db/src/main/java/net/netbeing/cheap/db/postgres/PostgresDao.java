@@ -16,8 +16,9 @@
 
 package net.netbeing.cheap.db.postgres;
 
+import net.netbeing.cheap.db.AbstractCheapDao;
 import net.netbeing.cheap.db.AspectTableMapping;
-import net.netbeing.cheap.db.CheapPersistenceModule;
+import net.netbeing.cheap.db.CheapDao;
 import net.netbeing.cheap.model.*;
 import net.netbeing.cheap.util.CheapFactory;
 import org.jetbrains.annotations.NotNull;
@@ -35,11 +36,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
-import java.time.Instant;
-import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -156,19 +154,15 @@ import java.util.UUID;
  *   <li>BLOB → BYTEA / BLB</li>
  * </ul>
  *
- * @see CheapPersistenceModule
+ * @see CheapDao
  * @see AspectTableMapping
  * @see CheapFactory
  * @see Catalog
  */
 @SuppressWarnings("DuplicateBranchesInSwitch")
-public class PostgresDao implements CheapPersistenceModule
+public class PostgresDao extends AbstractCheapDao
 {
     private static final Logger logger = LoggerFactory.getLogger(PostgresDao.class);
-
-    private final DataSource dataSource;
-    private final CheapFactory factory;
-    private final Map<String, AspectTableMapping> aspectTableMappings = new LinkedHashMap<>();
 
     /**
      * Constructs a new PostgresDao with the given data source.
@@ -178,8 +172,7 @@ public class PostgresDao implements CheapPersistenceModule
      */
     public PostgresDao(@NotNull DataSource dataSource)
     {
-        this.dataSource = dataSource;
-        this.factory = new CheapFactory();
+        super(dataSource, new CheapFactory(), logger);
     }
 
     /**
@@ -192,31 +185,7 @@ public class PostgresDao implements CheapPersistenceModule
      */
     public PostgresDao(@NotNull DataSource dataSource, @NotNull CheapFactory factory)
     {
-        this.dataSource = dataSource;
-        this.factory = factory;
-    }
-
-    /**
-     * Adds an AspectTableMapping to enable aspects to be saved/loaded from a custom table.
-     *
-     * @param mapping the AspectTableMapping to add
-     */
-    @Override
-    public void addAspectTableMapping(@NotNull AspectTableMapping mapping)
-    {
-        aspectTableMappings.put(mapping.aspectDef().name(), mapping);
-    }
-
-    /**
-     * Gets the AspectTableMapping for the given AspectDef name, if one exists.
-     *
-     * @param aspectDefName the AspectDef name
-     * @return the AspectTableMapping, or null if not mapped
-     */
-    @Override
-    public AspectTableMapping getAspectTableMapping(@NotNull String aspectDefName)
-    {
-        return aspectTableMappings.get(aspectDefName);
+        super(dataSource, factory, logger);
     }
 
     /**
@@ -327,29 +296,7 @@ public class PostgresDao implements CheapPersistenceModule
     }
 
     @Override
-    public void saveCatalog(@NotNull Connection conn, @NotNull Catalog catalog) throws SQLException
-    {
-        // Save the Catalog entity itself first and foremost
-        saveEntity(conn, catalog);
-
-        // Save the Catalog table record (must be before linking aspect defs due to FK constraint)
-        saveCatalogRecord(conn, catalog);
-
-        // Save AspectDefs
-        for (AspectDef aspectDef : catalog.aspectDefs()) {
-            saveAspectDef(conn, aspectDef);
-            // Link the AspectDef to this Catalog
-            linkCatalogToAspectDef(conn, catalog, aspectDef);
-        }
-
-        // Save all entities, aspects, and properties from hierarchies
-        for (Hierarchy hierarchy : catalog.hierarchies()) {
-            saveHierarchy(conn, hierarchy);
-            saveHierarchyContent(conn, hierarchy);
-        }
-    }
-
-    private void linkCatalogToAspectDef(Connection conn, Catalog catalog, AspectDef aspectDef) throws SQLException
+    protected void linkCatalogToAspectDef(Connection conn, Catalog catalog, AspectDef aspectDef) throws SQLException
     {
         UUID aspectDefId = aspectDef.globalId();
         String sql = "INSERT INTO catalog_aspect_def (catalog_id, aspect_def_id) " +
@@ -433,7 +380,8 @@ public class PostgresDao implements CheapPersistenceModule
         }
     }
 
-    private void saveCatalogRecord(Connection conn, Catalog catalog) throws SQLException
+    @Override
+    protected void saveCatalogRecord(Connection conn, Catalog catalog) throws SQLException
     {
         String sql = "INSERT INTO catalog (catalog_id, species, uri, upstream_catalog_id, version_number) "
             + "VALUES (?, ?, ?, ?, ?) " +
@@ -471,11 +419,9 @@ public class PostgresDao implements CheapPersistenceModule
         }
     }
 
-    private void saveHierarchyContent(Connection conn, Hierarchy hierarchy) throws SQLException
+    @Override
+    protected void saveHierarchyContent(Connection conn, Hierarchy hierarchy) throws SQLException
     {
-        UUID catalogId = hierarchy.catalog().globalId();
-        String hierarchyName = hierarchy.name();
-
         switch (hierarchy.type()) {
             case ENTITY_LIST -> saveEntityListContent(conn, (EntityListHierarchy) hierarchy);
             case ENTITY_SET -> saveEntitySetContent(conn, (EntitySetHierarchy) hierarchy);
@@ -789,14 +735,8 @@ public class PostgresDao implements CheapPersistenceModule
                         stmt.setObject(3, catalogId);
                         stmt.setString(4, propName);
                         stmt.setInt(5, 0); // value_index
-
-                        if (type == PropertyType.BLOB) {
-                            stmt.setString(6, null); // value_text
-                            stmt.setBytes(7, null);  // value_binary
-                        } else {
-                            stmt.setString(6, null); // value_text
-                            stmt.setBytes(7, null);  // value_binary
-                        }
+                        stmt.setString(6, null); // value_text
+                        stmt.setBytes(7, null);  // value_binary
                         stmt.addBatch();
                     }
                 } else if (propDef.isMultivalued() && value instanceof List) {
@@ -842,26 +782,6 @@ public class PostgresDao implements CheapPersistenceModule
             }
 
             stmt.executeBatch();
-        }
-    }
-
-    /**
-     * Converts a property value to its string representation for storage in value_text column.
-     */
-    @Override
-    public String convertValueToString(Object value, PropertyType type) throws SQLException
-    {
-        return switch (type) {
-            case DateTime -> convertToTimestamp(value).toString();
-            default -> value.toString();
-        };
-    }
-
-    @Override
-    public Catalog loadCatalog(@NotNull UUID catalogId) throws SQLException
-    {
-        try (Connection conn = dataSource.getConnection()) {
-            return loadCatalogWithConnection(conn, catalogId);
         }
     }
 
@@ -998,7 +918,8 @@ public class PostgresDao implements CheapPersistenceModule
         }
     }
 
-    private void loadEntityListContent(Connection conn, EntityListHierarchy hierarchy) throws SQLException
+    @Override
+    protected void loadEntityListContent(Connection conn, EntityListHierarchy hierarchy) throws SQLException
     {
         String sql = "SELECT entity_id, list_order FROM hierarchy_entity_list WHERE catalog_id = ? AND hierarchy_name = ? ORDER BY list_order";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -1014,7 +935,8 @@ public class PostgresDao implements CheapPersistenceModule
         }
     }
 
-    private void loadEntitySetContent(Connection conn, EntitySetHierarchy hierarchy) throws SQLException
+    @Override
+    protected void loadEntitySetContent(Connection conn, EntitySetHierarchy hierarchy) throws SQLException
     {
         String sql = "SELECT entity_id FROM hierarchy_entity_set WHERE catalog_id = ? AND hierarchy_name = ? ORDER BY set_order";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -1030,7 +952,8 @@ public class PostgresDao implements CheapPersistenceModule
         }
     }
 
-    private void loadEntityDirectoryContent(Connection conn, EntityDirectoryHierarchy hierarchy) throws SQLException
+    @Override
+    protected void loadEntityDirectoryContent(Connection conn, EntityDirectoryHierarchy hierarchy) throws SQLException
     {
         String sql = "SELECT entity_key, entity_id FROM hierarchy_entity_directory " +
             "WHERE catalog_id = ? AND hierarchy_name = ? ORDER BY dir_order";
@@ -1048,7 +971,8 @@ public class PostgresDao implements CheapPersistenceModule
         }
     }
 
-    private void loadEntityTreeContent(Connection conn, EntityTreeHierarchy hierarchy) throws SQLException
+    @Override
+    protected void loadEntityTreeContent(Connection conn, EntityTreeHierarchy hierarchy) throws SQLException
     {
         // Load all tree nodes into a map for efficient parent-child relationship building
         Map<UUID, NodeRecord> nodeMap = new HashMap<>();
@@ -1116,7 +1040,8 @@ public class PostgresDao implements CheapPersistenceModule
         EntityTreeHierarchy.Node node
     ) {}
 
-    private void loadAspectMapContent(Connection conn, AspectMapHierarchy hierarchy) throws SQLException
+    @Override
+    protected void loadAspectMapContent(Connection conn, AspectMapHierarchy hierarchy) throws SQLException
     {
         // Check if this AspectDef has a table mapping
         AspectTableMapping mapping = getAspectTableMapping(hierarchy.aspectDef().name());
@@ -1128,7 +1053,8 @@ public class PostgresDao implements CheapPersistenceModule
         }
     }
 
-    private void loadAspectMapContentFromDefaultTables(Connection conn, AspectMapHierarchy hierarchy) throws SQLException
+    @Override
+    protected void loadAspectMapContentFromDefaultTables(Connection conn, AspectMapHierarchy hierarchy) throws SQLException
     {
         String sql = "SELECT entity_id FROM hierarchy_aspect_map " +
             "WHERE catalog_id = ? AND hierarchy_name = ? ORDER BY map_order";
@@ -1147,7 +1073,8 @@ public class PostgresDao implements CheapPersistenceModule
         }
     }
 
-    private void loadAspectMapContentFromMappedTable(Connection conn, AspectMapHierarchy hierarchy, AspectTableMapping mapping) throws SQLException
+    @Override
+    protected void loadAspectMapContentFromMappedTable(Connection conn, AspectMapHierarchy hierarchy, AspectTableMapping mapping) throws SQLException
     {
         // Build column list for SELECT
         StringBuilder columns = new StringBuilder();
@@ -1348,7 +1275,8 @@ public class PostgresDao implements CheapPersistenceModule
         };
     }
 
-    private AspectDef loadAspectDefForHierarchy(Connection conn, UUID catalogId, String hierarchyName) throws SQLException
+    @Override
+    protected AspectDef loadAspectDefForHierarchy(Connection conn, UUID catalogId, String hierarchyName) throws SQLException
     {
         // For AspectMap hierarchies, the hierarchy name matches the AspectDef name
         // Try to load the AspectDef directly by name
@@ -1467,26 +1395,6 @@ public class PostgresDao implements CheapPersistenceModule
     }
 
     // ===== Value Conversion Methods =====
-
-    /**
-     * Converts a DateTime value to a Timestamp for database storage.
-     * Handles various date/time types including Timestamp, Date, Instant, and ZonedDateTime.
-     *
-     * @param value the date/time value
-     * @return a Timestamp suitable for database storage
-     * @throws IllegalStateException if the value type is not supported
-     */
-    @Override
-    public Timestamp convertToTimestamp(Object value)
-    {
-        return switch (value) {
-            case Timestamp timestamp -> timestamp;
-            case Date date -> new Timestamp(date.getTime());
-            case Instant instant -> Timestamp.from(instant);
-            case ZonedDateTime zonedDateTime -> Timestamp.from(zonedDateTime.toInstant());
-            default -> throw new IllegalStateException("Unexpected value class for DateTime: " + value.getClass());
-        };
-    }
 
     /**
      * Sets a property value in a PreparedStatement, handling type conversions.

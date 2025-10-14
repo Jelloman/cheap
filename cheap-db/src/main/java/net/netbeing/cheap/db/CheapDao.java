@@ -27,16 +27,15 @@ import org.jetbrains.annotations.NotNull;
 
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.UUID;
 
 /**
- * Interface for saving and loading complete Catalog instances to/from a database.
+ * Interface for saving and loading Cheap elements to/from a database.
  * Provides operations to persist the entire Cheap model structure including
  * definitions, entities, aspects, properties, and hierarchies.
  */
-public interface CheapPersistenceModule
+public interface CheapDao
 {
     /**
      * Checks if a catalog exists in the database.

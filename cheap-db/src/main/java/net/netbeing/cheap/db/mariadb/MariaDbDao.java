@@ -16,8 +16,9 @@
 
 package net.netbeing.cheap.db.mariadb;
 
+import net.netbeing.cheap.db.AbstractCheapDao;
 import net.netbeing.cheap.db.AspectTableMapping;
-import net.netbeing.cheap.db.CheapPersistenceModule;
+import net.netbeing.cheap.db.CheapDao;
 import net.netbeing.cheap.model.*;
 import net.netbeing.cheap.util.CheapFactory;
 import org.jetbrains.annotations.NotNull;
@@ -156,19 +157,15 @@ import java.util.UUID;
  *   <li>BLOB → LONGBLOB / BLB</li>
  * </ul>
  *
- * @see CheapPersistenceModule
+ * @see CheapDao
  * @see AspectTableMapping
  * @see CheapFactory
  * @see Catalog
  */
 @SuppressWarnings({"DuplicateBranchesInSwitch", "LoggingSimilarMessage"})
-public class MariaDbDao implements CheapPersistenceModule
+public class MariaDbDao extends AbstractCheapDao
 {
     private static final Logger logger = LoggerFactory.getLogger(MariaDbDao.class);
-
-    private final DataSource dataSource;
-    private final CheapFactory factory;
-    private final Map<String, AspectTableMapping> aspectTableMappings = new LinkedHashMap<>();
 
     /**
      * Constructs a new MariaDbDao with the given data source.
@@ -178,8 +175,7 @@ public class MariaDbDao implements CheapPersistenceModule
      */
     public MariaDbDao(@NotNull DataSource dataSource)
     {
-        this.dataSource = dataSource;
-        this.factory = new CheapFactory();
+        super(dataSource, new CheapFactory(), logger);
     }
 
     /**
@@ -192,29 +188,7 @@ public class MariaDbDao implements CheapPersistenceModule
      */
     public MariaDbDao(@NotNull DataSource dataSource, @NotNull CheapFactory factory)
     {
-        this.dataSource = dataSource;
-        this.factory = factory;
-    }
-
-    /**
-     * Adds an AspectTableMapping to enable aspects to be saved/loaded from a custom table.
-     *
-     * @param mapping the AspectTableMapping to add
-     */
-    public void addAspectTableMapping(@NotNull AspectTableMapping mapping)
-    {
-        aspectTableMappings.put(mapping.aspectDef().name(), mapping);
-    }
-
-    /**
-     * Gets the AspectTableMapping for the given AspectDef name, if one exists.
-     *
-     * @param aspectDefName the AspectDef name
-     * @return the AspectTableMapping, or null if not mapped
-     */
-    public AspectTableMapping getAspectTableMapping(@NotNull String aspectDefName)
-    {
-        return aspectTableMappings.get(aspectDefName);
+        super(dataSource, factory, logger);
     }
 
     /**
@@ -305,48 +279,7 @@ public class MariaDbDao implements CheapPersistenceModule
     }
 
     @Override
-    public void saveCatalog(@NotNull Catalog catalog) throws SQLException
-    {
-        if (catalog == null) {
-            throw new IllegalArgumentException("Catalog cannot be null");
-        }
-
-        try (Connection conn = dataSource.getConnection()) {
-            conn.setAutoCommit(false);
-            try {
-                saveCatalog(conn, catalog);
-                conn.commit();
-            } catch (SQLException e) {
-                conn.rollback();
-                throw e;
-            }
-        }
-    }
-
-    @Override
-    public void saveCatalog(@NotNull Connection conn, @NotNull Catalog catalog) throws SQLException
-    {
-        // Save the Catalog entity itself first and foremost
-        saveEntity(conn, catalog);
-
-        // Save the Catalog table record (must be before linking aspect defs due to FK constraint)
-        saveCatalogRecord(conn, catalog);
-
-        // Save AspectDefs
-        for (AspectDef aspectDef : catalog.aspectDefs()) {
-            saveAspectDef(conn, aspectDef);
-            // Link the AspectDef to this Catalog
-            linkCatalogToAspectDef(conn, catalog, aspectDef);
-        }
-
-        // Save all entities, aspects, and properties from hierarchies
-        for (Hierarchy hierarchy : catalog.hierarchies()) {
-            saveHierarchy(conn, hierarchy);
-            saveHierarchyContent(conn, hierarchy);
-        }
-    }
-
-    private void linkCatalogToAspectDef(Connection conn, Catalog catalog, AspectDef aspectDef) throws SQLException
+    protected void linkCatalogToAspectDef(Connection conn, Catalog catalog, AspectDef aspectDef) throws SQLException
     {
         final String aspectDefId = aspectDef.globalId().toString();
 
@@ -430,7 +363,8 @@ public class MariaDbDao implements CheapPersistenceModule
         }
     }
 
-    private void saveCatalogRecord(Connection conn, Catalog catalog) throws SQLException
+    @Override
+    protected void saveCatalogRecord(Connection conn, Catalog catalog) throws SQLException
     {
         String sql = "INSERT INTO catalog (catalog_id, species, uri, upstream_catalog_id, version_number) "
             + "VALUES (?, ?, ?, ?, ?) " +
@@ -468,7 +402,8 @@ public class MariaDbDao implements CheapPersistenceModule
         }
     }
 
-    private void saveHierarchyContent(Connection conn, Hierarchy hierarchy) throws SQLException
+    @Override
+    public void saveHierarchyContent(Connection conn, Hierarchy hierarchy) throws SQLException
     {
         switch (hierarchy.type()) {
             case ENTITY_LIST -> saveEntityListContent(conn, (EntityListHierarchy) hierarchy);
@@ -855,14 +790,6 @@ public class MariaDbDao implements CheapPersistenceModule
     }
 
     @Override
-    public Catalog loadCatalog(@NotNull UUID catalogId) throws SQLException
-    {
-        try (Connection conn = dataSource.getConnection()) {
-            return loadCatalogWithConnection(conn, catalogId);
-        }
-    }
-
-    @Override
     public Catalog loadCatalogWithConnection(Connection conn, UUID catalogId) throws SQLException
     {
         // Load catalog basic info
@@ -962,41 +889,7 @@ public class MariaDbDao implements CheapPersistenceModule
     }
 
     @Override
-    public Hierarchy createAndLoadHierarchy(Connection conn, Catalog catalog, HierarchyType type, String hierarchyName, long version) throws SQLException
-    {
-        switch (type) {
-            case ENTITY_LIST -> {
-                EntityListHierarchy hierarchy = factory.createEntityListHierarchy(catalog, hierarchyName, version);
-                loadEntityListContent(conn, hierarchy);
-                return hierarchy;
-            }
-            case ENTITY_SET -> {
-                EntitySetHierarchy hierarchy = factory.createEntitySetHierarchy(catalog, hierarchyName, version);
-                loadEntitySetContent(conn, hierarchy);
-                return hierarchy;
-            }
-            case ENTITY_DIR -> {
-                EntityDirectoryHierarchy hierarchy = factory.createEntityDirectoryHierarchy(catalog, hierarchyName, version);
-                loadEntityDirectoryContent(conn, hierarchy);
-                return hierarchy;
-            }
-            case ENTITY_TREE -> {
-                Entity rootEntity = factory.createEntity();
-                EntityTreeHierarchy hierarchy = factory.createEntityTreeHierarchy(catalog, hierarchyName, rootEntity);
-                loadEntityTreeContent(conn, hierarchy);
-                return hierarchy;
-            }
-            case ASPECT_MAP -> {
-                AspectDef aspectDef = loadAspectDefForHierarchy(conn, catalog.globalId(), hierarchyName);
-                AspectMapHierarchy hierarchy = factory.createAspectMapHierarchy(catalog, aspectDef, version);
-                loadAspectMapContent(conn, hierarchy);
-                return hierarchy;
-            }
-            default -> throw new IllegalArgumentException("Unknown hierarchy type: " + type);
-        }
-    }
-
-    private void loadEntityListContent(Connection conn, EntityListHierarchy hierarchy) throws SQLException
+    protected void loadEntityListContent(Connection conn, EntityListHierarchy hierarchy) throws SQLException
     {
         String sql = "SELECT entity_id, list_order FROM hierarchy_entity_list WHERE catalog_id = ? AND hierarchy_name = ? ORDER BY list_order";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -1013,7 +906,8 @@ public class MariaDbDao implements CheapPersistenceModule
         }
     }
 
-    private void loadEntitySetContent(Connection conn, EntitySetHierarchy hierarchy) throws SQLException
+    @Override
+    protected void loadEntitySetContent(Connection conn, EntitySetHierarchy hierarchy) throws SQLException
     {
         String sql = "SELECT entity_id FROM hierarchy_entity_set WHERE catalog_id = ? AND hierarchy_name = ? ORDER BY set_order";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -1030,7 +924,8 @@ public class MariaDbDao implements CheapPersistenceModule
         }
     }
 
-    private void loadEntityDirectoryContent(Connection conn, EntityDirectoryHierarchy hierarchy) throws SQLException
+    @Override
+    protected void loadEntityDirectoryContent(Connection conn, EntityDirectoryHierarchy hierarchy) throws SQLException
     {
         String sql = "SELECT entity_key, entity_id FROM hierarchy_entity_directory " +
             "WHERE catalog_id = ? AND hierarchy_name = ? ORDER BY dir_order";
@@ -1049,7 +944,8 @@ public class MariaDbDao implements CheapPersistenceModule
         }
     }
 
-    private void loadEntityTreeContent(Connection conn, EntityTreeHierarchy hierarchy) throws SQLException
+    @Override
+    protected void loadEntityTreeContent(Connection conn, EntityTreeHierarchy hierarchy) throws SQLException
     {
         // Load all tree nodes into a map for efficient parent-child relationship building
         Map<UUID, NodeRecord> nodeMap = new HashMap<>();
@@ -1120,7 +1016,8 @@ public class MariaDbDao implements CheapPersistenceModule
         EntityTreeHierarchy.Node node
     ) {}
 
-    private void loadAspectMapContent(Connection conn, AspectMapHierarchy hierarchy) throws SQLException
+    @Override
+    protected void loadAspectMapContent(Connection conn, AspectMapHierarchy hierarchy) throws SQLException
     {
         // Check if this AspectDef has a table mapping
         AspectTableMapping mapping = getAspectTableMapping(hierarchy.aspectDef().name());
@@ -1132,7 +1029,8 @@ public class MariaDbDao implements CheapPersistenceModule
         }
     }
 
-    private void loadAspectMapContentFromDefaultTables(Connection conn, AspectMapHierarchy hierarchy) throws SQLException
+    @Override
+    protected void loadAspectMapContentFromDefaultTables(Connection conn, AspectMapHierarchy hierarchy) throws SQLException
     {
         String sql = "SELECT entity_id FROM hierarchy_aspect_map " +
             "WHERE catalog_id = ? AND hierarchy_name = ? ORDER BY map_order";
@@ -1152,7 +1050,8 @@ public class MariaDbDao implements CheapPersistenceModule
         }
     }
 
-    private void loadAspectMapContentFromMappedTable(Connection conn, AspectMapHierarchy hierarchy, AspectTableMapping mapping) throws SQLException
+    @Override
+    protected void loadAspectMapContentFromMappedTable(Connection conn, AspectMapHierarchy hierarchy, AspectTableMapping mapping) throws SQLException
     {
         // Build column list for SELECT
         StringBuilder columns = new StringBuilder();
@@ -1354,7 +1253,8 @@ public class MariaDbDao implements CheapPersistenceModule
         };
     }
 
-    private AspectDef loadAspectDefForHierarchy(Connection conn, UUID catalogId, String hierarchyName) throws SQLException
+    @Override
+    protected AspectDef loadAspectDefForHierarchy(Connection conn, UUID catalogId, String hierarchyName) throws SQLException
     {
         // For AspectMap hierarchies, the hierarchy name matches the AspectDef name
         // Try to load the AspectDef directly by name
@@ -1473,26 +1373,6 @@ public class MariaDbDao implements CheapPersistenceModule
     }
 
     // ===== Value Conversion Methods =====
-
-    /**
-     * Converts a DateTime value to a Timestamp for database storage.
-     * Handles various date/time types including Timestamp, Date, Instant, and ZonedDateTime.
-     *
-     * @param value the date/time value
-     * @return a Timestamp suitable for database storage
-     * @throws IllegalStateException if the value type is not supported
-     */
-    @Override
-    public Timestamp convertToTimestamp(Object value)
-    {
-        return switch (value) {
-            case Timestamp timestamp -> timestamp;
-            case Date date -> new Timestamp(date.getTime());
-            case Instant instant -> Timestamp.from(instant);
-            case ZonedDateTime zonedDateTime -> Timestamp.from(zonedDateTime.toInstant());
-            default -> throw new IllegalStateException("Unexpected value class for DateTime: " + value.getClass());
-        };
-    }
 
     /**
      * Sets a property value in a PreparedStatement, handling type conversions.
