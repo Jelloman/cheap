@@ -10,6 +10,8 @@
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/cheap-core" />
             <option value="$PROJECT_DIR$/cheap-db" />
+            <option value="$PROJECT_DIR$/cheap-db-mariadb" />
+            <option value="$PROJECT_DIR$/cheap-db-sqlite" />
             <option value="$PROJECT_DIR$/cheap-json" />
           </set>
         </option>

@@ -7,12 +7,16 @@
         <processorPath useClasspath="false">
           <entry name="$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.projectlombok/lombok/1.18.38/57f8f5e02e92a30fd21b80cbd426a4172b5f8e29/lombok-1.18.38.jar" />
         </processorPath>
-        <module name="cheap.cheap-db.test" />
-        <module name="cheap.cheap-json.main" />
+        <module name="cheap.cheap-db-mariadb.test" />
+        <module name="cheap.cheap-db-sqlite.main" />
         <module name="cheap.cheap-core.test" />
         <module name="cheap.cheap-db.main" />
         <module name="cheap.cheap-core.main" />
         <module name="cheap.cheap-json.test" />
+        <module name="cheap.cheap-db.test" />
+        <module name="cheap.cheap-json.main" />
+        <module name="cheap.cheap-db-mariadb.main" />
+        <module name="cheap.cheap-db-sqlite.test" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel target="24" />
@@ -23,6 +27,12 @@
       <module name="cheap.cheap-core.main" options="-Xlint:-processing -Xlint:unchecked" />
       <module name="cheap.cheap-core.test" options="-Xlint:-processing -Xlint:unchecked" />
       <module name="cheap.cheap-db" options="-Xlint:-processing -Xlint:unchecked" />
+      <module name="cheap.cheap-db-mariadb" options="-Xlint:-processing -Xlint:unchecked" />
+      <module name="cheap.cheap-db-mariadb.main" options="-Xlint:-processing -Xlint:unchecked" />
+      <module name="cheap.cheap-db-mariadb.test" options="-Xlint:-processing -Xlint:unchecked" />
+      <module name="cheap.cheap-db-sqlite" options="-Xlint:-processing -Xlint:unchecked" />
+      <module name="cheap.cheap-db-sqlite.main" options="-Xlint:-processing -Xlint:unchecked" />
+      <module name="cheap.cheap-db-sqlite.test" options="-Xlint:-processing -Xlint:unchecked" />
       <module name="cheap.cheap-db.main" options="-Xlint:-processing -Xlint:unchecked" />
       <module name="cheap.cheap-db.test" options="-Xlint:-processing -Xlint:unchecked" />
       <module name="cheap.cheap-json" options="-Xlint:-processing -Xlint:unchecked" />
