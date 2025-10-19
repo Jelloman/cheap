@@ -752,7 +752,7 @@ public class PostgresDao extends AbstractCheapDao
                             stmt.setString(6, null); // value_text
                             stmt.setBytes(7, (byte[]) itemValue); // value_binary
                         } else {
-                            stmt.setString(6, convertValueToString(itemValue, type)); // value_text
+                            stmt.setString(6, valueAdapter.convertValueToString(itemValue, type)); // value_text
                             stmt.setBytes(7, null); // value_binary
                         }
                         stmt.addBatch();
@@ -769,7 +769,7 @@ public class PostgresDao extends AbstractCheapDao
                         stmt.setString(6, null); // value_text
                         stmt.setBytes(7, (byte[]) value); // value_binary
                     } else {
-                        stmt.setString(6, convertValueToString(value, type)); // value_text
+                        stmt.setString(6, valueAdapter.convertValueToString(value, type)); // value_text
                         stmt.setBytes(7, null); // value_binary
                     }
                     stmt.addBatch();
@@ -1406,7 +1406,7 @@ public class PostgresDao extends AbstractCheapDao
             case Integer -> stmt.setLong(paramIndex, ((Number) value).longValue());
             case Float -> stmt.setDouble(paramIndex, ((Number) value).doubleValue());
             case Boolean -> stmt.setBoolean(paramIndex, (Boolean) value);
-            case DateTime -> stmt.setTimestamp(paramIndex, convertToTimestamp(value));
+            case DateTime -> stmt.setTimestamp(paramIndex, valueAdapter.convertToTimestamp(value));
             case UUID -> stmt.setObject(paramIndex, value instanceof UUID ? value : UUID.fromString(value.toString()));
             case BLOB -> stmt.setBytes(paramIndex, (byte[]) value);
             default -> stmt.setString(paramIndex, value.toString());

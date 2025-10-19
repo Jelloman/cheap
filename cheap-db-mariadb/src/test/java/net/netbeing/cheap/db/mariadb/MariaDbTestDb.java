@@ -25,6 +25,7 @@ import org.mariadb.jdbc.MariaDbDataSource;
 
 import javax.sql.DataSource;
 import java.sql.SQLException;
+import java.util.TimeZone;
 
 class MariaDbTestDb
 {
@@ -50,7 +51,9 @@ class MariaDbTestDb
 
         // Create data source
         MariaDbDataSource ds = new MariaDbDataSource();
-        ds.setUrl(dbConfig.getURL(dbName));
+        String url = dbConfig.getURL(dbName);
+        url = url + (url.indexOf('?') >= 0 ? "&" : "?") + "allowMultiQueries=true";
+        ds.setUrl(url);
         ds.setUser("root");
         ds.setPassword("");
         this.dataSource = ds;
@@ -58,6 +61,7 @@ class MariaDbTestDb
         // Initialize factory and DAO
         factory = new CheapFactory();
         mariaDbDao = new MariaDbDao(dataSource, factory);
+        mariaDbDao.setTimeZone(TimeZone.getTimeZone("GMT"));
     }
 
     void tearDown() throws ManagedProcessException

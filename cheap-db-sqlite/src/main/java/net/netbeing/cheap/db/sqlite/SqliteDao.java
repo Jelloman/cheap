@@ -661,7 +661,7 @@ public class SqliteDao extends AbstractCheapDao
                             stmt.setString(6, null); // value_text
                             stmt.setBytes(7, (byte[]) itemValue); // value_binary
                         } else {
-                            stmt.setString(6, convertValueToString(itemValue, type)); // value_text
+                            stmt.setString(6, valueAdapter.convertValueToString(itemValue, type)); // value_text
                             stmt.setBytes(7, null); // value_binary
                         }
                         stmt.addBatch();
@@ -678,7 +678,7 @@ public class SqliteDao extends AbstractCheapDao
                         stmt.setString(6, null); // value_text
                         stmt.setBytes(7, (byte[]) value); // value_binary
                     } else {
-                        stmt.setString(6, convertValueToString(value, type)); // value_text
+                        stmt.setString(6, valueAdapter.convertValueToString(value, type)); // value_text
                         stmt.setBytes(7, null); // value_binary
                     }
                     stmt.addBatch();
@@ -1289,7 +1289,7 @@ public class SqliteDao extends AbstractCheapDao
             case Integer -> stmt.setLong(paramIndex, ((Number) value).longValue());
             case Float -> stmt.setDouble(paramIndex, ((Number) value).doubleValue());
             case Boolean -> stmt.setInt(paramIndex, (Boolean) value ? 1 : 0);
-            case DateTime -> stmt.setString(paramIndex, convertToTimestamp(value).toString());
+            case DateTime -> stmt.setString(paramIndex, valueAdapter.convertToTimestamp(value).toString());
             case UUID -> stmt.setString(paramIndex, value.toString());
             case BLOB -> stmt.setBytes(paramIndex, (byte[]) value);
             default -> stmt.setString(paramIndex, value.toString());

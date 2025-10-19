@@ -162,7 +162,7 @@ import java.util.UUID;
 @SuppressWarnings({"DuplicateBranchesInSwitch", "LoggingSimilarMessage"})
 public class MariaDbDao extends AbstractCheapDao
 {
-    private static final Logger logger = LoggerFactory.getLogger(MariaDbDao.class);
+    private static final Logger logger = LoggerFactory.getLogger(MariaDbDao.class); //NOSONAR
 
     /**
      * Constructs a new MariaDbDao with the given data source.
@@ -407,11 +407,11 @@ public class MariaDbDao extends AbstractCheapDao
             "ON DUPLICATE KEY UPDATE " +
             "entity_id = VALUES(entity_id)";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, catalogId);
+            stmt.setString(2, hierarchy.name());
             int order = 0;
             for (Entity entity : hierarchy) {
                 saveEntity(conn, entity);
-                stmt.setString(1, catalogId);
-                stmt.setString(2, hierarchy.name());
                 stmt.setString(3, entity.globalId().toString());
                 stmt.setInt(4, order++);
                 stmt.addBatch();
@@ -429,11 +429,11 @@ public class MariaDbDao extends AbstractCheapDao
             "ON DUPLICATE KEY UPDATE " +
             "set_order = VALUES(set_order)";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, catalogId);
+            stmt.setString(2, hierarchy.name());
             int order = 0;
             for (Entity entity : hierarchy) {
                 saveEntity(conn, entity);
-                stmt.setString(1, catalogId);
-                stmt.setString(2, hierarchy.name());
                 stmt.setString(3, entity.globalId().toString());
                 stmt.setInt(4, order++);
                 stmt.addBatch();
@@ -452,15 +452,14 @@ public class MariaDbDao extends AbstractCheapDao
             "entity_id = VALUES(entity_id), " +
             "dir_order = VALUES(dir_order)";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, catalogId);
+            stmt.setString(2, hierarchy.name());
             int order = 0;
-            for (String key : hierarchy.keySet()) {
-                Entity entity = hierarchy.get(key);
-                if (entity != null) {
-                    saveEntity(conn, entity);
-                    stmt.setString(1, catalogId);
-                    stmt.setString(2, hierarchy.name());
-                    stmt.setString(3, key);
-                    stmt.setString(4, entity.globalId().toString());
+            for (Map.Entry<String,Entity> entry : hierarchy.entrySet()) {
+                if (entry.getValue() != null) {
+                    saveEntity(conn, entry.getValue());
+                    stmt.setString(3, entry.getKey());
+                    stmt.setString(4, entry.getValue().globalId().toString());
                     stmt.setInt(5, order++);
                     stmt.addBatch();
                 }
@@ -545,33 +544,35 @@ public class MariaDbDao extends AbstractCheapDao
 
         final String aspectDefId = hierarchy.aspectDef().globalId().toString();
 
-        int order = 0;
-        for (Entity entity : hierarchy.keySet()) {
-            saveEntity(conn, entity);
+        try (PreparedStatement aspectStmt = conn.prepareStatement(aspectSql);
+             PreparedStatement mapStmt = conn.prepareStatement(hierarchyMapSql))
+        {
+            aspectStmt.setString(2, aspectDefId);
+            aspectStmt.setString(3, catalogId);
+            mapStmt.setString(1, catalogId);
+            mapStmt.setString(4, aspectDefId);
+            int order = 0;
+            for (Map.Entry<Entity,Aspect> entry : hierarchy.entrySet()) {
+                Entity entity = entry.getKey();
+                saveEntity(conn, entity);
 
-            Aspect aspect = hierarchy.get(entity);
-            if (aspect != null) {
-                // Save aspect
-                try (PreparedStatement aspectStmt = conn.prepareStatement(aspectSql)) {
+                Aspect aspect = entry.getValue();
+                if (aspect != null) {
+                    // Save aspect
                     aspectStmt.setString(1, entity.globalId().toString());
-                    aspectStmt.setString(2, aspectDefId);
-                    aspectStmt.setString(3, catalogId);
                     aspectStmt.setString(4, hierarchy.name());
                     aspectStmt.executeUpdate();
-                }
 
-                // Save hierarchy mapping
-                try (PreparedStatement mapStmt = conn.prepareStatement(hierarchyMapSql)) {
-                    mapStmt.setString(1, catalogId);
+                    // Save hierarchy mapping
                     mapStmt.setString(2, hierarchy.name());
                     mapStmt.setString(3, entity.globalId().toString());
-                    mapStmt.setString(4, aspectDefId);
                     mapStmt.setInt(5, order++);
                     mapStmt.executeUpdate();
-                }
 
-                // Save properties
-                saveAspectProperties(conn, entity.globalId(), hierarchy.aspectDef().globalId(), hierarchy.catalog().globalId(), aspect);
+                    // Save properties
+                    saveAspectProperties(conn, entity.globalId(), hierarchy.aspectDef().globalId(), hierarchy.catalog()
+                        .globalId(), aspect);
+                }
             }
         }
     }
@@ -581,19 +582,7 @@ public class MariaDbDao extends AbstractCheapDao
     {
         final String catalogId = hierarchy.catalog().globalId().toString();
         // Pre-save cleanup based on flags
-        if (!mapping.hasEntityId() && !mapping.hasCatalogId()) {
-            // No IDs: TRUNCATE the entire table
-            try (Statement stmt = conn.createStatement()) {
-                stmt.execute("TRUNCATE TABLE " + mapping.tableName());
-            }
-        } else if (!mapping.hasEntityId() && mapping.hasCatalogId()) {
-            // Catalog ID only: DELETE rows for this catalog
-            String deleteSql = "DELETE FROM " + mapping.tableName() + " WHERE catalog_id = ?";
-            try (PreparedStatement stmt = conn.prepareStatement(deleteSql)) {
-                stmt.setString(1, catalogId);
-                stmt.executeUpdate();
-            }
-        }
+        clearMappedTable(conn, mapping, catalogId);
         // If hasEntityId, no pre-save cleanup needed (will use ON DUPLICATE KEY UPDATE)
 
         // Build column list and placeholders for INSERT
@@ -646,10 +635,11 @@ public class MariaDbDao extends AbstractCheapDao
         // No ON DUPLICATE KEY UPDATE clause if !hasEntityId (simple INSERT after cleanup)
 
         try (PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
-            for (Entity entity : hierarchy.keySet()) {
+            for (Map.Entry<Entity,Aspect> entry : hierarchy.entrySet()) {
+                Entity entity = entry.getKey();
                 saveEntity(conn, entity);
 
-                Aspect aspect = hierarchy.get(entity);
+                Aspect aspect = entry.getValue();
                 if (aspect != null) {
                     int paramIndex = 1;
 
@@ -661,10 +651,8 @@ public class MariaDbDao extends AbstractCheapDao
                         stmt.setString(paramIndex++, entity.globalId().toString());
                     }
 
-                    for (Map.Entry<String, String> entry : mapping.propertyToColumnMap().entrySet()) {
-                        String propName = entry.getKey();
+                    for (String propName : mapping.propertyToColumnMap().keySet()) {
                         Object value = aspect.readObj(propName);
-
                         PropertyDef propDef = aspect.def().propertyDef(propName);
                         if (propDef != null) {
                             setPropertyValue(stmt, paramIndex++, value, propDef.type());
@@ -675,6 +663,23 @@ public class MariaDbDao extends AbstractCheapDao
 
                     stmt.executeUpdate();
                 }
+            }
+        }
+    }
+
+    private static void clearMappedTable(Connection conn, AspectTableMapping mapping, String catalogId) throws SQLException
+    {
+        if (!mapping.hasEntityId() && !mapping.hasCatalogId()) {
+            // No IDs: TRUNCATE the entire table
+            try (Statement stmt = conn.createStatement()) {
+                stmt.execute("TRUNCATE TABLE " + mapping.tableName());
+            }
+        } else if (!mapping.hasEntityId() && mapping.hasCatalogId()) {
+            // Catalog ID only: DELETE rows for this catalog
+            String deleteSql = "DELETE FROM " + mapping.tableName() + " WHERE catalog_id = ?";
+            try (PreparedStatement stmt = conn.prepareStatement(deleteSql)) {
+                stmt.setString(1, catalogId);
+                stmt.executeUpdate();
             }
         }
     }
@@ -701,6 +706,8 @@ public class MariaDbDao extends AbstractCheapDao
                 Object value = aspect.readObj(propName);
                 PropertyType type = propDef.type();
 
+                stmt.setString(4, propName);
+
                 if (value == null) {
                     // For null values:
                     // - Single-valued: insert a row with NULL
@@ -709,8 +716,7 @@ public class MariaDbDao extends AbstractCheapDao
                         stmt.setString(1, entityId.toString());
                         stmt.setString(2, aspectDefId.toString());
                         stmt.setString(3, catalogId.toString());
-                        stmt.setString(4, propName);
-                        stmt.setInt(5, 0); // value_index
+                        stmt.setInt(5, 0); // value_index - NOSONAR - sonar bug, doesn't see setInt(5,i) below
 
                         if (type == PropertyType.BLOB) {
                             stmt.setString(6, null); // value_text
@@ -732,14 +738,13 @@ public class MariaDbDao extends AbstractCheapDao
                         stmt.setString(1, entityId.toString());
                         stmt.setString(2, aspectDefId.toString());
                         stmt.setString(3, catalogId.toString());
-                        stmt.setString(4, propName);
                         stmt.setInt(5, i); // value_index
 
                         if (type == PropertyType.BLOB) {
                             stmt.setString(6, null); // value_text
                             stmt.setBytes(7, (byte[]) itemValue); // value_binary
                         } else {
-                            stmt.setString(6, convertValueToString(itemValue, type)); // value_text
+                            stmt.setString(6, valueAdapter.convertValueToString(itemValue, type)); // value_text
                             stmt.setBytes(7, null); // value_binary
                         }
                         stmt.addBatch();
@@ -749,14 +754,13 @@ public class MariaDbDao extends AbstractCheapDao
                     stmt.setString(1, entityId.toString());
                     stmt.setString(2, aspectDefId.toString());
                     stmt.setString(3, catalogId.toString());
-                    stmt.setString(4, propName);
-                    stmt.setInt(5, 0); // value_index
+                    stmt.setInt(5, 0); // value_index - NOSONAR - sonar bug, doesn't see setInt(5,i) above
 
                     if (type == PropertyType.BLOB) {
                         stmt.setString(6, null); // value_text
                         stmt.setBytes(7, (byte[]) value); // value_binary
                     } else {
-                        stmt.setString(6, convertValueToString(value, type)); // value_text
+                        stmt.setString(6, valueAdapter.convertValueToString(value, type)); // value_text
                         stmt.setBytes(7, null); // value_binary
                     }
                     stmt.addBatch();
@@ -765,19 +769,6 @@ public class MariaDbDao extends AbstractCheapDao
 
             stmt.executeBatch();
         }
-    }
-
-    /**
-     * Converts a property value to its string representation for storage in value_text column.
-     */
-    @Override
-    public String convertValueToString(Object value, PropertyType type) throws SQLException
-    {
-        return switch (type) {
-            case DateTime -> convertToTimestamp(value).toString();
-            case UUID -> value.toString();
-            default -> value.toString();
-        };
     }
 
     @Override
@@ -1259,20 +1250,21 @@ public class MariaDbDao extends AbstractCheapDao
     @Override
     public AspectDef loadAspectDef(Connection conn, String aspectDefName) throws SQLException
     {
-        // First load the AspectDef basic info including hash_version
-        String aspectSql = "SELECT aspect_def_id, hash_version, is_readable, is_writable, can_add_properties, can_remove_properties " +
+        // First load the AspectDef basic info, except hash_version
+        String aspectSql = "SELECT aspect_def_id, is_readable, is_writable, can_add_properties, can_remove_properties " +
             "FROM aspect_def WHERE name = ?";
 
-        long hashVersion;
         UUID aspectDefId;
-        boolean isReadable = true, isWritable = true, canAddProperties = false, canRemoveProperties = false;
+        boolean isReadable;
+        boolean isWritable;
+        boolean canAddProperties;
+        boolean canRemoveProperties;
 
         try (PreparedStatement stmt = conn.prepareStatement(aspectSql)) {
             stmt.setString(1, aspectDefName);
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
                     aspectDefId = UUID.fromString(rs.getString("aspect_def_id"));
-                    hashVersion = rs.getLong("hash_version");
                     isReadable = rs.getBoolean("is_readable");
                     isWritable = rs.getBoolean("is_writable");
                     canAddProperties = rs.getBoolean("can_add_properties");
@@ -1380,8 +1372,7 @@ public class MariaDbDao extends AbstractCheapDao
             case Integer -> stmt.setLong(paramIndex, ((Number) value).longValue());
             case Float -> stmt.setDouble(paramIndex, ((Number) value).doubleValue());
             case Boolean -> stmt.setBoolean(paramIndex, (Boolean) value);
-            case DateTime -> stmt.setTimestamp(paramIndex, convertToTimestamp(value));
-            case UUID -> stmt.setString(paramIndex, value.toString());
+            case DateTime -> stmt.setTimestamp(paramIndex, valueAdapter.convertToTimestamp(value));
             case BLOB -> stmt.setBytes(paramIndex, (byte[]) value);
             default -> stmt.setString(paramIndex, value.toString());
         }

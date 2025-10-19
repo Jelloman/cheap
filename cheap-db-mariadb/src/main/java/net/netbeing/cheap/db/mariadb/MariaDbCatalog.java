@@ -20,6 +20,7 @@ import net.netbeing.cheap.db.JdbcCatalogBase;
 import net.netbeing.cheap.impl.basic.EntityImpl;
 import net.netbeing.cheap.model.Entity;
 import net.netbeing.cheap.model.PropertyType;
+import net.netbeing.cheap.util.CheapException;
 import org.jetbrains.annotations.NotNull;
 
 import javax.sql.DataSource;
@@ -172,7 +173,7 @@ public class MariaDbCatalog extends JdbcCatalogBase
             }
 
         } catch (SQLException e) {
-            throw new RuntimeException("Failed to load tables from MariaDB database", e);
+            throw new CheapException("Failed to load tables from MariaDB database", e);
         }
     }
 
@@ -183,7 +184,7 @@ public class MariaDbCatalog extends JdbcCatalogBase
         try (Connection connection = dataSource.getConnection()) {
             return connection.getCatalog();
         } catch (SQLException e) {
-            throw new RuntimeException("Failed to get schema name from MariaDB database", e);
+            throw new CheapException("Failed to get schema name from MariaDB database", e);
         }
     }
 
@@ -212,50 +213,5 @@ public class MariaDbCatalog extends JdbcCatalogBase
 
         // Default to Text type if no mapping found
         return propertyType != null ? propertyType : PropertyType.Text;
-    }
-
-    @Override
-    protected Object convertValue(Object value, PropertyType expectedType)
-    {
-        if (value == null) {
-            return null;
-        }
-
-        // Handle MariaDB-specific type conversions, fall back to base implementation
-        try {
-            return switch (expectedType) {
-                case Integer -> {
-                    if (value instanceof Number n) {
-                        yield n.longValue();
-                    } else if (value instanceof String s) {
-                        yield Long.valueOf(s);
-                    }
-                    throw new SQLDataException("Expected Long type but found " + value.getClass());
-                }
-                case Float -> {
-                    if (value instanceof Number n) {
-                        yield n.doubleValue();
-                    } else if (value instanceof String s) {
-                        yield Double.valueOf(s);
-                    }
-                    throw new SQLDataException("Expected Double type but found " + value.getClass());
-                }
-                case Boolean -> {
-                    if (value instanceof Boolean b) {
-                        yield value;
-                    } else if (value instanceof Number n) {
-                        yield n.intValue() != 0;
-                    } else if (value instanceof String s) {
-                        yield Boolean.valueOf(s);
-                    }
-                    throw new SQLDataException("Expected Boolean type but found " + value.getClass());
-                }
-                default ->
-                    // Use base implementation for other types
-                    super.convertValue(value, expectedType);
-            };
-        } catch (SQLDataException e) {
-            throw new RuntimeException(e);
-        }
     }
 }

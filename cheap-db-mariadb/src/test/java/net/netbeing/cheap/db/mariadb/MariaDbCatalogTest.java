@@ -23,6 +23,7 @@ import net.netbeing.cheap.model.HierarchyType;
 import net.netbeing.cheap.model.Property;
 import net.netbeing.cheap.model.PropertyDef;
 import net.netbeing.cheap.model.PropertyType;
+import net.netbeing.cheap.util.PropertyValueAdapter;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -33,6 +34,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.List;
+import java.util.TimeZone;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -42,7 +44,7 @@ class MariaDbCatalogTest
     static final int EXPECTED_TABLE_COUNT = 1;
 
     static final String DB_NAME = "cheap";
-    volatile static MariaDbTestDb db;
+    static volatile MariaDbTestDb db;
 
     @BeforeAll
     static void setUpAll() throws Exception
@@ -64,6 +66,7 @@ class MariaDbCatalogTest
     void setUp() throws SQLException
     {
         catalog = new MariaDbCatalog(db.dataSource);
+        catalog.setValueAdapter(new PropertyValueAdapter(TimeZone.getTimeZone("GMT")));
         initializeTestData();
     }
 
@@ -79,6 +82,7 @@ class MariaDbCatalogTest
         try (Connection connection = db.dataSource.getConnection();
              Statement statement = connection.createStatement()) {
 
+            statement.execute("SET SESSION time_zone = '+0:00'");
             // Create test_table
             statement.execute(
                 "CREATE TABLE IF NOT EXISTS test_table (" +
@@ -241,10 +245,10 @@ class MariaDbCatalogTest
                 assertEquals(1.5, ((Double) floatProp.read()), "float_col should be 1.5");
 
                 Property dateProp = aspect.get("date_col");
-                assertEquals("2025-01-01", dateProp.read(), "date_col should be 2025-01-01");
+                assertEquals("2025-01-01T00:00Z[GMT]", dateProp.read().toString(), "date_col should be 2025-01-01T00:00Z[GMT]");
 
                 Property timestampProp = aspect.get("timestamp_col");
-                System.out.println("MariaDB Timestamp value: " + timestampProp.read());
+                assertEquals("2025-01-11T18:18:18Z[GMT]", timestampProp.read().toString(), "timestamp_col should be 2025-01-11T18:18:18Z[GMT]");
 
                 Property booleanProp = aspect.get("boolean_col");
                 assertEquals(true, (Boolean) booleanProp.read(), "boolean_col should be true");
@@ -268,10 +272,10 @@ class MariaDbCatalogTest
                 assertEquals(2.5, ((Double) floatProp.read()), "float_col should be 2.5");
 
                 Property dateProp = aspect.get("date_col");
-                assertEquals("2025-02-02", dateProp.read(), "date_col should be 2025-02-02");
+                assertEquals("2025-02-02T00:00Z[GMT]", dateProp.read().toString(), "date_col should be 2025-02-02T00:00Z[GMT]");
 
                 Property timestampProp = aspect.get("timestamp_col");
-                System.out.println("MariaDB Timestamp value: " + timestampProp.read());
+                assertEquals("2025-02-02T02:02:02Z[GMT]", timestampProp.read().toString(), "timestamp_col should be 2025-02-02T02:02:02Z[GMT]");
 
                 Property booleanProp = aspect.get("boolean_col");
                 assertEquals(false, (Boolean) booleanProp.read(), "boolean_col should be false");

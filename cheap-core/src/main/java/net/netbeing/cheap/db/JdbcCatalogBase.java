@@ -28,6 +28,8 @@ import net.netbeing.cheap.model.AspectMapHierarchy;
 import net.netbeing.cheap.model.Entity;
 import net.netbeing.cheap.model.PropertyDef;
 import net.netbeing.cheap.model.PropertyType;
+import net.netbeing.cheap.util.CheapException;
+import net.netbeing.cheap.util.PropertyValueAdapter;
 import org.jetbrains.annotations.NotNull;
 
 import javax.sql.DataSource;
@@ -37,12 +39,10 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 /**
  * Base class for Catalog implementations that load database tables via JDBC.
@@ -59,6 +59,9 @@ public abstract class JdbcCatalogBase extends CatalogImpl
 
     /** JDBC data source for database connections. */
     protected DataSource dataSource;
+
+    /** PropertyValueAdapter for adapting values read from the Database **/
+    protected PropertyValueAdapter valueAdapter = new PropertyValueAdapter();
 
     /**
      * Default constructor for testing or lazy initialization.
@@ -108,6 +111,24 @@ public abstract class JdbcCatalogBase extends CatalogImpl
      * @return the schema name, or null
      */
     protected abstract String getSchemaName();
+
+    /**
+     * Return the current PropertyValueAdapter in this CatalogAdapter.
+     * @return the current PropertyValueAdapter
+     */
+    public PropertyValueAdapter getValueAdapter()
+    {
+        return valueAdapter;
+    }
+
+    /**
+     * Set a new PropertyValueAdapter in this CatalogAdapter
+     * @param valueAdapter a new PropertyValueAdapter
+     */
+    public void setValueAdapter(PropertyValueAdapter valueAdapter)
+    {
+        this.valueAdapter = valueAdapter;
+    }
 
     /**
      * Gets the AspectDef for a database table, loading it from the database if necessary.
@@ -160,7 +181,7 @@ public abstract class JdbcCatalogBase extends CatalogImpl
             }
 
         } catch (SQLException e) {
-            throw new RuntimeException("Failed to load table definition for table: " + tableName, e);
+            throw new CheapException("Failed to load table definition for table: " + tableName, e);
         }
 
         tableAspects.put(tableName, aspectDef);
@@ -217,7 +238,7 @@ public abstract class JdbcCatalogBase extends CatalogImpl
 
                     PropertyDef propDef = aspectDef.propertyDef(columnName);
                     if (propDef != null) {
-                        PropertyImpl property = new PropertyImpl(propDef, convertValue(value, propDef.type()));
+                        PropertyImpl property = new PropertyImpl(propDef, convertValue(value, propDef));
                         aspect.unsafeAdd(property);
                     }
                 }
@@ -226,7 +247,7 @@ public abstract class JdbcCatalogBase extends CatalogImpl
             }
 
         } catch (SQLException e) {
-            throw new RuntimeException("Failed to load table data for table: " + tableName, e);
+            throw new CheapException("Failed to load table data for table: " + tableName, e);
         }
 
         return hierarchy;
@@ -234,68 +255,16 @@ public abstract class JdbcCatalogBase extends CatalogImpl
 
     /**
      * Converts a database value to the appropriate Java type for the given PropertyType.
-     * This default implementation handles common conversions; subclasses can override
-     * for database-specific behavior.
+     * This default implementation delegates all behavior to the PropertyValueAdapter of
+     * this object.
      *
      * @param value the database value
-     * @param expectedType the expected PropertyType
+     * @param expectedProperty the expected PropertyDef
      * @return the converted value
      */
-    protected Object convertValue(Object value, PropertyType expectedType)
+    protected Object convertValue(Object value, PropertyDef expectedProperty)
     {
-        if (value == null) {
-            return null;
-        }
-
-        // Convert based on expected PropertyType
-        switch (expectedType) {
-            case Integer:
-                if (value instanceof Number) {
-                    return ((Number) value).longValue();
-                } else if (value instanceof String) {
-                    return Long.valueOf((String) value);
-                }
-                break;
-            case Float:
-                if (value instanceof Number) {
-                    return ((Number) value).doubleValue();
-                } else if (value instanceof String) {
-                    return Double.valueOf((String) value);
-                }
-                break;
-            case Boolean:
-                if (value instanceof Boolean) {
-                    return value;
-                } else if (value instanceof Number) {
-                    return ((Number) value).intValue() != 0;
-                } else if (value instanceof String) {
-                    return Boolean.valueOf((String) value);
-                }
-                break;
-            case UUID:
-                if (value instanceof UUID) {
-                    return value;
-                }
-                break;
-            case DateTime:
-                if (value instanceof java.sql.Date) {
-                    return ((java.sql.Date) value).toLocalDate().toString();
-                } else if (value instanceof Date) {
-                    return ((Date) value).toInstant().toString();
-                }
-                break;
-            case String:
-            case Text:
-            case BigInteger:
-            case URI:
-                return value.toString();
-            case BLOB:
-            case CLOB:
-                // For now, return raw value - could be enhanced with streaming support
-                return value;
-        }
-
-        return value;
+        return valueAdapter.coerce(expectedProperty, value);
     }
 
     /**

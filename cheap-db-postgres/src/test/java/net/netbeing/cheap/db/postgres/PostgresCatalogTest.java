@@ -26,6 +26,7 @@ import net.netbeing.cheap.model.HierarchyType;
 import net.netbeing.cheap.model.Property;
 import net.netbeing.cheap.model.PropertyDef;
 import net.netbeing.cheap.model.PropertyType;
+import net.netbeing.cheap.util.PropertyValueAdapter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -40,6 +41,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.List;
+import java.util.TimeZone;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -60,6 +62,7 @@ class PostgresCatalogTest
     void setUp() {
         dataSource = flywayDB.getTestDatabase();
         catalog = new PostgresCatalog(dataSource);
+        catalog.setValueAdapter(new PropertyValueAdapter(TimeZone.getTimeZone("GMT")));
     }
 
     private void initializeCheapSchema() throws SQLException, IOException, URISyntaxException {
@@ -210,13 +213,11 @@ class PostgresCatalogTest
                 assertEquals(1.5, ((Double) floatProp.read()), "float_col should be 1.5");
                 
                 Property dateProp = aspect.get("date_col");
-                assertEquals("2025-01-01", dateProp.read(), "date_col should be 2025-01-01");
-                
+                assertEquals("2025-01-01T00:00Z[GMT]", dateProp.read().toString(), "date_col should be 2025-01-01T00:00Z[GMT]");
+
                 Property timestampProp = aspect.get("timestamp_col");
-                //String expectedTime = LocalDateTime.of(2025, 1, 11, 18, 18, 18, 18000000).toInstant()
-                System.out.println("Postgres Timestamp value: " + timestampProp.read());
-                //assertEquals("2025-01-12T02:18:18.018Z", timestampProp.read(), "timestamp_col should match expected timestamp");
-                
+                assertEquals("2025-01-12T02:18:18.018Z[GMT]", timestampProp.read().toString(), "timestamp_col should be 2025-01-12T02:18:18.018Z[GMT]");
+
                 Property booleanProp = aspect.get("boolean_col");
                 assertEquals(true, (Boolean) booleanProp.read(), "boolean_col should be true");
                 
@@ -239,12 +240,11 @@ class PostgresCatalogTest
                 assertEquals(2.5, ((Double) floatProp.read()), "float_col should be 2.5");
                 
                 Property dateProp = aspect.get("date_col");
-                assertEquals("2025-02-02", dateProp.read(), "date_col should be 2025-02-02");
-                
+                assertEquals("2025-02-02T00:00Z[GMT]", dateProp.read().toString(), "date_col should be 2025-02-02T00:00Z[GMT]");
+
                 Property timestampProp = aspect.get("timestamp_col");
-                System.out.println("Postgres Timestamp value: " + timestampProp.read());
-                //assertEquals("2025-02-02T10:02:02.002Z", timestampProp.read(), "timestamp_col should match expected timestamp");
-                
+                assertEquals("2025-02-02T10:02:02.002Z[GMT]", timestampProp.read().toString(), "timestamp_col should be 2025-02-02T10:02:02.002Z[GMT]");
+
                 Property booleanProp = aspect.get("boolean_col");
                 assertEquals(false, (Boolean) booleanProp.read(), "boolean_col should be false");
                 

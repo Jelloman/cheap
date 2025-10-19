@@ -177,20 +177,6 @@ public interface CheapDao
     void saveHierarchy(Connection conn, Hierarchy hierarchy) throws SQLException;
 
     /**
-     * Converts a property value to its string representation for storage in a text column.
-     * This is used when persisting properties to the default property_value table.
-     *
-     * <p>Most types use toString(), but some types (like DateTime) require special handling
-     * to ensure they can be reliably parsed back from the string representation.
-     *
-     * @param value the property value to convert
-     * @param type the PropertyType indicating how to interpret the value
-     * @return string representation suitable for database storage
-     * @throws SQLException if conversion fails
-     */
-    String convertValueToString(Object value, PropertyType type) throws SQLException;
-
-    /**
      * Loads a complete catalog from the database by its global ID.
      * Creates a new database connection for the operation.
      *
@@ -292,17 +278,4 @@ public interface CheapDao
      * @throws SQLException if database operation fails
      */
     boolean deleteCatalog(@NotNull UUID catalogId) throws SQLException;
-
-    /**
-     * Converts a DateTime value to a SQL Timestamp for database storage.
-     * Handles various date/time types including Timestamp, Date, Instant, and ZonedDateTime.
-     *
-     * <p>This method ensures consistent timestamp representation across different
-     * Java temporal types.
-     *
-     * @param value the date/time value to convert
-     * @return a Timestamp suitable for database storage
-     * @throws IllegalStateException if the value type is not supported
-     */
-    Timestamp convertToTimestamp(Object value);
 }

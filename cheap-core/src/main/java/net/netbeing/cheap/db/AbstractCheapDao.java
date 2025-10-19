@@ -28,6 +28,7 @@ import net.netbeing.cheap.model.Hierarchy;
 import net.netbeing.cheap.model.HierarchyType;
 import net.netbeing.cheap.model.PropertyType;
 import net.netbeing.cheap.util.CheapFactory;
+import net.netbeing.cheap.util.PropertyValueAdapter;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,12 +36,10 @@ import org.slf4j.LoggerFactory;
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.sql.Timestamp;
-import java.time.Instant;
-import java.time.ZonedDateTime;
-import java.util.Date;
+import java.util.HexFormat;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.TimeZone;
 import java.util.UUID;
 
 /**
@@ -55,7 +54,7 @@ import java.util.UUID;
  * <h2>Responsibilities</h2>
  * <ul>
  *   <li>Managing AspectTableMapping registration and lookup</li>
- *   <li>Orchestrating multi-step save operations (catalog, hierarchies, aspects)</li>
+ *   <li>Orchestrating multistep save operations (catalog, hierarchies, aspects)</li>
  *   <li>Routing save/load operations to appropriate mapped or default table handlers</li>
  *   <li>Providing common type conversion utilities</li>
  * </ul>
@@ -98,6 +97,10 @@ public abstract class AbstractCheapDao implements CheapDao
      */
     protected final Map<String, AspectTableMapping> aspectTableMappings = new LinkedHashMap<>();
 
+    /** PropertyValueAdapter for adapting values read from the Database **/
+    protected PropertyValueAdapter valueAdapter = new PropertyValueAdapter();
+
+
     /**
      * Constructs a new AbstractCheapDao with the given data source, factory, and logger.
      * This constructor allows sharing a CheapFactory instance across multiple DAOs
@@ -124,6 +127,30 @@ public abstract class AbstractCheapDao implements CheapDao
     public AspectTableMapping getAspectTableMapping(@NotNull String aspectDefName)
     {
         return aspectTableMappings.get(aspectDefName);
+    }
+
+    /**
+     * Return the current PropertyValueAdapter in this CatalogAdapter.
+     * @return the current PropertyValueAdapter
+     */
+    public PropertyValueAdapter getValueAdapter()
+    {
+        return valueAdapter;
+    }
+
+    /**
+     * Set a new PropertyValueAdapter in this CatalogAdapter
+     * @param valueAdapter a new PropertyValueAdapter
+     */
+    public void setValueAdapter(PropertyValueAdapter valueAdapter)
+    {
+        this.valueAdapter = valueAdapter;
+    }
+
+    public void setTimeZone(TimeZone zone)
+    {
+        this.valueAdapter.setTimeZone(zone);
+        this.factory.setTimeZone(zone);
     }
 
     @Override
@@ -292,15 +319,6 @@ public abstract class AbstractCheapDao implements CheapDao
     protected abstract void saveAspectMapContentToMappedTable(Connection conn, AspectMapHierarchy hierarchy, AspectTableMapping mapping) throws SQLException;
 
     @Override
-    public String convertValueToString(Object value, PropertyType type) throws SQLException
-    {
-        return switch (type) {
-            case DateTime -> convertToTimestamp(value).toString();
-            default -> value.toString();
-        };
-    }
-
-    @Override
     public Catalog loadCatalog(@NotNull UUID catalogId) throws SQLException
     {
         try (Connection conn = dataSource.getConnection()) {
@@ -435,19 +453,4 @@ public abstract class AbstractCheapDao implements CheapDao
      * @throws SQLException if database operation fails or AspectDef not found
      */
     protected abstract AspectDef loadAspectDefForHierarchy(Connection conn, UUID catalogId, String hierarchyName) throws SQLException;
-
-    // ===== Value Conversion Methods =====
-
-    @Override
-    public Timestamp convertToTimestamp(Object value)
-    {
-        return switch (value) {
-            case Timestamp timestamp -> timestamp;
-            case Date date -> new Timestamp(date.getTime());
-            case Instant instant -> Timestamp.from(instant);
-            case ZonedDateTime zonedDateTime -> Timestamp.from(zonedDateTime.toInstant());
-            default -> throw new IllegalStateException("Unexpected value class for DateTime: " + value.getClass());
-        };
-    }
-
 }
