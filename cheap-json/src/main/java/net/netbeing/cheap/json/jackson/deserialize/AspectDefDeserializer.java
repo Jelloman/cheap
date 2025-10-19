@@ -88,6 +88,7 @@ class AspectDefDeserializer extends JsonDeserializer<AspectDef>
         }
 
         String name = null;
+        UUID globalId = null;
         List<PropertyDef> propertyDefs = new ArrayList<>();
         Flags flags = new Flags();
 
@@ -97,6 +98,7 @@ class AspectDefDeserializer extends JsonDeserializer<AspectDef>
 
             switch (fieldName) {
                 case "name" -> name = p.getValueAsString();
+                case "globalId" -> globalId = UUID.fromString(p.getValueAsString());
                 case "isReadable" -> flags.isReadable = p.getBooleanValue();
                 case "isWritable" -> flags.isWritable = p.getBooleanValue();
                 case "canAddProperties" -> flags.canAddProperties = p.getBooleanValue();
@@ -116,6 +118,9 @@ class AspectDefDeserializer extends JsonDeserializer<AspectDef>
         if (name == null) {
             throw new JsonMappingException(p, "Missing required field in AspectDef: name");
         }
+        if (globalId == null) {
+            throw new JsonMappingException(p, "Missing required field in AspectDef: globalId");
+        }
 
         Map<String, PropertyDef> propertyDefMap = new LinkedHashMap<>();
         for (PropertyDef propertyDef : propertyDefs) {
@@ -126,13 +131,13 @@ class AspectDefDeserializer extends JsonDeserializer<AspectDef>
         AspectDef def;
         if (flags.canAddProperties && flags.canRemoveProperties) {
             // Fully mutable - use MutableAspectDefImpl
-            def = factory.createMutableAspectDef(name, propertyDefMap);
+            def = factory.createMutableAspectDef(name, globalId, propertyDefMap);
         } else if (!flags.canAddProperties && !flags.canRemoveProperties) {
             // Fully immutable - use ImmutableAspectDefImpl
-            def = factory.createImmutableAspectDef(name, propertyDefMap);
+            def = factory.createImmutableAspectDef(name, globalId, propertyDefMap);
         } else {
             // Mixed mutability - use FullAspectDefImpl
-            def = factory.createFullAspectDef(name, UUID.randomUUID(), propertyDefMap,
+            def = factory.createFullAspectDef(name, globalId, propertyDefMap,
                 flags.isReadable, flags.isWritable, flags.canAddProperties, flags.canRemoveProperties);
         }
         AspectDef existingDef = factory.getAspectDef(name);

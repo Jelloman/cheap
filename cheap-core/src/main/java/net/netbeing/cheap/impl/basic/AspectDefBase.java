@@ -107,7 +107,7 @@ public abstract class AspectDefBase extends EntityImpl implements AspectDef
      * {@inheritDoc}
      */
     @Override
-    public @NotNull Collection<? extends PropertyDef> propertyDefs()
+    public @NotNull Collection<PropertyDef> propertyDefs()
     {
         return propertyDefs.values();
     }

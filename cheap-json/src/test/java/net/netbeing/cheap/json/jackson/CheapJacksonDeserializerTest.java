@@ -70,6 +70,7 @@ public class CheapJacksonDeserializerTest
         }
         assertNotNull(personAspectDef);
         assertEquals("person", personAspectDef.name());
+        assertEquals(UUID.fromString("82758400-e24b-41d4-a726-446644440000"), personAspectDef.globalId());
         PropertyDef nameProp = personAspectDef.propertyDef("name");
         assertNotNull(nameProp);
         assertEquals("name", nameProp.name());
@@ -179,6 +180,7 @@ public class CheapJacksonDeserializerTest
         AspectMapHierarchy aspectMap = (AspectMapHierarchy) hierarchy;
         assertEquals(HierarchyType.ASPECT_MAP, aspectMap.type());
         assertEquals("person", aspectMap.aspectDef().name());
+        assertEquals(UUID.fromString("12348400-e24b-41d4-a716-446644440000"), aspectMap.aspectDef().globalId());
 
         assertFalse(aspectMap.isEmpty());
         Entity entity = freshDeserializer.getFactory().getEntity(UUID.fromString("550e8400-e29b-41d4-a716-446655440000"));
@@ -203,7 +205,7 @@ public class CheapJacksonDeserializerTest
 
         // Verify AspectDefs
         int aspectDefCount = 0;
-        for (AspectDef ad : catalog.aspectDefs()) {
+        for (AspectDef _ : catalog.aspectDefs()) {
             aspectDefCount++;
         }
         assertEquals(2, aspectDefCount);
@@ -220,7 +222,7 @@ public class CheapJacksonDeserializerTest
 
         // Verify all hierarchies are present
         int hierarchyCount = 0;
-        for (Hierarchy h : catalog.hierarchies()) {
+        for (Hierarchy _ : catalog.hierarchies()) {
             hierarchyCount++;
         }
         assertEquals(6, hierarchyCount);
@@ -259,7 +261,6 @@ public class CheapJacksonDeserializerTest
 
         assertEquals(compactCatalog.globalId(), prettyCatalog.globalId());
         assertEquals(compactCatalog.species(), prettyCatalog.species());
-        // isStrict() removed from model
     }
 
     @Test

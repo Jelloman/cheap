@@ -38,6 +38,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -49,11 +50,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * equivalent functionality.
  */
 @SuppressWarnings({"MismatchedQueryAndUpdateOfCollection", "ConstantValue"})
-public class CheapJacksonSerializerTest
+class CheapJacksonSerializerTest
 {
     private static final UUID CATALOG_ID = UUID.fromString("550e8400-e29b-41d4-a716-444444444444");
 
-    private static final String WRITE_OUTPUT_PATH = null;
+    private static final String WRITE_OUTPUT_PATH = "D:\\src\\tmp";
 
     private static CatalogImpl createTestCatalog()
     {
@@ -63,7 +64,8 @@ public class CheapJacksonSerializerTest
         PropertyDef nameProp = new PropertyDefBuilder().setName("name").setType(PropertyType.String).setDefaultValue(null).setHasDefaultValue(false).setIsReadable(true).setIsWritable(true).setIsNullable(false).setIsRemovable(false).setIsMultivalued(false).build();
         PropertyDef ageProp = new PropertyDefBuilder().setName("age").setType(PropertyType.Integer).setDefaultValue(null).setHasDefaultValue(false).setIsReadable(true).setIsWritable(true).setIsNullable(true).setIsRemovable(false).setIsMultivalued(false).build();
         Map<String, PropertyDef> personProps = ImmutableMap.of("name", nameProp, "age", ageProp);
-        AspectDef personAspectDef = new ImmutableAspectDefImpl("person", personProps);
+        UUID aspectDefId = UUID.fromString("82758400-e24b-41d4-a726-446644440000");
+        AspectDef personAspectDef = new ImmutableAspectDefImpl("person", aspectDefId, personProps);
 
         catalog.extend(personAspectDef);
         return catalog;
@@ -309,7 +311,8 @@ public class CheapJacksonSerializerTest
 
         PropertyDef nameProp = new PropertyDefBuilder().setName("name").setType(PropertyType.String).setDefaultValue(null).setHasDefaultValue(false).setIsReadable(true).setIsWritable(true).setIsNullable(false).setIsRemovable(false).setIsMultivalued(false).build();
         Map<String, PropertyDef> personProps = ImmutableMap.of("name", nameProp);
-        AspectDef personAspectDef = new ImmutableAspectDefImpl("person", personProps);
+        UUID aspectDefId = UUID.fromString("12348400-e24b-41d4-a716-446644440000");
+        AspectDef personAspectDef = new ImmutableAspectDefImpl("person", aspectDefId, personProps);
         AspectMapHierarchy personAspects = catalog.extend(personAspectDef);
 
         AspectObjectMapImpl personAspect = new AspectObjectMapImpl(entity, personAspectDef);
@@ -352,25 +355,20 @@ public class CheapJacksonSerializerTest
         PropertyDef nameProp = new PropertyDefBuilder().setName("name").setType(PropertyType.String).setDefaultValue(null).setHasDefaultValue(false).setIsReadable(true).setIsWritable(true).setIsNullable(false).setIsRemovable(false).setIsMultivalued(false).build();
         PropertyDef ageProp = new PropertyDefBuilder().setName("age").setType(PropertyType.Integer).setDefaultValue(null).setHasDefaultValue(false).setIsReadable(true).setIsWritable(true).setIsNullable(true).setIsRemovable(false).setIsMultivalued(false).build();
         Map<String, PropertyDef> personProps = ImmutableMap.of("age", ageProp, "name", nameProp);
-        AspectDef personAspectDef = new ImmutableAspectDefImpl("person", personProps);
+        UUID aspectDefId1 = UUID.fromString("12348400-e24b-41d4-a716-446644440000");
+        AspectDef personAspectDef = new ImmutableAspectDefImpl("person", aspectDefId1, personProps);
 
         PropertyDef titleProp = new PropertyDefBuilder().setName("title").setType(PropertyType.String).setDefaultValue(null).setHasDefaultValue(false).setIsReadable(true).setIsWritable(true).setIsNullable(false).setIsRemovable(false).setIsMultivalued(false).build();
         PropertyDef descProp = new PropertyDefBuilder().setName("description").setType(PropertyType.String).setDefaultValue(null).setHasDefaultValue(false).setIsReadable(true).setIsWritable(true).setIsNullable(true).setIsRemovable(false).setIsMultivalued(false).build();
         Map<String, PropertyDef> docProps = ImmutableMap.of("title", titleProp, "description", descProp);
-        AspectDef docAspectDef = new ImmutableAspectDefImpl("document", docProps);
+        UUID aspectDefId2 = UUID.fromString("73737400-e24b-41d4-a716-446644440000");
+        AspectDef docAspectDef = new ImmutableAspectDefImpl("document", aspectDefId2, docProps);
 
         // Create HierarchyDefs for most (but not all) hierarchies that will be added
         HierarchyDef entityDirDef = new HierarchyDefImpl("userDirectory", HierarchyType.ENTITY_DIR);
         HierarchyDef entityListDef = new HierarchyDefImpl("taskQueue", HierarchyType.ENTITY_LIST);
         HierarchyDef entitySetDef = new HierarchyDefImpl("activeUsers", HierarchyType.ENTITY_SET);
         // Intentionally omitting entityTreeDef from CatalogDef to test embedded def scenario
-        HierarchyDef personAspectsDef = new HierarchyDefImpl("person", HierarchyType.ASPECT_MAP);
-        HierarchyDef docAspectsDef = new HierarchyDefImpl("document", HierarchyType.ASPECT_MAP);
-
-        Collection<AspectDef> aspectDefs = ImmutableList.of(personAspectDef, docAspectDef);
-        Collection<HierarchyDef> hierarchyDefs = ImmutableList.of(entityDirDef, entityListDef, entitySetDef, personAspectsDef, docAspectsDef);
-
-        CatalogDef catalogDef = new CatalogDefImpl(hierarchyDefs, aspectDefs);
 
         // Create a non-strict catalog with explicit CatalogDef (strict=false allows additional hierarchies)
         CatalogImpl catalog = new CatalogImpl(CATALOG_ID, CatalogSpecies.SINK, null, 0L);
@@ -494,22 +492,23 @@ public class CheapJacksonSerializerTest
             "ratings", ratingsProp,
             "title", titleProp
         );
-        AspectDef productAspectDef = new ImmutableAspectDefImpl("product", productProps);
+        UUID aspectDefId = UUID.fromString("09348400-e24b-41d4-a716-446644440000");
+        AspectDef productAspectDef = new ImmutableAspectDefImpl("product", aspectDefId, productProps);
         AspectMapHierarchy productAspects = catalog.extend(productAspectDef);
 
         // Create first product with multivalued properties
         AspectObjectMapImpl product1 = new AspectObjectMapImpl(entity1, productAspectDef);
-        product1.write("tags", ImmutableList.of("electronics", "gadget", "popular"));
-        product1.write("scores", ImmutableList.of(100L, 95L, 87L));
-        product1.write("ratings", ImmutableList.of(4.5, 4.8, 4.2));
+        product1.write("tags", List.of("electronics", "gadget", "popular"));
+        product1.write("scores", List.of(100L, 95L, 87L));
+        product1.write("ratings", List.of(4.5, 4.8, 4.2));
         product1.write("title", "Smart Watch");
         productAspects.put(entity1, product1);
 
         // Create second product with multivalued properties
         AspectObjectMapImpl product2 = new AspectObjectMapImpl(entity2, productAspectDef);
-        product2.write("tags", ImmutableList.of("software", "productivity"));
-        product2.write("scores", ImmutableList.of(98L, 92L));
-        product2.write("ratings", ImmutableList.of(4.7, 4.9));
+        product2.write("tags", List.of("software", "productivity"));
+        product2.write("scores", List.of(98L, 92L));
+        product2.write("ratings", List.of(4.7, 4.9));
         product2.write("title", "Office Suite");
         productAspects.put(entity2, product2);
 

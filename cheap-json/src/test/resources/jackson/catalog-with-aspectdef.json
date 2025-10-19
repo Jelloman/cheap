@@ -5,6 +5,7 @@
   "aspectDefs" : {
     "person" : {
       "name" : "person",
+      "globalId" : "82758400-e24b-41d4-a726-446644440000",
       "propertyDefs" : [ {
         "name" : "name",
         "type" : "String",
