@@ -3,7 +3,12 @@ package net.netbeing.cheap.impl.reflect;
 import net.netbeing.cheap.impl.basic.EntityImpl;
 import net.netbeing.cheap.impl.basic.PropertyDefBuilder;
 import net.netbeing.cheap.impl.basic.PropertyImpl;
-import net.netbeing.cheap.model.*;
+import net.netbeing.cheap.model.Aspect;
+import net.netbeing.cheap.model.AspectBuilder;
+import net.netbeing.cheap.model.Entity;
+import net.netbeing.cheap.model.Property;
+import net.netbeing.cheap.model.PropertyDef;
+import net.netbeing.cheap.model.PropertyType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

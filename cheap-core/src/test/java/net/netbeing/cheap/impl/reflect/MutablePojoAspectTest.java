@@ -2,10 +2,8 @@ package net.netbeing.cheap.impl.reflect;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import net.netbeing.cheap.impl.basic.CatalogImpl;
 import net.netbeing.cheap.impl.basic.EntityImpl;
 import net.netbeing.cheap.impl.basic.PropertyImpl;
-import net.netbeing.cheap.model.Catalog;
 import net.netbeing.cheap.model.Entity;
 import net.netbeing.cheap.model.Property;
 import org.junit.jupiter.api.AfterEach;

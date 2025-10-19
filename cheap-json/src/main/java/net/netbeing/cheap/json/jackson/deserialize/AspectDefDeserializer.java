@@ -102,7 +102,7 @@ class AspectDefDeserializer extends JsonDeserializer<AspectDef>
                 case "canAddProperties" -> flags.canAddProperties = p.getBooleanValue();
                 case "canRemoveProperties" -> flags.canRemoveProperties = p.getBooleanValue();
                 case "propertyDefs" -> {
-                    if (p.currentToken() == JsonToken.START_ARRAY) {
+                    if (p.currentToken() == JsonToken.START_ARRAY) { // NOSONAR - Sonar bug, https://sonarsource.atlassian.net/browse/SONARJAVA-4962
                         while (p.nextToken() != JsonToken.END_ARRAY) {
                             PropertyDef propDef = deserializePropertyDef(p, flags);
                             propertyDefs.add(propDef);

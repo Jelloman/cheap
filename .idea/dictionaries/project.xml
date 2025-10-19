@@ -25,6 +25,7 @@
       <w>lseg</w>
       <w>macaddr</w>
       <w>nokey</w>
+      <w>nosonar</w>
       <w>numrange</w>
       <w>ossp</w>
       <w>plpgsql</w>

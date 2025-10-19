@@ -16,12 +16,27 @@
 
 package net.netbeing.cheap.db;
 
-import net.netbeing.cheap.impl.basic.*;
-import net.netbeing.cheap.model.*;
+import net.netbeing.cheap.impl.basic.AspectMapHierarchyImpl;
+import net.netbeing.cheap.impl.basic.AspectPropertyMapImpl;
+import net.netbeing.cheap.impl.basic.CatalogImpl;
+import net.netbeing.cheap.impl.basic.MutableAspectDefImpl;
+import net.netbeing.cheap.impl.basic.PropertyDefBuilder;
+import net.netbeing.cheap.impl.basic.PropertyDefImpl;
+import net.netbeing.cheap.impl.basic.PropertyImpl;
+import net.netbeing.cheap.model.AspectDef;
+import net.netbeing.cheap.model.AspectMapHierarchy;
+import net.netbeing.cheap.model.Entity;
+import net.netbeing.cheap.model.PropertyDef;
+import net.netbeing.cheap.model.PropertyType;
 import org.jetbrains.annotations.NotNull;
 
 import javax.sql.DataSource;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;

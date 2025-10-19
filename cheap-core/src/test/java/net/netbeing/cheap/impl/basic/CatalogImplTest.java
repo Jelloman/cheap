@@ -1,6 +1,7 @@
 package net.netbeing.cheap.impl.basic;
 
-import net.netbeing.cheap.model.*;
+import net.netbeing.cheap.model.Catalog;
+import net.netbeing.cheap.model.CatalogSpecies;
 import org.junit.jupiter.api.Test;
 
 import java.util.UUID;

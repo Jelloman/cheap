@@ -16,10 +16,17 @@
 
 package net.netbeing.cheap.impl.basic;
 
-import net.netbeing.cheap.model.*;
+import net.netbeing.cheap.model.Catalog;
+import net.netbeing.cheap.model.Entity;
+import net.netbeing.cheap.model.EntityTreeHierarchy;
+import net.netbeing.cheap.model.HierarchyDef;
+import net.netbeing.cheap.model.HierarchyType;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.*;
+import java.util.AbstractMap;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.Set;
 
 /**
  * Basic implementation of an EntityTreeHierarchy that represents a tree structure

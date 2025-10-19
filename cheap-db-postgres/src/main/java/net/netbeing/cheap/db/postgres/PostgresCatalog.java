@@ -17,14 +17,18 @@
 package net.netbeing.cheap.db.postgres;
 
 import net.netbeing.cheap.db.JdbcCatalogBase;
-import net.netbeing.cheap.impl.basic.*;
-import net.netbeing.cheap.model.*;
+import net.netbeing.cheap.impl.basic.EntityImpl;
+import net.netbeing.cheap.model.Entity;
+import net.netbeing.cheap.model.PropertyType;
 import org.jetbrains.annotations.NotNull;
 
-import java.sql.*;
-import java.util.*;
 import javax.sql.DataSource;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLDataException;
+import java.sql.SQLException;
+import java.util.Map;
 
 import static java.util.Map.entry;
 

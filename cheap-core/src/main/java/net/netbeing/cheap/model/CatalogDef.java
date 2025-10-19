@@ -19,8 +19,6 @@ package net.netbeing.cheap.model;
 import net.netbeing.cheap.util.CheapHasher;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Objects;
-
 /**
  * A CatalogDef defines the structure and properties of a catalog.
  * This is a purely informational class.

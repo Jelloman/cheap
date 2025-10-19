@@ -22,7 +22,9 @@ import net.netbeing.cheap.model.CatalogSpecies;
 import net.netbeing.cheap.model.HierarchyDef;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
  * Basic implementation of a CatalogDef that defines the structure and properties

@@ -1,12 +1,17 @@
 package net.netbeing.cheap.util;
 
-import net.netbeing.cheap.impl.basic.AspectMapHierarchyImpl;
 import net.netbeing.cheap.impl.basic.CatalogImpl;
 import net.netbeing.cheap.impl.basic.HierarchyDefImpl;
-import net.netbeing.cheap.impl.reflect.RecordAspectDef;
 import net.netbeing.cheap.impl.reflect.RecordAspect;
-import net.netbeing.cheap.model.*;
+import net.netbeing.cheap.impl.reflect.RecordAspectDef;
+import net.netbeing.cheap.model.Aspect;
+import net.netbeing.cheap.model.AspectMapHierarchy;
+import net.netbeing.cheap.model.Catalog;
+import net.netbeing.cheap.model.Entity;
+import net.netbeing.cheap.model.EntityTreeHierarchy;
 import net.netbeing.cheap.model.EntityTreeHierarchy.Node;
+import net.netbeing.cheap.model.Hierarchy;
+import net.netbeing.cheap.model.HierarchyType;
 import net.netbeing.cheap.util.CheapFileUtil.FileRec;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

@@ -16,8 +16,6 @@
 
 package net.netbeing.cheap.json.jackson;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import net.netbeing.cheap.json.jackson.deserialize.CheapJacksonDeserializer;
 import net.netbeing.cheap.model.*;
 import net.netbeing.cheap.util.CheapFactory;

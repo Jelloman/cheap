@@ -16,7 +16,13 @@
 
 package net.netbeing.cheap.impl.basic;
 
-import net.netbeing.cheap.model.*;
+import net.netbeing.cheap.model.AspectDef;
+import net.netbeing.cheap.model.AspectMapHierarchy;
+import net.netbeing.cheap.model.Catalog;
+import net.netbeing.cheap.model.CatalogDef;
+import net.netbeing.cheap.model.CatalogSpecies;
+import net.netbeing.cheap.model.Hierarchy;
+import net.netbeing.cheap.model.LocalEntity;
 import org.jetbrains.annotations.NotNull;
 
 import java.net.URI;

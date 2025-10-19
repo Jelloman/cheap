@@ -16,13 +16,7 @@
 
 package net.netbeing.cheap.model;
 
-import com.google.common.hash.*;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.Collection;
-import java.util.Objects;
-
-import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  * Defines the structure and metadata for an aspect type within the Cheap data model.

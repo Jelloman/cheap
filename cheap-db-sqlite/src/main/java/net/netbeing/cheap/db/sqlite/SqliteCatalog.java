@@ -17,12 +17,16 @@
 package net.netbeing.cheap.db.sqlite;
 
 import net.netbeing.cheap.db.JdbcCatalogBase;
-import net.netbeing.cheap.impl.basic.*;
-import net.netbeing.cheap.model.*;
+import net.netbeing.cheap.impl.basic.LocalEntityOneCatalogImpl;
+import net.netbeing.cheap.model.Entity;
+import net.netbeing.cheap.model.PropertyType;
 
-import java.sql.*;
-import java.util.*;
 import javax.sql.DataSource;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.Map;
 
 import static java.util.Map.entry;
 

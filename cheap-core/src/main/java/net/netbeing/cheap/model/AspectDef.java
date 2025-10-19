@@ -20,7 +20,6 @@ import net.netbeing.cheap.util.CheapHasher;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
-import java.util.Objects;
 
 /**
  * Defines the structure and metadata for an aspect type within the Cheap data model.
@@ -47,7 +46,7 @@ public interface AspectDef extends Entity
      * 
      * @return a collection of property definitions, never null but may be empty
      */
-    @NotNull Collection<? extends PropertyDef> propertyDefs();
+    @NotNull Collection<PropertyDef> propertyDefs();
 
     /**
      * Return the number of properties in this AspectDef.

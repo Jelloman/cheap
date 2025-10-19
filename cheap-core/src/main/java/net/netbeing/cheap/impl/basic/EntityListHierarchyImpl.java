@@ -16,7 +16,11 @@
 
 package net.netbeing.cheap.impl.basic;
 
-import net.netbeing.cheap.model.*;
+import net.netbeing.cheap.model.Catalog;
+import net.netbeing.cheap.model.Entity;
+import net.netbeing.cheap.model.EntityListHierarchy;
+import net.netbeing.cheap.model.HierarchyDef;
+import net.netbeing.cheap.model.HierarchyType;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;

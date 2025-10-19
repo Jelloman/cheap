@@ -1,7 +1,12 @@
 package net.netbeing.cheap.impl.basic;
 
 import com.google.common.collect.ImmutableList;
-import net.netbeing.cheap.model.*;
+import net.netbeing.cheap.model.Aspect;
+import net.netbeing.cheap.model.Entity;
+import net.netbeing.cheap.model.MutableAspectDef;
+import net.netbeing.cheap.model.Property;
+import net.netbeing.cheap.model.PropertyDef;
+import net.netbeing.cheap.model.PropertyType;
 import net.netbeing.cheap.util.CheapFactory;
 import org.junit.jupiter.api.Test;
 

@@ -20,7 +20,15 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import net.netbeing.cheap.impl.basic.*;
 import net.netbeing.cheap.json.jackson.serialize.CheapJacksonSerializer;
-import net.netbeing.cheap.model.*;
+import net.netbeing.cheap.model.AspectDef;
+import net.netbeing.cheap.model.AspectMapHierarchy;
+import net.netbeing.cheap.model.CatalogDef;
+import net.netbeing.cheap.model.CatalogSpecies;
+import net.netbeing.cheap.model.Entity;
+import net.netbeing.cheap.model.HierarchyDef;
+import net.netbeing.cheap.model.HierarchyType;
+import net.netbeing.cheap.model.PropertyDef;
+import net.netbeing.cheap.model.PropertyType;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;

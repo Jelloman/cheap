@@ -18,8 +18,6 @@ package net.netbeing.cheap.model;
 
 import net.netbeing.cheap.util.CheapHasher;
 
-import java.util.Objects;
-
 /**
  * Defines the metadata and characteristics of a hierarchy within the Cheap data model.
  * A hierarchy definition specifies the type, name, and mutability constraints of
