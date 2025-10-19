@@ -16,6 +16,7 @@
 
 package net.netbeing.cheap.json.jackson;
 
+import com.google.common.collect.Iterables;
 import net.netbeing.cheap.json.jackson.deserialize.CheapJacksonDeserializer;
 import net.netbeing.cheap.model.*;
 import net.netbeing.cheap.util.CheapFactory;
@@ -34,7 +35,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * Tests the Jackson-based deserializer's ability to reconstruct Cheap objects
  * from their JSON representations.
  */
-public class CheapJacksonDeserializerTest
+class CheapJacksonDeserializerTest
 {
     private final CheapJacksonDeserializer deserializer = new CheapJacksonDeserializer();
 
@@ -204,10 +205,7 @@ public class CheapJacksonDeserializerTest
         assertEquals(CatalogSpecies.SINK, catalog.species());
 
         // Verify AspectDefs
-        int aspectDefCount = 0;
-        for (AspectDef _ : catalog.aspectDefs()) {
-            aspectDefCount++;
-        }
+        int aspectDefCount = Iterables.size(catalog.aspectDefs());
         assertEquals(2, aspectDefCount);
 
         // Find person and document AspectDefs
@@ -221,10 +219,7 @@ public class CheapJacksonDeserializerTest
         assertNotNull(documentDef);
 
         // Verify all hierarchies are present
-        int hierarchyCount = 0;
-        for (Hierarchy _ : catalog.hierarchies()) {
-            hierarchyCount++;
-        }
+        int hierarchyCount = Iterables.size(catalog.hierarchies());
         assertEquals(6, hierarchyCount);
         assertNotNull(catalog.hierarchy("person"));
         assertNotNull(catalog.hierarchy("document"));

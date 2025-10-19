@@ -15,6 +15,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@SuppressWarnings("DataFlowIssue")
 class AspectPropertyMapBuilderTest
 {
     private AspectPropertyMapBuilder builder;
@@ -49,15 +50,6 @@ class AspectPropertyMapBuilderTest
         stringProperty = new PropertyImpl(stringPropDef, "test-value");
         intProperty = new PropertyImpl(intPropDef, 42L);
     }
-
-    @Test
-    void constructor_CreatesEmptyBuilder()
-    {
-        AspectPropertyMapBuilder builder = new AspectPropertyMapBuilder();
-
-        assertNotNull(builder);
-    }
-
 
     @Test
     void entity_SetsEntity()
@@ -175,7 +167,7 @@ class AspectPropertyMapBuilderTest
     @Test
     void property_PropertyObjectNoAspectDefSet_Succeeds()
     {
-        builder.property(stringProperty);
+        assertDoesNotThrow(() -> builder.property(stringProperty));
     }
 
     @Test
@@ -253,8 +245,9 @@ class AspectPropertyMapBuilderTest
     @Test
     void build_NoEntity_ThrowsException()
     {
+        builder.aspectDef(aspectDef);
         IllegalStateException exception = assertThrows(IllegalStateException.class, () ->
-            builder.aspectDef(aspectDef).build());
+            builder.build());
 
         assertEquals("Entity must be set before building aspect", exception.getMessage());
     }
@@ -262,8 +255,9 @@ class AspectPropertyMapBuilderTest
     @Test
     void build_NoAspectDef_ThrowsException()
     {
+        builder.entity(entity);
         IllegalStateException exception = assertThrows(IllegalStateException.class, () ->
-            builder.entity(entity).build());
+            builder.build());
 
         assertEquals("AspectDef must be set before building aspect", exception.getMessage());
     }

@@ -38,7 +38,7 @@ import java.util.UUID;
 public class CachingEntityMultiCatalogImpl extends LocalEntityMultiCatalogImpl
 {
     /** Lazily initialized map of aspect definitions to aspects. */
-    protected volatile Cache<@NotNull AspectDef, @NotNull Aspect> aspects;
+    protected Cache<@NotNull AspectDef, @NotNull Aspect> aspects;
 
     /**
      * Creates a new CachingEntityMultiCatalogImpl for the specified catalog.
@@ -46,7 +46,7 @@ public class CachingEntityMultiCatalogImpl extends LocalEntityMultiCatalogImpl
      *
      * @param catalog the catalog this entity has its Aspects in
      */
-    public CachingEntityMultiCatalogImpl(@NotNull Catalog catalog)
+    public CachingEntityMultiCatalogImpl(@NotNull Catalog catalog) // NOSONAR bug with java:S2637
     {
         super(catalog);
     }
@@ -58,7 +58,7 @@ public class CachingEntityMultiCatalogImpl extends LocalEntityMultiCatalogImpl
      * @param globalId the UUID for this entity
      * @param catalog the catalog this entity has its Aspects in
      */
-    public CachingEntityMultiCatalogImpl(@NotNull UUID globalId, @NotNull Catalog catalog)
+    public CachingEntityMultiCatalogImpl(@NotNull UUID globalId, @NotNull Catalog catalog) // NOSONAR bug with java:S2637
     {
         super(globalId, catalog);
     }

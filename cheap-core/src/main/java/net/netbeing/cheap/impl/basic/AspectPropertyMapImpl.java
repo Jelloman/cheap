@@ -66,7 +66,7 @@ public class AspectPropertyMapImpl extends AspectBaseImpl
     public AspectPropertyMapImpl(Entity entity, AspectDef def, int initialCapacity)
     {
         super(entity, def);
-        this.props = new LinkedHashMap<>(initialCapacity);
+        this.props = LinkedHashMap.newLinkedHashMap(initialCapacity);
     }
 
     /**

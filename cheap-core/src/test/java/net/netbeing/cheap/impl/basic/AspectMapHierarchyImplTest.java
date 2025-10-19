@@ -4,7 +4,6 @@ import net.netbeing.cheap.model.Aspect;
 import net.netbeing.cheap.model.AspectDef;
 import net.netbeing.cheap.model.Catalog;
 import net.netbeing.cheap.model.Entity;
-import net.netbeing.cheap.model.HierarchyDef;
 import net.netbeing.cheap.model.HierarchyType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -15,7 +14,6 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class AspectMapHierarchyImplTest
 {
-    private HierarchyDef hierarchyDef;
     private AspectDef aspectDef;
     private AspectMapHierarchyImpl hierarchy;
     private Entity entity1;
@@ -29,7 +27,6 @@ class AspectMapHierarchyImplTest
     {
         catalog = new CatalogImpl();
         String uniqueName = "test" + System.nanoTime();
-        hierarchyDef = new HierarchyDefImpl(uniqueName, HierarchyType.ASPECT_MAP);
         aspectDef = new MutableAspectDefImpl(uniqueName);
         hierarchy = new AspectMapHierarchyImpl(catalog, aspectDef);
 

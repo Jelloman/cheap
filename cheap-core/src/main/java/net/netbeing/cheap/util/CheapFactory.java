@@ -42,7 +42,9 @@ import java.util.UUID;
  */
 public class CheapFactory
 {
-    /** The default LocalEntity type to create when not explicitly specified. */
+    /**
+     * The default LocalEntity type to create when not explicitly specified.
+     */
     private final LocalEntityType defaultLocalEntityType;
     private final Class<? extends AspectBuilder> aspectBuilderClass;
     private final Map<String, AspectDef> aspectDefs = new HashMap<>();
@@ -67,11 +69,12 @@ public class CheapFactory
      * and AspectObjectMapBuilder.class.
      *
      * @param defaultLocalEntityType the default type of LocalEntity to create
-     * @param aspectBuilderClass the default aspectBuilderClass
+     * @param aspectBuilderClass     the default aspectBuilderClass
      */
     public CheapFactory(LocalEntityType defaultLocalEntityType, Class<? extends AspectBuilder> aspectBuilderClass)
     {
-        this.defaultLocalEntityType = defaultLocalEntityType != null ? defaultLocalEntityType : LocalEntityType.SINGLE_CATALOG;
+        this.defaultLocalEntityType = defaultLocalEntityType != null ? defaultLocalEntityType :
+            LocalEntityType.SINGLE_CATALOG;
         this.aspectBuilderClass = aspectBuilderClass != null ? aspectBuilderClass : AspectObjectMapBuilder.class;
     }
 
@@ -114,9 +117,11 @@ public class CheapFactory
     public AspectBuilder createAspectBuilder()
     {
         try {
-            return aspectBuilderClass.getDeclaredConstructor().newInstance();
+            return aspectBuilderClass
+                .getDeclaredConstructor()
+                .newInstance();
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new IllegalStateException("Aspect builder class " + aspectBuilderClass.getSimpleName() + " has no " + "default constructor.", e);
         }
     }
 
@@ -216,7 +221,7 @@ public class CheapFactory
     /**
      * Creates a new non-strict catalog with the specified species and upstream.
      *
-     * @param species the catalog species
+     * @param species  the catalog species
      * @param upstream the upstream catalog, or null for SOURCE/SINK catalogs
      * @return a new Catalog instance
      */
@@ -229,12 +234,11 @@ public class CheapFactory
      * Creates a new catalog with full configuration.
      *
      * @param globalId the global identifier for the catalog
-     * @param species the catalog species
+     * @param species  the catalog species
      * @param upstream the upstream catalog, or null for SOURCE/SINK catalogs
      * @return a new Catalog instance
      */
-    public @NotNull Catalog createCatalog(@NotNull UUID globalId, @NotNull CatalogSpecies species,
-                                          UUID upstream)
+    public @NotNull Catalog createCatalog(@NotNull UUID globalId, @NotNull CatalogSpecies species, UUID upstream)
     {
         return new CatalogImpl(globalId, species, upstream, 0L);
     }
@@ -243,13 +247,13 @@ public class CheapFactory
      * Creates a new catalog with full configuration including version.
      *
      * @param globalId the global identifier for the catalog
-     * @param species the catalog species
+     * @param species  the catalog species
      * @param upstream the upstream catalog, or null for SOURCE/SINK catalogs
-     * @param version the version number of this catalog
+     * @param version  the version number of this catalog
      * @return a new Catalog instance
      */
-    public @NotNull Catalog createCatalog(@NotNull UUID globalId, @NotNull CatalogSpecies species,
-                                          URI uri, UUID upstream, long version)
+    public @NotNull Catalog createCatalog(@NotNull UUID globalId, @NotNull CatalogSpecies species, URI uri,
+                                          UUID upstream, long version)
     {
         CatalogImpl cat = new CatalogImpl(globalId, species, upstream, version);
         cat.uri(uri);
@@ -281,11 +285,10 @@ public class CheapFactory
      * Creates a new catalog definition with specified hierarchies and aspect definitions.
      *
      * @param hierarchyDefs the hierarchy definitions to include
-     * @param aspectDefs the aspect definitions to include
+     * @param aspectDefs    the aspect definitions to include
      * @return a new CatalogDef instance
      */
-    public @NotNull CatalogDef createCatalogDef(Iterable<HierarchyDef> hierarchyDefs, 
-                                                Iterable<AspectDef> aspectDefs)
+    public @NotNull CatalogDef createCatalogDef(Iterable<HierarchyDef> hierarchyDefs, Iterable<AspectDef> aspectDefs)
     {
         return new CatalogDefImpl(hierarchyDefs, aspectDefs);
     }
@@ -310,7 +313,7 @@ public class CheapFactory
     public @NotNull Entity createAndRegisterEntity()
     {
         Entity e = new EntityImpl();
-        entities.put(e.globalId(),e);
+        entities.put(e.globalId(), e);
         return e;
     }
 
@@ -339,7 +342,7 @@ public class CheapFactory
             return e;
         }
         e = new EntityImpl(globalId);
-        entities.put(e.globalId(),e);
+        entities.put(e.globalId(), e);
         return e;
     }
 
@@ -368,7 +371,7 @@ public class CheapFactory
      * Creates a new local entity associated with a catalog with optional UUID using the configured LocalEntityType.
      *
      * @param globalId the UUID for the entity, or null for random UUID
-     * @param catalog the catalog this entity belongs to
+     * @param catalog  the catalog this entity belongs to
      * @return a new LocalEntity instance of the configured type
      */
     public @NotNull LocalEntity createLocalEntity(UUID globalId, @NotNull Catalog catalog)
@@ -379,7 +382,7 @@ public class CheapFactory
     /**
      * Creates a new local entity of the specified type associated with a catalog.
      *
-     * @param type the type of LocalEntity to create
+     * @param type    the type of LocalEntity to create
      * @param catalog the catalog this entity belongs to
      * @return a new LocalEntity instance
      */
@@ -391,26 +394,27 @@ public class CheapFactory
     /**
      * Creates a new local entity of the specified type associated with a catalog with optional UUID.
      *
-     * @param type the type of LocalEntity to create
+     * @param type     the type of LocalEntity to create
      * @param globalId the UUID for the entity, or null for random UUID
-     * @param catalog the catalog this entity belongs to
+     * @param catalog  the catalog this entity belongs to
      * @return a new LocalEntity instance
      */
-    public @NotNull LocalEntity createLocalEntity(@NotNull LocalEntityType type, UUID globalId, @NotNull Catalog catalog)
+    public @NotNull LocalEntity createLocalEntity(@NotNull LocalEntityType type, UUID globalId,
+                                                  @NotNull Catalog catalog)
     {
         return switch (type) {
-            case SINGLE_CATALOG -> globalId != null 
-                ? new LocalEntityOneCatalogImpl(globalId, catalog)
-                : new LocalEntityOneCatalogImpl(catalog);
-            case MULTI_CATALOG -> globalId != null
-                ? new LocalEntityMultiCatalogImpl(globalId, catalog)
-                : new LocalEntityMultiCatalogImpl(catalog);
-            case CACHING_SINGLE_CATALOG -> globalId != null
-                ? new CachingEntityOneCatalogImpl(globalId, catalog)
-                : new CachingEntityOneCatalogImpl(catalog);
-            case CACHING_MULTI_CATALOG -> globalId != null
-                ? new CachingEntityMultiCatalogImpl(globalId, catalog)
-                : new CachingEntityMultiCatalogImpl(catalog);
+            case SINGLE_CATALOG ->
+                globalId != null ? new LocalEntityOneCatalogImpl(globalId, catalog) :
+                    new LocalEntityOneCatalogImpl(catalog);
+            case MULTI_CATALOG ->
+                globalId != null ? new LocalEntityMultiCatalogImpl(globalId, catalog) :
+                    new LocalEntityMultiCatalogImpl(catalog);
+            case CACHING_SINGLE_CATALOG ->
+                globalId != null ? new CachingEntityOneCatalogImpl(globalId, catalog) :
+                    new CachingEntityOneCatalogImpl(catalog);
+            case CACHING_MULTI_CATALOG ->
+                globalId != null ? new CachingEntityMultiCatalogImpl(globalId, catalog) :
+                    new CachingEntityMultiCatalogImpl(catalog);
         };
     }
 
@@ -418,7 +422,7 @@ public class CheapFactory
      * Creates a new single-catalog local entity with specified global ID.
      *
      * @param globalId the UUID for the entity
-     * @param catalog the catalog this entity belongs to
+     * @param catalog  the catalog this entity belongs to
      * @return a new LocalEntity instance (single-catalog type)
      */
     public @NotNull LocalEntity createSingleCatalogEntity(@NotNull UUID globalId, @NotNull Catalog catalog)
@@ -452,7 +456,7 @@ public class CheapFactory
      * Creates a new local entity that can belong to multiple catalogs with specified global ID.
      *
      * @param globalId the UUID for the entity
-     * @param catalog the initial catalog this entity belongs to
+     * @param catalog  the initial catalog this entity belongs to
      * @return a new LocalEntity instance
      */
     public @NotNull LocalEntity createMultiCatalogEntity(@NotNull UUID globalId, @NotNull Catalog catalog)
@@ -475,7 +479,7 @@ public class CheapFactory
      * Creates a new caching local entity associated with a catalog with specified global ID.
      *
      * @param globalId the UUID for the entity
-     * @param catalog the catalog this entity belongs to
+     * @param catalog  the catalog this entity belongs to
      * @return a new LocalEntity instance with caching
      */
     public @NotNull LocalEntity createCachingEntity(@NotNull UUID globalId, @NotNull Catalog catalog)
@@ -498,7 +502,7 @@ public class CheapFactory
      * Creates a new caching local entity that can belong to multiple catalogs with specified global ID.
      *
      * @param globalId the UUID for the entity
-     * @param catalog the initial catalog this entity belongs to
+     * @param catalog  the initial catalog this entity belongs to
      * @return a new LocalEntity instance with caching
      */
     public @NotNull LocalEntity createCachingMultiCatalogEntity(@NotNull UUID globalId, @NotNull Catalog catalog)
@@ -535,10 +539,11 @@ public class CheapFactory
      * Creates a new entity directory hierarchy.
      *
      * @param catalog the owning catalog
-     * @param name the name of this hierarchy in the catalog
+     * @param name    the name of this hierarchy in the catalog
      * @return a new EntityDirectoryHierarchy instance
      */
-    public @NotNull EntityDirectoryHierarchy createEntityDirectoryHierarchy(@NotNull Catalog catalog, @NotNull String name)
+    public @NotNull EntityDirectoryHierarchy createEntityDirectoryHierarchy(@NotNull Catalog catalog,
+                                                                            @NotNull String name)
     {
         return new EntityDirectoryHierarchyImpl(catalog, name);
     }
@@ -547,11 +552,12 @@ public class CheapFactory
      * Creates a new entity directory hierarchy with version.
      *
      * @param catalog the owning catalog
-     * @param name the name of this hierarchy in the catalog
+     * @param name    the name of this hierarchy in the catalog
      * @param version the version number of this hierarchy
      * @return a new EntityDirectoryHierarchy instance
      */
-    public @NotNull EntityDirectoryHierarchy createEntityDirectoryHierarchy(@NotNull Catalog catalog, @NotNull String name, long version)
+    public @NotNull EntityDirectoryHierarchy createEntityDirectoryHierarchy(@NotNull Catalog catalog,
+                                                                            @NotNull String name, long version)
     {
         return new EntityDirectoryHierarchyImpl(catalog, name, version);
     }
@@ -582,11 +588,12 @@ public class CheapFactory
      * Creates a new entity list hierarchy with version.
      *
      * @param catalog the owning catalog
-     * @param name the name of this hierarchy in the catalog
+     * @param name    the name of this hierarchy in the catalog
      * @param version the version number of this hierarchy
      * @return a new EntityListHierarchy instance
      */
-    public @NotNull EntityListHierarchy createEntityListHierarchy(@NotNull Catalog catalog, @NotNull String name, long version)
+    public @NotNull EntityListHierarchy createEntityListHierarchy(@NotNull Catalog catalog, @NotNull String name,
+                                                                  long version)
     {
         return new EntityListHierarchyImpl(catalog, name, version);
     }
@@ -594,13 +601,14 @@ public class CheapFactory
     /**
      * Creates a new entity list hierarchy with initial capacity and version.
      *
-     * @param catalog the owning catalog
-     * @param name the name of this hierarchy in the catalog
+     * @param catalog         the owning catalog
+     * @param name            the name of this hierarchy in the catalog
      * @param initialCapacity the initial capacity for the list
-     * @param version the version number of this hierarchy
+     * @param version         the version number of this hierarchy
      * @return a new EntityListHierarchy instance
      */
-    public @NotNull EntityListHierarchy createEntityListHierarchy(@NotNull Catalog catalog, @NotNull String name, int initialCapacity, long version)
+    public @NotNull EntityListHierarchy createEntityListHierarchy(@NotNull Catalog catalog, @NotNull String name,
+                                                                  int initialCapacity, long version)
     {
         return new EntityListHierarchyImpl(catalog, name, initialCapacity, version);
     }
@@ -631,11 +639,12 @@ public class CheapFactory
      * Creates a new entity set hierarchy with version.
      *
      * @param catalog the owning catalog
-     * @param name the name of this hierarchy in the catalog
+     * @param name    the name of this hierarchy in the catalog
      * @param version the version number of this hierarchy
      * @return a new EntitySetHierarchy instance
      */
-    public @NotNull EntitySetHierarchy createEntitySetHierarchy(@NotNull Catalog catalog, @NotNull String name, long version)
+    public @NotNull EntitySetHierarchy createEntitySetHierarchy(@NotNull Catalog catalog, @NotNull String name,
+                                                                long version)
     {
         return new EntitySetHierarchyImpl(catalog, name, version);
     }
@@ -643,13 +652,14 @@ public class CheapFactory
     /**
      * Creates a new entity set hierarchy with initial capacity and version.
      *
-     * @param catalog the owning catalog
-     * @param name the name of this hierarchy in the catalog
+     * @param catalog         the owning catalog
+     * @param name            the name of this hierarchy in the catalog
      * @param initialCapacity the initial capacity for the set
-     * @param version the version number of this hierarchy
+     * @param version         the version number of this hierarchy
      * @return a new EntitySetHierarchy instance
      */
-    public @NotNull EntitySetHierarchy createEntitySetHierarchy(@NotNull Catalog catalog, @NotNull String name, int initialCapacity, long version)
+    public @NotNull EntitySetHierarchy createEntitySetHierarchy(@NotNull Catalog catalog, @NotNull String name,
+                                                                int initialCapacity, long version)
     {
         return new EntitySetHierarchyImpl(catalog, name, initialCapacity, version);
     }
@@ -657,7 +667,7 @@ public class CheapFactory
     /**
      * Creates a new entity tree hierarchy.
      *
-     * @param name the name of this hierarchy in the catalog
+     * @param name       the name of this hierarchy in the catalog
      * @param rootEntity the entity to use as the root of the tree
      * @return a new EntityTreeHierarchy instance
      */
@@ -669,7 +679,7 @@ public class CheapFactory
     /**
      * Creates a new entity tree hierarchy.
      *
-     * @param name the name of this hierarchy in the catalog
+     * @param name       the name of this hierarchy in the catalog
      * @param rootEntity the entity to use as the root of the tree
      * @return a new EntityTreeHierarchy instance
      */
@@ -682,7 +692,7 @@ public class CheapFactory
     /**
      * Creates a new entity tree hierarchy.
      *
-     * @param name the name of this hierarchy in the catalog
+     * @param name     the name of this hierarchy in the catalog
      * @param rootNode the node to use as the root of the tree
      * @return a new EntityTreeHierarchy instance
      */
@@ -695,7 +705,7 @@ public class CheapFactory
     /**
      * Creates a new entity tree hierarchy.
      *
-     * @param name the name of this hierarchy in the catalog
+     * @param name     the name of this hierarchy in the catalog
      * @param rootNode the node to use as the root of the tree
      * @return a new EntityTreeHierarchy instance
      */
@@ -708,14 +718,15 @@ public class CheapFactory
     /**
      * Creates a new entity tree hierarchy with version.
      *
-     * @param catalog the owning catalog
-     * @param name the name of this hierarchy in the catalog
+     * @param catalog  the owning catalog
+     * @param name     the name of this hierarchy in the catalog
      * @param rootNode the node to use as the root of the tree
-     * @param version the version number of this hierarchy
+     * @param version  the version number of this hierarchy
      * @return a new EntityTreeHierarchy instance
      */
     public @NotNull EntityTreeHierarchy createEntityTreeHierarchy(@NotNull Catalog catalog, @NotNull String name,
-                                                                  @NotNull EntityTreeHierarchy.Node rootNode, long version)
+                                                                  @NotNull EntityTreeHierarchy.Node rootNode,
+                                                                  long version)
     {
         return new EntityTreeHierarchyImpl(catalog, name, rootNode, version);
     }
@@ -745,7 +756,7 @@ public class CheapFactory
     /**
      * Creates a new aspect map hierarchy with custom hierarchy definition.
      *
-     * @param name the name of this hierarchy in the catalog
+     * @param name      the name of this hierarchy in the catalog
      * @param aspectDef the aspect definition for aspects in this hierarchy
      * @return a new AspectMapHierarchy instance
      */
@@ -757,12 +768,13 @@ public class CheapFactory
     /**
      * Creates a new aspect map hierarchy with version.
      *
-     * @param catalog the owning catalog
+     * @param catalog   the owning catalog
      * @param aspectDef the aspect definition for aspects in this hierarchy
-     * @param version the version number of this hierarchy
+     * @param version   the version number of this hierarchy
      * @return a new AspectMapHierarchy instance
      */
-    public @NotNull AspectMapHierarchy createAspectMapHierarchy(@NotNull Catalog catalog, @NotNull AspectDef aspectDef, long version)
+    public @NotNull AspectMapHierarchy createAspectMapHierarchy(@NotNull Catalog catalog,
+                                                                @NotNull AspectDef aspectDef, long version)
     {
         return new AspectMapHierarchyImpl(catalog, aspectDef, version);
     }
@@ -783,7 +795,7 @@ public class CheapFactory
     /**
      * Creates a new mutable aspect definition with property definitions.
      *
-     * @param name the name of this aspect definition
+     * @param name         the name of this aspect definition
      * @param propertyDefs the map of property names to property definitions
      * @return a new mutable AspectDef instance
      */
@@ -796,8 +808,8 @@ public class CheapFactory
     /**
      * Creates a new mutable aspect definition with property definitions.
      *
-     * @param name the name of this aspect definition
-     * @param aspectDefId the global ID of this aspect definition
+     * @param name         the name of this aspect definition
+     * @param aspectDefId  the global ID of this aspect definition
      * @param propertyDefs the map of property names to property definitions
      * @return a new mutable AspectDef instance
      */
@@ -810,12 +822,12 @@ public class CheapFactory
     /**
      * Creates a new immutable aspect definition.
      *
-     * @param name the name of this aspect definition
+     * @param name         the name of this aspect definition
      * @param propertyDefs the map of property names to property definitions
      * @return a new immutable AspectDef instance
      */
-    public @NotNull AspectDef createImmutableAspectDef(@NotNull String name,
-                                                       @NotNull Map<String, ? extends PropertyDef> propertyDefs)
+    public @NotNull AspectDef createImmutableAspectDef(@NotNull String name, @NotNull Map<String, ?
+        extends PropertyDef> propertyDefs)
     {
         return new ImmutableAspectDefImpl(name, propertyDefs);
     }
@@ -823,8 +835,8 @@ public class CheapFactory
     /**
      * Creates a new mutable aspect definition with property definitions.
      *
-     * @param name the name of this aspect definition
-     * @param aspectDefId the global ID of this aspect definition
+     * @param name         the name of this aspect definition
+     * @param aspectDefId  the global ID of this aspect definition
      * @param propertyDefs the map of property names to property definitions
      * @return a new mutable AspectDef instance
      */
@@ -837,25 +849,22 @@ public class CheapFactory
     /**
      * Creates a new full aspect definition with explicit control over all boolean flags.
      *
-     * @param name the name of this aspect definition
-     * @param globalId the global ID for this aspect definition
-     * @param propertyDefs the map of property names to property definitions
-     * @param isReadable whether this aspect definition is readable
-     * @param isWritable whether this aspect definition is writable
-     * @param canAddProperties whether properties can be added
+     * @param name                the name of this aspect definition
+     * @param globalId            the global ID for this aspect definition
+     * @param propertyDefs        the map of property names to property definitions
+     * @param isReadable          whether this aspect definition is readable
+     * @param isWritable          whether this aspect definition is writable
+     * @param canAddProperties    whether properties can be added
      * @param canRemoveProperties whether properties can be removed
      * @return a new full AspectDef instance
      */
-    public @NotNull MutableAspectDef createFullAspectDef(@NotNull String name,
-                                                          @NotNull UUID globalId,
-                                                          @NotNull Map<String, PropertyDef> propertyDefs,
-                                                          boolean isReadable,
-                                                          boolean isWritable,
-                                                          boolean canAddProperties,
-                                                          boolean canRemoveProperties)
+    public @NotNull MutableAspectDef createFullAspectDef(@NotNull String name, @NotNull UUID globalId,
+                                                         @NotNull Map<String, PropertyDef> propertyDefs,
+                                                         boolean isReadable, boolean isWritable,
+                                                         boolean canAddProperties, boolean canRemoveProperties)
     {
-        return new FullAspectDefImpl(name, globalId, propertyDefs, isReadable, isWritable,
-            canAddProperties, canRemoveProperties);
+        return new FullAspectDefImpl(name, globalId, propertyDefs, isReadable, isWritable, canAddProperties,
+            canRemoveProperties);
     }
 
     // ===== Property Factory Methods =====
@@ -863,25 +872,24 @@ public class CheapFactory
     /**
      * Creates a new property definition.
      *
-     * @param name the name of the property
-     * @param type the data type of the property
-     * @param defaultValue the default value for the property
+     * @param name            the name of the property
+     * @param type            the data type of the property
+     * @param defaultValue    the default value for the property
      * @param hasDefaultValue whether the property has a default value
-     * @param isReadable whether the property can be read
-     * @param isWritable whether the property can be written
-     * @param isNullable whether the property accepts null values
-     * @param isRemovable whether the property can be removed
-     * @param isMultivalued whether the property can hold multiple values
+     * @param isReadable      whether the property can be read
+     * @param isWritable      whether the property can be written
+     * @param isNullable      whether the property accepts null values
+     * @param isRemovable     whether the property can be removed
+     * @param isMultivalued   whether the property can hold multiple values
      * @return a new PropertyDef instance
      */
     public @NotNull PropertyDef createPropertyDef(@NotNull String name, @NotNull PropertyType type,
-                                                        Object defaultValue, boolean hasDefaultValue,
-                                                        boolean isReadable, boolean isWritable,
-                                                        boolean isNullable, boolean isRemovable,
-                                                        boolean isMultivalued)
+                                                  Object defaultValue, boolean hasDefaultValue, boolean isReadable,
+                                                  boolean isWritable, boolean isNullable, boolean isRemovable,
+                                                  boolean isMultivalued)
     {
-        return new PropertyDefImpl(name, type, defaultValue, hasDefaultValue, isReadable, isWritable, 
-                                  isNullable, isRemovable, isMultivalued);
+        return new PropertyDefImpl(name, type, defaultValue, hasDefaultValue, isReadable, isWritable, isNullable,
+            isRemovable, isMultivalued);
     }
 
     /**
@@ -893,35 +901,45 @@ public class CheapFactory
      */
     public @NotNull PropertyDef createPropertyDef(@NotNull String name, @NotNull PropertyType type)
     {
-        return new PropertyDefBuilder().setName(name).setType(type).build();
+        return new PropertyDefBuilder()
+            .setName(name)
+            .setType(type)
+            .build();
     }
 
     /**
      * Creates a new property definition with specified accessibility.
      *
-     * @param name the name of the property
-     * @param type the data type of the property
-     * @param isReadable whether the property can be read
-     * @param isWritable whether the property can be written
-     * @param isNullable whether the property accepts null values
-     * @param isRemovable whether the property can be removed
+     * @param name          the name of the property
+     * @param type          the data type of the property
+     * @param isReadable    whether the property can be read
+     * @param isWritable    whether the property can be written
+     * @param isNullable    whether the property accepts null values
+     * @param isRemovable   whether the property can be removed
      * @param isMultivalued whether the property can hold multiple values
      * @return a new PropertyDef instance
      */
     public @NotNull PropertyDef createPropertyDef(@NotNull String name, @NotNull PropertyType type,
-                                                        boolean isReadable, boolean isWritable,
-                                                        boolean isNullable, boolean isRemovable,
-                                                        boolean isMultivalued)
+                                                  boolean isReadable, boolean isWritable, boolean isNullable,
+                                                  boolean isRemovable, boolean isMultivalued)
     {
-        return new PropertyDefBuilder().setName(name).setType(type).setIsReadable(isReadable).setIsWritable(isWritable).setIsNullable(isNullable).setIsRemovable(isRemovable).setIsMultivalued(isMultivalued).build();
+        return new PropertyDefBuilder()
+            .setName(name)
+            .setType(type)
+            .setIsReadable(isReadable)
+            .setIsWritable(isWritable)
+            .setIsNullable(isNullable)
+            .setIsRemovable(isRemovable)
+            .setIsMultivalued(isMultivalued)
+            .build();
     }
 
     /**
      * Creates a new read-only property definition.
      *
-     * @param name the name of the property
-     * @param type the data type of the property
-     * @param isNullable whether the property accepts null values
+     * @param name        the name of the property
+     * @param type        the data type of the property
+     * @param isNullable  whether the property accepts null values
      * @param isRemovable whether the property can be removed
      * @return a new read-only PropertyDef instance
      */
@@ -942,7 +960,7 @@ public class CheapFactory
      * Creates a new property with the specified value.
      * The value will be coerced to the type specified in the PropertyDef if necessary.
      *
-     * @param def the property definition for this property
+     * @param def   the property definition for this property
      * @param value the value to store in this property
      * @return a new Property instance
      * @throws IllegalArgumentException if the value cannot be coerced to the required type
@@ -970,7 +988,7 @@ public class CheapFactory
     /**
      * Creates a new non-leaf EntityTreeHierarchy.Node with the specified parent.
      *
-     * @param value the entity value to store at this node
+     * @param value  the entity value to store at this node
      * @param parent the parent node
      * @return a new non-leaf Node instance
      */
@@ -993,7 +1011,7 @@ public class CheapFactory
     /**
      * Creates a new leaf EntityTreeHierarchy.Node with the specified parent.
      *
-     * @param value the entity value to store at this leaf node
+     * @param value  the entity value to store at this leaf node
      * @param parent the parent node
      * @return a new leaf Node instance
      */
@@ -1008,7 +1026,7 @@ public class CheapFactory
      * Creates a new aspect with object-based property storage.
      *
      * @param entity the entity this aspect is attached to
-     * @param def the aspect definition describing this aspect's structure
+     * @param def    the aspect definition describing this aspect's structure
      * @return a new Aspect instance
      */
     public @NotNull Aspect createObjectMapAspect(Entity entity, @NotNull AspectDef def)
@@ -1019,8 +1037,8 @@ public class CheapFactory
     /**
      * Creates a new aspect with object-based property storage and performance tuning.
      *
-     * @param entity the entity this aspect is attached to
-     * @param def the aspect definition describing this aspect's structure
+     * @param entity          the entity this aspect is attached to
+     * @param def             the aspect definition describing this aspect's structure
      * @param initialCapacity the initial capacity for the internal map
      * @return a new Aspect instance
      */
@@ -1032,14 +1050,14 @@ public class CheapFactory
     /**
      * Creates a new aspect with object-based property storage and full performance tuning.
      *
-     * @param entity the entity this aspect is attached to
-     * @param def the aspect definition describing this aspect's structure
+     * @param entity          the entity this aspect is attached to
+     * @param def             the aspect definition describing this aspect's structure
      * @param initialCapacity the initial capacity for the internal map
-     * @param loadFactor the load factor for the internal map
+     * @param loadFactor      the load factor for the internal map
      * @return a new Aspect instance
      */
-    public @NotNull Aspect createObjectMapAspect(Entity entity, @NotNull AspectDef def, 
-                                                       int initialCapacity, float loadFactor)
+    public @NotNull Aspect createObjectMapAspect(Entity entity, @NotNull AspectDef def, int initialCapacity,
+                                                 float loadFactor)
     {
         return new AspectObjectMapImpl(entity, def, initialCapacity, loadFactor);
     }
@@ -1048,7 +1066,7 @@ public class CheapFactory
      * Creates a new aspect with Property-based storage.
      *
      * @param entity the entity this aspect is attached to
-     * @param def the aspect definition describing this aspect's structure
+     * @param def    the aspect definition describing this aspect's structure
      * @return a new Aspect instance
      */
     public @NotNull Aspect createPropertyMapAspect(Entity entity, @NotNull AspectDef def)
@@ -1059,8 +1077,8 @@ public class CheapFactory
     /**
      * Creates a new aspect with Property-based storage and performance tuning.
      *
-     * @param entity the entity this aspect is attached to
-     * @param def the aspect definition describing this aspect's structure
+     * @param entity          the entity this aspect is attached to
+     * @param def             the aspect definition describing this aspect's structure
      * @param initialCapacity the initial capacity for the internal map
      * @return a new Aspect instance
      */
@@ -1072,14 +1090,14 @@ public class CheapFactory
     /**
      * Creates a new aspect with Property-based storage and full performance tuning.
      *
-     * @param entity the entity this aspect is attached to
-     * @param def the aspect definition describing this aspect's structure
+     * @param entity          the entity this aspect is attached to
+     * @param def             the aspect definition describing this aspect's structure
      * @param initialCapacity the initial capacity for the internal map
-     * @param loadFactor the load factor for the internal map
+     * @param loadFactor      the load factor for the internal map
      * @return a new Aspect instance
      */
-    public @NotNull Aspect createPropertyMapAspect(Entity entity, @NotNull AspectDef def, 
-                                                         int initialCapacity, float loadFactor)
+    public @NotNull Aspect createPropertyMapAspect(Entity entity, @NotNull AspectDef def, int initialCapacity,
+                                                   float loadFactor)
     {
         return new AspectPropertyMapImpl(entity, def, initialCapacity, loadFactor);
     }

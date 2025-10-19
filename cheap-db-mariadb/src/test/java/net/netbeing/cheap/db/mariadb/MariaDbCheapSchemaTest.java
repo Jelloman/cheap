@@ -32,7 +32,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class MariaDbCheapSchemaTest
 {
     static final String DB_NAME = "cheap";
-    volatile static MariaDbTestDb db;
+    static volatile MariaDbTestDb db;
 
     @BeforeAll
     static void setUp() throws Exception

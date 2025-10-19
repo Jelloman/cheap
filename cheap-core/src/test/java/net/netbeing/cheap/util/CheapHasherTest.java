@@ -1,12 +1,12 @@
 package net.netbeing.cheap.util;
 
-import com.google.common.collect.ImmutableList;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.net.URI;
 import java.time.ZonedDateTime;
+import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -15,7 +15,6 @@ import static org.junit.jupiter.api.Assertions.*;
  * Unit tests for the CheapHasher class.
  * Tests FNV-1a hash computation for all PropertyType javaClass types.
  */
-@SuppressWarnings("NullableProblems")
 class CheapHasherTest
 {
     @Test
@@ -45,9 +44,9 @@ class CheapHasherTest
     void testHashLong()
     {
         // Test static hash method
-        Long long1 = 12345L;
-        Long long2 = 12345L;
-        Long long3 = 67890L;
+        long long1 = 12345L;
+        long long2 = 12345L;
+        long long3 = 67890L;
 
         long hash1 = CheapHasher.hash(long1);
         long hash2 = CheapHasher.hash(long2);
@@ -555,9 +554,9 @@ class CheapHasherTest
     void testDifferentValuesSameType()
     {
         // Ensure different values of the same type produce different hashes
-        ImmutableList<String> strings = ImmutableList.of("a", "b", "c", "abc", "xyz", "test", "hello", "world");
-        ImmutableList<Long> longs = ImmutableList.of(0L, 1L, 2L, 100L, 1000L, -1L, -100L, Long.MAX_VALUE, Long.MIN_VALUE);
-        ImmutableList<Double> doubles = ImmutableList.of(0.0, 1.0, -1.0, 3.14, 2.71, Double.MAX_VALUE, Double.MIN_VALUE);
+        List<String> strings = List.of("a", "b", "c", "abc", "xyz", "test", "hello", "world");
+        List<Long> longs = List.of(0L, 1L, 2L, 100L, 1000L, -1L, -100L, Long.MAX_VALUE, Long.MIN_VALUE);
+        List<Double> doubles = List.of(0.0, 1.0, -1.0, 3.14, 2.71, Double.MAX_VALUE, Double.MIN_VALUE);
 
         // Test strings
         for (int i = 0; i < strings.size(); i++) {
@@ -593,6 +592,7 @@ class CheapHasherTest
         }
     }
 
+    @SuppressWarnings("UnnecessaryUnicodeEscape")
     @Test
     void testUTF8Encoding()
     {

@@ -26,7 +26,7 @@ import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class CheapFileUtilTest
+class CheapFileUtilTest
 {
     private Path testRoot;
     private Path subdir;
@@ -57,8 +57,6 @@ public class CheapFileUtilTest
     {
         Map<Path, FileRec> files = CheapFileUtil.walkAll(testRoot, 10);
 
-        //files.values().forEach(System.out::println);
-
         assertEquals(5, files.size());
 
         assertEquals("hierarchyTestDir", files.get(testRoot).name());
@@ -80,7 +78,7 @@ public class CheapFileUtilTest
     @Test
     void fileRecConstant_CorrectValue()
     {
-        assertEquals(FileRec.class.getCanonicalName(), CheapFileUtil.FILE_REC_ASPECT_NAME);
+        assertEquals(CheapFileUtil.FILE_REC_ASPECT_NAME, FileRec.class.getCanonicalName());
     }
 
     @Test

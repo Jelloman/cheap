@@ -2,7 +2,6 @@ package net.netbeing.cheap.impl.basic;
 
 import net.netbeing.cheap.model.Catalog;
 import net.netbeing.cheap.model.Entity;
-import net.netbeing.cheap.model.HierarchyDef;
 import net.netbeing.cheap.model.HierarchyType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -16,7 +15,6 @@ import static org.junit.jupiter.api.Assertions.*;
 class EntityDirectoryHierarchyImplTest
 {
     private Catalog catalog;
-    private HierarchyDef hierarchyDef;
     private EntityDirectoryHierarchyImpl entityDirectory;
     private Entity entity1;
     private Entity entity2;
@@ -26,9 +24,8 @@ class EntityDirectoryHierarchyImplTest
     void setUp()
     {
         catalog = new CatalogImpl();
-        hierarchyDef = new HierarchyDefImpl("testEntityDirectory", HierarchyType.ENTITY_DIR);
         entityDirectory = new EntityDirectoryHierarchyImpl(catalog, "testEntityDirectory");
-        
+
         entity1 = new EntityImpl();
         entity2 = new EntityImpl();
         entity3 = new EntityImpl();
@@ -56,7 +53,7 @@ class EntityDirectoryHierarchyImplTest
     void put_NewEntry_AddsEntity()
     {
         Entity result = entityDirectory.put("entity1", entity1);
-        
+
         assertNull(result);
         assertEquals(1, entityDirectory.size());
         assertSame(entity1, entityDirectory.get("entity1"));
@@ -68,9 +65,9 @@ class EntityDirectoryHierarchyImplTest
     void put_ExistingKey_ReplacesEntity()
     {
         entityDirectory.put("entity1", entity1);
-        
+
         Entity result = entityDirectory.put("entity1", entity2);
-        
+
         assertSame(entity1, result);
         assertEquals(1, entityDirectory.size());
         assertSame(entity2, entityDirectory.get("entity1"));
@@ -84,7 +81,7 @@ class EntityDirectoryHierarchyImplTest
         entityDirectory.put("entity1", entity1);
         entityDirectory.put("entity2", entity2);
         entityDirectory.put("entity3", entity3);
-        
+
         assertEquals(3, entityDirectory.size());
         assertSame(entity1, entityDirectory.get("entity1"));
         assertSame(entity2, entityDirectory.get("entity2"));
@@ -95,7 +92,7 @@ class EntityDirectoryHierarchyImplTest
     void put_EmptyStringKey_AcceptsEmptyString()
     {
         Entity result = entityDirectory.put("", entity1);
-        
+
         assertNull(result);
         assertEquals(1, entityDirectory.size());
         assertSame(entity1, entityDirectory.get(""));
@@ -107,7 +104,7 @@ class EntityDirectoryHierarchyImplTest
     {
         String whitespaceKey = "  \t\n  ";
         Entity result = entityDirectory.put(whitespaceKey, entity1);
-        
+
         assertNull(result);
         assertEquals(1, entityDirectory.size());
         assertSame(entity1, entityDirectory.get(whitespaceKey));
@@ -118,7 +115,7 @@ class EntityDirectoryHierarchyImplTest
     void get_ExistingKey_ReturnsEntity()
     {
         entityDirectory.put("entity1", entity1);
-        
+
         assertSame(entity1, entityDirectory.get("entity1"));
     }
 
@@ -126,9 +123,9 @@ class EntityDirectoryHierarchyImplTest
     void remove_ExistingKey_RemovesEntity()
     {
         entityDirectory.put("entity1", entity1);
-        
+
         Entity result = entityDirectory.remove("entity1");
-        
+
         assertSame(entity1, result);
         assertEquals(0, entityDirectory.size());
     }
@@ -137,7 +134,7 @@ class EntityDirectoryHierarchyImplTest
     void remove_NonExistentKey_ReturnsNull()
     {
         Entity result = entityDirectory.remove("nonexistent");
-        
+
         assertNull(result);
         assertEquals(0, entityDirectory.size());
     }
@@ -146,7 +143,7 @@ class EntityDirectoryHierarchyImplTest
     void containsKey_ExistingKey_ReturnsTrue()
     {
         entityDirectory.put("entity1", entity1);
-        
+
         assertTrue(entityDirectory.containsKey("entity1"));
     }
 
@@ -162,7 +159,7 @@ class EntityDirectoryHierarchyImplTest
     void containsKey_CaseSensitive_DistinguishesCases()
     {
         entityDirectory.put("Entity1", entity1);
-        
+
         assertTrue(entityDirectory.containsKey("Entity1"));
         assertFalse(entityDirectory.containsKey("entity1"));
         assertFalse(entityDirectory.containsKey("ENTITY1"));
@@ -173,9 +170,9 @@ class EntityDirectoryHierarchyImplTest
     {
         entityDirectory.put("entity1", entity1);
         entityDirectory.put("entity2", entity2);
-        
+
         Set<String> keys = entityDirectory.keySet();
-        
+
         assertEquals(2, keys.size());
         assertTrue(keys.contains("entity1"));
         assertTrue(keys.contains("entity2"));
@@ -186,9 +183,9 @@ class EntityDirectoryHierarchyImplTest
     {
         entityDirectory.put("entity1", entity1);
         entityDirectory.put("entity2", entity2);
-        
+
         Collection<Entity> values = entityDirectory.values();
-        
+
         assertEquals(2, values.size());
         assertTrue(values.contains(entity1));
         assertTrue(values.contains(entity2));
@@ -199,38 +196,40 @@ class EntityDirectoryHierarchyImplTest
     {
         entityDirectory.put("entity1", entity1);
         entityDirectory.put("entity2", entity2);
-        
+
         Set<Map.Entry<String, Entity>> entries = entityDirectory.entrySet();
-        
+
         assertEquals(2, entries.size());
-        assertTrue(entries.stream().anyMatch(e -> e.getKey().equals("entity1") && e.getValue().equals(entity1)));
-        assertTrue(entries.stream().anyMatch(e -> e.getKey().equals("entity2") && e.getValue().equals(entity2)));
+        assertTrue(entries
+            .stream()
+            .anyMatch(e -> e
+                .getKey()
+                .equals("entity1") && e
+                .getValue()
+                .equals(entity1)));
+        assertTrue(entries
+            .stream()
+            .anyMatch(e -> e
+                .getKey()
+                .equals("entity2") && e
+                .getValue()
+                .equals(entity2)));
     }
 
     @Test
     void put_SpecialCharacterKeys_HandlesCorrectly()
     {
-        String[] specialKeys = {
-            "entity-with-dashes",
-            "entity_with_underscores",
-            "entity.with.dots",
-            "entity@with@symbols",
-            "entity/with/slashes",
-            "entity\\with\\backslashes",
-            "entity with spaces",
-            "ENTITY_UPPERCASE",
-            "entity123numbers",
-            "αβγ_unicode",
-            ""
-        };
+        String[] specialKeys = {"entity-with-dashes", "entity_with_underscores", "entity.with.dots", "entity@with" +
+            "@symbols", "entity/with/slashes", "entity\\with\\backslashes", "entity with spaces", "ENTITY_UPPERCASE",
+            "entity123numbers", "αβγ_unicode", ""};
 
         for (String specialKey : specialKeys) {
             Entity entity = new EntityImpl();
             entityDirectory.put(specialKey, entity);
         }
-        
+
         assertEquals(specialKeys.length, entityDirectory.size());
-        
+
         for (String key : specialKeys) {
             assertTrue(entityDirectory.containsKey(key));
             assertNotNull(entityDirectory.get(key));
@@ -241,9 +240,9 @@ class EntityDirectoryHierarchyImplTest
     void put_VeryLongKey_HandlesCorrectly()
     {
         String longKey = "a".repeat(10000);
-        
+
         Entity result = entityDirectory.put(longKey, entity1);
-        
+
         assertNull(result);
         assertSame(entity1, entityDirectory.get(longKey));
     }
@@ -253,7 +252,7 @@ class EntityDirectoryHierarchyImplTest
     {
         entityDirectory.put("key1", entity1);
         entityDirectory.put("key2", entity1); // Same entity, different key
-        
+
         assertEquals(2, entityDirectory.size());
         assertSame(entity1, entityDirectory.get("key1"));
         assertSame(entity1, entityDirectory.get("key2"));
@@ -293,13 +292,13 @@ class EntityDirectoryHierarchyImplTest
     {
         EntityDirectoryHierarchyImpl dir1 = new EntityDirectoryHierarchyImpl(catalog, "testEntityDirectory");
         EntityDirectoryHierarchyImpl dir2 = new EntityDirectoryHierarchyImpl(catalog, "testEntityDirectory");
-        
+
         dir1.put("entity1", entity1);
         dir1.put("entity2", entity2);
-        
+
         dir2.put("entity2", entity2);
         dir2.put("entity1", entity1); // Different order
-        
+
         assertEquals(dir1, dir2);
     }
 
@@ -308,14 +307,14 @@ class EntityDirectoryHierarchyImplTest
     {
         int entryCount = 1000;
         Entity[] entities = new Entity[entryCount];
-        
+
         for (int i = 0; i < entryCount; i++) {
             entities[i] = new EntityImpl();
             entityDirectory.put("entity" + i, entities[i]);
         }
-        
+
         assertEquals(entryCount, entityDirectory.size());
-        
+
         // Verify all entities are present and retrievable
         for (int i = 0; i < entryCount; i++) {
             assertTrue(entityDirectory.containsKey("entity" + i));
@@ -327,9 +326,9 @@ class EntityDirectoryHierarchyImplTest
     void put_ReplaceWithSameEntity_DoesNotChange()
     {
         entityDirectory.put("entity1", entity1);
-        
+
         Entity result = entityDirectory.put("entity1", entity1); // Same entity
-        
+
         assertSame(entity1, result);
         assertEquals(1, entityDirectory.size());
         assertSame(entity1, entityDirectory.get("entity1"));

@@ -16,13 +16,21 @@
 
 package net.netbeing.cheap.json.jackson;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import net.netbeing.cheap.impl.basic.*;
+import net.netbeing.cheap.impl.basic.AspectMapHierarchyImpl;
+import net.netbeing.cheap.impl.basic.AspectObjectMapImpl;
+import net.netbeing.cheap.impl.basic.CatalogImpl;
+import net.netbeing.cheap.impl.basic.EntityDirectoryHierarchyImpl;
+import net.netbeing.cheap.impl.basic.EntityImpl;
+import net.netbeing.cheap.impl.basic.EntityListHierarchyImpl;
+import net.netbeing.cheap.impl.basic.EntitySetHierarchyImpl;
+import net.netbeing.cheap.impl.basic.EntityTreeHierarchyImpl;
+import net.netbeing.cheap.impl.basic.HierarchyDefImpl;
+import net.netbeing.cheap.impl.basic.ImmutableAspectDefImpl;
+import net.netbeing.cheap.impl.basic.PropertyDefBuilder;
 import net.netbeing.cheap.json.jackson.serialize.CheapJacksonSerializer;
 import net.netbeing.cheap.model.AspectDef;
 import net.netbeing.cheap.model.AspectMapHierarchy;
-import net.netbeing.cheap.model.CatalogDef;
 import net.netbeing.cheap.model.CatalogSpecies;
 import net.netbeing.cheap.model.Entity;
 import net.netbeing.cheap.model.HierarchyDef;
@@ -37,7 +45,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -183,7 +190,7 @@ class CheapJacksonSerializerTest
         Entity entity2 = new EntityImpl(entityId2);
 
         HierarchyDef entityListDef = new HierarchyDefImpl("taskQueue", HierarchyType.ENTITY_LIST);
-        EntityListHierarchyImpl entityList = new EntityListHierarchyImpl(catalog, entityListDef.name());
+        EntityListHierarchyImpl entityList = new EntityListHierarchyImpl(catalog, entityListDef.name()); // NOSONAR
         entityList.add(entity1);
         entityList.add(entity2);
 
@@ -226,7 +233,7 @@ class CheapJacksonSerializerTest
         Entity entity2 = new EntityImpl(entityId2);
 
         HierarchyDef entitySetDef = new HierarchyDefImpl("activeUsers", HierarchyType.ENTITY_SET);
-        EntitySetHierarchyImpl entitySet = new EntitySetHierarchyImpl(catalog, entitySetDef.name());
+        EntitySetHierarchyImpl entitySet = new EntitySetHierarchyImpl(catalog, entitySetDef.name()); // NOSONAR
         entitySet.add(entity1);
         entitySet.add(entity2);
 

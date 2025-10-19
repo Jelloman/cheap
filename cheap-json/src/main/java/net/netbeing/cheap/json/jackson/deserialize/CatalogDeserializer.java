@@ -109,7 +109,6 @@ class CatalogDeserializer extends JsonDeserializer<Catalog>
                     // Register all aspect defs with the factory
                     if (p.currentToken() == JsonToken.START_OBJECT) {
                         while (p.nextToken() != JsonToken.END_OBJECT) {
-                            //String aspectDefName = p.currentName();
                             p.nextToken();
                             AspectDef aspectDef = p.readValueAs(AspectDef.class);
                             factory.registerAspectDef(aspectDef);
@@ -119,7 +118,6 @@ class CatalogDeserializer extends JsonDeserializer<Catalog>
                 case "hierarchies" -> {
                     if (p.currentToken() == JsonToken.START_OBJECT) {
                         while (p.nextToken() != JsonToken.END_OBJECT) {
-                            //String hierarchyName = p.currentName();
                             p.nextToken();
                             // Store the raw JSON structure for later processing
                             hierarchyData.add(context.readTree(p));

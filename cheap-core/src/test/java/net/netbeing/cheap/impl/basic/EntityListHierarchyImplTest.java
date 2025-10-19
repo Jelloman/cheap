@@ -2,13 +2,13 @@ package net.netbeing.cheap.impl.basic;
 
 import net.netbeing.cheap.model.Catalog;
 import net.netbeing.cheap.model.Entity;
-import net.netbeing.cheap.model.HierarchyDef;
 import net.netbeing.cheap.model.HierarchyType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.ListIterator;
 
@@ -17,7 +17,6 @@ import static org.junit.jupiter.api.Assertions.*;
 class EntityListHierarchyImplTest
 {
     private Catalog catalog;
-    private HierarchyDef hierarchyDef;
     private EntityListHierarchyImpl entityList;
     private Entity entity1;
     private Entity entity2;
@@ -27,7 +26,6 @@ class EntityListHierarchyImplTest
     void setUp()
     {
         catalog = new CatalogImpl();
-        hierarchyDef = new HierarchyDefImpl("testEntityList", HierarchyType.ENTITY_LIST);
         entityList = new EntityListHierarchyImpl(catalog, "testEntityList");
 
         entity1 = new EntityImpl();
@@ -35,6 +33,7 @@ class EntityListHierarchyImplTest
         entity3 = new EntityImpl();
     }
 
+    @SuppressWarnings("ConstantValue")
     @Test
     void constructor_ValidHierarchyDef_CreatesEmptyList()
     {
@@ -60,7 +59,7 @@ class EntityListHierarchyImplTest
         
         assertTrue(result);
         assertEquals(1, entityList.size());
-        assertSame(entity1, entityList.get(0));
+        assertSame(entity1, entityList.getFirst());
         assertTrue(entityList.contains(entity1));
     }
 
@@ -96,7 +95,7 @@ class EntityListHierarchyImplTest
         
         assertTrue(result);
         assertEquals(1, entityList.size());
-        assertNull(entityList.get(0));
+        assertNull(entityList.getFirst());
         assertTrue(entityList.contains(null));
     }
 
@@ -254,6 +253,7 @@ class EntityListHierarchyImplTest
         assertFalse(entityList.contains(entity1));
     }
 
+    @SuppressWarnings("ConstantValue")
     @Test
     void clear_PopulatedList_RemovesAllEntities()
     {
@@ -371,7 +371,7 @@ class EntityListHierarchyImplTest
         entityList.add(entity1);
         entityList.add(entity3);
         
-        Collection<Entity> entities = Arrays.asList(entity2);
+        Collection<Entity> entities = Collections.singletonList(entity2);
         boolean result = entityList.addAll(1, entities);
         
         assertTrue(result);
@@ -394,7 +394,7 @@ class EntityListHierarchyImplTest
         
         assertTrue(result);
         assertEquals(1, entityList.size());
-        assertSame(entity2, entityList.get(0));
+        assertSame(entity2, entityList.getFirst());
     }
 
     @Test

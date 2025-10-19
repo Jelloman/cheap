@@ -297,7 +297,7 @@ class PropertyValueAdapterTest
     void testCoerce_multivalued_fromList()
     {
         PropertyDef propDef = new PropertyDefImpl("test", PropertyType.Integer, null, false, true, true, true, true, true);
-        List<Integer> input = ImmutableList.of(1, 2, 3);
+        List<Integer> input = List.of(1, 2, 3);
 
         Object result = adapter.coerce(propDef, input);
         assertInstanceOf(List.class, result);
@@ -331,7 +331,7 @@ class PropertyValueAdapterTest
     void testCoerce_multivalued_listNoCoercionNeeded()
     {
         PropertyDef propDef = new PropertyDefImpl("test", PropertyType.Integer, null, false, true, true, true, true, true);
-        List<Long> input = ImmutableList.of(1L, 2L, 3L);
+        List<Long> input = List.of(1L, 2L, 3L);
 
         Object result = adapter.coerce(propDef, input);
         assertSame(input, result); // Should return same list when no coercion needed
@@ -353,7 +353,7 @@ class PropertyValueAdapterTest
     void testCoerce_singleValued_cannotPassList()
     {
         PropertyDef propDef = new PropertyDefImpl("test", PropertyType.Integer, null, false, true, true, true, true, false);
-        List<Integer> input = ImmutableList.of(1, 2, 3);
+        List<Integer> input = List.of(1, 2, 3);
 
         // For single-valued properties, lists are coerced to the target type
         // which will fail for Integer type
@@ -433,7 +433,7 @@ class PropertyValueAdapterTest
     void testCoerce_emptyList()
     {
         PropertyDef propDef = new PropertyDefImpl("test", PropertyType.Integer, null, false, true, true, true, true, true);
-        List<Integer> input = ImmutableList.of();
+        List<Integer> input = List.of();
 
         Object result = adapter.coerce(propDef, input);
         assertInstanceOf(List.class, result);

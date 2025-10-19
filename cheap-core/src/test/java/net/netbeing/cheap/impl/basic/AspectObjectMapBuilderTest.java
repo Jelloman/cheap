@@ -14,6 +14,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@SuppressWarnings("DataFlowIssue")
 class AspectObjectMapBuilderTest
 {
     private AspectObjectMapBuilder builder;
@@ -39,14 +40,6 @@ class AspectObjectMapBuilderTest
 
         ((MutableAspectDefImpl) aspectDef).add(propDef1);
         ((MutableAspectDefImpl) aspectDef).add(propDef2);
-    }
-
-    @Test
-    void constructor_CreatesEmptyBuilder()
-    {
-        AspectObjectMapBuilder builder = new AspectObjectMapBuilder();
-
-        assertNotNull(builder);
     }
 
     @Test
@@ -108,12 +101,7 @@ class AspectObjectMapBuilderTest
     @Test
     void build_WithRequiredFields_CreatesAspectObjectMapImpl()
     {
-        Aspect result = builder
-            .entity(entity)
-            .aspectDef(aspectDef)
-            .property("prop1", "test-value")
-            .property("prop2", 42)
-            .build();
+        Aspect result = builder.entity(entity).aspectDef(aspectDef).property("prop1", "test-value").property("prop2", 42).build();
 
         assertNotNull(result);
         assertInstanceOf(AspectObjectMapImpl.class, result);
@@ -126,12 +114,7 @@ class AspectObjectMapBuilderTest
     @Test
     void build_WithPropertyObject_CreatesAspectObjectMapImpl()
     {
-        Aspect result = builder
-            .entity(entity)
-            .aspectDef(aspectDef)
-            .property(property1)
-            .property(property2)
-            .build();
+        Aspect result = builder.entity(entity).aspectDef(aspectDef).property(property1).property(property2).build();
 
         assertNotNull(result);
         assertInstanceOf(AspectObjectMapImpl.class, result);
@@ -142,8 +125,8 @@ class AspectObjectMapBuilderTest
     @Test
     void build_NoEntity_ThrowsException()
     {
-        IllegalStateException exception = assertThrows(IllegalStateException.class, () ->
-            builder.aspectDef(aspectDef).build());
+        builder.aspectDef(aspectDef);
+        IllegalStateException exception = assertThrows(IllegalStateException.class, () -> builder.build());
 
         assertEquals("Entity must be set before building aspect", exception.getMessage());
     }
@@ -151,8 +134,9 @@ class AspectObjectMapBuilderTest
     @Test
     void build_NoAspectDef_ThrowsException()
     {
-        IllegalStateException exception = assertThrows(IllegalStateException.class, () ->
-            builder.entity(entity).build());
+        builder.entity(entity);
+
+        IllegalStateException exception = assertThrows(IllegalStateException.class, () -> builder.build());
 
         assertEquals("AspectDef must be set before building aspect", exception.getMessage());
     }
@@ -160,10 +144,7 @@ class AspectObjectMapBuilderTest
     @Test
     void reset_ClearsAllState()
     {
-        builder
-            .entity(entity)
-            .aspectDef(aspectDef)
-            .property("prop1", "test-value");
+        builder.entity(entity).aspectDef(aspectDef).property("prop1", "test-value");
 
         AspectBuilder result = builder.reset();
 
@@ -177,20 +158,11 @@ class AspectObjectMapBuilderTest
     void reset_AllowsReuse()
     {
         // Build first aspect
-        Aspect aspect1 = builder
-            .entity(entity)
-            .aspectDef(aspectDef)
-            .property("prop1", "value1")
-            .build();
+        Aspect aspect1 = builder.entity(entity).aspectDef(aspectDef).property("prop1", "value1").build();
 
         // Reset and build second aspect
         Entity entity2 = new EntityImpl();
-        Aspect aspect2 = builder
-            .reset()
-            .entity(entity2)
-            .aspectDef(aspectDef)
-            .property("prop1", "value2")
-            .build();
+        Aspect aspect2 = builder.reset().entity(entity2).aspectDef(aspectDef).property("prop1", "value2").build();
 
         assertNotSame(aspect1, aspect2);
         assertEquals("value1", aspect1.readObj("prop1"));
@@ -201,12 +173,7 @@ class AspectObjectMapBuilderTest
     @Test
     void fluentInterface_ChainsMethods()
     {
-        Aspect result = builder
-            .entity(entity)
-            .aspectDef(aspectDef)
-            .property("prop1", "test-value")
-            .property(property2)
-            .build();
+        Aspect result = builder.entity(entity).aspectDef(aspectDef).property("prop1", "test-value").property(property2).build();
 
         assertNotNull(result);
         assertEquals("test-value", result.readObj("prop1"));

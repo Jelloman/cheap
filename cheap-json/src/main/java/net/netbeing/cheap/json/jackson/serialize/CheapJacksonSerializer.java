@@ -28,6 +28,7 @@ import net.netbeing.cheap.model.HierarchyDef;
 
 import java.io.IOException;
 import java.io.StringWriter;
+import java.io.UncheckedIOException;
 
 /**
  * Jackson-based JSON serializer for Cheap data model objects.
@@ -81,7 +82,7 @@ public class CheapJacksonSerializer
             mapper.writeValue(writer, catalog);
             return writer.toString();
         } catch (IOException e) {
-            throw new RuntimeException("Failed to serialize catalog to JSON", e);
+            throw new UncheckedIOException("Failed to serialize catalog to JSON", e);
         }
     }
     

@@ -91,12 +91,12 @@ class AspectSerializer extends JsonSerializer<Aspect>
     {
         if (value == null) {
             gen.writeNull();
-        } else if (value instanceof String) {
-            gen.writeString((String) value);
+        } else if (value instanceof String s) {
+            gen.writeString(s);
         } else if (value instanceof Number) {
             gen.writeNumber(value.toString());
-        } else if (value instanceof Boolean) {
-            gen.writeBoolean((Boolean) value);
+        } else if (value instanceof Boolean b) {
+            gen.writeBoolean(b);
         } else if (value instanceof Collection<?> collection) {
             gen.writeStartArray();
             for (Object item : collection) {

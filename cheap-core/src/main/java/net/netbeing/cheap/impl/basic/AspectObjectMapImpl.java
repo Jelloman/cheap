@@ -61,7 +61,7 @@ public class AspectObjectMapImpl extends AspectBaseImpl
     public AspectObjectMapImpl(Entity entity, @NotNull AspectDef def, int initialCapacity)
     {
         super(entity, def);
-        this.props = new LinkedHashMap<>(initialCapacity);
+        this.props = LinkedHashMap.newLinkedHashMap(initialCapacity);
     }
 
     /**
