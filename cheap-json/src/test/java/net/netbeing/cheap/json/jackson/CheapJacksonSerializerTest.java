@@ -61,7 +61,7 @@ class CheapJacksonSerializerTest
 {
     private static final UUID CATALOG_ID = UUID.fromString("550e8400-e29b-41d4-a716-444444444444");
 
-    private static final String WRITE_OUTPUT_PATH = "D:\\src\\tmp";
+    private static final String WRITE_OUTPUT_PATH = null;
 
     private static CatalogImpl createTestCatalog()
     {
