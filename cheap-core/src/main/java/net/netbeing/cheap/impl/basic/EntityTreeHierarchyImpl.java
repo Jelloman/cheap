@@ -24,9 +24,14 @@ import net.netbeing.cheap.model.HierarchyType;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.AbstractMap;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Set;
+import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 
 /**
  * Basic implementation of an EntityTreeHierarchy that represents a tree structure
@@ -35,7 +40,7 @@ import java.util.Set;
  * <p>
  * This implementation provides both regular nodes (which can have children) and
  * leaf nodes (which cannot have children) to build tree structures.
- * 
+ *
  * @see EntityTreeHierarchy
  * @see Entity
  * @see HierarchyDef
@@ -43,188 +48,27 @@ import java.util.Set;
 public class EntityTreeHierarchyImpl implements EntityTreeHierarchy
 {
     /**
-     * Implementation of a tree node that can have child nodes.
-     * This node type extends HashMap to provide string-to-node mappings.
+     * The catalog containing this hierarchy.
      */
-    public static class NodeImpl extends LinkedHashMap<String, Node> implements Node
-    {
-        /** The entity value stored at this node. */
-        private Entity value;
-        
-        /** The parent node, or null for root nodes. */
-        private final Node parent;
-
-        /**
-         * Creates a new NodeImpl with the specified entity value and no parent.
-         * 
-         * @param value the entity value to store at this node
-         */
-        public NodeImpl(Entity value)
-        {
-            this(value, null);
-        }
-
-        /**
-         * Creates a new NodeImpl with the specified entity value and parent.
-         * 
-         * @param value the entity value to store at this node
-         * @param parent the parent node, or null for root nodes
-         */
-        public NodeImpl(Entity value, Node parent)
-        {
-            this.value = value;
-            this.parent = parent;
-        }
-
-        /**
-         * Returns whether this node is a leaf node.
-         * 
-         * @return {@code true} only if this node has no children
-         */
-        @Override
-        public boolean isLeaf()
-        {
-            return isEmpty();
-        }
-
-        /**
-         * Returns the parent node of this node.
-         * 
-         * @return the parent node, or {@code null} if this is a root node
-         */
-        @Override
-        public Node getParent()
-        {
-            return parent;
-        }
-
-        /**
-         * Returns the entity value stored at this node.
-         * 
-         * @return the entity value at this node
-         */
-        @Override
-        public Entity value()
-        {
-            return value;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void setValue(Entity entity)
-        {
-            value = entity;
-        }
-    }
-
-    /**
-     * Implementation of a leaf tree node that cannot have child nodes.
-     * This node type extends AbstractMap but provides an empty entry set.
-     */
-    public static class LeafNodeImpl extends AbstractMap<String, Node> implements Node
-    {
-        /** The entity value stored at this leaf node. */
-        private Entity value;
-        
-        /** The parent node, or null for root leaf nodes. */
-        private final Node parent;
-
-        /**
-         * Creates a new LeafNodeImpl with the specified entity value and no parent.
-         * 
-         * @param value the entity value to store at this leaf node
-         */
-        public LeafNodeImpl(Entity value)
-        {
-            this(value, null);
-        }
-
-        /**
-         * Creates a new LeafNodeImpl with the specified entity value and parent.
-         * 
-         * @param value the entity value to store at this leaf node
-         * @param parent the parent node, or null for root leaf nodes
-         */
-        public LeafNodeImpl(Entity value, Node parent)
-        {
-            this.value = value;
-            this.parent = parent;
-        }
-
-        /**
-         * Returns whether this node is a leaf node.
-         * 
-         * @return {@code true} as this implementation cannot have children
-         */
-        @Override
-        public boolean isLeaf()
-        {
-            return true;
-        }
-
-        /**
-         * Returns the parent node of this leaf node.
-         * 
-         * @return the parent node, or {@code null} if this is a root leaf node
-         */
-        @Override
-        public Node getParent()
-        {
-            return parent;
-        }
-
-        /**
-         * Returns the entity value stored at this leaf node.
-         * 
-         * @return the entity value at this leaf node
-         */
-        @Override
-        public Entity value()
-        {
-            return value;
-        }
-
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void setValue(Entity entity)
-        {
-            value = entity;
-        }
-
-        /**
-         * Returns an empty set of entries as leaf nodes cannot have children.
-         * 
-         * @return an empty set
-         */
-        @Override
-        public @NotNull Set<Entry<String, Node>> entrySet()
-        {
-            return Collections.emptySet();
-        }
-    }
-
-    /** The catalog containing this hierarchy. */
     private final Catalog catalog;
-
-    /** The name of this hierarchy in the catalog. */
+    /**
+     * The name of this hierarchy in the catalog.
+     */
     private final String name;
-
-    /** The version number of this hierarchy. */
+    /**
+     * The version number of this hierarchy.
+     */
     private final long version;
-
-    /** The root node of this tree hierarchy. */
+    /**
+     * The root node of this tree hierarchy.
+     */
     private Node root;
 
     /**
      * Creates a new EntityTreeHierarchyImpl with the specified hierarchy definition and a root with a null entity.
      *
      * @param catalog the catalog containing this hierarchy
-     * @param name the name of this hierarchy in the catalog
+     * @param name    the name of this hierarchy in the catalog
      */
     public EntityTreeHierarchyImpl(@NotNull Catalog catalog, @NotNull String name)
     {
@@ -234,8 +78,8 @@ public class EntityTreeHierarchyImpl implements EntityTreeHierarchy
     /**
      * Creates a new EntityTreeHierarchyImpl with the specified hierarchy definition and root entity.
      *
-     * @param catalog the catalog containing this hierarchy
-     * @param name the name of this hierarchy in the catalog
+     * @param catalog    the catalog containing this hierarchy
+     * @param name       the name of this hierarchy in the catalog
      * @param rootEntity the entity to use as the root of the tree
      */
     public EntityTreeHierarchyImpl(@NotNull Catalog catalog, @NotNull String name, Entity rootEntity)
@@ -246,8 +90,8 @@ public class EntityTreeHierarchyImpl implements EntityTreeHierarchy
     /**
      * Creates a new EntityTreeHierarchyImpl with the specified hierarchy definition and root node.
      *
-     * @param catalog the catalog containing this hierarchy
-     * @param name the name of this hierarchy in the catalog
+     * @param catalog  the catalog containing this hierarchy
+     * @param name     the name of this hierarchy in the catalog
      * @param rootNode the node to use as the root of the tree
      */
     public EntityTreeHierarchyImpl(@NotNull Catalog catalog, @NotNull String name, Node rootNode)
@@ -258,10 +102,10 @@ public class EntityTreeHierarchyImpl implements EntityTreeHierarchy
     /**
      * Creates a new EntityTreeHierarchyImpl with the specified hierarchy definition, root node, and version.
      *
-     * @param catalog the catalog containing this hierarchy
-     * @param name the name of this hierarchy in the catalog
+     * @param catalog  the catalog containing this hierarchy
+     * @param name     the name of this hierarchy in the catalog
      * @param rootNode the node to use as the root of the tree
-     * @param version the version number of this hierarchy
+     * @param version  the version number of this hierarchy
      */
     public EntityTreeHierarchyImpl(@NotNull Catalog catalog, @NotNull String name, Node rootNode, long version)
     {
@@ -305,7 +149,7 @@ public class EntityTreeHierarchyImpl implements EntityTreeHierarchy
 
     /**
      * Returns the root node of this tree hierarchy.
-     * 
+     *
      * @return the root node of the tree
      */
     @Override
@@ -333,5 +177,353 @@ public class EntityTreeHierarchyImpl implements EntityTreeHierarchy
     public void setRoot(@NotNull Node newRoot)
     {
         this.root = newRoot;
+    }
+
+    /**
+     * Implementation of a tree node that can have child nodes.
+     * This node type uses composition with an internal map to provide string-to-node mappings.
+     */
+    public static class NodeImpl implements Node
+    {
+        /**
+         * The parent node, or null for root nodes.
+         */
+        private final Node parent;
+        /**
+         * The internal map storing child nodes.
+         */
+        private final Map<String, Node> children;
+        /**
+         * The entity value stored at this node.
+         */
+        private Entity value;
+
+        /**
+         * Creates a new NodeImpl with the specified entity value and no parent.
+         *
+         * @param value the entity value to store at this node
+         */
+        public NodeImpl(Entity value)
+        {
+            this(value, null);
+        }
+
+        /**
+         * Creates a new NodeImpl with the specified entity value and parent.
+         *
+         * @param value  the entity value to store at this node
+         * @param parent the parent node, or null for root nodes
+         */
+        public NodeImpl(Entity value, Node parent)
+        {
+            this.value = value;
+            this.parent = parent;
+            this.children = new LinkedHashMap<>();
+        }
+
+        /**
+         * Returns whether this node is a leaf node.
+         *
+         * @return {@code true} only if this node has no children
+         */
+        @Override
+        public boolean isLeaf()
+        {
+            return children.isEmpty();
+        }
+
+        /**
+         * Returns the parent node of this node.
+         *
+         * @return the parent node, or {@code null} if this is a root node
+         */
+        @Override
+        public Node getParent()
+        {
+            return parent;
+        }
+
+        /**
+         * Returns the entity value stored at this node.
+         *
+         * @return the entity value at this node
+         */
+        @Override
+        public Entity value()
+        {
+            return value;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void setValue(Entity entity)
+        {
+            value = entity;
+        }
+
+        // Map interface delegation methods
+
+        @Override
+        public int size()
+        {
+            return children.size();
+        }
+
+        @Override
+        public boolean isEmpty()
+        {
+            return children.isEmpty();
+        }
+
+        @Override
+        public boolean containsKey(Object key)
+        {
+            return children.containsKey(key);
+        }
+
+        @Override
+        public boolean containsValue(Object value)
+        {
+            return children.containsValue(value);
+        }
+
+        @Override
+        public Node get(Object key)
+        {
+            return children.get(key);
+        }
+
+        @Override
+        public Node put(String key, Node value)
+        {
+            return children.put(key, value);
+        }
+
+        @Override
+        public Node remove(Object key)
+        {
+            return children.remove(key);
+        }
+
+        @Override
+        public void putAll(@NotNull Map<? extends String, ? extends Node> m)
+        {
+            children.putAll(m);
+        }
+
+        @Override
+        public void clear()
+        {
+            children.clear();
+        }
+
+        @Override
+        public @NotNull Set<String> keySet()
+        {
+            return children.keySet();
+        }
+
+        @Override
+        public @NotNull Collection<Node> values()
+        {
+            return children.values();
+        }
+
+        @Override
+        public @NotNull Set<Entry<String, Node>> entrySet()
+        {
+            return children.entrySet();
+        }
+
+        @SuppressWarnings("SuspiciousMethodCalls")
+        @Override
+        public Node getOrDefault(Object key, Node defaultValue)
+        {
+            return children.getOrDefault(key, defaultValue);
+        }
+
+        @Override
+        public void forEach(BiConsumer<? super String, ? super Node> action)
+        {
+            children.forEach(action);
+        }
+
+        @Override
+        public void replaceAll(BiFunction<? super String, ? super Node, ? extends Node> function)
+        {
+            children.replaceAll(function);
+        }
+
+        @Override
+        public Node putIfAbsent(String key, Node value)
+        {
+            return children.putIfAbsent(key, value);
+        }
+
+        @Override
+        public boolean remove(Object key, Object value)
+        {
+            return children.remove(key, value);
+        }
+
+        @Override
+        public boolean replace(String key, Node oldValue, Node newValue)
+        {
+            return children.replace(key, oldValue, newValue);
+        }
+
+        @Override
+        public Node replace(String key, Node value)
+        {
+            return children.replace(key, value);
+        }
+
+        @Override
+        public Node computeIfAbsent(String key, @NotNull Function<? super String, ? extends Node> mappingFunction)
+        {
+            return children.computeIfAbsent(key, mappingFunction);
+        }
+
+        @Override
+        public Node computeIfPresent(String key, @NotNull BiFunction<? super String, ? super Node, ? extends Node> remappingFunction)
+        {
+            return children.computeIfPresent(key, remappingFunction);
+        }
+
+        @Override
+        public Node compute(String key, @NotNull BiFunction<? super String, ? super Node, ? extends Node> remappingFunction)
+        {
+            return children.compute(key, remappingFunction);
+        }
+
+        @Override
+        public Node merge(String key, @NotNull Node value,
+                          @NotNull BiFunction<? super Node, ? super Node, ? extends Node> remappingFunction)
+        {
+            return children.merge(key, value, remappingFunction);
+        }
+
+        @Override
+        public boolean equals(Object o)
+        {
+            if (this == o) return true;
+            if (!(o instanceof NodeImpl node)) return false;
+            return children.equals(node.children);
+        }
+
+        @Override
+        public int hashCode()
+        {
+            return children.hashCode();
+        }
+    }
+
+    /**
+     * Implementation of a leaf tree node that cannot have child nodes.
+     * This node type implements the Map interface by extending AbstractMap and
+     * providing an empty entry set to indicate no children are allowed.
+     */
+    public static class LeafNodeImpl extends AbstractMap<String, Node> implements Node
+    {
+        /**
+         * The parent node, or null for root leaf nodes.
+         */
+        private final Node parent;
+        /**
+         * The entity value stored at this leaf node.
+         */
+        private Entity value;
+
+        /**
+         * Creates a new LeafNodeImpl with the specified entity value and no parent.
+         *
+         * @param value the entity value to store at this leaf node
+         */
+        public LeafNodeImpl(Entity value)
+        {
+            this(value, null);
+        }
+
+        /**
+         * Creates a new LeafNodeImpl with the specified entity value and parent.
+         *
+         * @param value  the entity value to store at this leaf node
+         * @param parent the parent node, or null for root leaf nodes
+         */
+        public LeafNodeImpl(Entity value, Node parent)
+        {
+            this.value = value;
+            this.parent = parent;
+        }
+
+        /**
+         * Returns whether this node is a leaf node.
+         *
+         * @return {@code true} as this implementation cannot have children
+         */
+        @Override
+        public boolean isLeaf()
+        {
+            return true;
+        }
+
+        /**
+         * Returns the parent node of this leaf node.
+         *
+         * @return the parent node, or {@code null} if this is a root leaf node
+         */
+        @Override
+        public Node getParent()
+        {
+            return parent;
+        }
+
+        /**
+         * Returns the entity value stored at this leaf node.
+         *
+         * @return the entity value at this leaf node
+         */
+        @Override
+        public Entity value()
+        {
+            return value;
+        }
+
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void setValue(Entity entity)
+        {
+            value = entity;
+        }
+
+        /**
+         * Returns an empty set of entries as leaf nodes cannot have children.
+         *
+         * @return an empty set
+         */
+        @Override
+        public @NotNull Set<Entry<String, Node>> entrySet()
+        {
+            return Collections.emptySet();
+        }
+
+        @Override
+        public boolean equals(Object o)
+        {
+            if (this == o) return true;
+            if (!(o instanceof LeafNodeImpl)) return false;
+            return super.equals(o);
+        }
+
+        @Override
+        public int hashCode()
+        {
+            return super.hashCode();
+        }
     }
 }
