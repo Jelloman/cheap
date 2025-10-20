@@ -44,6 +44,7 @@
       <w>roundtrip</w>
       <w>smallserial</w>
       <w>substr</w>
+      <w>temurin</w>
       <w>timestamptz</w>
       <w>tsquery</w>
       <w>tsrange</w>
