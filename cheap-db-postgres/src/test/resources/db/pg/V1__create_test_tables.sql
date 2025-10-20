@@ -1,3 +1,4 @@
+SET TIME ZONE 'UTC';
 
 CREATE TABLE test_table (
 	id SERIAL PRIMARY KEY,
