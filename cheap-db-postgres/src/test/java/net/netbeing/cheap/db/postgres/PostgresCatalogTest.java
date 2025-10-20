@@ -26,20 +26,12 @@ import net.netbeing.cheap.model.HierarchyType;
 import net.netbeing.cheap.model.Property;
 import net.netbeing.cheap.model.PropertyDef;
 import net.netbeing.cheap.model.PropertyType;
-import net.netbeing.cheap.util.PropertyValueAdapter;
+import net.netbeing.cheap.util.CheapFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import javax.sql.DataSource;
-import java.io.IOException;
-import java.net.URISyntaxException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.List;
 import java.util.TimeZone;
 import java.util.UUID;
@@ -52,43 +44,20 @@ class PostgresCatalogTest
     @RegisterExtension
     public static PreparedDbExtension flywayDB = EmbeddedPostgresExtension.preparedDatabase(FlywayPreparer.forClasspathLocation("db/pg"));
 
-    private DataSource dataSource;
-    private PostgresCatalog catalog;
-    private static boolean cheapSchemaInitialized = false;
+    DataSource dataSource;
+    PostgresCatalog catalog;
+    CheapFactory factory;
+    PostgresAdapter adapter;
 
     static final int EXPECTED_TABLE_COUNT = 6;
 
     @BeforeEach
     void setUp() {
         dataSource = flywayDB.getTestDatabase();
-        catalog = new PostgresCatalog(dataSource);
-        catalog.setValueAdapter(new PropertyValueAdapter(TimeZone.getTimeZone("GMT")));
-    }
-
-    private void initializeCheapSchema() throws SQLException, IOException, URISyntaxException {
-        if (cheapSchemaInitialized) {
-            return;
-        }
-
-        String mainSchemaPath = "/db/schemas/postgres/postgres-cheap.sql";
-        String auditSchemaPath = "/db/schemas/postgres/postgres-cheap-audit.sql";
-
-        String mainDdl = loadResourceFile(mainSchemaPath);
-        String auditDdl = loadResourceFile(auditSchemaPath);
-
-        try (Connection connection = dataSource.getConnection();
-             Statement statement = connection.createStatement()) {
-            statement.execute(mainDdl);
-            statement.execute(auditDdl);
-        }
-
-        cheapSchemaInitialized = true;
-    }
-
-    @SuppressWarnings("DataFlowIssue")
-    private static String loadResourceFile(String resourcePath) throws IOException, URISyntaxException {
-        Path path = Paths.get(PostgresCatalogTest.class.getResource(resourcePath).toURI());
-        return Files.readString(path);
+        factory = new CheapFactory();
+        adapter = new PostgresAdapter(dataSource, factory);
+        adapter.setTimeZone(TimeZone.getTimeZone("UTC"));
+        catalog = new PostgresCatalog(adapter);
     }
 
     @Test
@@ -103,20 +72,6 @@ class PostgresCatalogTest
         assertTrue(tables.contains("test_aspect_mapping_no_key"), "Should contain test_table");
     }
     
-    @Test
-    void testLoadDbStaticMethod()
-    {
-        PostgresCatalog staticCatalog = new PostgresCatalog(dataSource);
-        
-        assertNotNull(staticCatalog, "Catalog should not be null");
-        
-        List<String> tables = staticCatalog.getTables();
-        assertNotNull(tables, "Tables list should not be null");
-        assertEquals(EXPECTED_TABLE_COUNT, tables.size(), "Should have six tables");
-        assertTrue(tables.contains("test_table"), "Should contain test_table");
-        assertTrue(tables.contains("test_aspect_mapping_no_key"), "Should contain test_table");
-    }
-
     @Test
     void testLoadTableDef()
     {
@@ -213,13 +168,13 @@ class PostgresCatalogTest
                 assertEquals(1.5, ((Double) floatProp.read()), "float_col should be 1.5");
                 
                 Property dateProp = aspect.get("date_col");
-                assertEquals("2025-01-01T00:00Z[GMT]", dateProp.read().toString(), "date_col should be 2025-01-01T00:00Z[GMT]");
+                assertEquals("2025-01-01T00:00Z[UTC]", dateProp.read().toString(), "date_col should be 2025-01-01T00:00Z[UTC]");
 
                 Property timestampProp = aspect.get("timestamp_col");
-                assertEquals("2025-01-12T02:18:18.018Z[GMT]", timestampProp.read().toString(), "timestamp_col should be 2025-01-12T02:18:18.018Z[GMT]");
+                assertEquals("2025-01-12T02:18:18.018Z[UTC]", timestampProp.read().toString(), "timestamp_col should be 2025-01-12T02:18:18.018Z[UTC]");
 
                 Property booleanProp = aspect.get("boolean_col");
-                assertEquals(true, (Boolean) booleanProp.read(), "boolean_col should be true");
+                assertEquals(true, booleanProp.read(), "boolean_col should be true");
                 
                 Property uuidProp = aspect.get("uuid_col");
                 assertEquals(UUID.fromString("4186bfb6-b135-48af-9236-95cacdb20327"), uuidProp.read(), "uuid_col should match expected UUID");
@@ -240,13 +195,13 @@ class PostgresCatalogTest
                 assertEquals(2.5, ((Double) floatProp.read()), "float_col should be 2.5");
                 
                 Property dateProp = aspect.get("date_col");
-                assertEquals("2025-02-02T00:00Z[GMT]", dateProp.read().toString(), "date_col should be 2025-02-02T00:00Z[GMT]");
+                assertEquals("2025-02-02T00:00Z[UTC]", dateProp.read().toString(), "date_col should be 2025-02-02T00:00Z[UTC]");
 
                 Property timestampProp = aspect.get("timestamp_col");
-                assertEquals("2025-02-02T10:02:02.002Z[GMT]", timestampProp.read().toString(), "timestamp_col should be 2025-02-02T10:02:02.002Z[GMT]");
+                assertEquals("2025-02-02T10:02:02.002Z[UTC]", timestampProp.read().toString(), "timestamp_col should be 2025-02-02T10:02:02.002Z[UTC]");
 
                 Property booleanProp = aspect.get("boolean_col");
-                assertEquals(false, (Boolean) booleanProp.read(), "boolean_col should be false");
+                assertEquals(false, booleanProp.read(), "boolean_col should be false");
                 
                 Property uuidProp = aspect.get("uuid_col");
                 assertEquals(UUID.fromString("655a99b9-af7c-4f2f-afa8-c4801986b9d4"), uuidProp.read(), "uuid_col should match expected UUID");

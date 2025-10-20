@@ -35,6 +35,7 @@ class MariaDbTestDb
     final CheapFactory factory;
     final DBConfiguration dbConfig;
     final String dbName;
+    final MariaDbAdapter adapter;
 
     MariaDbTestDb(String dbName) throws ManagedProcessException, SQLException
     {
@@ -60,8 +61,9 @@ class MariaDbTestDb
 
         // Initialize factory and DAO
         factory = new CheapFactory();
-        mariaDbDao = new MariaDbDao(dataSource, factory);
-        mariaDbDao.setTimeZone(TimeZone.getTimeZone("GMT"));
+        adapter = new MariaDbAdapter(dataSource, factory);
+        adapter.setTimeZone(TimeZone.getTimeZone("UTC"));
+        mariaDbDao = new MariaDbDao(adapter);
     }
 
     void tearDown() throws ManagedProcessException

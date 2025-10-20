@@ -16,7 +16,6 @@
 
 package net.netbeing.cheap.db.postgres;
 
-import com.google.common.collect.ImmutableList;
 import io.zonky.test.db.postgres.embedded.FlywayPreparer;
 import io.zonky.test.db.postgres.junit5.EmbeddedPostgresExtension;
 import io.zonky.test.db.postgres.junit5.PreparedDbExtension;
@@ -56,9 +55,11 @@ class PostgresDaoTest
     static volatile boolean schemaInitialized = false;
 
     PostgresDao postgresDao;
+    PostgresAdapter adapter;
     CheapFactory factory;
 
-    void setUp() throws SQLException, IOException, URISyntaxException
+    // Annotating this with BeforeEach causes errors.
+    void setupEach() throws SQLException, IOException, URISyntaxException
     {
         // Get the datasource (will be initialized by JUnit extension)
         dataSource = flywayDB.getTestDatabase();
@@ -73,7 +74,8 @@ class PostgresDaoTest
         }
 
         factory = new CheapFactory();
-        postgresDao = new PostgresDao(dataSource, factory);
+        adapter = new PostgresAdapter(dataSource, factory);
+        postgresDao = new PostgresDao(adapter);
 
         // Clean up all tables before each test
         truncateAllTables();
@@ -121,7 +123,7 @@ class PostgresDaoTest
     @Test
     void testSaveAndLoadSimpleCatalog() throws SQLException, IOException, URISyntaxException
     {
-        setUp();
+        setupEach();
 
         // Create a simple catalog
         UUID catalogId = UUID.randomUUID();
@@ -143,7 +145,7 @@ class PostgresDaoTest
     @Test
     void testSaveAndLoadCatalogWithUri() throws SQLException, IOException, URISyntaxException
     {
-        setUp();
+        setupEach();
 
         // Create catalog with URI
         UUID catalogId = UUID.randomUUID();
@@ -162,7 +164,7 @@ class PostgresDaoTest
     @Test
     void testSaveAndLoadCatalogWithUpstream() throws SQLException, IOException, URISyntaxException
     {
-        setUp();
+        setupEach();
 
         // Create upstream catalog first
         UUID upstreamId = UUID.randomUUID();
@@ -185,7 +187,7 @@ class PostgresDaoTest
     @Test
     void testSaveAndLoadCatalogWithAspectDefs() throws SQLException, IOException, URISyntaxException
     {
-        setUp();
+        setupEach();
 
         // Create AspectDef
         AspectDef personAspectDef = factory.createMutableAspectDef("person");
@@ -220,14 +222,11 @@ class PostgresDaoTest
     @Test
     void testSaveAndLoadCatalogWithEntitySetHierarchy() throws SQLException, IOException, URISyntaxException
     {
-        setUp();
+        setupEach();
 
         // Create catalog
         UUID catalogId = UUID.randomUUID();
         Catalog originalCatalog = factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
-
-        // Create hierarchy definition
-        HierarchyDef hierarchyDef = factory.createHierarchyDef("entities", HierarchyType.ENTITY_SET);
 
         // Create hierarchy
         EntitySetHierarchy hierarchy = factory.createEntitySetHierarchy(originalCatalog, "entities");
@@ -268,14 +267,11 @@ class PostgresDaoTest
     @Test
     void testSaveAndLoadCatalogWithEntityDirectoryHierarchy() throws SQLException, IOException, URISyntaxException
     {
-        setUp();
+        setupEach();
 
         // Create catalog
         UUID catalogId = UUID.randomUUID();
         Catalog originalCatalog = factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
-
-        // Create hierarchy definition
-        HierarchyDef hierarchyDef = factory.createHierarchyDef("directory", HierarchyType.ENTITY_DIR);
 
         // Create hierarchy
         EntityDirectoryHierarchy hierarchy = factory.createEntityDirectoryHierarchy(originalCatalog, "directory");
@@ -310,7 +306,7 @@ class PostgresDaoTest
     @Test
     void testSaveAndLoadCatalogWithAspectMapHierarchy() throws SQLException, IOException, URISyntaxException
     {
-        setUp();
+        setupEach();
 
         // Create AspectDef with properties
         AspectDef personAspectDef = factory.createMutableAspectDef("person");
@@ -368,7 +364,7 @@ class PostgresDaoTest
     @Test
     void testDeleteCatalog() throws SQLException, IOException, URISyntaxException
     {
-        setUp();
+        setupEach();
 
         // Create and save catalog
         UUID catalogId = UUID.randomUUID();
@@ -390,7 +386,7 @@ class PostgresDaoTest
     @Test
     void testDeleteNonExistentCatalog() throws SQLException, IOException, URISyntaxException
     {
-        setUp();
+        setupEach();
 
         UUID nonExistentId = UUID.randomUUID();
 
@@ -402,7 +398,7 @@ class PostgresDaoTest
     @Test
     void testCatalogExists() throws SQLException, IOException, URISyntaxException
     {
-        setUp();
+        setupEach();
 
         UUID catalogId = UUID.randomUUID();
 
@@ -420,7 +416,7 @@ class PostgresDaoTest
     @Test
     void testLoadNonExistentCatalog() throws SQLException, IOException, URISyntaxException
     {
-        setUp();
+        setupEach();
 
         UUID nonExistentId = UUID.randomUUID();
         Catalog catalog = postgresDao.loadCatalog(nonExistentId);
@@ -431,15 +427,15 @@ class PostgresDaoTest
     @Test
     void testSaveNullCatalogThrowsException() throws SQLException, IOException, URISyntaxException
     {
-        setUp();
+        setupEach();
 
-        assertThrows(IllegalArgumentException.class, () -> postgresDao.saveCatalog(null));
+        assertThrows(NullPointerException.class, () -> postgresDao.saveCatalog(null));
     }
 
     @Test
     void testTransactionRollbackOnError() throws SQLException, IOException, URISyntaxException
     {
-        setUp();
+        setupEach();
 
         // This test would verify that failed saves don't leave partial data
         // Due to the complexity of creating a controlled failure scenario,
@@ -456,7 +452,7 @@ class PostgresDaoTest
     @Test
     void testComplexCatalogRoundTrip() throws SQLException, IOException, URISyntaxException
     {
-        setUp();
+        setupEach();
 
         // Create a complex catalog with multiple hierarchy types
         UUID catalogId = UUID.randomUUID();
@@ -465,10 +461,6 @@ class PostgresDaoTest
         // Create multiple aspect definitions
         AspectDef personAspect = factory.createMutableAspectDef("person");
         AspectDef addressAspect = factory.createMutableAspectDef("address");
-
-        // Create multiple hierarchies
-        HierarchyDef entitiesHierarchy = factory.createHierarchyDef("entities", HierarchyType.ENTITY_SET);
-        HierarchyDef directoryHierarchy = factory.createHierarchyDef("directory", HierarchyType.ENTITY_DIR);
 
         // Create entity set hierarchy
         EntitySetHierarchy entitySet = factory.createEntitySetHierarchy(originalCatalog, "entities");
@@ -536,7 +528,7 @@ class PostgresDaoTest
     @Test
     void testCreateAspectTableWithAllPropertyTypes() throws Exception
     {
-        setUp();
+        setupEach();
 
         // Create an AspectDef with one Property of each type
         String aspectDefName = "all_types_aspect";
@@ -685,18 +677,17 @@ class PostgresDaoTest
         columnMapping.put("clob_prop", "clob_prop");
         columnMapping.put("blob_prop", "blob_prop");
 
-        AspectTableMapping mapping = new AspectTableMapping(
+        return new AspectTableMapping(
             aspectDef,
             tableName,
             columnMapping
         );
-        return mapping;
     }
 
     @Test
     void testSaveAndLoadMultivaluedStringProperties() throws Exception
     {
-        setUp();
+        setupEach();
 
         // Create AspectDef with multivalued String property
         PropertyDef tagsProp = factory.createPropertyDef("tags", PropertyType.String,
@@ -716,7 +707,7 @@ class PostgresDaoTest
         Entity entity = factory.createEntity(entityId);
         Aspect aspect = factory.createPropertyMapAspect(entity, productDef);
 
-        List<String> tags = ImmutableList.of("electronics", "gadget", "popular");
+        List<String> tags = List.of("electronics", "gadget", "popular");
         aspect.put(factory.createProperty(tagsProp, tags));
 
         hierarchy.put(entity, aspect);
@@ -768,7 +759,7 @@ class PostgresDaoTest
     @Test
     void testSaveAndLoadMultivaluedIntegerProperties() throws Exception
     {
-        setUp();
+        setupEach();
 
         // Create AspectDef with multivalued Integer property
         PropertyDef scoresProp = factory.createPropertyDef("scores", PropertyType.Integer,
@@ -788,7 +779,7 @@ class PostgresDaoTest
         Entity entity = factory.createEntity(entityId);
         Aspect aspect = factory.createPropertyMapAspect(entity, testDef);
 
-        List<Long> scores = ImmutableList.of(100L, 95L, 87L, 92L);
+        List<Long> scores = List.of(100L, 95L, 87L, 92L);
         aspect.put(factory.createProperty(scoresProp, scores));
 
         hierarchy.put(entity, aspect);
@@ -814,7 +805,7 @@ class PostgresDaoTest
     @Test
     void testSaveAndLoadEmptyMultivaluedProperty() throws Exception
     {
-        setUp();
+        setupEach();
 
         // Create AspectDef with multivalued property
         PropertyDef tagsProp = factory.createPropertyDef("tags", PropertyType.String,
@@ -834,7 +825,7 @@ class PostgresDaoTest
         Entity entity = factory.createEntity(entityId);
         Aspect aspect = factory.createPropertyMapAspect(entity, productDef);
 
-        List<String> emptyTags = ImmutableList.of();
+        List<String> emptyTags = List.of();
         aspect.put(factory.createProperty(tagsProp, emptyTags));
 
         hierarchy.put(entity, aspect);
@@ -871,7 +862,7 @@ class PostgresDaoTest
     @Test
     void testSaveAndLoadNullMultivaluedProperty() throws Exception
     {
-        setUp();
+        setupEach();
 
         // Create AspectDef with nullable multivalued property
         PropertyDef tagsProp = factory.createPropertyDef("tags", PropertyType.String,
@@ -927,7 +918,7 @@ class PostgresDaoTest
     @Test
     void testSaveAndLoadMixedSingleAndMultivaluedProperties() throws Exception
     {
-        setUp();
+        setupEach();
 
         // Create AspectDef with both single-valued and multivalued properties
         PropertyDef titleProp = factory.createPropertyDef("title", PropertyType.String,
@@ -956,8 +947,8 @@ class PostgresDaoTest
         Aspect aspect = factory.createPropertyMapAspect(entity, productDef);
 
         aspect.put(factory.createProperty(titleProp, "Smart Watch"));
-        aspect.put(factory.createProperty(tagsProp, ImmutableList.of("electronics", "gadget")));
-        aspect.put(factory.createProperty(pricesProp, ImmutableList.of(199.99, 249.99, 299.99)));
+        aspect.put(factory.createProperty(tagsProp, List.of("electronics", "gadget")));
+        aspect.put(factory.createProperty(pricesProp, List.of(199.99, 249.99, 299.99)));
 
         hierarchy.put(entity, aspect);
 
@@ -1013,7 +1004,7 @@ class PostgresDaoTest
     @Test
     void testSaveAndLoadMultivaluedBooleanAndUUIDProperties() throws Exception
     {
-        setUp();
+        setupEach();
 
         // Create AspectDef with multivalued Boolean and UUID properties
         PropertyDef flagsProp = factory.createPropertyDef("flags", PropertyType.Boolean,
@@ -1042,8 +1033,8 @@ class PostgresDaoTest
         UUID id2 = UUID.fromString("6ba7b810-9dad-11d1-80b4-00c04fd430c8");
         UUID id3 = UUID.fromString("7c9e6679-7425-40de-944b-e07fc1f90ae7");
 
-        aspect.put(factory.createProperty(flagsProp, ImmutableList.of(true, false, true, true)));
-        aspect.put(factory.createProperty(idsProp, ImmutableList.of(id1, id2, id3)));
+        aspect.put(factory.createProperty(flagsProp, List.of(true, false, true, true)));
+        aspect.put(factory.createProperty(idsProp, List.of(id1, id2, id3)));
 
         hierarchy.put(entity, aspect);
 
@@ -1077,7 +1068,7 @@ class PostgresDaoTest
     @Test
     void testUpdateMultivaluedPropertyWithDifferentLength() throws Exception
     {
-        setUp();
+        setupEach();
 
         // Create AspectDef with multivalued property
         PropertyDef tagsProp = factory.createPropertyDef("tags", PropertyType.String,
@@ -1097,7 +1088,7 @@ class PostgresDaoTest
         Entity entity = factory.createEntity(entityId);
         Aspect aspect = factory.createPropertyMapAspect(entity, productDef);
 
-        aspect.put(factory.createProperty(tagsProp, ImmutableList.of("tag1", "tag2", "tag3")));
+        aspect.put(factory.createProperty(tagsProp, List.of("tag1", "tag2", "tag3")));
         hierarchy.put(entity, aspect);
 
         // Save catalog
@@ -1106,7 +1097,7 @@ class PostgresDaoTest
         // Update with list of 5 items
         Aspect updatedAspect = factory.createPropertyMapAspect(entity, productDef);
         updatedAspect.put(factory.createProperty(tagsProp,
-            ImmutableList.of("new1", "new2", "new3", "new4", "new5")));
+            List.of("new1", "new2", "new3", "new4", "new5")));
         hierarchy.put(entity, updatedAspect);
 
         // Save again
@@ -1143,10 +1134,10 @@ class PostgresDaoTest
     @Test
     void testAspectTableMappingAllFourPatterns() throws Exception
     {
-        setUp();
+        setupEach();
 
         // Load AspectDefs from test tables created by Flyway V3 migration
-        PostgresCatalog pgCatalog = new PostgresCatalog(dataSource);
+        PostgresCatalog pgCatalog = new PostgresCatalog(adapter);
         AspectDef noKeyAspectDef = pgCatalog.loadTableDef("test_aspect_mapping_no_key");
         AspectDef catIdAspectDef = pgCatalog.loadTableDef("test_aspect_mapping_with_cat_id");
         AspectDef entityIdAspectDef = pgCatalog.loadTableDef("test_aspect_mapping_with_entity_id");

@@ -22,10 +22,8 @@ import net.netbeing.cheap.db.CheapDao;
 import net.netbeing.cheap.model.*;
 import net.netbeing.cheap.util.CheapFactory;
 import org.jetbrains.annotations.NotNull;
-import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.sql.DataSource;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.net.URI;
@@ -71,30 +69,15 @@ import java.util.UUID;
 @SuppressWarnings("DuplicateBranchesInSwitch")
 public class SqliteDao extends AbstractCheapDao
 {
-    private static final Logger logger = LoggerFactory.getLogger(SqliteDao.class);
-
     /**
      * Constructs a new SqliteDao with the given data source.
      * Creates a new CheapFactory instance for object creation and entity management.
      *
-     * @param dataSource the SQLite data source to use for database operations
+     * @param adapter the SQLite database adapter to use for database operations
      */
-    public SqliteDao(@NotNull DataSource dataSource)
+    public SqliteDao(@NotNull SqliteAdapter adapter)
     {
-        super(dataSource, new CheapFactory(), logger);
-    }
-
-    /**
-     * Constructs a new SqliteDao with the given data source and factory.
-     * This constructor allows sharing a CheapFactory instance across multiple DAOs
-     * to maintain a consistent entity registry.
-     *
-     * @param dataSource the SQLite data source to use for database operations
-     * @param factory the CheapFactory to use for object creation and entity management
-     */
-    public SqliteDao(@NotNull DataSource dataSource, @NotNull CheapFactory factory)
-    {
-        super(dataSource, factory, logger);
+        super(adapter, LoggerFactory.getLogger(SqliteDao.class));
     }
 
     /**
@@ -155,7 +138,7 @@ public class SqliteDao extends AbstractCheapDao
 
         sql.append("\n)");
 
-        try (Connection conn = dataSource.getConnection(); Statement stmt = conn.createStatement()) {
+        try (Connection conn = adapter.getConnection(); Statement stmt = conn.createStatement()) {
             stmt.execute(sql.toString());
         }
     }
@@ -207,7 +190,7 @@ public class SqliteDao extends AbstractCheapDao
     }
 
     @Override
-    protected void linkCatalogToAspectDef(Connection conn, Catalog catalog, AspectDef aspectDef) throws SQLException
+    protected void linkCatalogToAspectDef(@NotNull Connection conn, @NotNull Catalog catalog, @NotNull AspectDef aspectDef) throws SQLException
     {
         String aspectDefId = aspectDef.globalId().toString();
         String sql = "INSERT OR IGNORE INTO catalog_aspect_def (catalog_id, aspect_def_id) VALUES (?, ?)";
@@ -219,7 +202,7 @@ public class SqliteDao extends AbstractCheapDao
     }
 
     @Override
-    public void saveAspectDef(Connection conn, AspectDef aspectDef) throws SQLException
+    public void saveAspectDef(@NotNull Connection conn, @NotNull AspectDef aspectDef) throws SQLException
     {
         String sql =
             "INSERT INTO aspect_def (aspect_def_id, name, hash_version, is_readable, is_writable, can_add_properties, can_remove_properties) " +
@@ -280,7 +263,7 @@ public class SqliteDao extends AbstractCheapDao
 
 
     @Override
-    public void saveEntity(Connection conn, Entity entity) throws SQLException
+    public void saveEntity(@NotNull Connection conn, @NotNull Entity entity) throws SQLException
     {
         String sql = "INSERT OR IGNORE INTO entity (entity_id) VALUES (?)";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -290,7 +273,7 @@ public class SqliteDao extends AbstractCheapDao
     }
 
     @Override
-    protected void saveCatalogRecord(Connection conn, Catalog catalog) throws SQLException
+    protected void saveCatalogRecord(@NotNull Connection conn, @NotNull Catalog catalog) throws SQLException
     {
         String sql = "INSERT INTO catalog (catalog_id, species, uri, upstream_catalog_id, version_number) "
             + "VALUES (?, ?, ?, ?, ?) " +
@@ -310,7 +293,7 @@ public class SqliteDao extends AbstractCheapDao
     }
 
     @Override
-    public void saveHierarchy(Connection conn, Hierarchy hierarchy) throws SQLException
+    public void saveHierarchy(@NotNull Connection conn, @NotNull Hierarchy hierarchy) throws SQLException
     {
         String catalogId = hierarchy.catalog().globalId().toString();
 
@@ -329,7 +312,7 @@ public class SqliteDao extends AbstractCheapDao
     }
 
     @Override
-    protected void saveEntityListContent(Connection conn, EntityListHierarchy hierarchy) throws SQLException
+    protected void saveEntityListContent(@NotNull Connection conn, @NotNull EntityListHierarchy hierarchy) throws SQLException
     {
         String sql = "INSERT INTO hierarchy_entity_list (catalog_id, hierarchy_name, entity_id, list_order) " +
             "VALUES (?, ?, ?, ?) " +
@@ -350,7 +333,7 @@ public class SqliteDao extends AbstractCheapDao
     }
 
     @Override
-    protected void saveEntitySetContent(Connection conn, EntitySetHierarchy hierarchy) throws SQLException
+    protected void saveEntitySetContent(@NotNull Connection conn, @NotNull EntitySetHierarchy hierarchy) throws SQLException
     {
         String sql = "INSERT INTO hierarchy_entity_set (catalog_id, hierarchy_name, entity_id, set_order) " +
             "VALUES (?, ?, ?, ?) " +
@@ -371,7 +354,7 @@ public class SqliteDao extends AbstractCheapDao
     }
 
     @Override
-    protected void saveEntityDirectoryContent(Connection conn, EntityDirectoryHierarchy hierarchy) throws SQLException
+    protected void saveEntityDirectoryContent(@NotNull Connection conn, @NotNull EntityDirectoryHierarchy hierarchy) throws SQLException
     {
         String sql = "INSERT INTO hierarchy_entity_directory (catalog_id, hierarchy_name, entity_key, entity_id, dir_order) " +
             "VALUES (?, ?, ?, ?, ?) " +
@@ -380,13 +363,13 @@ public class SqliteDao extends AbstractCheapDao
             "dir_order = excluded.dir_order";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             int order = 0;
-            for (String key : hierarchy.keySet()) {
-                Entity entity = hierarchy.get(key);
+            for (Map.Entry<String,Entity> entry : hierarchy.entrySet()) {
+                Entity entity = entry.getValue();
                 if (entity != null) {
                     saveEntity(conn, entity);
                     stmt.setString(1, hierarchy.catalog().globalId().toString());
                     stmt.setString(2, hierarchy.name());
-                    stmt.setString(3, key);
+                    stmt.setString(3, entry.getKey());
                     stmt.setString(4, entity.globalId().toString());
                     stmt.setInt(5, order++);
                     stmt.addBatch();
@@ -397,7 +380,7 @@ public class SqliteDao extends AbstractCheapDao
     }
 
     @Override
-    protected void saveEntityTreeContent(Connection conn, EntityTreeHierarchy hierarchy) throws SQLException
+    protected void saveEntityTreeContent(@NotNull Connection conn, @NotNull EntityTreeHierarchy hierarchy) throws SQLException
     {
         // Save tree nodes recursively
         saveTreeNode(conn, hierarchy, hierarchy.root(), "", "", null, 0);
@@ -456,7 +439,7 @@ public class SqliteDao extends AbstractCheapDao
     }
 
     @Override
-    protected void saveAspectMapContentToDefaultTables(Connection conn, AspectMapHierarchy hierarchy) throws SQLException
+    protected void saveAspectMapContentToDefaultTables(@NotNull Connection conn, @NotNull AspectMapHierarchy hierarchy) throws SQLException
     {
         String aspectSql = "INSERT INTO aspect (entity_id, aspect_def_id, catalog_id, hierarchy_name) " +
             "VALUES (?, ?, ?, ?) " +
@@ -470,33 +453,35 @@ public class SqliteDao extends AbstractCheapDao
 
         String aspectDefId = hierarchy.aspectDef().globalId().toString();
 
-        int order = 0;
-        for (Entity entity : hierarchy.keySet()) {
-            saveEntity(conn, entity);
+        try (PreparedStatement aspectStmt = conn.prepareStatement(aspectSql);
+             PreparedStatement mapStmt = conn.prepareStatement(hierarchyMapSql))
+        {
+            aspectStmt.setString(2, aspectDefId);
+            aspectStmt.setString(3, hierarchy.catalog().globalId().toString());
+            aspectStmt.setString(4, hierarchy.name());
+            mapStmt.setString(4, aspectDefId);
+            mapStmt.setString(1, hierarchy.catalog().globalId().toString());
+            mapStmt.setString(2, hierarchy.name());
+            int order = 0;
+            for (Map.Entry<Entity,Aspect> entry : hierarchy.entrySet()) {
+                Entity entity = entry.getKey();
+                saveEntity(conn, entity);
 
-            Aspect aspect = hierarchy.get(entity);
-            if (aspect != null) {
-                // Save aspect
-                try (PreparedStatement aspectStmt = conn.prepareStatement(aspectSql)) {
+                Aspect aspect = entry.getValue();
+                if (aspect != null) {
+                    // Save aspect
                     aspectStmt.setString(1, entity.globalId().toString());
-                    aspectStmt.setString(2, aspectDefId);
-                    aspectStmt.setString(3, hierarchy.catalog().globalId().toString());
-                    aspectStmt.setString(4, hierarchy.name());
                     aspectStmt.executeUpdate();
-                }
 
-                // Save hierarchy mapping
-                try (PreparedStatement mapStmt = conn.prepareStatement(hierarchyMapSql)) {
-                    mapStmt.setString(1, hierarchy.catalog().globalId().toString());
-                    mapStmt.setString(2, hierarchy.name());
+                    // Save hierarchy mapping
                     mapStmt.setString(3, entity.globalId().toString());
-                    mapStmt.setString(4, aspectDefId);
                     mapStmt.setInt(5, order++);
                     mapStmt.executeUpdate();
-                }
 
-                // Save properties
-                saveAspectProperties(conn, entity.globalId().toString(), aspectDefId, hierarchy.catalog().globalId().toString(), aspect);
+                    // Save properties
+                    saveAspectProperties(conn, entity.globalId().toString(), aspectDefId, hierarchy.catalog().globalId()
+                        .toString(), aspect);
+                }
             }
         }
     }
@@ -505,21 +490,47 @@ public class SqliteDao extends AbstractCheapDao
     protected void saveAspectMapContentToMappedTable(Connection conn, AspectMapHierarchy hierarchy, AspectTableMapping mapping) throws SQLException
     {
         // Pre-save cleanup based on flags
-        if (!mapping.hasEntityId() && !mapping.hasCatalogId()) {
-            // No IDs: DELETE all rows (SQLite doesn't have TRUNCATE)
-            try (Statement stmt = conn.createStatement()) {
-                stmt.execute("DELETE FROM " + mapping.tableName());
-            }
-        } else if (!mapping.hasEntityId() && mapping.hasCatalogId()) {
-            // Catalog ID only: DELETE rows for this catalog
-            String deleteSql = "DELETE FROM " + mapping.tableName() + " WHERE catalog_id = ?";
-            try (PreparedStatement stmt = conn.prepareStatement(deleteSql)) {
-                stmt.setString(1, hierarchy.catalog().globalId().toString());
-                stmt.executeUpdate();
+        clearMappedTable(conn, mapping, hierarchy.catalog().globalId());
+
+        StringBuilder sql = buildAspectMapSql(mapping);
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
+            for (Map.Entry<Entity,Aspect> entry : hierarchy.entrySet()) {
+                Entity entity = entry.getKey();
+                saveEntity(conn, entity);
+
+                Aspect aspect = hierarchy.get(entity);
+                if (aspect != null) {
+                    int paramIndex = 1;
+
+                    if (mapping.hasCatalogId()) {
+                        stmt.setString(paramIndex++, hierarchy.catalog().globalId().toString());
+                    }
+
+                    if (mapping.hasEntityId()) {
+                        stmt.setString(paramIndex++, entity.globalId().toString());
+                    }
+
+                    for (String propName : mapping.propertyToColumnMap().keySet()) {
+                        Object value = aspect.readObj(propName);
+
+                        PropertyDef propDef = aspect.def().propertyDef(propName);
+                        if (propDef != null) {
+                            setPropertyValue(stmt, paramIndex++, value, propDef.type());
+                        } else {
+                            stmt.setObject(paramIndex++, value);
+                        }
+                    }
+
+                    stmt.executeUpdate();
+                }
             }
         }
-        // If hasEntityId, no pre-save cleanup needed (will use ON CONFLICT)
+    }
 
+    @Override
+    protected @NotNull StringBuilder buildAspectMapSql(@NotNull AspectTableMapping mapping)
+    {
         // Build column list and placeholders for INSERT
         StringBuilder columns = new StringBuilder();
         StringBuilder placeholders = new StringBuilder();
@@ -572,39 +583,26 @@ public class SqliteDao extends AbstractCheapDao
             }
         }
         // No ON CONFLICT clause if !hasEntityId (simple INSERT after cleanup)
+        return sql;
+    }
 
-        try (PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
-            for (Entity entity : hierarchy.keySet()) {
-                saveEntity(conn, entity);
-
-                Aspect aspect = hierarchy.get(entity);
-                if (aspect != null) {
-                    int paramIndex = 1;
-
-                    if (mapping.hasCatalogId()) {
-                        stmt.setString(paramIndex++, hierarchy.catalog().globalId().toString());
-                    }
-
-                    if (mapping.hasEntityId()) {
-                        stmt.setString(paramIndex++, entity.globalId().toString());
-                    }
-
-                    for (Map.Entry<String, String> entry : mapping.propertyToColumnMap().entrySet()) {
-                        String propName = entry.getKey();
-                        Object value = aspect.readObj(propName);
-
-                        PropertyDef propDef = aspect.def().propertyDef(propName);
-                        if (propDef != null) {
-                            setPropertyValue(stmt, paramIndex++, value, propDef.type());
-                        } else {
-                            stmt.setObject(paramIndex++, value);
-                        }
-                    }
-
-                    stmt.executeUpdate();
-                }
+    @Override
+    protected void clearMappedTable(@NotNull Connection conn, @NotNull AspectTableMapping mapping, @NotNull UUID catalogId) throws SQLException
+    {
+        if (!mapping.hasEntityId() && !mapping.hasCatalogId()) {
+            // No IDs: DELETE all rows (SQLite doesn't have TRUNCATE)
+            try (Statement stmt = conn.createStatement()) {
+                stmt.execute("DELETE FROM " + mapping.tableName());
+            }
+        } else if (!mapping.hasEntityId() && mapping.hasCatalogId()) {
+            // Catalog ID only: DELETE rows for this catalog
+            String deleteSql = "DELETE FROM " + mapping.tableName() + " WHERE catalog_id = ?";
+            try (PreparedStatement stmt = conn.prepareStatement(deleteSql)) {
+                stmt.setString(1, catalogId.toString());
+                stmt.executeUpdate();
             }
         }
+        // If hasEntityId, no pre-save cleanup needed (will use ON CONFLICT)
     }
 
     private void saveAspectProperties(Connection conn, String entityId, String aspectDefId, String catalogId, Aspect aspect) throws SQLException
@@ -624,6 +622,9 @@ public class SqliteDao extends AbstractCheapDao
         AspectDef aspectDef = aspect.def();
 
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, entityId);
+            stmt.setString(2, aspectDefId);
+            stmt.setString(3, catalogId);
             for (PropertyDef propDef : aspectDef.propertyDefs()) {
                 String propName = propDef.name();
                 Object value = aspect.readObj(propName);
@@ -634,11 +635,8 @@ public class SqliteDao extends AbstractCheapDao
                     // - Single-valued: insert a row with NULL
                     // - Multivalued: don't insert any rows (null will be distinguished from empty list during load)
                     if (!propDef.isMultivalued()) {
-                        stmt.setString(1, entityId);
-                        stmt.setString(2, aspectDefId);
-                        stmt.setString(3, catalogId);
                         stmt.setString(4, propName);
-                        stmt.setInt(5, 0); // value_index
+                        stmt.setInt(5, 0); // NOSONAR - sonar bug, doesn't see setInt(5,i) below
                         stmt.setString(6, null); // value_text
                         stmt.setBytes(7, null);  // value_binary
                         stmt.addBatch();
@@ -647,38 +645,32 @@ public class SqliteDao extends AbstractCheapDao
                     // For multivalued properties, insert one row per value
                     @SuppressWarnings("unchecked")
                     List<Object> listValues = (List<Object>) value;
+                    stmt.setString(4, propName);
 
                     // If empty list, don't insert any rows (empty list represented by no rows)
                     for (int i = 0; i < listValues.size(); i++) {
                         Object itemValue = listValues.get(i);
-                        stmt.setString(1, entityId);
-                        stmt.setString(2, aspectDefId);
-                        stmt.setString(3, catalogId);
-                        stmt.setString(4, propName);
                         stmt.setInt(5, i); // value_index
 
                         if (type == PropertyType.BLOB) {
                             stmt.setString(6, null); // value_text
                             stmt.setBytes(7, (byte[]) itemValue); // value_binary
                         } else {
-                            stmt.setString(6, valueAdapter.convertValueToString(itemValue, type)); // value_text
+                            stmt.setString(6, adapter.getValueAdapter().convertValueToString(itemValue, type)); // value_text
                             stmt.setBytes(7, null); // value_binary
                         }
                         stmt.addBatch();
                     }
                 } else {
                     // For single-valued properties, insert one row with value_index 0
-                    stmt.setString(1, entityId);
-                    stmt.setString(2, aspectDefId);
-                    stmt.setString(3, catalogId);
                     stmt.setString(4, propName);
-                    stmt.setInt(5, 0); // value_index
+                    stmt.setInt(5, 0); // NOSONAR - sonar bug, doesn't see setInt(5,i) above
 
                     if (type == PropertyType.BLOB) {
                         stmt.setString(6, null); // value_text
                         stmt.setBytes(7, (byte[]) value); // value_binary
                     } else {
-                        stmt.setString(6, valueAdapter.convertValueToString(value, type)); // value_text
+                        stmt.setString(6, adapter.getValueAdapter().convertValueToString(value, type)); // value_text
                         stmt.setBytes(7, null); // value_binary
                     }
                     stmt.addBatch();
@@ -690,7 +682,7 @@ public class SqliteDao extends AbstractCheapDao
     }
 
     @Override
-    public Catalog loadCatalogWithConnection(Connection conn, UUID catalogId) throws SQLException
+    public Catalog loadCatalogWithConnection(@NotNull Connection conn, @NotNull UUID catalogId) throws SQLException
     {
         // Load catalog basic info
         String sql = "SELECT catalog_id, species, uri, upstream_catalog_id, version_number FROM catalog WHERE catalog_id = ?";
@@ -717,7 +709,7 @@ public class SqliteDao extends AbstractCheapDao
                 long version = rs.getLong("version_number");
 
                 // Create catalog with version
-                Catalog catalog = factory.createCatalog(catalogId, species, uri, upstream, version);
+                Catalog catalog = adapter.getFactory().createCatalog(catalogId, species, uri, upstream, version);
 
                 // Load and extend catalog with AspectDefs
                 loadAndExtendAspectDefs(conn, catalog);
@@ -798,7 +790,7 @@ public class SqliteDao extends AbstractCheapDao
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
                     UUID entityId = UUID.fromString(rs.getString("entity_id"));
-                    Entity entity = factory.getOrRegisterNewEntity(entityId);
+                    Entity entity = adapter.getFactory().getOrRegisterNewEntity(entityId);
                     hierarchy.add(entity);
                 }
             }
@@ -815,7 +807,7 @@ public class SqliteDao extends AbstractCheapDao
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
                     UUID entityId = UUID.fromString(rs.getString("entity_id"));
-                    Entity entity = factory.getOrRegisterNewEntity(entityId);
+                    Entity entity = adapter.getFactory().getOrRegisterNewEntity(entityId);
                     hierarchy.add(entity);
                 }
             }
@@ -834,7 +826,7 @@ public class SqliteDao extends AbstractCheapDao
                 while (rs.next()) {
                     String key = rs.getString("entity_key");
                     UUID entityId = UUID.fromString(rs.getString("entity_id"));
-                    Entity entity = factory.getOrRegisterNewEntity(entityId);
+                    Entity entity = adapter.getFactory().getOrRegisterNewEntity(entityId);
                     hierarchy.put(key, entity);
                 }
             }
@@ -863,11 +855,11 @@ public class SqliteDao extends AbstractCheapDao
                     String nodeKey = rs.getString("node_key");
                     String entityIdStr = rs.getString("entity_id");
 
-                    Entity entity = entityIdStr != null ? factory.getOrRegisterNewEntity(UUID.fromString(entityIdStr)) : null;
-                    EntityTreeHierarchy.Node node = factory.createTreeNode(entity);
+                    Entity entity = entityIdStr != null ? adapter.getFactory().getOrRegisterNewEntity(UUID.fromString(entityIdStr)) : null;
+                    EntityTreeHierarchy.Node node = adapter.getFactory().createTreeNode(entity);
 
-                    NodeRecord record = new NodeRecord(nodeId, parentNodeId, nodeKey, node);
-                    nodeMap.put(nodeId, record);
+                    NodeRecord nodeRecord = new NodeRecord(nodeId, parentNodeId, nodeKey, node);
+                    nodeMap.put(nodeId, nodeRecord);
 
                     // Root node has no parent
                     if (parentNodeId == null) {
@@ -878,11 +870,11 @@ public class SqliteDao extends AbstractCheapDao
         }
 
         // Build the tree structure by adding children to their parents
-        for (NodeRecord record : nodeMap.values()) {
-            if (record.parentNodeId != null) {
-                NodeRecord parentRecord = nodeMap.get(record.parentNodeId);
+        for (NodeRecord nodeRecord : nodeMap.values()) {
+            if (nodeRecord.parentNodeId != null) {
+                NodeRecord parentRecord = nodeMap.get(nodeRecord.parentNodeId);
                 if (parentRecord != null) {
-                    parentRecord.node.put(record.nodeKey, record.node);
+                    parentRecord.node.put(nodeRecord.nodeKey, nodeRecord.node);
                 }
             }
         }
@@ -935,7 +927,7 @@ public class SqliteDao extends AbstractCheapDao
                 while (rs.next()) {
                     UUID entityId = UUID.fromString(rs.getString("entity_id"));
 
-                    Entity entity = factory.getOrRegisterNewEntity(entityId);
+                    Entity entity = adapter.getFactory().getOrRegisterNewEntity(entityId);
                     Aspect aspect = loadAspect(conn, entity, hierarchy.aspectDef(), hierarchy.catalog());
                     hierarchy.put(entity, aspect);
                 }
@@ -985,13 +977,13 @@ public class SqliteDao extends AbstractCheapDao
                     if (mapping.hasEntityId()) {
                         // Entity ID is in the table - use it
                         UUID entityId = UUID.fromString(rs.getString("entity_id"));
-                        entity = factory.getOrRegisterNewEntity(entityId);
+                        entity = adapter.getFactory().getOrRegisterNewEntity(entityId);
                     } else {
                         // No entity ID in table - generate a new one
-                        entity = factory.createEntity();
+                        entity = adapter.getFactory().createEntity();
                     }
 
-                    Aspect aspect = factory.createPropertyMapAspect(entity, hierarchy.aspectDef());
+                    Aspect aspect = adapter.getFactory().createPropertyMapAspect(entity, hierarchy.aspectDef());
 
                     // Load properties from mapped columns
                     for (Map.Entry<String, String> entry : mapping.propertyToColumnMap().entrySet()) {
@@ -1005,7 +997,7 @@ public class SqliteDao extends AbstractCheapDao
                             if (propDef.type() == PropertyType.UUID && value != null) {
                                 value = UUID.fromString(value.toString());
                             }
-                            Property property = factory.createProperty(propDef, value);
+                            Property property = adapter.getFactory().createProperty(propDef, value);
                             aspect.put(property);
                         }
                     }
@@ -1017,9 +1009,9 @@ public class SqliteDao extends AbstractCheapDao
     }
 
     @Override
-    public Aspect loadAspect(Connection conn, Entity entity, AspectDef aspectDef, Catalog catalog) throws SQLException
+    public Aspect loadAspect(@NotNull Connection conn, @NotNull Entity entity, @NotNull AspectDef aspectDef, @NotNull Catalog catalog) throws SQLException
     {
-        Aspect aspect = factory.createPropertyMapAspect(entity, aspectDef);
+        Aspect aspect = adapter.getFactory().createPropertyMapAspect(entity, aspectDef);
 
         String sql = "SELECT property_name, value_index, value_text, value_binary " +
             "FROM property_value " +
@@ -1083,7 +1075,7 @@ public class SqliteDao extends AbstractCheapDao
         for (PropertyDef propDef : aspectDef.propertyDefs()) {
             if (!loadedProperties.contains(propDef.name()) && propDef.isMultivalued()) {
                 // Multivalued property with no rows → create with empty list
-                Property property = factory.createProperty(propDef, Collections.emptyList());
+                Property property = adapter.getFactory().createProperty(propDef, Collections.emptyList());
                 aspect.put(property);
             }
         }
@@ -1099,18 +1091,18 @@ public class SqliteDao extends AbstractCheapDao
         if (values.isEmpty()) {
             // No rows found - for multivalued, this means empty list
             if (propDef.isMultivalued()) {
-                Property property = factory.createProperty(propDef, Collections.emptyList());
+                Property property = adapter.getFactory().createProperty(propDef, Collections.emptyList());
                 aspect.put(property);
             }
             // For single-valued, don't add the property (will use default value if available)
         } else if (propDef.isMultivalued()) {
             // Multivalued property - create property with list of all values
-            Property property = factory.createProperty(propDef, new ArrayList<>(values));
+            Property property = adapter.getFactory().createProperty(propDef, new ArrayList<>(values));
             aspect.put(property);
         } else {
             // Single-valued property - use the first (and only) value
             Object value = values.getFirst();
-            Property property = factory.createProperty(propDef, value);
+            Property property = adapter.getFactory().createProperty(propDef, value);
             aspect.put(property);
         }
     }
@@ -1162,22 +1154,23 @@ public class SqliteDao extends AbstractCheapDao
     }
 
     @Override
-    public AspectDef loadAspectDef(Connection conn, String aspectDefName) throws SQLException
+    public AspectDef loadAspectDef(@NotNull Connection conn, @NotNull String aspectDefName) throws SQLException
     {
-        // First load the AspectDef basic info including hash_version
-        String aspectSql = "SELECT aspect_def_id, hash_version, is_readable, is_writable, can_add_properties, can_remove_properties " +
+        // First load the AspectDef basic info except hash_version
+        String aspectSql = "SELECT aspect_def_id, is_readable, is_writable, can_add_properties, can_remove_properties " +
             "FROM aspect_def WHERE name = ?";
 
-        long hashVersion;
         UUID aspectDefId;
-        boolean isReadable, isWritable, canAddProperties, canRemoveProperties;
+        boolean isReadable;
+        boolean isWritable;
+        boolean canAddProperties;
+        boolean canRemoveProperties;
 
         try (PreparedStatement stmt = conn.prepareStatement(aspectSql)) {
             stmt.setString(1, aspectDefName);
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
                     aspectDefId = UUID.fromString(rs.getString("aspect_def_id"));
-                    hashVersion = rs.getLong("hash_version");
                     isReadable = rs.getInt("is_readable") == 1;
                     isWritable = rs.getInt("is_writable") == 1;
                     canAddProperties = rs.getInt("can_add_properties") == 1;
@@ -1210,7 +1203,7 @@ public class SqliteDao extends AbstractCheapDao
                     boolean isRemovable = rs.getInt("is_removable") == 1;
                     boolean isMultivalued = rs.getInt("is_multivalued") == 1;
 
-                    PropertyDef propDef = factory.createPropertyDef(propName, type, defaultValue, hasDefaultValue,
+                    PropertyDef propDef = adapter.getFactory().createPropertyDef(propName, type, defaultValue, hasDefaultValue,
                         propReadable, propWritable, isNullable, isRemovable, isMultivalued);
 
                     propertyDefMap.put(propName, propDef);
@@ -1222,13 +1215,13 @@ public class SqliteDao extends AbstractCheapDao
         AspectDef aspectDef;
         if (canAddProperties && canRemoveProperties) {
             // Fully mutable - use MutableAspectDefImpl
-            aspectDef = factory.createMutableAspectDef(aspectDefName, aspectDefId, propertyDefMap);
+            aspectDef = adapter.getFactory().createMutableAspectDef(aspectDefName, aspectDefId, propertyDefMap);
         } else if (!canAddProperties && !canRemoveProperties) {
             // Fully immutable - use ImmutableAspectDefImpl
-            aspectDef = factory.createImmutableAspectDef(aspectDefName, aspectDefId, propertyDefMap);
+            aspectDef = adapter.getFactory().createImmutableAspectDef(aspectDefName, aspectDefId, propertyDefMap);
         } else {
             // Mixed mutability - use FullAspectDefImpl
-            aspectDef = factory.createFullAspectDef(aspectDefName, aspectDefId, propertyDefMap,
+            aspectDef = adapter.getFactory().createFullAspectDef(aspectDefName, aspectDefId, propertyDefMap,
                 isReadable, isWritable, canAddProperties, canRemoveProperties);
         }
 
@@ -1238,7 +1231,7 @@ public class SqliteDao extends AbstractCheapDao
     @Override
     public boolean deleteCatalog(@NotNull UUID catalogId) throws SQLException
     {
-        try (Connection conn = dataSource.getConnection()) {
+        try (Connection conn = adapter.getConnection()) {
             // Enable foreign keys
             try (Statement stmt = conn.createStatement()) {
                 stmt.execute("PRAGMA foreign_keys = ON");
@@ -1264,7 +1257,7 @@ public class SqliteDao extends AbstractCheapDao
     public boolean catalogExists(@NotNull UUID catalogId) throws SQLException
     {
         String sql = "SELECT 1 FROM catalog WHERE catalog_id = ?";
-        try (Connection conn = dataSource.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (Connection conn = adapter.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, catalogId.toString());
             try (ResultSet rs = stmt.executeQuery()) {
                 return rs.next();
@@ -1278,7 +1271,8 @@ public class SqliteDao extends AbstractCheapDao
      * Sets a property value in a PreparedStatement, handling type conversions.
      * Used when saving aspects to custom mapped tables.
      */
-    private void setPropertyValue(PreparedStatement stmt, int paramIndex, Object value, PropertyType type) throws SQLException
+    @Override
+    protected void setPropertyValue(@NotNull PreparedStatement stmt, int paramIndex, Object value, @NotNull PropertyType type) throws SQLException
     {
         if (value == null) {
             stmt.setObject(paramIndex, null);
@@ -1289,7 +1283,7 @@ public class SqliteDao extends AbstractCheapDao
             case Integer -> stmt.setLong(paramIndex, ((Number) value).longValue());
             case Float -> stmt.setDouble(paramIndex, ((Number) value).doubleValue());
             case Boolean -> stmt.setInt(paramIndex, (Boolean) value ? 1 : 0);
-            case DateTime -> stmt.setString(paramIndex, valueAdapter.convertToTimestamp(value).toString());
+            case DateTime -> stmt.setString(paramIndex, adapter.getValueAdapter().convertToTimestamp(value).toString());
             case UUID -> stmt.setString(paramIndex, value.toString());
             case BLOB -> stmt.setBytes(paramIndex, (byte[]) value);
             default -> stmt.setString(paramIndex, value.toString());

@@ -23,11 +23,9 @@ import net.netbeing.cheap.model.PropertyType;
 import net.netbeing.cheap.util.CheapException;
 import org.jetbrains.annotations.NotNull;
 
-import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.SQLDataException;
 import java.sql.SQLException;
 import java.util.Map;
 
@@ -96,12 +94,12 @@ public class MariaDbCatalog extends JdbcCatalogBase
      * 'public' schema. The table names are cached for subsequent use.
      * </p>
      *
-     * @param dataSource the MariaDB data source to use for database access
-     * @throws NullPointerException if dataSource is null
+     * @param adapter the MariaDB database adapter to use for database access
+     * @throws NullPointerException if adapter is null
      */
-    public MariaDbCatalog(@NotNull DataSource dataSource)
+    public MariaDbCatalog(@NotNull MariaDbAdapter adapter)
     {
-        super(dataSource);
+        super(adapter);
     }
 
     private static final Map<String, PropertyType> MARIADB_TO_PROPERTY_TYPE = Map.<String, PropertyType>ofEntries(
@@ -162,7 +160,7 @@ public class MariaDbCatalog extends JdbcCatalogBase
     @Override
     protected void loadTables()
     {
-        try (Connection connection = dataSource.getConnection();
+        try (Connection connection = adapter.getConnection();
              PreparedStatement statement = connection.prepareStatement(
                  "SELECT table_name FROM information_schema.tables " +
                  "WHERE table_schema = DATABASE() AND table_type = 'BASE TABLE'");
@@ -181,7 +179,7 @@ public class MariaDbCatalog extends JdbcCatalogBase
     protected String getSchemaName()
     {
         // In MariaDB, the schema is the database name
-        try (Connection connection = dataSource.getConnection()) {
+        try (Connection connection = adapter.getConnection()) {
             return connection.getCatalog();
         } catch (SQLException e) {
             throw new CheapException("Failed to get schema name from MariaDB database", e);

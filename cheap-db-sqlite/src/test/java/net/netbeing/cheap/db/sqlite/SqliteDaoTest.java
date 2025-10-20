@@ -16,7 +16,6 @@
 
 package net.netbeing.cheap.db.sqlite;
 
-import com.google.common.collect.ImmutableList;
 import net.netbeing.cheap.db.AspectTableMapping;
 import net.netbeing.cheap.model.*;
 import net.netbeing.cheap.util.CheapFactory;
@@ -51,6 +50,7 @@ class SqliteDaoTest
     DataSource dataSource;
     Connection connection;
     SqliteDao sqliteDao;
+    SqliteAdapter adapter;
     CheapFactory factory;
 
     @BeforeEach
@@ -66,7 +66,8 @@ class SqliteDaoTest
 
         // Initialize factory and DAO
         factory = new CheapFactory();
-        sqliteDao = new SqliteDao(dataSource, factory);
+        adapter = new SqliteAdapter(dataSource, factory);
+        sqliteDao = new SqliteDao(adapter);
 
         // Initialize schema
         initializeSchema();
@@ -185,9 +186,6 @@ class SqliteDaoTest
         UUID catalogId = UUID.randomUUID();
         Catalog originalCatalog = factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
 
-        // Create hierarchy definition
-        HierarchyDef hierarchyDef = factory.createHierarchyDef("entities", HierarchyType.ENTITY_SET);
-
         // Create hierarchy
         EntitySetHierarchy hierarchy = factory.createEntitySetHierarchy(originalCatalog, "entities");
 
@@ -230,9 +228,6 @@ class SqliteDaoTest
         // Create catalog
         UUID catalogId = UUID.randomUUID();
         Catalog originalCatalog = factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
-
-        // Create hierarchy definition
-        HierarchyDef hierarchyDef = factory.createHierarchyDef("directory", HierarchyType.ENTITY_DIR);
 
         // Create hierarchy
         EntityDirectoryHierarchy hierarchy = factory.createEntityDirectoryHierarchy(originalCatalog, "directory");
@@ -376,9 +371,7 @@ class SqliteDaoTest
     @Test
     void testSaveNullCatalogThrowsException()
     {
-        assertThrows(IllegalArgumentException.class, () -> {
-            sqliteDao.saveCatalog(null);
-        });
+        assertThrows(IllegalArgumentException.class, () -> sqliteDao.saveCatalog(null));
     }
 
     @Test
@@ -402,10 +395,6 @@ class SqliteDaoTest
         // Create multiple aspect definitions
         AspectDef personAspect = factory.createMutableAspectDef("person");
         AspectDef addressAspect = factory.createMutableAspectDef("address");
-
-        // Create multiple hierarchies
-        HierarchyDef entitiesHierarchy = factory.createHierarchyDef("entities", HierarchyType.ENTITY_SET);
-        HierarchyDef directoryHierarchy = factory.createHierarchyDef("directory", HierarchyType.ENTITY_DIR);
 
         // Create entity set hierarchy
         EntitySetHierarchy entitySet = factory.createEntitySetHierarchy(originalCatalog, "entities");
@@ -490,7 +479,7 @@ class SqliteDaoTest
         Entity entity = factory.createEntity(entityId);
         Aspect aspect = factory.createPropertyMapAspect(entity, productDef);
 
-        List<String> tags = ImmutableList.of("electronics", "gadget", "popular");
+        List<String> tags = List.of("electronics", "gadget", "popular");
         aspect.put(factory.createProperty(tagsProp, tags));
 
         hierarchy.put(entity, aspect);
@@ -560,7 +549,7 @@ class SqliteDaoTest
         Entity entity = factory.createEntity(entityId);
         Aspect aspect = factory.createPropertyMapAspect(entity, testDef);
 
-        List<Long> scores = ImmutableList.of(100L, 95L, 87L, 92L);
+        List<Long> scores = List.of(100L, 95L, 87L, 92L);
         aspect.put(factory.createProperty(scoresProp, scores));
 
         hierarchy.put(entity, aspect);
@@ -604,7 +593,7 @@ class SqliteDaoTest
         Entity entity = factory.createEntity(entityId);
         Aspect aspect = factory.createPropertyMapAspect(entity, productDef);
 
-        List<String> emptyTags = ImmutableList.of();
+        List<String> emptyTags = List.of();
         aspect.put(factory.createProperty(tagsProp, emptyTags));
 
         hierarchy.put(entity, aspect);
@@ -722,8 +711,8 @@ class SqliteDaoTest
         Aspect aspect = factory.createPropertyMapAspect(entity, productDef);
 
         aspect.put(factory.createProperty(titleProp, "Smart Watch"));
-        aspect.put(factory.createProperty(tagsProp, ImmutableList.of("electronics", "gadget")));
-        aspect.put(factory.createProperty(pricesProp, ImmutableList.of(199.99, 249.99, 299.99)));
+        aspect.put(factory.createProperty(tagsProp, List.of("electronics", "gadget")));
+        aspect.put(factory.createProperty(pricesProp, List.of(199.99, 249.99, 299.99)));
 
         hierarchy.put(entity, aspect);
 
@@ -806,8 +795,8 @@ class SqliteDaoTest
         UUID id2 = UUID.fromString("6ba7b810-9dad-11d1-80b4-00c04fd430c8");
         UUID id3 = UUID.fromString("7c9e6679-7425-40de-944b-e07fc1f90ae7");
 
-        aspect.put(factory.createProperty(flagsProp, ImmutableList.of(true, false, true, true)));
-        aspect.put(factory.createProperty(idsProp, ImmutableList.of(id1, id2, id3)));
+        aspect.put(factory.createProperty(flagsProp, List.of(true, false, true, true)));
+        aspect.put(factory.createProperty(idsProp, List.of(id1, id2, id3)));
 
         hierarchy.put(entity, aspect);
 
@@ -859,7 +848,7 @@ class SqliteDaoTest
         Entity entity = factory.createEntity(entityId);
         Aspect aspect = factory.createPropertyMapAspect(entity, productDef);
 
-        aspect.put(factory.createProperty(tagsProp, ImmutableList.of("tag1", "tag2", "tag3")));
+        aspect.put(factory.createProperty(tagsProp, List.of("tag1", "tag2", "tag3")));
         hierarchy.put(entity, aspect);
 
         // Save catalog
@@ -868,7 +857,7 @@ class SqliteDaoTest
         // Update with list of 5 items
         Aspect updatedAspect = factory.createPropertyMapAspect(entity, productDef);
         updatedAspect.put(factory.createProperty(tagsProp,
-            ImmutableList.of("new1", "new2", "new3", "new4", "new5")));
+            List.of("new1", "new2", "new3", "new4", "new5")));
         hierarchy.put(entity, updatedAspect);
 
         // Save again
@@ -915,14 +904,14 @@ class SqliteDaoTest
 
         for (String sqlFile : sqlFiles) {
             String sql = loadResourceFile(sqlFile);
-            try (Connection conn = dataSource.getConnection();
+            try (Connection conn = adapter.getConnection();
                  Statement stmt = conn.createStatement()) {
                 stmt.execute(sql);
             }
         }
 
         // Load AspectDefs from test tables
-        SqliteCatalog sqliteCatalog = new SqliteCatalog(dataSource);
+        SqliteCatalog sqliteCatalog = new SqliteCatalog(adapter);
         AspectDef noKeyAspectDef = sqliteCatalog.loadTableDef("test_aspect_mapping_no_key");
         AspectDef catIdAspectDef = sqliteCatalog.loadTableDef("test_aspect_mapping_with_cat_id");
         AspectDef entityIdAspectDef = sqliteCatalog.loadTableDef("test_aspect_mapping_with_entity_id");
@@ -1233,12 +1222,7 @@ class SqliteDaoTest
         columnMapping.put("clob_prop", "clob_prop");
         columnMapping.put("blob_prop", "blob_prop");
 
-        AspectTableMapping mapping = new AspectTableMapping(
-            aspectDef,
-            tableName,
-            columnMapping
-        );
-        return mapping;
+        return new AspectTableMapping(aspectDef, tableName, columnMapping);
     }
 
     @SuppressWarnings("DataFlowIssue")

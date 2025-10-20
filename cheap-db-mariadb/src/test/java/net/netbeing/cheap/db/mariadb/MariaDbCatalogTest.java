@@ -23,7 +23,6 @@ import net.netbeing.cheap.model.HierarchyType;
 import net.netbeing.cheap.model.Property;
 import net.netbeing.cheap.model.PropertyDef;
 import net.netbeing.cheap.model.PropertyType;
-import net.netbeing.cheap.util.PropertyValueAdapter;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -34,7 +33,6 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.List;
-import java.util.TimeZone;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -65,8 +63,7 @@ class MariaDbCatalogTest
     @BeforeEach
     void setUp() throws SQLException
     {
-        catalog = new MariaDbCatalog(db.dataSource);
-        catalog.setValueAdapter(new PropertyValueAdapter(TimeZone.getTimeZone("GMT")));
+        catalog = new MariaDbCatalog(db.adapter);
         initializeTestData();
     }
 
@@ -139,7 +136,7 @@ class MariaDbCatalogTest
     @Test
     void testLoadDbStaticMethod()
     {
-        MariaDbCatalog staticCatalog = new MariaDbCatalog(db.dataSource);
+        MariaDbCatalog staticCatalog = new MariaDbCatalog(db.adapter);
 
         assertNotNull(staticCatalog, "Catalog should not be null");
 
@@ -245,13 +242,13 @@ class MariaDbCatalogTest
                 assertEquals(1.5, ((Double) floatProp.read()), "float_col should be 1.5");
 
                 Property dateProp = aspect.get("date_col");
-                assertEquals("2025-01-01T00:00Z[GMT]", dateProp.read().toString(), "date_col should be 2025-01-01T00:00Z[GMT]");
+                assertEquals("2025-01-01T00:00Z[UTC]", dateProp.read().toString(), "date_col should be 2025-01-01T00:00Z[GMT]");
 
                 Property timestampProp = aspect.get("timestamp_col");
-                assertEquals("2025-01-11T18:18:18Z[GMT]", timestampProp.read().toString(), "timestamp_col should be 2025-01-11T18:18:18Z[GMT]");
+                assertEquals("2025-01-11T18:18:18Z[UTC]", timestampProp.read().toString(), "timestamp_col should be 2025-01-11T18:18:18Z[GMT]");
 
                 Property booleanProp = aspect.get("boolean_col");
-                assertEquals(true, (Boolean) booleanProp.read(), "boolean_col should be true");
+                assertEquals(true, booleanProp.read(), "boolean_col should be true");
 
                 Property uuidProp = aspect.get("uuid_col");
                 assertEquals("4186bfb6-b135-48af-9236-95cacdb20327", uuidProp.read(), "uuid_col should match expected UUID");
@@ -272,13 +269,13 @@ class MariaDbCatalogTest
                 assertEquals(2.5, ((Double) floatProp.read()), "float_col should be 2.5");
 
                 Property dateProp = aspect.get("date_col");
-                assertEquals("2025-02-02T00:00Z[GMT]", dateProp.read().toString(), "date_col should be 2025-02-02T00:00Z[GMT]");
+                assertEquals("2025-02-02T00:00Z[UTC]", dateProp.read().toString(), "date_col should be 2025-02-02T00:00Z[GMT]");
 
                 Property timestampProp = aspect.get("timestamp_col");
-                assertEquals("2025-02-02T02:02:02Z[GMT]", timestampProp.read().toString(), "timestamp_col should be 2025-02-02T02:02:02Z[GMT]");
+                assertEquals("2025-02-02T02:02:02Z[UTC]", timestampProp.read().toString(), "timestamp_col should be 2025-02-02T02:02:02Z[GMT]");
 
                 Property booleanProp = aspect.get("boolean_col");
-                assertEquals(false, (Boolean) booleanProp.read(), "boolean_col should be false");
+                assertEquals(false, booleanProp.read(), "boolean_col should be false");
 
                 Property uuidProp = aspect.get("uuid_col");
                 assertEquals("655a99b9-af7c-4f2f-afa8-c4801986b9d4", uuidProp.read(), "uuid_col should match expected UUID");

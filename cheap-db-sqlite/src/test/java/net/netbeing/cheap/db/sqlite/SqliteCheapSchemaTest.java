@@ -151,9 +151,6 @@ class SqliteCheapSchemaTest {
             UUID catalogId = UUID.randomUUID();
             testFactory.populateAllHierarchyTypes(conn, catalogId);
 
-            String entityIdStr = catalogId.toString();
-            String aspectDefIdStr = catalogId.toString();
-
             // Verify all tables have at least 1 row
             assertTrue(getRowCount(conn, "entity") >= 1, "entity should have at least 1 row");
             assertTrue(getRowCount(conn, "aspect_def") >= 1, "aspect_def should have at least 1 row");

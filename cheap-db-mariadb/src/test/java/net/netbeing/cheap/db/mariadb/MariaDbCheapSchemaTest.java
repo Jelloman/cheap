@@ -137,7 +137,7 @@ class MariaDbCheapSchemaTest
             // Populate all tables with at least 1 row
             CheapTestFactory testFactory = new CheapTestFactory();
             UUID catalogId = UUID.randomUUID();
-            CheapTestFactory.EntityIds ids = testFactory.populateAllHierarchyTypes(conn, catalogId);
+            testFactory.populateAllHierarchyTypes(conn, catalogId);
 
             // Verify all tables have at least 1 row
             assertTrue(getRowCount(conn, "entity") >= 1, "entity should have at least 1 row");

@@ -1,4 +1,3 @@
-
 INSERT INTO test_table
 (id, string_col, integer_col, float_col, date_col, timestamp_col, boolean_col, uuid_col, blob_col)
 VALUES(1, 'string1', 1, 1.5, '2025-01-01', '2025-01-11 18:18:18.018', true,

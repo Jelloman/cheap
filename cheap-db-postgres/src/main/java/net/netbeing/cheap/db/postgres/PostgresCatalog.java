@@ -23,7 +23,6 @@ import net.netbeing.cheap.model.PropertyType;
 import net.netbeing.cheap.util.CheapException;
 import org.jetbrains.annotations.NotNull;
 
-import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -72,8 +71,8 @@ import static java.util.Map.entry;
  * Usage example:
  * </p>
  * <pre>{@code
- * DataSource dataSource = createPostgreSQLDataSource("jdbc:postgresql://localhost/mydb");
- * PostgresCatalog catalog = new PostgresCatalog(dataSource);
+ * DataSource adapter = createPostgreSQLDataSource("jdbc:postgresql://localhost/mydb");
+ * PostgresCatalog catalog = new PostgresCatalog(adapter);
  *
  * // Get list of available tables
  * List<String> tables = catalog.getTables();
@@ -95,12 +94,12 @@ public class PostgresCatalog extends JdbcCatalogBase
      * 'public' schema. The table names are cached for subsequent use.
      * </p>
      *
-     * @param dataSource the PostgreSQL data source to use for database access
-     * @throws NullPointerException if dataSource is null
+     * @param adapter the PostgreSQL data source to use for database access
+     * @throws NullPointerException if adapter is null
      */
-    public PostgresCatalog(@NotNull DataSource dataSource)
+    public PostgresCatalog(@NotNull PostgresAdapter adapter)
     {
-        super(dataSource);
+        super(adapter);
     }
     
     private static final Map<String, PropertyType> POSTGRES_TO_PROPERTY_TYPE = Map.<String, PropertyType>ofEntries(
@@ -215,7 +214,7 @@ public class PostgresCatalog extends JdbcCatalogBase
     @Override
     protected void loadTables()
     {
-        try (Connection connection = dataSource.getConnection();
+        try (Connection connection = adapter.getConnection();
              PreparedStatement statement = connection.prepareStatement(
                  "SELECT table_name FROM information_schema.tables " +
                  "WHERE table_schema = 'public' AND table_type = 'BASE TABLE'");

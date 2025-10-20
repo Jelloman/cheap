@@ -29,10 +29,8 @@ import net.netbeing.cheap.model.Entity;
 import net.netbeing.cheap.model.PropertyDef;
 import net.netbeing.cheap.model.PropertyType;
 import net.netbeing.cheap.util.CheapException;
-import net.netbeing.cheap.util.PropertyValueAdapter;
 import org.jetbrains.annotations.NotNull;
 
-import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
@@ -51,37 +49,32 @@ import java.util.Map;
  */
 public abstract class JdbcCatalogBase extends CatalogImpl
 {
+    /**
+     * The database adapter used by this catalog adapter.
+     */
+    protected final CheapJdbcAdapter adapter;
+
     /** List of table names available in the database. Populated by {@link #loadTables()}. */
     protected final List<String> tables = new LinkedList<>();
 
     /** Cache of AspectDef objects created for each table, keyed by table name. */
     protected final Map<String, AspectDef> tableAspects = new LinkedHashMap<>();
 
-    /** JDBC data source for database connections. */
-    protected DataSource dataSource;
-
-    /** PropertyValueAdapter for adapting values read from the Database **/
-    protected PropertyValueAdapter valueAdapter = new PropertyValueAdapter();
-
-    /**
-     * Default constructor for testing or lazy initialization.
-     * The data source must be set before calling most methods.
-     */
-    protected JdbcCatalogBase()
-    {
-        // Default constructor
-    }
-
     /**
      * Constructs a new catalog connected to the given data source.
      * Immediately loads the list of available tables from the database.
      *
-     * @param dataSource the JDBC data source to use for database access
+     * @param adapter the database adapter to use for database access
      */
-    protected JdbcCatalogBase(DataSource dataSource)
+    protected JdbcCatalogBase(@NotNull CheapJdbcAdapter adapter)
     {
-        this.dataSource = dataSource;
+        this.adapter = adapter;
         loadTables();
+    }
+
+    public CheapJdbcAdapter getAdapter()
+    {
+        return adapter;
     }
 
     /**
@@ -113,24 +106,6 @@ public abstract class JdbcCatalogBase extends CatalogImpl
     protected abstract String getSchemaName();
 
     /**
-     * Return the current PropertyValueAdapter in this CatalogAdapter.
-     * @return the current PropertyValueAdapter
-     */
-    public PropertyValueAdapter getValueAdapter()
-    {
-        return valueAdapter;
-    }
-
-    /**
-     * Set a new PropertyValueAdapter in this CatalogAdapter
-     * @param valueAdapter a new PropertyValueAdapter
-     */
-    public void setValueAdapter(PropertyValueAdapter valueAdapter)
-    {
-        this.valueAdapter = valueAdapter;
-    }
-
-    /**
      * Gets the AspectDef for a database table, loading it from the database if necessary.
      * This method caches AspectDefs to avoid repeated introspection of the same table.
      *
@@ -153,18 +128,14 @@ public abstract class JdbcCatalogBase extends CatalogImpl
      *
      * @param tableName the name of the database table to introspect
      * @return a MutableAspectDef representing the table structure
-     * @throws IllegalStateException if dataSource is not set
+     * @throws IllegalStateException if adapter is not set
      * @throws RuntimeException if database introspection fails
      */
     public AspectDef loadTableDef(@NotNull String tableName)
     {
-        if (dataSource == null) {
-            throw new IllegalStateException("DataSource not set. Use constructor with DataSource to initialize the catalog.");
-        }
-
         MutableAspectDefImpl aspectDef = new MutableAspectDefImpl(tableName);
 
-        try (Connection connection = dataSource.getConnection()) {
+        try (Connection connection = adapter.getConnection()) {
             DatabaseMetaData metaData = connection.getMetaData();
 
             try (ResultSet columns = metaData.getColumns(null, getSchemaName(), tableName, null)) {
@@ -174,7 +145,9 @@ public abstract class JdbcCatalogBase extends CatalogImpl
                     boolean isNullable = columns.getInt("NULLABLE") == DatabaseMetaData.columnNullable;
 
                     PropertyType propertyType = mapDbTypeToPropertyType(dbTypeName);
-                    PropertyDefImpl propertyDef = new PropertyDefBuilder().setName(columnName).setType(propertyType).setIsReadable(true).setIsWritable(true).setIsNullable(isNullable).setIsRemovable(true).setIsMultivalued(false).build();
+                    PropertyDefImpl propertyDef = new PropertyDefBuilder().setName(columnName).setType(propertyType)
+                        .setIsReadable(true).setIsWritable(true).setIsNullable(isNullable).setIsRemovable(true)
+                        .setIsMultivalued(false).build();
 
                     aspectDef.add(propertyDef);
                 }
@@ -203,12 +176,12 @@ public abstract class JdbcCatalogBase extends CatalogImpl
      * @param tableName the name of the database table to load
      * @param maxRows maximum number of rows to load, or -1 for unlimited
      * @return an AspectMapHierarchy containing the table data
-     * @throws IllegalStateException if dataSource is not set
+     * @throws IllegalStateException if adapter is not set
      * @throws RuntimeException if the query fails
      */
     public AspectMapHierarchy loadTable(@NotNull String tableName, int maxRows)
     {
-        if (dataSource == null) {
+        if (adapter == null) {
             throw new IllegalStateException("DataSource not set. Use constructor with DataSource to initialize the catalog.");
         }
 
@@ -220,7 +193,7 @@ public abstract class JdbcCatalogBase extends CatalogImpl
             query += " LIMIT " + maxRows;
         }
 
-        try (Connection connection = dataSource.getConnection();
+        try (Connection connection = adapter.getConnection();
              Statement statement = connection.createStatement();
              ResultSet resultSet = statement.executeQuery(query)) {
 
@@ -264,7 +237,7 @@ public abstract class JdbcCatalogBase extends CatalogImpl
      */
     protected Object convertValue(Object value, PropertyDef expectedProperty)
     {
-        return valueAdapter.coerce(expectedProperty, value);
+        return adapter.getValueAdapter().coerce(expectedProperty, value);
     }
 
     /**
@@ -287,15 +260,5 @@ public abstract class JdbcCatalogBase extends CatalogImpl
     public List<String> getTables()
     {
         return new LinkedList<>(tables);
-    }
-
-    /**
-     * Gets the JDBC data source used by this catalog.
-     *
-     * @return the data source, or null if not set
-     */
-    public DataSource getDataSource()
-    {
-        return dataSource;
     }
 }
