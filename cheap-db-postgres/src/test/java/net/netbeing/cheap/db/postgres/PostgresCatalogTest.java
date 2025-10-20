@@ -171,7 +171,7 @@ class PostgresCatalogTest
                 assertEquals("2025-01-01T00:00Z[UTC]", dateProp.read().toString(), "date_col should be 2025-01-01T00:00Z[UTC]");
 
                 Property timestampProp = aspect.get("timestamp_col");
-                assertEquals("2025-01-12T02:18:18.018Z[UTC]", timestampProp.read().toString(), "timestamp_col should be 2025-01-12T02:18:18.018Z[UTC]");
+                assertEquals("2025-01-11T18:18:18.018Z[UTC]", timestampProp.read().toString(), "timestamp_col should be 2025-01-11T18:18:18.018Z[UTC]");
 
                 Property booleanProp = aspect.get("boolean_col");
                 assertEquals(true, booleanProp.read(), "boolean_col should be true");
@@ -198,7 +198,7 @@ class PostgresCatalogTest
                 assertEquals("2025-02-02T00:00Z[UTC]", dateProp.read().toString(), "date_col should be 2025-02-02T00:00Z[UTC]");
 
                 Property timestampProp = aspect.get("timestamp_col");
-                assertEquals("2025-02-02T10:02:02.002Z[UTC]", timestampProp.read().toString(), "timestamp_col should be 2025-02-02T10:02:02.002Z[UTC]");
+                assertEquals("2025-02-02T02:02:02.002Z[UTC]", timestampProp.read().toString(), "timestamp_col should be 2025-02-02T02:02:02.002Z[UTC]");
 
                 Property booleanProp = aspect.get("boolean_col");
                 assertEquals(false, booleanProp.read(), "boolean_col should be false");

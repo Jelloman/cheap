@@ -5,7 +5,7 @@ CREATE TABLE test_aspect_mapping_no_key (
 	integer_col INTEGER,
 	float_col DOUBLE PRECISION,
 	date_col DATE,
-	timestamp_col TIMESTAMP,
+	timestamp_col TIMESTAMP WITH TIME ZONE,
 	boolean_col BOOLEAN,
 	uuid_col UUID,
 	blob_col BYTEA
@@ -22,7 +22,7 @@ CREATE TABLE test_aspect_mapping_with_cat_id (
 	integer_col INTEGER,
 	float_col DOUBLE PRECISION,
 	date_col DATE,
-	timestamp_col TIMESTAMP,
+	timestamp_col TIMESTAMP WITH TIME ZONE,
 	boolean_col BOOLEAN,
 	uuid_col UUID,
 	blob_col BYTEA
@@ -39,7 +39,7 @@ CREATE TABLE test_aspect_mapping_with_entity_id (
 	integer_col INTEGER,
 	float_col DOUBLE PRECISION,
 	date_col DATE,
-	timestamp_col TIMESTAMP,
+	timestamp_col TIMESTAMP WITH TIME ZONE,
 	boolean_col BOOLEAN,
 	uuid_col UUID,
 	blob_col BYTEA
@@ -57,7 +57,7 @@ CREATE TABLE test_aspect_mapping_with_both_ids (
 	integer_col INTEGER,
 	float_col DOUBLE PRECISION,
 	date_col DATE,
-	timestamp_col TIMESTAMP,
+	timestamp_col TIMESTAMP WITH TIME ZONE,
 	boolean_col BOOLEAN,
 	uuid_col UUID,
 	blob_col BYTEA,
