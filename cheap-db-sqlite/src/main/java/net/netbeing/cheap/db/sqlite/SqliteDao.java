@@ -24,8 +24,6 @@ import net.netbeing.cheap.util.CheapFactory;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.LoggerFactory;
 
-import java.math.BigDecimal;
-import java.math.BigInteger;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.sql.Connection;
@@ -33,7 +31,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -722,64 +719,6 @@ public class SqliteDao extends AbstractCheapDao
         }
     }
 
-    private void loadAndExtendAspectDefs(Connection conn, Catalog catalog) throws SQLException
-    {
-        String sql = "SELECT ad.name FROM catalog_aspect_def cad " +
-            "JOIN aspect_def ad ON cad.aspect_def_id = ad.aspect_def_id " +
-            "WHERE cad.catalog_id = ?";
-
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, catalog.globalId().toString());
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    String aspectDefName = rs.getString("name");
-                    AspectDef aspectDef = loadAspectDef(conn, aspectDefName);
-                    catalog.extend(aspectDef);
-                }
-            }
-        }
-    }
-
-    private void loadHierarchies(Connection conn, Catalog catalog) throws SQLException
-    {
-        String sql = "SELECT name, hierarchy_type, version_number FROM hierarchy WHERE catalog_id = ?";
-
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, catalog.globalId().toString());
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    String name = rs.getString("name");
-                    String typeStr = rs.getString("hierarchy_type");
-                    long version = rs.getLong("version_number");
-                    HierarchyType type = HierarchyType.fromTypeCode(typeStr);
-
-                    // Check if hierarchy already exists (it may have been created by extend())
-                    Hierarchy existingHierarchy = catalog.hierarchy(name);
-                    if (existingHierarchy != null) {
-                        // Hierarchy already exists, load content into it based on type
-                        loadExistingHierarchyContent(conn, existingHierarchy);
-                    } else {
-                        // Create and load new hierarchy
-                        Hierarchy hierarchy = createAndLoadHierarchy(conn, catalog, type, name, version);
-                        catalog.addHierarchy(hierarchy);
-                    }
-                }
-            }
-        }
-    }
-
-    private void loadExistingHierarchyContent(Connection conn, Hierarchy hierarchy) throws SQLException
-    {
-        switch (hierarchy.type()) {
-            case ENTITY_LIST -> loadEntityListContent(conn, (EntityListHierarchy) hierarchy);
-            case ENTITY_SET -> loadEntitySetContent(conn, (EntitySetHierarchy) hierarchy);
-            case ENTITY_DIR -> loadEntityDirectoryContent(conn, (EntityDirectoryHierarchy) hierarchy);
-            case ENTITY_TREE -> loadEntityTreeContent(conn, (EntityTreeHierarchy) hierarchy);
-            case ASPECT_MAP -> loadAspectMapContent(conn, (AspectMapHierarchy) hierarchy);
-            default -> throw new IllegalArgumentException("Unknown hierarchy type: " + hierarchy.type());
-        }
-    }
-
     @Override
     protected void loadEntityListContent(Connection conn, EntityListHierarchy hierarchy) throws SQLException
     {
@@ -1083,64 +1022,6 @@ public class SqliteDao extends AbstractCheapDao
         return aspect;
     }
 
-    /**
-     * Saves a loaded property to an aspect, handling both single-valued and multivalued properties.
-     */
-    private void saveLoadedProperty(Aspect aspect, PropertyDef propDef, List<Object> values)
-    {
-        if (values.isEmpty()) {
-            // No rows found - for multivalued, this means empty list
-            if (propDef.isMultivalued()) {
-                Property property = adapter.getFactory().createProperty(propDef, Collections.emptyList());
-                aspect.put(property);
-            }
-            // For single-valued, don't add the property (will use default value if available)
-        } else if (propDef.isMultivalued()) {
-            // Multivalued property - create property with list of all values
-            Property property = adapter.getFactory().createProperty(propDef, new ArrayList<>(values));
-            aspect.put(property);
-        } else {
-            // Single-valued property - use the first (and only) value
-            Object value = values.getFirst();
-            Property property = adapter.getFactory().createProperty(propDef, value);
-            aspect.put(property);
-        }
-    }
-
-    /**
-     * Extracts a property value from the result set based on the property type.
-     * Uses value_text for all types except BLOB (which uses value_binary).
-     */
-    private Object extractPropertyValue(PropertyType type, String valueText, byte[] valueBinary) throws SQLException
-    {
-        if (type == PropertyType.BLOB) {
-            return valueBinary; // May be null
-        }
-
-        if (valueText == null) {
-            return null;
-        }
-
-        return switch (type) {
-            case Integer -> Long.parseLong(valueText);
-            case Float -> Double.parseDouble(valueText);
-            case Boolean -> Boolean.parseBoolean(valueText);
-            case String, Text, CLOB -> valueText;
-            case BigInteger -> new BigInteger(valueText);
-            case BigDecimal -> new BigDecimal(valueText);
-            case DateTime -> Timestamp.valueOf(valueText);
-            case URI -> {
-                try {
-                    yield new URI(valueText);
-                } catch (URISyntaxException e) {
-                    throw new SQLException("Invalid URI value: " + valueText, e);
-                }
-            }
-            case UUID -> UUID.fromString(valueText);
-            case BLOB -> throw new IllegalStateException("BLOB should be handled before this switch");
-        };
-    }
-
     @Override
     protected AspectDef loadAspectDefForHierarchy(Connection conn, UUID catalogId, String hierarchyName) throws SQLException
     {
@@ -1266,6 +1147,20 @@ public class SqliteDao extends AbstractCheapDao
     }
 
     // ===== Value Conversion Methods =====
+
+    /**
+     * Sets a UUID parameter in a PreparedStatement using SQLite's string representation.
+     *
+     * @param stmt the PreparedStatement to set the parameter on
+     * @param parameterIndex the parameter index (1-based)
+     * @param value the UUID value to set
+     * @throws SQLException if database operation fails
+     */
+    @Override
+    protected void setUuidParameter(PreparedStatement stmt, int parameterIndex, UUID value) throws SQLException
+    {
+        stmt.setString(parameterIndex, value.toString());
+    }
 
     /**
      * Sets a property value in a PreparedStatement, handling type conversions.
