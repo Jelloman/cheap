@@ -513,7 +513,7 @@ public class CheapFactory
     // ===== Hierarchy Factory Methods =====
 
     /**
-     * Creates a new modifiable hierarchy definition.
+     * Creates a new modifiable hierarchy definition in the current catalog.
      *
      * @param name the name of the hierarchy
      * @param type the type of hierarchy
@@ -525,14 +525,14 @@ public class CheapFactory
     }
 
     /**
-     * Creates a new entity directory hierarchy.
+     * Creates a new entity directory hierarchy in the current catalog.
      *
      * @param name the name of this hierarchy in the catalog
      * @return a new EntityDirectoryHierarchy instance
      */
     public @NotNull EntityDirectoryHierarchy createEntityDirectoryHierarchy(@NotNull String name)
     {
-        return createEntityDirectoryHierarchy(catalog, name);
+        return createEntityDirectoryHierarchy(catalog, name, 0L);
     }
 
     /**
@@ -545,7 +545,7 @@ public class CheapFactory
     public @NotNull EntityDirectoryHierarchy createEntityDirectoryHierarchy(@NotNull Catalog catalog,
                                                                             @NotNull String name)
     {
-        return new EntityDirectoryHierarchyImpl(catalog, name);
+        return createEntityDirectoryHierarchy(catalog, name, 0L);
     }
 
     /**
@@ -559,18 +559,20 @@ public class CheapFactory
     public @NotNull EntityDirectoryHierarchy createEntityDirectoryHierarchy(@NotNull Catalog catalog,
                                                                             @NotNull String name, long version)
     {
-        return new EntityDirectoryHierarchyImpl(catalog, name, version);
+        EntityDirectoryHierarchy hierarchy = catalog.createEntityDirectory(name, version);
+        catalog.addHierarchy(hierarchy);
+        return hierarchy;
     }
 
     /**
-     * Creates a new entity list hierarchy.
+     * Creates a new entity list hierarchy in the current catalog.
      *
      * @param name the name of this hierarchy in the catalog
      * @return a new EntityListHierarchy instance
      */
     public @NotNull EntityListHierarchy createEntityListHierarchy(@NotNull String name)
     {
-        return new EntityListHierarchyImpl(catalog, name);
+        return createEntityListHierarchy(catalog, name, 0L);
     }
 
     /**
@@ -581,7 +583,19 @@ public class CheapFactory
      */
     public @NotNull EntityListHierarchy createEntityListHierarchy(@NotNull Catalog catalog, @NotNull String name)
     {
-        return new EntityListHierarchyImpl(catalog, name);
+        return createEntityListHierarchy(catalog, name, 0L);
+    }
+
+    /**
+     * Creates a new entity list hierarchy with version in the current catalog.
+     *
+     * @param name    the name of this hierarchy in the catalog
+     * @param version the version number of this hierarchy
+     * @return a new EntityListHierarchy instance
+     */
+    public @NotNull EntityListHierarchy createEntityListHierarchy(@NotNull String name, long version)
+    {
+        return createEntityListHierarchy(catalog, name, version);
     }
 
     /**
@@ -592,10 +606,11 @@ public class CheapFactory
      * @param version the version number of this hierarchy
      * @return a new EntityListHierarchy instance
      */
-    public @NotNull EntityListHierarchy createEntityListHierarchy(@NotNull Catalog catalog, @NotNull String name,
-                                                                  long version)
+    public @NotNull EntityListHierarchy createEntityListHierarchy(@NotNull Catalog catalog, @NotNull String name, long version)
     {
-        return new EntityListHierarchyImpl(catalog, name, version);
+        EntityListHierarchy hierarchy = catalog.createEntityList(name, version);
+        catalog.addHierarchy(hierarchy);
+        return hierarchy;
     }
 
     /**
@@ -603,25 +618,27 @@ public class CheapFactory
      *
      * @param catalog         the owning catalog
      * @param name            the name of this hierarchy in the catalog
-     * @param initialCapacity the initial capacity for the list
      * @param version         the version number of this hierarchy
+     * @param initialCapacity the initial capacity for the list
      * @return a new EntityListHierarchy instance
      */
     public @NotNull EntityListHierarchy createEntityListHierarchy(@NotNull Catalog catalog, @NotNull String name,
-                                                                  int initialCapacity, long version)
+                                                                  long version, int initialCapacity)
     {
-        return new EntityListHierarchyImpl(catalog, name, initialCapacity, version);
+        EntityListHierarchy hierarchy = catalog.createEntityList(name, version, initialCapacity);
+        catalog.addHierarchy(hierarchy);
+        return hierarchy;
     }
 
     /**
-     * Creates a new entity set hierarchy.
+     * Creates a new entity set hierarchy in the current catalog.
      *
      * @param name the name of this hierarchy in the catalog
      * @return a new EntitySetHierarchy instance
      */
     public @NotNull EntitySetHierarchy createEntitySetHierarchy(@NotNull String name)
     {
-        return new EntitySetHierarchyImpl(catalog, name);
+        return createEntitySetHierarchy(catalog, name, 0L);
     }
 
     /**
@@ -632,7 +649,7 @@ public class CheapFactory
      */
     public @NotNull EntitySetHierarchy createEntitySetHierarchy(@NotNull Catalog catalog, @NotNull String name)
     {
-        return new EntitySetHierarchyImpl(catalog, name);
+        return createEntitySetHierarchy(catalog, name, 0L);
     }
 
     /**
@@ -643,10 +660,11 @@ public class CheapFactory
      * @param version the version number of this hierarchy
      * @return a new EntitySetHierarchy instance
      */
-    public @NotNull EntitySetHierarchy createEntitySetHierarchy(@NotNull Catalog catalog, @NotNull String name,
-                                                                long version)
+    public @NotNull EntitySetHierarchy createEntitySetHierarchy(@NotNull Catalog catalog, @NotNull String name, long version)
     {
-        return new EntitySetHierarchyImpl(catalog, name, version);
+        EntitySetHierarchy hierarchy = catalog.createEntitySet(name, version);
+        catalog.addHierarchy(hierarchy);
+        return hierarchy;
     }
 
     /**
@@ -659,38 +677,26 @@ public class CheapFactory
      * @return a new EntitySetHierarchy instance
      */
     public @NotNull EntitySetHierarchy createEntitySetHierarchy(@NotNull Catalog catalog, @NotNull String name,
-                                                                int initialCapacity, long version)
+                                                                long version, int initialCapacity)
     {
-        return new EntitySetHierarchyImpl(catalog, name, initialCapacity, version);
+        EntitySetHierarchy hierarchy = catalog.createEntitySet(name, version, initialCapacity);
+        catalog.addHierarchy(hierarchy);
+        return hierarchy;
     }
 
     /**
-     * Creates a new entity tree hierarchy.
+     * Creates a new entity tree hierarchy in the current catalog.
      *
-     * @param name       the name of this hierarchy in the catalog
-     * @param rootEntity the entity to use as the root of the tree
+     * @param name     the name of this hierarchy in the catalog
      * @return a new EntityTreeHierarchy instance
      */
-    public @NotNull EntityTreeHierarchy createEntityTreeHierarchy(@NotNull String name, @NotNull Entity rootEntity)
+    public @NotNull EntityTreeHierarchy createEntityTreeHierarchy(@NotNull String name)
     {
-        return new EntityTreeHierarchyImpl(catalog, name, rootEntity);
+        return createEntityTreeHierarchy(catalog, name, null, 0L);
     }
 
     /**
-     * Creates a new entity tree hierarchy.
-     *
-     * @param name       the name of this hierarchy in the catalog
-     * @param rootEntity the entity to use as the root of the tree
-     * @return a new EntityTreeHierarchy instance
-     */
-    public @NotNull EntityTreeHierarchy createEntityTreeHierarchy(@NotNull Catalog catalog, @NotNull String name,
-                                                                  @NotNull Entity rootEntity)
-    {
-        return new EntityTreeHierarchyImpl(catalog, name, rootEntity);
-    }
-
-    /**
-     * Creates a new entity tree hierarchy.
+     * Creates a new entity tree hierarchy in the current catalog.
      *
      * @param name     the name of this hierarchy in the catalog
      * @param rootNode the node to use as the root of the tree
@@ -699,20 +705,21 @@ public class CheapFactory
     public @NotNull EntityTreeHierarchy createEntityTreeHierarchy(@NotNull String name,
                                                                   @NotNull EntityTreeHierarchy.Node rootNode)
     {
-        return new EntityTreeHierarchyImpl(catalog, name, rootNode);
+        return createEntityTreeHierarchy(catalog, name, null, 0L);
     }
 
     /**
      * Creates a new entity tree hierarchy.
      *
+     * @param catalog  the owning catalog
      * @param name     the name of this hierarchy in the catalog
      * @param rootNode the node to use as the root of the tree
      * @return a new EntityTreeHierarchy instance
      */
     public @NotNull EntityTreeHierarchy createEntityTreeHierarchy(@NotNull Catalog catalog, @NotNull String name,
-                                                                  @NotNull EntityTreeHierarchy.Node rootNode)
+                                                                  EntityTreeHierarchy.Node rootNode)
     {
-        return new EntityTreeHierarchyImpl(catalog, name, rootNode);
+        return createEntityTreeHierarchy(catalog, name, rootNode, 0L);
     }
 
     /**
@@ -725,44 +732,49 @@ public class CheapFactory
      * @return a new EntityTreeHierarchy instance
      */
     public @NotNull EntityTreeHierarchy createEntityTreeHierarchy(@NotNull Catalog catalog, @NotNull String name,
-                                                                  @NotNull EntityTreeHierarchy.Node rootNode,
-                                                                  long version)
+                                                                  EntityTreeHierarchy.Node rootNode, long version)
     {
-        return new EntityTreeHierarchyImpl(catalog, name, rootNode, version);
+        if (rootNode == null) {
+            rootNode = new EntityTreeHierarchyImpl.NodeImpl(null);
+        }
+        EntityTreeHierarchy hierarchy = catalog.createEntityTree(name, rootNode, version);
+        catalog.addHierarchy(hierarchy);
+        return hierarchy;
     }
 
     /**
      * Creates a new aspect map hierarchy.
+     *
+     * @param catalog   the owning catalog
+     * @param aspectDef the aspect definition for aspects in this hierarchy
+     * @return a new AspectMapHierarchy instance
+     */
+    public @NotNull AspectMapHierarchy createAspectMapHierarchy(@NotNull Catalog catalog, @NotNull AspectDef aspectDef)
+    {
+        return catalog.createAspectMap(aspectDef, 0L);
+    }
+
+    /**
+     * Creates a new aspect map hierarchy in the current catalog.
      *
      * @param aspectDef the aspect definition for aspects in this hierarchy
      * @return a new AspectMapHierarchy instance
      */
     public @NotNull AspectMapHierarchy createAspectMapHierarchy(@NotNull AspectDef aspectDef)
     {
-        return new AspectMapHierarchyImpl(catalog, aspectDef);
+        return createAspectMapHierarchy(catalog, aspectDef, 0L);
     }
 
     /**
-     * Creates a new aspect map hierarchy.
+     * Creates a new aspect map hierarchy in the current catalog.
      *
      * @param aspectDef the aspect definition for aspects in this hierarchy
+     * @param version   the version number of this hierarchy
      * @return a new AspectMapHierarchy instance
      */
-    public @NotNull AspectMapHierarchy createAspectMapHierarchy(@NotNull Catalog catalog, @NotNull AspectDef aspectDef)
+    public @NotNull AspectMapHierarchy createAspectMapHierarchy(@NotNull AspectDef aspectDef, long version)
     {
-        return new AspectMapHierarchyImpl(catalog, aspectDef);
-    }
-
-    /**
-     * Creates a new aspect map hierarchy with custom hierarchy definition.
-     *
-     * @param name      the name of this hierarchy in the catalog
-     * @param aspectDef the aspect definition for aspects in this hierarchy
-     * @return a new AspectMapHierarchy instance
-     */
-    public @NotNull AspectMapHierarchy createAspectMapHierarchy(@NotNull String name, @NotNull AspectDef aspectDef)
-    {
-        return new AspectMapHierarchyImpl(catalog, aspectDef);
+        return createAspectMapHierarchy(catalog, aspectDef, version);
     }
 
     /**
@@ -776,7 +788,9 @@ public class CheapFactory
     public @NotNull AspectMapHierarchy createAspectMapHierarchy(@NotNull Catalog catalog,
                                                                 @NotNull AspectDef aspectDef, long version)
     {
-        return new AspectMapHierarchyImpl(catalog, aspectDef, version);
+        AspectMapHierarchy hierarchy = catalog.createAspectMap(aspectDef, version);
+        catalog.addHierarchy(hierarchy);
+        return hierarchy;
     }
 
     // ===== Aspect Definition Factory Methods =====
