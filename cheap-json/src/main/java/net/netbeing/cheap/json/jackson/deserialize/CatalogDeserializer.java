@@ -22,13 +22,18 @@ import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
-import net.netbeing.cheap.model.*;
+import net.netbeing.cheap.model.AspectDef;
+import net.netbeing.cheap.model.Catalog;
+import net.netbeing.cheap.model.CatalogSpecies;
+import net.netbeing.cheap.model.Hierarchy;
 import net.netbeing.cheap.util.CheapFactory;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.net.URI;
-import java.util.*;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.UUID;
 
 /**
  * Jackson deserializer for {@link Catalog} objects in the Cheap data model.
@@ -104,7 +109,6 @@ class CatalogDeserializer extends JsonDeserializer<Catalog>
                     // Register all aspect defs with the factory
                     if (p.currentToken() == JsonToken.START_OBJECT) {
                         while (p.nextToken() != JsonToken.END_OBJECT) {
-                            //String aspectDefName = p.currentName();
                             p.nextToken();
                             AspectDef aspectDef = p.readValueAs(AspectDef.class);
                             factory.registerAspectDef(aspectDef);
@@ -114,7 +118,6 @@ class CatalogDeserializer extends JsonDeserializer<Catalog>
                 case "hierarchies" -> {
                     if (p.currentToken() == JsonToken.START_OBJECT) {
                         while (p.nextToken() != JsonToken.END_OBJECT) {
-                            //String hierarchyName = p.currentName();
                             p.nextToken();
                             // Store the raw JSON structure for later processing
                             hierarchyData.add(context.readTree(p));

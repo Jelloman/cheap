@@ -16,7 +16,6 @@
 
 package net.netbeing.cheap.db.mariadb;
 
-import com.google.common.collect.ImmutableList;
 import net.netbeing.cheap.db.AspectTableMapping;
 import net.netbeing.cheap.model.*;
 import org.junit.jupiter.api.AfterAll;
@@ -47,7 +46,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class MariaDbDaoTest
 {
     static final String DB_NAME = "cheap";
-    volatile static MariaDbTestDb db;
+    static volatile MariaDbTestDb db;
 
     @BeforeAll
     static void setUp() throws Exception
@@ -162,9 +161,6 @@ class MariaDbDaoTest
         UUID catalogId = UUID.randomUUID();
         Catalog originalCatalog = db.factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
 
-        // Create hierarchy definition
-        HierarchyDef hierarchyDef = db.factory.createHierarchyDef("entities", HierarchyType.ENTITY_SET);
-
         // Create hierarchy
         EntitySetHierarchy hierarchy = db.factory.createEntitySetHierarchy(originalCatalog, "entities");
 
@@ -207,9 +203,6 @@ class MariaDbDaoTest
         // Create catalog
         UUID catalogId = UUID.randomUUID();
         Catalog originalCatalog = db.factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
-
-        // Create hierarchy definition
-        HierarchyDef hierarchyDef = db.factory.createHierarchyDef("directory", HierarchyType.ENTITY_DIR);
 
         // Create hierarchy
         EntityDirectoryHierarchy hierarchy = db.factory.createEntityDirectoryHierarchy(originalCatalog, "directory");
@@ -380,10 +373,6 @@ class MariaDbDaoTest
         AspectDef personAspect = db.factory.createMutableAspectDef("person");
         AspectDef addressAspect = db.factory.createMutableAspectDef("address");
 
-        // Create multiple hierarchies
-        HierarchyDef entitiesHierarchy = db.factory.createHierarchyDef("entities", HierarchyType.ENTITY_SET);
-        HierarchyDef directoryHierarchy = db.factory.createHierarchyDef("directory", HierarchyType.ENTITY_DIR);
-
         // Create entity set hierarchy
         EntitySetHierarchy entitySet = db.factory.createEntitySetHierarchy(originalCatalog, "entities");
         Entity entity1 = db.factory.createEntity(UUID.randomUUID());
@@ -467,7 +456,7 @@ class MariaDbDaoTest
         Entity entity = db.factory.createEntity(entityId);
         Aspect aspect = db.factory.createPropertyMapAspect(entity, productDef);
 
-        List<String> tags = ImmutableList.of("electronics", "gadget", "popular");
+        List<String> tags = List.of("electronics", "gadget", "popular");
         aspect.put(db.factory.createProperty(tagsProp, tags));
 
         hierarchy.put(entity, aspect);
@@ -537,7 +526,7 @@ class MariaDbDaoTest
         Entity entity = db.factory.createEntity(entityId);
         Aspect aspect = db.factory.createPropertyMapAspect(entity, testDef);
 
-        List<Long> scores = ImmutableList.of(100L, 95L, 87L, 92L);
+        List<Long> scores = List.of(100L, 95L, 87L, 92L);
         aspect.put(db.factory.createProperty(scoresProp, scores));
 
         hierarchy.put(entity, aspect);
@@ -581,7 +570,7 @@ class MariaDbDaoTest
         Entity entity = db.factory.createEntity(entityId);
         Aspect aspect = db.factory.createPropertyMapAspect(entity, productDef);
 
-        List<String> emptyTags = ImmutableList.of();
+        List<String> emptyTags = List.of();
         aspect.put(db.factory.createProperty(tagsProp, emptyTags));
 
         hierarchy.put(entity, aspect);
@@ -699,8 +688,8 @@ class MariaDbDaoTest
         Aspect aspect = db.factory.createPropertyMapAspect(entity, productDef);
 
         aspect.put(db.factory.createProperty(titleProp, "Smart Watch"));
-        aspect.put(db.factory.createProperty(tagsProp, ImmutableList.of("electronics", "gadget")));
-        aspect.put(db.factory.createProperty(pricesProp, ImmutableList.of(199.99, 249.99, 299.99)));
+        aspect.put(db.factory.createProperty(tagsProp, List.of("electronics", "gadget")));
+        aspect.put(db.factory.createProperty(pricesProp, List.of(199.99, 249.99, 299.99)));
 
         hierarchy.put(entity, aspect);
 
@@ -783,8 +772,8 @@ class MariaDbDaoTest
         UUID id2 = UUID.fromString("6ba7b810-9dad-11d1-80b4-00c04fd430c8");
         UUID id3 = UUID.fromString("7c9e6679-7425-40de-944b-e07fc1f90ae7");
 
-        aspect.put(db.factory.createProperty(flagsProp, ImmutableList.of(true, false, true, true)));
-        aspect.put(db.factory.createProperty(idsProp, ImmutableList.of(id1, id2, id3)));
+        aspect.put(db.factory.createProperty(flagsProp, List.of(true, false, true, true)));
+        aspect.put(db.factory.createProperty(idsProp, List.of(id1, id2, id3)));
 
         hierarchy.put(entity, aspect);
 
@@ -836,7 +825,7 @@ class MariaDbDaoTest
         Entity entity = db.factory.createEntity(entityId);
         Aspect aspect = db.factory.createPropertyMapAspect(entity, productDef);
 
-        aspect.put(db.factory.createProperty(tagsProp, ImmutableList.of("tag1", "tag2", "tag3")));
+        aspect.put(db.factory.createProperty(tagsProp, List.of("tag1", "tag2", "tag3")));
         hierarchy.put(entity, aspect);
 
         // Save catalog
@@ -845,7 +834,7 @@ class MariaDbDaoTest
         // Update with list of 5 items
         Aspect updatedAspect = db.factory.createPropertyMapAspect(entity, productDef);
         updatedAspect.put(db.factory.createProperty(tagsProp,
-            ImmutableList.of("new1", "new2", "new3", "new4", "new5")));
+            List.of("new1", "new2", "new3", "new4", "new5")));
         hierarchy.put(entity, updatedAspect);
 
         // Save again
@@ -899,7 +888,7 @@ class MariaDbDaoTest
         }
 
         // Load AspectDefs from test tables
-        MariaDbCatalog mariaDbCatalog = new MariaDbCatalog(db.dataSource);
+        MariaDbCatalog mariaDbCatalog = new MariaDbCatalog(db.adapter);
         AspectDef noKeyAspectDef = mariaDbCatalog.loadTableDef("test_aspect_mapping_no_key");
         AspectDef catIdAspectDef = mariaDbCatalog.loadTableDef("test_aspect_mapping_with_cat_id");
         AspectDef entityIdAspectDef = mariaDbCatalog.loadTableDef("test_aspect_mapping_with_entity_id");
@@ -1210,12 +1199,7 @@ class MariaDbDaoTest
         columnMapping.put("clob_prop", "clob_prop");
         columnMapping.put("blob_prop", "blob_prop");
 
-        AspectTableMapping mapping = new AspectTableMapping(
-            aspectDef,
-            tableName,
-            columnMapping
-        );
-        return mapping;
+        return new AspectTableMapping(aspectDef, tableName, columnMapping);
     }
 
     @SuppressWarnings("DataFlowIssue")

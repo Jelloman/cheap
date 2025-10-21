@@ -3,7 +3,13 @@ package net.netbeing.cheap.impl.reflect;
 import net.netbeing.cheap.impl.basic.EntityImpl;
 import net.netbeing.cheap.impl.basic.PropertyDefBuilder;
 import net.netbeing.cheap.impl.basic.PropertyImpl;
-import net.netbeing.cheap.model.*;
+import net.netbeing.cheap.model.Aspect;
+import net.netbeing.cheap.model.AspectBuilder;
+import net.netbeing.cheap.model.AspectDef;
+import net.netbeing.cheap.model.Entity;
+import net.netbeing.cheap.model.Property;
+import net.netbeing.cheap.model.PropertyDef;
+import net.netbeing.cheap.model.PropertyType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -11,6 +17,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@SuppressWarnings("DataFlowIssue")
 class ImmutablePojoAspectBuilderTest
 {
     private ImmutablePojoAspectBuilder<TestPojo> builder;
@@ -24,8 +31,6 @@ class ImmutablePojoAspectBuilderTest
         private int age;
         private boolean active;
         private Double salary;
-
-        public TestPojo() {} // Required no-arg constructor
 
         public String getName() { return name; }
         public void setName(String name) { this.name = name; }
@@ -192,8 +197,10 @@ class ImmutablePojoAspectBuilderTest
     @Test
     void build_NoEntity_ThrowsException()
     {
+        builder.property("name", "test");
+
         IllegalStateException exception = assertThrows(IllegalStateException.class, () ->
-            builder.property("name", "test").build());
+            builder.build());
 
         assertEquals("Entity must be set before building aspect", exception.getMessage());
     }
@@ -217,12 +224,11 @@ class ImmutablePojoAspectBuilderTest
     {
         ImmutablePojoAspectBuilder<InvalidPojo> invalidBuilder =
             new ImmutablePojoAspectBuilder<>(InvalidPojo.class);
+        invalidBuilder
+            .entity(entity)
+            .property("name", "test");
 
-        RuntimeException exception = assertThrows(RuntimeException.class, () ->
-            invalidBuilder
-                .entity(entity)
-                .property("name", "test")
-                .build());
+        RuntimeException exception = assertThrows(RuntimeException.class, invalidBuilder::build);
 
         assertTrue(exception.getMessage().contains("Failed to create instance of"));
         assertTrue(exception.getMessage().contains("no-argument constructor"));
@@ -258,8 +264,8 @@ class ImmutablePojoAspectBuilderTest
     {
         Aspect result = builder
             .entity(entity)
-            .property("age", Integer.valueOf(42))
-            .property("active", Boolean.valueOf(true))
+            .property("age", 42)
+            .property("active", Boolean.TRUE)
             .build();
 
         assertEquals(42, result.readObj("age"));
@@ -359,7 +365,7 @@ class ImmutablePojoAspectBuilderTest
         assertEquals("Fallback Test", result.readObj("name"));
         // Should have fallen back to creating a new definition for TestPojo.class
         assertNotSame(genericDef, result.def());
-        assertTrue(result.def() instanceof ImmutablePojoAspectDef);
+        assertInstanceOf(ImmutablePojoAspectDef.class, result.def());
         // Verify it's using TestPojo definition, not String definition
         assertEquals(TestPojo.class.getCanonicalName(), result.def().name());
     }

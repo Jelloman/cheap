@@ -33,14 +33,6 @@ public class EntityLazyIdImpl implements Entity
     private volatile UUID globalId;
     
     /**
-     * Creates a new EntityLazyIdImpl with a new local entity.
-     * The global ID will be created on first access.
-     */
-    public EntityLazyIdImpl()
-    {
-    }
-
-    /**
      * Returns the globally unique identifier for this entity, creating it if necessary.
      * Uses double-checked locking for thread-safe lazy initialization.
      * 

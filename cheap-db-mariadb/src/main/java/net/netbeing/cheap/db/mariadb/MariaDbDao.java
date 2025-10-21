@@ -25,7 +25,6 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.sql.DataSource;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.net.URI;
@@ -36,11 +35,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
-import java.time.Instant;
-import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -115,8 +111,8 @@ import java.util.UUID;
  * dao.executeMainSchemaDdl(ds);
  *
  * // Create a catalog with data
- * Catalog catalog = factory.createCatalog(UUID.randomUUID(), CatalogSpecies.SOURCE, null, null, 1);
- * AspectDef customerDef = factory.createImmutableAspectDef("Customer", props);
+ * Catalog catalog = adapter.getFactory().createCatalog(UUID.randomUUID(), CatalogSpecies.SOURCE, null, null, 1);
+ * AspectDef customerDef = adapter.getFactory().createImmutableAspectDef("Customer", props);
  * catalog.extend(customerDef);
  * // ... populate with hierarchies and data ...
  *
@@ -165,30 +161,16 @@ import java.util.UUID;
 @SuppressWarnings({"DuplicateBranchesInSwitch", "LoggingSimilarMessage"})
 public class MariaDbDao extends AbstractCheapDao
 {
-    private static final Logger logger = LoggerFactory.getLogger(MariaDbDao.class);
+    private static final Logger logger = LoggerFactory.getLogger(MariaDbDao.class); //NOSONAR
 
     /**
-     * Constructs a new MariaDbDao with the given data source.
-     * Creates a new CheapFactory instance for object creation and entity management.
+     * Constructs a new MariaDbDao with the given database adapter.
      *
-     * @param dataSource the MariaDB data source to use for database operations
+     * @param adapter the MariaDB database adapter to use for database operations
      */
-    public MariaDbDao(@NotNull DataSource dataSource)
+    public MariaDbDao(@NotNull MariaDbAdapter adapter)
     {
-        super(dataSource, new CheapFactory(), logger);
-    }
-
-    /**
-     * Constructs a new MariaDbDao with the given data source and factory.
-     * This constructor allows sharing a CheapFactory instance across multiple DAOs
-     * to maintain a consistent entity registry.
-     *
-     * @param dataSource the MariaDB data source to use for database operations
-     * @param factory the CheapFactory to use for object creation and entity management
-     */
-    public MariaDbDao(@NotNull DataSource dataSource, @NotNull CheapFactory factory)
-    {
-        super(dataSource, factory, logger);
+        super(adapter, logger);
     }
 
     /**
@@ -249,7 +231,7 @@ public class MariaDbDao extends AbstractCheapDao
 
         sql.append("\n)");
 
-        try (Connection conn = dataSource.getConnection(); Statement stmt = conn.createStatement()) {
+        try (Connection conn = adapter.getConnection(); Statement stmt = conn.createStatement()) {
             stmt.execute(sql.toString());
         }
 
@@ -279,7 +261,7 @@ public class MariaDbDao extends AbstractCheapDao
     }
 
     @Override
-    protected void linkCatalogToAspectDef(Connection conn, Catalog catalog, AspectDef aspectDef) throws SQLException
+    protected void linkCatalogToAspectDef(@NotNull Connection conn, @NotNull Catalog catalog, @NotNull AspectDef aspectDef) throws SQLException
     {
         final String aspectDefId = aspectDef.globalId().toString();
 
@@ -293,7 +275,7 @@ public class MariaDbDao extends AbstractCheapDao
     }
 
     @Override
-    public void saveAspectDef(Connection conn, AspectDef aspectDef) throws SQLException
+    public void saveAspectDef(@NotNull Connection conn, @NotNull AspectDef aspectDef) throws SQLException
     {
         String sql =
             "INSERT INTO aspect_def (aspect_def_id, name, hash_version, is_readable, is_writable, can_add_properties, can_remove_properties) " +
@@ -353,7 +335,7 @@ public class MariaDbDao extends AbstractCheapDao
     }
 
     @Override
-    public void saveEntity(Connection conn, Entity entity) throws SQLException
+    public void saveEntity(@NotNull Connection conn, @NotNull Entity entity) throws SQLException
     {
         String sql = "INSERT INTO entity (entity_id) VALUES (?) ON DUPLICATE KEY UPDATE entity_id=VALUES(entity_id)";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -363,7 +345,7 @@ public class MariaDbDao extends AbstractCheapDao
     }
 
     @Override
-    protected void saveCatalogRecord(Connection conn, Catalog catalog) throws SQLException
+    protected void saveCatalogRecord(@NotNull Connection conn, @NotNull Catalog catalog) throws SQLException
     {
         String sql = "INSERT INTO catalog (catalog_id, species, uri, upstream_catalog_id, version_number) "
             + "VALUES (?, ?, ?, ?, ?) " +
@@ -383,7 +365,7 @@ public class MariaDbDao extends AbstractCheapDao
     }
 
     @Override
-    public void saveHierarchy(Connection conn, Hierarchy hierarchy) throws SQLException
+    public void saveHierarchy(@NotNull Connection conn, @NotNull Hierarchy hierarchy) throws SQLException
     {
         UUID catalogId = hierarchy.catalog().globalId();
 
@@ -402,7 +384,7 @@ public class MariaDbDao extends AbstractCheapDao
     }
 
     @Override
-    protected void saveEntityListContent(Connection conn, EntityListHierarchy hierarchy) throws SQLException
+    protected void saveEntityListContent(@NotNull Connection conn, @NotNull EntityListHierarchy hierarchy) throws SQLException
     {
         final String catalogId = hierarchy.catalog().globalId().toString();
         String sql = "INSERT INTO hierarchy_entity_list (catalog_id, hierarchy_name, entity_id, list_order) " +
@@ -410,11 +392,11 @@ public class MariaDbDao extends AbstractCheapDao
             "ON DUPLICATE KEY UPDATE " +
             "entity_id = VALUES(entity_id)";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, catalogId);
+            stmt.setString(2, hierarchy.name());
             int order = 0;
             for (Entity entity : hierarchy) {
                 saveEntity(conn, entity);
-                stmt.setString(1, catalogId);
-                stmt.setString(2, hierarchy.name());
                 stmt.setString(3, entity.globalId().toString());
                 stmt.setInt(4, order++);
                 stmt.addBatch();
@@ -424,7 +406,7 @@ public class MariaDbDao extends AbstractCheapDao
     }
 
     @Override
-    protected void saveEntitySetContent(Connection conn, EntitySetHierarchy hierarchy) throws SQLException
+    protected void saveEntitySetContent(@NotNull Connection conn, @NotNull EntitySetHierarchy hierarchy) throws SQLException
     {
         final String catalogId = hierarchy.catalog().globalId().toString();
         String sql = "INSERT INTO hierarchy_entity_set (catalog_id, hierarchy_name, entity_id, set_order) " +
@@ -432,11 +414,11 @@ public class MariaDbDao extends AbstractCheapDao
             "ON DUPLICATE KEY UPDATE " +
             "set_order = VALUES(set_order)";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, catalogId);
+            stmt.setString(2, hierarchy.name());
             int order = 0;
             for (Entity entity : hierarchy) {
                 saveEntity(conn, entity);
-                stmt.setString(1, catalogId);
-                stmt.setString(2, hierarchy.name());
                 stmt.setString(3, entity.globalId().toString());
                 stmt.setInt(4, order++);
                 stmt.addBatch();
@@ -446,7 +428,7 @@ public class MariaDbDao extends AbstractCheapDao
     }
 
     @Override
-    protected void saveEntityDirectoryContent(Connection conn, EntityDirectoryHierarchy hierarchy) throws SQLException
+    protected void saveEntityDirectoryContent(@NotNull Connection conn, @NotNull EntityDirectoryHierarchy hierarchy) throws SQLException
     {
         final String catalogId = hierarchy.catalog().globalId().toString();
         String sql = "INSERT INTO hierarchy_entity_directory (catalog_id, hierarchy_name, entity_key, entity_id, dir_order) " +
@@ -455,15 +437,14 @@ public class MariaDbDao extends AbstractCheapDao
             "entity_id = VALUES(entity_id), " +
             "dir_order = VALUES(dir_order)";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, catalogId);
+            stmt.setString(2, hierarchy.name());
             int order = 0;
-            for (String key : hierarchy.keySet()) {
-                Entity entity = hierarchy.get(key);
-                if (entity != null) {
-                    saveEntity(conn, entity);
-                    stmt.setString(1, catalogId);
-                    stmt.setString(2, hierarchy.name());
-                    stmt.setString(3, key);
-                    stmt.setString(4, entity.globalId().toString());
+            for (Map.Entry<String,Entity> entry : hierarchy.entrySet()) {
+                if (entry.getValue() != null) {
+                    saveEntity(conn, entry.getValue());
+                    stmt.setString(3, entry.getKey());
+                    stmt.setString(4, entry.getValue().globalId().toString());
                     stmt.setInt(5, order++);
                     stmt.addBatch();
                 }
@@ -473,7 +454,7 @@ public class MariaDbDao extends AbstractCheapDao
     }
 
     @Override
-    protected void saveEntityTreeContent(Connection conn, EntityTreeHierarchy hierarchy) throws SQLException
+    protected void saveEntityTreeContent(@NotNull Connection conn, @NotNull EntityTreeHierarchy hierarchy) throws SQLException
     {
         // Save tree nodes recursively
         saveTreeNode(conn, hierarchy, hierarchy.root(), "", "", null, 0);
@@ -533,7 +514,7 @@ public class MariaDbDao extends AbstractCheapDao
     }
 
     @Override
-    protected void saveAspectMapContentToDefaultTables(Connection conn, AspectMapHierarchy hierarchy) throws SQLException
+    protected void saveAspectMapContentToDefaultTables(@NotNull Connection conn, @NotNull AspectMapHierarchy hierarchy) throws SQLException
     {
         final String catalogId = hierarchy.catalog().globalId().toString();
         String aspectSql = "INSERT INTO aspect (entity_id, aspect_def_id, catalog_id, hierarchy_name) " +
@@ -548,57 +529,42 @@ public class MariaDbDao extends AbstractCheapDao
 
         final String aspectDefId = hierarchy.aspectDef().globalId().toString();
 
-        int order = 0;
-        for (Entity entity : hierarchy.keySet()) {
-            saveEntity(conn, entity);
+        try (PreparedStatement aspectStmt = conn.prepareStatement(aspectSql);
+             PreparedStatement mapStmt = conn.prepareStatement(hierarchyMapSql))
+        {
+            aspectStmt.setString(2, aspectDefId);
+            aspectStmt.setString(3, catalogId);
+            mapStmt.setString(1, catalogId);
+            mapStmt.setString(4, aspectDefId);
+            int order = 0;
+            for (Map.Entry<Entity,Aspect> entry : hierarchy.entrySet()) {
+                Entity entity = entry.getKey();
+                saveEntity(conn, entity);
 
-            Aspect aspect = hierarchy.get(entity);
-            if (aspect != null) {
-                // Save aspect
-                try (PreparedStatement aspectStmt = conn.prepareStatement(aspectSql)) {
+                Aspect aspect = entry.getValue();
+                if (aspect != null) {
+                    // Save aspect
                     aspectStmt.setString(1, entity.globalId().toString());
-                    aspectStmt.setString(2, aspectDefId);
-                    aspectStmt.setString(3, catalogId);
                     aspectStmt.setString(4, hierarchy.name());
                     aspectStmt.executeUpdate();
-                }
 
-                // Save hierarchy mapping
-                try (PreparedStatement mapStmt = conn.prepareStatement(hierarchyMapSql)) {
-                    mapStmt.setString(1, catalogId);
+                    // Save hierarchy mapping
                     mapStmt.setString(2, hierarchy.name());
                     mapStmt.setString(3, entity.globalId().toString());
-                    mapStmt.setString(4, aspectDefId);
                     mapStmt.setInt(5, order++);
                     mapStmt.executeUpdate();
-                }
 
-                // Save properties
-                saveAspectProperties(conn, entity.globalId(), hierarchy.aspectDef().globalId(), hierarchy.catalog().globalId(), aspect);
+                    // Save properties
+                    saveAspectProperties(conn, entity.globalId(), hierarchy.aspectDef().globalId(), hierarchy.catalog()
+                        .globalId(), aspect);
+                }
             }
         }
     }
 
     @Override
-    protected void saveAspectMapContentToMappedTable(Connection conn, AspectMapHierarchy hierarchy, AspectTableMapping mapping) throws SQLException
+    protected @NotNull StringBuilder buildAspectMapSql(@NotNull AspectTableMapping mapping)
     {
-        final String catalogId = hierarchy.catalog().globalId().toString();
-        // Pre-save cleanup based on flags
-        if (!mapping.hasEntityId() && !mapping.hasCatalogId()) {
-            // No IDs: TRUNCATE the entire table
-            try (Statement stmt = conn.createStatement()) {
-                stmt.execute("TRUNCATE TABLE " + mapping.tableName());
-            }
-        } else if (!mapping.hasEntityId() && mapping.hasCatalogId()) {
-            // Catalog ID only: DELETE rows for this catalog
-            String deleteSql = "DELETE FROM " + mapping.tableName() + " WHERE catalog_id = ?";
-            try (PreparedStatement stmt = conn.prepareStatement(deleteSql)) {
-                stmt.setString(1, catalogId);
-                stmt.executeUpdate();
-            }
-        }
-        // If hasEntityId, no pre-save cleanup needed (will use ON DUPLICATE KEY UPDATE)
-
         // Build column list and placeholders for INSERT
         StringBuilder columns = new StringBuilder();
         StringBuilder placeholders = new StringBuilder();
@@ -647,37 +613,49 @@ public class MariaDbDao extends AbstractCheapDao
             }
         }
         // No ON DUPLICATE KEY UPDATE clause if !hasEntityId (simple INSERT after cleanup)
+        return sql;
+    }
 
-        try (PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
-            for (Entity entity : hierarchy.keySet()) {
-                saveEntity(conn, entity);
+    @Override
+    protected void saveAspectToMappedTable(@NotNull AspectTableMapping mapping, @NotNull Entity entity, Aspect aspect, @NotNull PreparedStatement stmt, @NotNull UUID catalogId) throws SQLException
+    {
+        int paramIndex = 1;
 
-                Aspect aspect = hierarchy.get(entity);
-                if (aspect != null) {
-                    int paramIndex = 1;
+        if (mapping.hasCatalogId()) {
+            stmt.setString(paramIndex++, catalogId.toString());
+        }
 
-                    if (mapping.hasCatalogId()) {
-                        stmt.setString(paramIndex++, catalogId);
-                    }
+        if (mapping.hasEntityId()) {
+            stmt.setString(paramIndex++, entity.globalId().toString());
+        }
 
-                    if (mapping.hasEntityId()) {
-                        stmt.setString(paramIndex++, entity.globalId().toString());
-                    }
+        for (String propName : mapping.propertyToColumnMap().keySet()) {
+            Object value = aspect.readObj(propName);
+            PropertyDef propDef = aspect.def().propertyDef(propName);
+            if (propDef != null) {
+                setPropertyValue(stmt, paramIndex++, value, propDef.type());
+            } else {
+                stmt.setObject(paramIndex++, value);
+            }
+        }
 
-                    for (Map.Entry<String, String> entry : mapping.propertyToColumnMap().entrySet()) {
-                        String propName = entry.getKey();
-                        Object value = aspect.readObj(propName);
+        stmt.executeUpdate();
+    }
 
-                        PropertyDef propDef = aspect.def().propertyDef(propName);
-                        if (propDef != null) {
-                            setPropertyValue(stmt, paramIndex++, value, propDef.type());
-                        } else {
-                            stmt.setObject(paramIndex++, value);
-                        }
-                    }
-
-                    stmt.executeUpdate();
-                }
+    @Override
+    protected void clearMappedTable(@NotNull Connection conn, @NotNull AspectTableMapping mapping, @NotNull UUID catalogId) throws SQLException
+    {
+        if (!mapping.hasEntityId() && !mapping.hasCatalogId()) {
+            // No IDs: TRUNCATE the entire table
+            try (Statement stmt = conn.createStatement()) {
+                stmt.execute("TRUNCATE TABLE " + mapping.tableName());
+            }
+        } else if (!mapping.hasEntityId() && mapping.hasCatalogId()) {
+            // Catalog ID only: DELETE rows for this catalog
+            String deleteSql = "DELETE FROM " + mapping.tableName() + " WHERE catalog_id = ?";
+            try (PreparedStatement stmt = conn.prepareStatement(deleteSql)) {
+                stmt.setString(1, catalogId.toString());
+                stmt.executeUpdate();
             }
         }
     }
@@ -704,6 +682,8 @@ public class MariaDbDao extends AbstractCheapDao
                 Object value = aspect.readObj(propName);
                 PropertyType type = propDef.type();
 
+                stmt.setString(4, propName);
+
                 if (value == null) {
                     // For null values:
                     // - Single-valued: insert a row with NULL
@@ -712,16 +692,9 @@ public class MariaDbDao extends AbstractCheapDao
                         stmt.setString(1, entityId.toString());
                         stmt.setString(2, aspectDefId.toString());
                         stmt.setString(3, catalogId.toString());
-                        stmt.setString(4, propName);
-                        stmt.setInt(5, 0); // value_index
-
-                        if (type == PropertyType.BLOB) {
-                            stmt.setString(6, null); // value_text
-                            stmt.setBytes(7, null);  // value_binary
-                        } else {
-                            stmt.setString(6, null); // value_text
-                            stmt.setBytes(7, null);  // value_binary
-                        }
+                        stmt.setInt(5, 0); // NOSONAR - sonar bug, doesn't see setInt(5,i) below
+                        stmt.setString(6, null); // value_text
+                        stmt.setBytes(7, null);  // value_binary
                         stmt.addBatch();
                     }
                 } else if (propDef.isMultivalued() && value instanceof List) {
@@ -735,14 +708,13 @@ public class MariaDbDao extends AbstractCheapDao
                         stmt.setString(1, entityId.toString());
                         stmt.setString(2, aspectDefId.toString());
                         stmt.setString(3, catalogId.toString());
-                        stmt.setString(4, propName);
                         stmt.setInt(5, i); // value_index
 
                         if (type == PropertyType.BLOB) {
                             stmt.setString(6, null); // value_text
                             stmt.setBytes(7, (byte[]) itemValue); // value_binary
                         } else {
-                            stmt.setString(6, convertValueToString(itemValue, type)); // value_text
+                            stmt.setString(6, adapter.getValueAdapter().convertValueToString(itemValue, type)); // value_text
                             stmt.setBytes(7, null); // value_binary
                         }
                         stmt.addBatch();
@@ -752,14 +724,13 @@ public class MariaDbDao extends AbstractCheapDao
                     stmt.setString(1, entityId.toString());
                     stmt.setString(2, aspectDefId.toString());
                     stmt.setString(3, catalogId.toString());
-                    stmt.setString(4, propName);
-                    stmt.setInt(5, 0); // value_index
+                    stmt.setInt(5, 0); // value_index - NOSONAR - sonar bug, doesn't see setInt(5,i) above
 
                     if (type == PropertyType.BLOB) {
                         stmt.setString(6, null); // value_text
                         stmt.setBytes(7, (byte[]) value); // value_binary
                     } else {
-                        stmt.setString(6, convertValueToString(value, type)); // value_text
+                        stmt.setString(6, adapter.getValueAdapter().convertValueToString(value, type)); // value_text
                         stmt.setBytes(7, null); // value_binary
                     }
                     stmt.addBatch();
@@ -770,21 +741,8 @@ public class MariaDbDao extends AbstractCheapDao
         }
     }
 
-    /**
-     * Converts a property value to its string representation for storage in value_text column.
-     */
     @Override
-    public String convertValueToString(Object value, PropertyType type) throws SQLException
-    {
-        return switch (type) {
-            case DateTime -> convertToTimestamp(value).toString();
-            case UUID -> value.toString();
-            default -> value.toString();
-        };
-    }
-
-    @Override
-    public Catalog loadCatalogWithConnection(Connection conn, UUID catalogId) throws SQLException
+    public Catalog loadCatalogWithConnection(@NotNull Connection conn, @NotNull UUID catalogId) throws SQLException
     {
         // Load catalog basic info
         String sql = "SELECT catalog_id, species, uri, upstream_catalog_id, version_number FROM catalog WHERE catalog_id = ?";
@@ -811,7 +769,7 @@ public class MariaDbDao extends AbstractCheapDao
                 long version = rs.getLong("version_number");
 
                 // Create catalog with version
-                Catalog catalog = factory.createCatalog(catalogId, species, uri, upstream, version);
+                Catalog catalog = adapter.getFactory().createCatalog(catalogId, species, uri, upstream, version);
 
                 // Load and extend catalog with AspectDefs
                 loadAndExtendAspectDefs(conn, catalog);
@@ -893,7 +851,7 @@ public class MariaDbDao extends AbstractCheapDao
                 while (rs.next()) {
                     String entityIdStr = rs.getString("entity_id");
                     UUID entityId = UUID.fromString(entityIdStr);
-                    Entity entity = factory.getOrRegisterNewEntity(entityId);
+                    Entity entity = adapter.getFactory().getOrRegisterNewEntity(entityId);
                     hierarchy.add(entity);
                 }
             }
@@ -911,7 +869,7 @@ public class MariaDbDao extends AbstractCheapDao
                 while (rs.next()) {
                     String entityIdStr = rs.getString("entity_id");
                     UUID entityId = UUID.fromString(entityIdStr);
-                    Entity entity = factory.getOrRegisterNewEntity(entityId);
+                    Entity entity = adapter.getFactory().getOrRegisterNewEntity(entityId);
                     hierarchy.add(entity);
                 }
             }
@@ -931,7 +889,7 @@ public class MariaDbDao extends AbstractCheapDao
                     String key = rs.getString("entity_key");
                     String entityIdStr = rs.getString("entity_id");
                     UUID entityId = UUID.fromString(entityIdStr);
-                    Entity entity = factory.getOrRegisterNewEntity(entityId);
+                    Entity entity = adapter.getFactory().getOrRegisterNewEntity(entityId);
                     hierarchy.put(key, entity);
                 }
             }
@@ -963,11 +921,11 @@ public class MariaDbDao extends AbstractCheapDao
                     String entityIdStr = rs.getString("entity_id");
                     UUID entityId = entityIdStr != null ? UUID.fromString(entityIdStr) : null;
 
-                    Entity entity = entityId != null ? factory.getOrRegisterNewEntity(entityId) : null;
-                    EntityTreeHierarchy.Node node = factory.createTreeNode(entity);
+                    Entity entity = entityId != null ? adapter.getFactory().getOrRegisterNewEntity(entityId) : null;
+                    EntityTreeHierarchy.Node node = adapter.getFactory().createTreeNode(entity);
 
-                    NodeRecord record = new NodeRecord(nodeId, parentNodeId, nodeKey, node);
-                    nodeMap.put(nodeId, record);
+                    NodeRecord nodeRec = new NodeRecord(nodeId, parentNodeId, nodeKey, node);
+                    nodeMap.put(nodeId, nodeRec);
 
                     // Root node has no parent
                     if (parentNodeId == null) {
@@ -978,11 +936,11 @@ public class MariaDbDao extends AbstractCheapDao
         }
 
         // Build the tree structure by adding children to their parents
-        for (NodeRecord record : nodeMap.values()) {
-            if (record.parentNodeId != null) {
-                NodeRecord parentRecord = nodeMap.get(record.parentNodeId);
+        for (NodeRecord nodeRec : nodeMap.values()) {
+            if (nodeRec.parentNodeId != null) {
+                NodeRecord parentRecord = nodeMap.get(nodeRec.parentNodeId);
                 if (parentRecord != null) {
-                    parentRecord.node.put(record.nodeKey, record.node);
+                    parentRecord.node.put(nodeRec.nodeKey, nodeRec.node);
                 }
             }
         }
@@ -1036,7 +994,7 @@ public class MariaDbDao extends AbstractCheapDao
                     String entityIdStr = rs.getString("entity_id");
                     UUID entityId = UUID.fromString(entityIdStr);
 
-                    Entity entity = factory.getOrRegisterNewEntity(entityId);
+                    Entity entity = adapter.getFactory().getOrRegisterNewEntity(entityId);
                     Aspect aspect = loadAspect(conn, entity, hierarchy.aspectDef(), hierarchy.catalog());
                     hierarchy.put(entity, aspect);
                 }
@@ -1087,13 +1045,13 @@ public class MariaDbDao extends AbstractCheapDao
                         // Entity ID is in the table - use it
                         String entityIdStr = rs.getString("entity_id");
                         UUID entityId = UUID.fromString(entityIdStr);
-                        entity = factory.getOrRegisterNewEntity(entityId);
+                        entity = adapter.getFactory().getOrRegisterNewEntity(entityId);
                     } else {
                         // No entity ID in table - generate a new one
-                        entity = factory.createEntity();
+                        entity = adapter.getFactory().createEntity();
                     }
 
-                    Aspect aspect = factory.createPropertyMapAspect(entity, hierarchy.aspectDef());
+                    Aspect aspect = adapter.getFactory().createPropertyMapAspect(entity, hierarchy.aspectDef());
 
                     // Load properties from mapped columns
                     for (Map.Entry<String, String> entry : mapping.propertyToColumnMap().entrySet()) {
@@ -1103,7 +1061,7 @@ public class MariaDbDao extends AbstractCheapDao
                         PropertyDef propDef = hierarchy.aspectDef().propertyDef(propName);
                         if (propDef != null) {
                             Object value = rs.getObject(columnName);
-                            Property property = factory.createProperty(propDef, value);
+                            Property property = adapter.getFactory().createProperty(propDef, value);
                             aspect.put(property);
                         }
                     }
@@ -1115,9 +1073,9 @@ public class MariaDbDao extends AbstractCheapDao
     }
 
     @Override
-    public Aspect loadAspect(Connection conn, Entity entity, AspectDef aspectDef, Catalog catalog) throws SQLException
+    public Aspect loadAspect(@NotNull Connection conn, @NotNull Entity entity, @NotNull AspectDef aspectDef, @NotNull Catalog catalog) throws SQLException
     {
-        Aspect aspect = factory.createPropertyMapAspect(entity, aspectDef);
+        Aspect aspect = adapter.getFactory().createPropertyMapAspect(entity, aspectDef);
 
         String sql = "SELECT property_name, value_index, value_text, value_binary " +
             "FROM property_value " +
@@ -1181,7 +1139,7 @@ public class MariaDbDao extends AbstractCheapDao
         for (PropertyDef propDef : aspectDef.propertyDefs()) {
             if (!loadedProperties.contains(propDef.name()) && propDef.isMultivalued()) {
                 // Multivalued property with no rows → create with empty list
-                Property property = factory.createProperty(propDef, Collections.emptyList());
+                Property property = adapter.getFactory().createProperty(propDef, Collections.emptyList());
                 aspect.put(property);
             }
         }
@@ -1197,18 +1155,18 @@ public class MariaDbDao extends AbstractCheapDao
         if (values.isEmpty()) {
             // No rows found - for multivalued, this means empty list
             if (propDef.isMultivalued()) {
-                Property property = factory.createProperty(propDef, Collections.emptyList());
+                Property property = adapter.getFactory().createProperty(propDef, Collections.emptyList());
                 aspect.put(property);
             }
             // For single-valued, don't add the property (will use default value if available)
         } else if (propDef.isMultivalued()) {
             // Multivalued property - create property with list of all values
-            Property property = factory.createProperty(propDef, new ArrayList<>(values));
+            Property property = adapter.getFactory().createProperty(propDef, new ArrayList<>(values));
             aspect.put(property);
         } else {
             // Single-valued property - use the first (and only) value
             Object value = values.getFirst();
-            Property property = factory.createProperty(propDef, value);
+            Property property = adapter.getFactory().createProperty(propDef, value);
             aspect.put(property);
         }
     }
@@ -1260,22 +1218,23 @@ public class MariaDbDao extends AbstractCheapDao
     }
 
     @Override
-    public AspectDef loadAspectDef(Connection conn, String aspectDefName) throws SQLException
+    public AspectDef loadAspectDef(@NotNull Connection conn, @NotNull String aspectDefName) throws SQLException
     {
-        // First load the AspectDef basic info including hash_version
-        String aspectSql = "SELECT aspect_def_id, hash_version, is_readable, is_writable, can_add_properties, can_remove_properties " +
+        // First load the AspectDef basic info, except hash_version
+        String aspectSql = "SELECT aspect_def_id, is_readable, is_writable, can_add_properties, can_remove_properties " +
             "FROM aspect_def WHERE name = ?";
 
-        long hashVersion;
         UUID aspectDefId;
-        boolean isReadable = true, isWritable = true, canAddProperties = false, canRemoveProperties = false;
+        boolean isReadable;
+        boolean isWritable;
+        boolean canAddProperties;
+        boolean canRemoveProperties;
 
         try (PreparedStatement stmt = conn.prepareStatement(aspectSql)) {
             stmt.setString(1, aspectDefName);
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
                     aspectDefId = UUID.fromString(rs.getString("aspect_def_id"));
-                    hashVersion = rs.getLong("hash_version");
                     isReadable = rs.getBoolean("is_readable");
                     isWritable = rs.getBoolean("is_writable");
                     canAddProperties = rs.getBoolean("can_add_properties");
@@ -1308,7 +1267,7 @@ public class MariaDbDao extends AbstractCheapDao
                     boolean isRemovable = rs.getBoolean("is_removable");
                     boolean isMultivalued = rs.getBoolean("is_multivalued");
 
-                    PropertyDef propDef = factory.createPropertyDef(propName, type, defaultValue, hasDefaultValue,
+                    PropertyDef propDef = adapter.getFactory().createPropertyDef(propName, type, defaultValue, hasDefaultValue,
                         propReadable, propWritable, isNullable, isRemovable, isMultivalued);
 
                     propertyDefMap.put(propName, propDef);
@@ -1320,13 +1279,13 @@ public class MariaDbDao extends AbstractCheapDao
         AspectDef aspectDef;
         if (canAddProperties && canRemoveProperties) {
             // Fully mutable - use MutableAspectDefImpl
-            aspectDef = factory.createMutableAspectDef(aspectDefName, aspectDefId, propertyDefMap);
+            aspectDef = adapter.getFactory().createMutableAspectDef(aspectDefName, aspectDefId, propertyDefMap);
         } else if (!canAddProperties && !canRemoveProperties) {
             // Fully immutable - use ImmutableAspectDefImpl
-            aspectDef = factory.createImmutableAspectDef(aspectDefName, aspectDefId, propertyDefMap);
+            aspectDef = adapter.getFactory().createImmutableAspectDef(aspectDefName, aspectDefId, propertyDefMap);
         } else {
             // Mixed mutability - use FullAspectDefImpl
-            aspectDef = factory.createFullAspectDef(aspectDefName, aspectDefId, propertyDefMap,
+            aspectDef = adapter.getFactory().createFullAspectDef(aspectDefName, aspectDefId, propertyDefMap,
                 isReadable, isWritable, canAddProperties, canRemoveProperties);
         }
 
@@ -1336,7 +1295,7 @@ public class MariaDbDao extends AbstractCheapDao
     @Override
     public boolean deleteCatalog(@NotNull UUID catalogId) throws SQLException
     {
-        try (Connection conn = dataSource.getConnection()) {
+        try (Connection conn = adapter.getConnection()) {
             conn.setAutoCommit(false);
             try {
                 // Cascading deletes should also delete all child DB entities.
@@ -1358,7 +1317,7 @@ public class MariaDbDao extends AbstractCheapDao
     public boolean catalogExists(@NotNull UUID catalogId) throws SQLException
     {
         String sql = "SELECT 1 FROM catalog WHERE catalog_id = ?";
-        try (Connection conn = dataSource.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (Connection conn = adapter.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, catalogId.toString());
             try (ResultSet rs = stmt.executeQuery()) {
                 return rs.next();
@@ -1372,7 +1331,8 @@ public class MariaDbDao extends AbstractCheapDao
      * Sets a property value in a PreparedStatement, handling type conversions.
      * Used when saving aspects to custom mapped tables.
      */
-    private void setPropertyValue(PreparedStatement stmt, int paramIndex, Object value, PropertyType type) throws SQLException
+    @Override
+    protected void setPropertyValue(@NotNull PreparedStatement stmt, int paramIndex, Object value, @NotNull PropertyType type) throws SQLException
     {
         if (value == null) {
             stmt.setObject(paramIndex, null);
@@ -1383,8 +1343,7 @@ public class MariaDbDao extends AbstractCheapDao
             case Integer -> stmt.setLong(paramIndex, ((Number) value).longValue());
             case Float -> stmt.setDouble(paramIndex, ((Number) value).doubleValue());
             case Boolean -> stmt.setBoolean(paramIndex, (Boolean) value);
-            case DateTime -> stmt.setTimestamp(paramIndex, convertToTimestamp(value));
-            case UUID -> stmt.setString(paramIndex, value.toString());
+            case DateTime -> stmt.setTimestamp(paramIndex, adapter.getValueAdapter().convertToTimestamp(value));
             case BLOB -> stmt.setBytes(paramIndex, (byte[]) value);
             default -> stmt.setString(paramIndex, value.toString());
         }

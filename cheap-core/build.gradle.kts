@@ -3,7 +3,7 @@ plugins {
     `java-library`
     id("io.freefair.lombok") version "8.14.2"
     idea
-
+    id("org.sonarqube") version "7.0.0.6105"
 }
 
 group = "net.netbeing"

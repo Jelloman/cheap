@@ -16,18 +16,31 @@
 
 package net.netbeing.cheap.db;
 
-import net.netbeing.cheap.impl.basic.*;
-import net.netbeing.cheap.model.*;
+import net.netbeing.cheap.impl.basic.AspectMapHierarchyImpl;
+import net.netbeing.cheap.impl.basic.AspectPropertyMapImpl;
+import net.netbeing.cheap.impl.basic.CatalogImpl;
+import net.netbeing.cheap.impl.basic.MutableAspectDefImpl;
+import net.netbeing.cheap.impl.basic.PropertyDefBuilder;
+import net.netbeing.cheap.impl.basic.PropertyDefImpl;
+import net.netbeing.cheap.impl.basic.PropertyImpl;
+import net.netbeing.cheap.model.AspectDef;
+import net.netbeing.cheap.model.AspectMapHierarchy;
+import net.netbeing.cheap.model.Entity;
+import net.netbeing.cheap.model.PropertyDef;
+import net.netbeing.cheap.model.PropertyType;
+import net.netbeing.cheap.util.CheapException;
 import org.jetbrains.annotations.NotNull;
 
-import javax.sql.DataSource;
-import java.sql.*;
-import java.util.Date;
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 /**
  * Base class for Catalog implementations that load database tables via JDBC.
@@ -36,34 +49,32 @@ import java.util.UUID;
  */
 public abstract class JdbcCatalogBase extends CatalogImpl
 {
+    /**
+     * The database adapter used by this catalog adapter.
+     */
+    protected final CheapJdbcAdapter adapter;
+
     /** List of table names available in the database. Populated by {@link #loadTables()}. */
     protected final List<String> tables = new LinkedList<>();
 
     /** Cache of AspectDef objects created for each table, keyed by table name. */
     protected final Map<String, AspectDef> tableAspects = new LinkedHashMap<>();
 
-    /** JDBC data source for database connections. */
-    protected DataSource dataSource;
-
-    /**
-     * Default constructor for testing or lazy initialization.
-     * The data source must be set before calling most methods.
-     */
-    protected JdbcCatalogBase()
-    {
-        // Default constructor
-    }
-
     /**
      * Constructs a new catalog connected to the given data source.
      * Immediately loads the list of available tables from the database.
      *
-     * @param dataSource the JDBC data source to use for database access
+     * @param adapter the database adapter to use for database access
      */
-    protected JdbcCatalogBase(DataSource dataSource)
+    protected JdbcCatalogBase(@NotNull CheapJdbcAdapter adapter)
     {
-        this.dataSource = dataSource;
+        this.adapter = adapter;
         loadTables();
+    }
+
+    public CheapJdbcAdapter getAdapter()
+    {
+        return adapter;
     }
 
     /**
@@ -117,18 +128,14 @@ public abstract class JdbcCatalogBase extends CatalogImpl
      *
      * @param tableName the name of the database table to introspect
      * @return a MutableAspectDef representing the table structure
-     * @throws IllegalStateException if dataSource is not set
+     * @throws IllegalStateException if adapter is not set
      * @throws RuntimeException if database introspection fails
      */
     public AspectDef loadTableDef(@NotNull String tableName)
     {
-        if (dataSource == null) {
-            throw new IllegalStateException("DataSource not set. Use constructor with DataSource to initialize the catalog.");
-        }
-
         MutableAspectDefImpl aspectDef = new MutableAspectDefImpl(tableName);
 
-        try (Connection connection = dataSource.getConnection()) {
+        try (Connection connection = adapter.getConnection()) {
             DatabaseMetaData metaData = connection.getMetaData();
 
             try (ResultSet columns = metaData.getColumns(null, getSchemaName(), tableName, null)) {
@@ -138,14 +145,16 @@ public abstract class JdbcCatalogBase extends CatalogImpl
                     boolean isNullable = columns.getInt("NULLABLE") == DatabaseMetaData.columnNullable;
 
                     PropertyType propertyType = mapDbTypeToPropertyType(dbTypeName);
-                    PropertyDefImpl propertyDef = new PropertyDefBuilder().setName(columnName).setType(propertyType).setIsReadable(true).setIsWritable(true).setIsNullable(isNullable).setIsRemovable(true).setIsMultivalued(false).build();
+                    PropertyDefImpl propertyDef = new PropertyDefBuilder().setName(columnName).setType(propertyType)
+                        .setIsReadable(true).setIsWritable(true).setIsNullable(isNullable).setIsRemovable(true)
+                        .setIsMultivalued(false).build();
 
                     aspectDef.add(propertyDef);
                 }
             }
 
         } catch (SQLException e) {
-            throw new RuntimeException("Failed to load table definition for table: " + tableName, e);
+            throw new CheapException("Failed to load table definition for table: " + tableName, e);
         }
 
         tableAspects.put(tableName, aspectDef);
@@ -167,12 +176,12 @@ public abstract class JdbcCatalogBase extends CatalogImpl
      * @param tableName the name of the database table to load
      * @param maxRows maximum number of rows to load, or -1 for unlimited
      * @return an AspectMapHierarchy containing the table data
-     * @throws IllegalStateException if dataSource is not set
+     * @throws IllegalStateException if adapter is not set
      * @throws RuntimeException if the query fails
      */
     public AspectMapHierarchy loadTable(@NotNull String tableName, int maxRows)
     {
-        if (dataSource == null) {
+        if (adapter == null) {
             throw new IllegalStateException("DataSource not set. Use constructor with DataSource to initialize the catalog.");
         }
 
@@ -184,7 +193,7 @@ public abstract class JdbcCatalogBase extends CatalogImpl
             query += " LIMIT " + maxRows;
         }
 
-        try (Connection connection = dataSource.getConnection();
+        try (Connection connection = adapter.getConnection();
              Statement statement = connection.createStatement();
              ResultSet resultSet = statement.executeQuery(query)) {
 
@@ -202,7 +211,7 @@ public abstract class JdbcCatalogBase extends CatalogImpl
 
                     PropertyDef propDef = aspectDef.propertyDef(columnName);
                     if (propDef != null) {
-                        PropertyImpl property = new PropertyImpl(propDef, convertValue(value, propDef.type()));
+                        PropertyImpl property = new PropertyImpl(propDef, convertValue(value, propDef));
                         aspect.unsafeAdd(property);
                     }
                 }
@@ -211,7 +220,7 @@ public abstract class JdbcCatalogBase extends CatalogImpl
             }
 
         } catch (SQLException e) {
-            throw new RuntimeException("Failed to load table data for table: " + tableName, e);
+            throw new CheapException("Failed to load table data for table: " + tableName, e);
         }
 
         return hierarchy;
@@ -219,68 +228,16 @@ public abstract class JdbcCatalogBase extends CatalogImpl
 
     /**
      * Converts a database value to the appropriate Java type for the given PropertyType.
-     * This default implementation handles common conversions; subclasses can override
-     * for database-specific behavior.
+     * This default implementation delegates all behavior to the PropertyValueAdapter of
+     * this object.
      *
      * @param value the database value
-     * @param expectedType the expected PropertyType
+     * @param expectedProperty the expected PropertyDef
      * @return the converted value
      */
-    protected Object convertValue(Object value, PropertyType expectedType)
+    protected Object convertValue(Object value, PropertyDef expectedProperty)
     {
-        if (value == null) {
-            return null;
-        }
-
-        // Convert based on expected PropertyType
-        switch (expectedType) {
-            case Integer:
-                if (value instanceof Number) {
-                    return ((Number) value).longValue();
-                } else if (value instanceof String) {
-                    return Long.valueOf((String) value);
-                }
-                break;
-            case Float:
-                if (value instanceof Number) {
-                    return ((Number) value).doubleValue();
-                } else if (value instanceof String) {
-                    return Double.valueOf((String) value);
-                }
-                break;
-            case Boolean:
-                if (value instanceof Boolean) {
-                    return value;
-                } else if (value instanceof Number) {
-                    return ((Number) value).intValue() != 0;
-                } else if (value instanceof String) {
-                    return Boolean.valueOf((String) value);
-                }
-                break;
-            case UUID:
-                if (value instanceof UUID) {
-                    return value;
-                }
-                break;
-            case DateTime:
-                if (value instanceof java.sql.Date) {
-                    return ((java.sql.Date) value).toLocalDate().toString();
-                } else if (value instanceof Date) {
-                    return ((Date) value).toInstant().toString();
-                }
-                break;
-            case String:
-            case Text:
-            case BigInteger:
-            case URI:
-                return value.toString();
-            case BLOB:
-            case CLOB:
-                // For now, return raw value - could be enhanced with streaming support
-                return value;
-        }
-
-        return value;
+        return adapter.getValueAdapter().coerce(expectedProperty, value);
     }
 
     /**
@@ -303,15 +260,5 @@ public abstract class JdbcCatalogBase extends CatalogImpl
     public List<String> getTables()
     {
         return new LinkedList<>(tables);
-    }
-
-    /**
-     * Gets the JDBC data source used by this catalog.
-     *
-     * @return the data source, or null if not set
-     */
-    public DataSource getDataSource()
-    {
-        return dataSource;
     }
 }

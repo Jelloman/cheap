@@ -17,14 +17,17 @@
 package net.netbeing.cheap.db.postgres;
 
 import net.netbeing.cheap.db.JdbcCatalogBase;
-import net.netbeing.cheap.impl.basic.*;
-import net.netbeing.cheap.model.*;
+import net.netbeing.cheap.impl.basic.EntityImpl;
+import net.netbeing.cheap.model.Entity;
+import net.netbeing.cheap.model.PropertyType;
+import net.netbeing.cheap.util.CheapException;
 import org.jetbrains.annotations.NotNull;
 
-import java.sql.*;
-import java.util.*;
-import javax.sql.DataSource;
-import java.sql.SQLDataException;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.Map;
 
 import static java.util.Map.entry;
 
@@ -68,8 +71,8 @@ import static java.util.Map.entry;
  * Usage example:
  * </p>
  * <pre>{@code
- * DataSource dataSource = createPostgreSQLDataSource("jdbc:postgresql://localhost/mydb");
- * PostgresCatalog catalog = new PostgresCatalog(dataSource);
+ * DataSource adapter = createPostgreSQLDataSource("jdbc:postgresql://localhost/mydb");
+ * PostgresCatalog catalog = new PostgresCatalog(adapter);
  *
  * // Get list of available tables
  * List<String> tables = catalog.getTables();
@@ -91,12 +94,12 @@ public class PostgresCatalog extends JdbcCatalogBase
      * 'public' schema. The table names are cached for subsequent use.
      * </p>
      *
-     * @param dataSource the PostgreSQL data source to use for database access
-     * @throws NullPointerException if dataSource is null
+     * @param adapter the PostgreSQL data source to use for database access
+     * @throws NullPointerException if adapter is null
      */
-    public PostgresCatalog(@NotNull DataSource dataSource)
+    public PostgresCatalog(@NotNull PostgresAdapter adapter)
     {
-        super(dataSource);
+        super(adapter);
     }
     
     private static final Map<String, PropertyType> POSTGRES_TO_PROPERTY_TYPE = Map.<String, PropertyType>ofEntries(
@@ -211,7 +214,7 @@ public class PostgresCatalog extends JdbcCatalogBase
     @Override
     protected void loadTables()
     {
-        try (Connection connection = dataSource.getConnection();
+        try (Connection connection = adapter.getConnection();
              PreparedStatement statement = connection.prepareStatement(
                  "SELECT table_name FROM information_schema.tables " +
                  "WHERE table_schema = 'public' AND table_type = 'BASE TABLE'");
@@ -222,7 +225,7 @@ public class PostgresCatalog extends JdbcCatalogBase
             }
 
         } catch (SQLException e) {
-            throw new RuntimeException("Failed to load tables from PostgreSQL database", e);
+            throw new CheapException("Failed to load tables from PostgreSQL database", e);
         }
     }
 
@@ -257,50 +260,5 @@ public class PostgresCatalog extends JdbcCatalogBase
 
         // Default to Text type if no mapping found
         return propertyType != null ? propertyType : PropertyType.Text;
-    }
-
-    @Override
-    protected Object convertValue(Object value, PropertyType expectedType)
-    {
-        if (value == null) {
-            return null;
-        }
-
-        // Handle PostgreSQL-specific type conversions, fall back to base implementation
-        try {
-            return switch (expectedType) {
-                case Integer -> {
-                    if (value instanceof Number n) {
-                        yield n.longValue();
-                    } else if (value instanceof String s) {
-                        yield Long.valueOf(s);
-                    }
-                    throw new SQLDataException("Expected Long type but found " + value.getClass());
-                }
-                case Float -> {
-                    if (value instanceof Number n) {
-                        yield n.doubleValue();
-                    } else if (value instanceof String s) {
-                        yield Double.valueOf(s);
-                    }
-                    throw new SQLDataException("Expected Double type but found " + value.getClass());
-                }
-                case Boolean -> {
-                    if (value instanceof Boolean b) {
-                        yield value;
-                    } else if (value instanceof Number n) {
-                        yield n.intValue() != 0;
-                    } else if (value instanceof String s) {
-                        yield Boolean.valueOf(s);
-                    }
-                    throw new SQLDataException("Expected Boolean type but found " + value.getClass());
-                }
-                default ->
-                    // Use base implementation for other types
-                    super.convertValue(value, expectedType);
-            };
-        } catch (SQLDataException e) {
-            throw new RuntimeException(e);
-        }
     }
 }

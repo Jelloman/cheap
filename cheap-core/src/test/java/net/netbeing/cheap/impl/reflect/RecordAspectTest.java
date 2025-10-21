@@ -15,7 +15,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class RecordAspectTest
+class RecordAspectTest
 {
     public record TestRecord(
         int integerPrimitive,
@@ -35,7 +35,6 @@ public class RecordAspectTest
     ) {}
 
     private static TestRecord record1;
-    private static TestRecord record2;
 
     final Entity testEntity = new EntityImpl();
     final Catalog testCatalog = new CatalogImpl();
@@ -48,7 +47,6 @@ public class RecordAspectTest
     {
         def = new RecordAspectDef(TestRecord.class);
         record1 = new TestRecord(1, 'a', true, (byte) 10, (short) 100, 1000L, 10.5f, 100.25, "foo", 2, 'b', UUID.randomUUID(), URI.create("http://example.com/"), LocalDateTime.now());
-        record2 = new TestRecord(3, 'c', false, (byte) 30, (short) 300, 3000L, 30.5f, 300.75, "bar", 4, 'd', UUID.randomUUID(), URI.create("http://example.com/bar"), LocalDateTime.now().minusDays(1));
     }
 
     @AfterEach
@@ -56,14 +54,7 @@ public class RecordAspectTest
     {
         def = null;
         record1 = null;
-        record2 = null;
         recordAspect = null;
-    }
-
-    @Test
-    void construct()
-    {
-        recordAspect = new RecordAspect<>(testEntity, def, record1);
     }
 
     @Test
@@ -129,7 +120,7 @@ public class RecordAspectTest
     }
 
     @Test
-    void record()
+    void recordTest()
     {
         recordAspect = new RecordAspect<>(testEntity, def, record1);
         

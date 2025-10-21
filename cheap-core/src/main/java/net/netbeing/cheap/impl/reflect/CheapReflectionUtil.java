@@ -21,14 +21,22 @@ import net.netbeing.cheap.model.PropertyType;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.*;
+import java.lang.reflect.GenericArrayType;
+import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.RecordComponent;
+import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.net.URI;
 import java.net.URL;
 import java.nio.CharBuffer;
 import java.time.temporal.TemporalAccessor;
-import java.util.*;
+import java.util.Calendar;
+import java.util.Collection;
+import java.util.Date;
+import java.util.Map;
+import java.util.UUID;
 
 /**
  * Utility class providing reflection-based operations and type mapping functionality for the Cheap reflection package.
@@ -326,7 +334,7 @@ final class CheapReflectionUtil
             for (var annotation : annotations) {
                 Class<?> annotationType = annotation.annotationType();
                 String simpleName = annotationType.getSimpleName();
-                if (annotationType.getSimpleName().equals("NotNull")) { // this catches annotations from multiples libraries
+                if (simpleName.equals("NotNull")) { // this catches annotations from multiples libraries
                     return false;
                 }
             }
@@ -426,16 +434,15 @@ final class CheapReflectionUtil
      * @return the component type of the Collection, or {@code null} if it cannot be determined
      * @throws NullPointerException if klass is null
      */
-    private static Class<?> getCollectionComponentType(@NotNull Class<?> klass, Type genericType)
+    public static Class<?> getCollectionComponentType(@NotNull Class<?> klass, Type genericType)
     {
-        if (Collection.class.isAssignableFrom(klass)) {
-            if (genericType instanceof ParameterizedType) {
-                Type[] paramTypes = ((ParameterizedType) genericType).getActualTypeArguments();
+        if (Collection.class.isAssignableFrom(klass) && genericType instanceof ParameterizedType parameterizedType) {
+                Type[] paramTypes = parameterizedType.getActualTypeArguments();
                 if (paramTypes.length == 1) {
                     return paramTypes[0].getClass();
                 }
             }
-        }
+
         return null;
     }
 
@@ -447,7 +454,7 @@ final class CheapReflectionUtil
      * @throws NullPointerException if field is null
      * @see #getCollectionComponentType(Class, Type)
      */
-    private static Class<?> getCollectionComponentType(RecordComponent field)
+    public static Class<?> getCollectionComponentType(RecordComponent field)
     {
         return getCollectionComponentType(field.getType(), field.getGenericType());
     }
@@ -460,7 +467,7 @@ final class CheapReflectionUtil
      * @throws NullPointerException if getter is null
      * @see #getCollectionComponentType(Class, Type)
      */
-    private static Class<?> getCollectionComponentTypeGetter(Method getter)
+    public static Class<?> getCollectionComponentTypeGetter(Method getter)
     {
         return getCollectionComponentType(getter.getReturnType(), getter.getGenericReturnType());
     }
@@ -474,7 +481,7 @@ final class CheapReflectionUtil
      * @throws IndexOutOfBoundsException if setter has no parameters
      * @see #getCollectionComponentType(Class, Type)
      */
-    private static Class<?> getCollectionComponentTypeSetter(Method setter)
+    public static Class<?> getCollectionComponentTypeSetter(Method setter)
     {
         return getCollectionComponentType(setter.getParameterTypes()[0], setter.getGenericParameterTypes()[0]);
     }

@@ -1,3 +1,4 @@
+SET TIME ZONE 'UTC';
 
 INSERT INTO test_table
 (id, string_col, integer_col, float_col, date_col, timestamp_col, boolean_col, uuid_col, blob_col)

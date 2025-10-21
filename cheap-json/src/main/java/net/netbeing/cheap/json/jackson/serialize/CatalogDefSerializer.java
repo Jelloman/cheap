@@ -19,7 +19,9 @@ package net.netbeing.cheap.json.jackson.serialize;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
-import net.netbeing.cheap.model.*;
+import net.netbeing.cheap.model.AspectDef;
+import net.netbeing.cheap.model.CatalogDef;
+import net.netbeing.cheap.model.HierarchyDef;
 
 import java.io.IOException;
 

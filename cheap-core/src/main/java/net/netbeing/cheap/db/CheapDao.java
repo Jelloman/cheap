@@ -27,7 +27,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.sql.Timestamp;
 import java.util.UUID;
 
 /**
@@ -152,7 +151,7 @@ public interface CheapDao
      * @param aspectDef the AspectDef to save
      * @throws SQLException if database operation fails
      */
-    void saveAspectDef(Connection conn, AspectDef aspectDef) throws SQLException;
+    void saveAspectDef(@NotNull Connection conn, @NotNull AspectDef aspectDef) throws SQLException;
 
     /**
      * Persists an Entity to the database. If the entity already exists
@@ -162,7 +161,7 @@ public interface CheapDao
      * @param entity the Entity to save
      * @throws SQLException if database operation fails
      */
-    void saveEntity(Connection conn, Entity entity) throws SQLException;
+    void saveEntity(@NotNull Connection conn, @NotNull Entity entity) throws SQLException;
 
     /**
      * Persists a Hierarchy metadata record to the database.
@@ -174,21 +173,7 @@ public interface CheapDao
      * @throws SQLException if database operation fails
      * @see #saveCatalog(Connection, Catalog)
      */
-    void saveHierarchy(Connection conn, Hierarchy hierarchy) throws SQLException;
-
-    /**
-     * Converts a property value to its string representation for storage in a text column.
-     * This is used when persisting properties to the default property_value table.
-     *
-     * <p>Most types use toString(), but some types (like DateTime) require special handling
-     * to ensure they can be reliably parsed back from the string representation.
-     *
-     * @param value the property value to convert
-     * @param type the PropertyType indicating how to interpret the value
-     * @return string representation suitable for database storage
-     * @throws SQLException if conversion fails
-     */
-    String convertValueToString(Object value, PropertyType type) throws SQLException;
+    void saveHierarchy(@NotNull Connection conn, @NotNull Hierarchy hierarchy) throws SQLException;
 
     /**
      * Loads a complete catalog from the database by its global ID.
@@ -216,7 +201,7 @@ public interface CheapDao
      * @return the loaded Catalog, or null if not found
      * @throws SQLException if database operation fails
      */
-    Catalog loadCatalogWithConnection(Connection conn, UUID catalogId) throws SQLException;
+    Catalog loadCatalogWithConnection(@NotNull Connection conn, @NotNull UUID catalogId) throws SQLException;
 
     /**
      * Creates a new Hierarchy instance of the specified type and loads its content
@@ -239,7 +224,7 @@ public interface CheapDao
      * @return the newly created and loaded Hierarchy
      * @throws SQLException if database operation fails
      */
-    Hierarchy createAndLoadHierarchy(Connection conn, Catalog catalog, HierarchyType type, String hierarchyName, long version) throws SQLException;
+    Hierarchy createAndLoadHierarchy(@NotNull Connection conn, @NotNull Catalog catalog, @NotNull HierarchyType type, @NotNull String hierarchyName, long version) throws SQLException;
 
     /**
      * Loads an Aspect from the database for a specific entity and AspectDef.
@@ -256,10 +241,10 @@ public interface CheapDao
      * @return the loaded Aspect with all its properties
      * @throws SQLException if database operation fails
      */
-    Aspect loadAspect(Connection conn, Entity entity, AspectDef aspectDef, Catalog catalog) throws SQLException;
+    Aspect loadAspect(@NotNull Connection conn, @NotNull Entity entity, @NotNull AspectDef aspectDef, @NotNull Catalog catalog) throws SQLException;
 
     /**
-     * Loads an AspectDef from the database by its name.
+     * Loads an AspectDef from the database by its name and catalog ID.
      * This includes loading all PropertyDefs and reconstructing the appropriate
      * AspectDef implementation based on mutability flags.
      *
@@ -275,7 +260,7 @@ public interface CheapDao
      * @return the loaded AspectDef
      * @throws SQLException if database operation fails or AspectDef not found
      */
-    AspectDef loadAspectDef(Connection conn, String aspectDefName) throws SQLException;
+    AspectDef loadAspectDef(@NotNull Connection conn, @NotNull String aspectDefName) throws SQLException;
 
     /**
      * Deletes a catalog and all its associated data from the database.
@@ -292,17 +277,4 @@ public interface CheapDao
      * @throws SQLException if database operation fails
      */
     boolean deleteCatalog(@NotNull UUID catalogId) throws SQLException;
-
-    /**
-     * Converts a DateTime value to a SQL Timestamp for database storage.
-     * Handles various date/time types including Timestamp, Date, Instant, and ZonedDateTime.
-     *
-     * <p>This method ensures consistent timestamp representation across different
-     * Java temporal types.
-     *
-     * @param value the date/time value to convert
-     * @return a Timestamp suitable for database storage
-     * @throws IllegalStateException if the value type is not supported
-     */
-    Timestamp convertToTimestamp(Object value);
 }

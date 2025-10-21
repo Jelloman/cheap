@@ -17,12 +17,17 @@
 package net.netbeing.cheap.db.sqlite;
 
 import net.netbeing.cheap.db.JdbcCatalogBase;
-import net.netbeing.cheap.impl.basic.*;
-import net.netbeing.cheap.model.*;
+import net.netbeing.cheap.impl.basic.LocalEntityOneCatalogImpl;
+import net.netbeing.cheap.model.Entity;
+import net.netbeing.cheap.model.PropertyType;
+import net.netbeing.cheap.util.CheapException;
+import org.jetbrains.annotations.NotNull;
 
-import java.sql.*;
-import java.util.*;
-import javax.sql.DataSource;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.Map;
 
 import static java.util.Map.entry;
 
@@ -66,30 +71,17 @@ import static java.util.Map.entry;
 public class SqliteCatalog extends JdbcCatalogBase
 {
     /**
-     * Default constructor for testing or lazy initialization.
-     * <p>
-     * When using this constructor, the data source must be set separately before calling
-     * methods that interact with the database. This constructor is primarily used for testing
-     * scenarios or when the catalog needs to be initialized before the data source is available.
-     * </p>
-     */
-    public SqliteCatalog()
-    {
-        // Default constructor for testing
-    }
-
-    /**
      * Constructs a new SQLite catalog connected to the given data source.
      * <p>
      * This constructor immediately loads the list of available tables from the SQLite database
      * by querying the sqlite_master system table. The table names are cached for subsequent use.
      * </p>
      *
-     * @param dataSource the SQLite data source to use for database access
+     * @param adapter the SQLite database adapter to use for database access
      */
-    public SqliteCatalog(DataSource dataSource)
+    public SqliteCatalog(@NotNull SqliteAdapter adapter)
     {
-        super(dataSource);
+        super(adapter);
     }
     
     private static final Map<String, PropertyType> SQLITE_TO_PROPERTY_TYPE = Map.ofEntries(
@@ -128,25 +120,10 @@ public class SqliteCatalog extends JdbcCatalogBase
         entry("BOOLEAN", PropertyType.Boolean)
     );
 
-    /**
-     * Convenience factory method to create and load a SqliteCatalog from a data source.
-     *
-     * @param dataSource the SQLite data source
-     * @return a new SqliteCatalog instance with tables loaded
-     */
-    public static SqliteCatalog loadDb(DataSource dataSource)
-    {
-        return new SqliteCatalog(dataSource);
-    }
-
     @Override
     protected void loadTables()
     {
-        if (dataSource == null) {
-            return;
-        }
-
-        try (Connection connection = dataSource.getConnection();
+        try (Connection connection = adapter.getConnection();
              Statement statement = connection.createStatement();
              ResultSet resultSet = statement.executeQuery("SELECT name FROM sqlite_master WHERE type='table';")) {
 
@@ -155,7 +132,7 @@ public class SqliteCatalog extends JdbcCatalogBase
             }
 
         } catch (SQLException e) {
-            throw new RuntimeException("Failed to load tables from database", e);
+            throw new CheapException("Failed to load tables from database", e);
         }
     }
 

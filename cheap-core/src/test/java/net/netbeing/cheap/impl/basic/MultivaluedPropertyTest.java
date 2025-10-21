@@ -1,7 +1,11 @@
 package net.netbeing.cheap.impl.basic;
 
-import com.google.common.collect.ImmutableList;
-import net.netbeing.cheap.model.*;
+import net.netbeing.cheap.model.Aspect;
+import net.netbeing.cheap.model.Entity;
+import net.netbeing.cheap.model.MutableAspectDef;
+import net.netbeing.cheap.model.Property;
+import net.netbeing.cheap.model.PropertyDef;
+import net.netbeing.cheap.model.PropertyType;
 import net.netbeing.cheap.util.CheapFactory;
 import org.junit.jupiter.api.Test;
 
@@ -31,7 +35,7 @@ class MultivaluedPropertyTest
         assertTrue(propDef.isMultivalued());
         assertEquals(PropertyType.String, propDef.type());
 
-        List<String> tags = ImmutableList.of("java", "cheap", "data");
+        List<String> tags = List.of("java", "cheap", "data");
         Property property = factory.createProperty(propDef, tags);
 
         assertNotNull(property);
@@ -57,7 +61,7 @@ class MultivaluedPropertyTest
         assertTrue(propDef.isMultivalued());
         assertEquals(PropertyType.Integer, propDef.type());
 
-        List<Long> scores = ImmutableList.of(100L, 95L, 87L, 92L);
+        List<Long> scores = List.of(100L, 95L, 87L, 92L);
         Property property = factory.createProperty(propDef, scores);
 
         assertNotNull(property);
@@ -79,7 +83,7 @@ class MultivaluedPropertyTest
 
         assertTrue(propDef.isMultivalued());
 
-        List<Boolean> flags = ImmutableList.of(true, false, true, true);
+        List<Boolean> flags = List.of(true, false, true, true);
         Property property = factory.createProperty(propDef, flags);
 
         @SuppressWarnings("unchecked")
@@ -97,7 +101,7 @@ class MultivaluedPropertyTest
         PropertyDef propDef = factory.createPropertyDef("temperatures", PropertyType.Float,
             true, true, true, true, true);
 
-        List<Double> temps = ImmutableList.of(98.6, 99.1, 97.8, 98.2);
+        List<Double> temps = List.of(98.6, 99.1, 97.8, 98.2);
         Property property = factory.createProperty(propDef, temps);
 
         @SuppressWarnings("unchecked")
@@ -115,7 +119,7 @@ class MultivaluedPropertyTest
 
         UUID id1 = UUID.randomUUID();
         UUID id2 = UUID.randomUUID();
-        List<UUID> ids = ImmutableList.of(id1, id2);
+        List<UUID> ids = List.of(id1, id2);
 
         Property property = factory.createProperty(propDef, ids);
 
@@ -134,7 +138,7 @@ class MultivaluedPropertyTest
 
         URI uri1 = new URI("https://example.com");
         URI uri2 = new URI("https://test.com");
-        List<URI> uris = ImmutableList.of(uri1, uri2);
+        List<URI> uris = List.of(uri1, uri2);
 
         Property property = factory.createProperty(propDef, uris);
 
@@ -153,7 +157,7 @@ class MultivaluedPropertyTest
 
         BigInteger big1 = new BigInteger("12345678901234567890");
         BigInteger big2 = new BigInteger("98765432109876543210");
-        List<BigInteger> bigInts = ImmutableList.of(big1, big2);
+        List<BigInteger> bigInts = List.of(big1, big2);
 
         Property property = factory.createProperty(propDef, bigInts);
 
@@ -172,7 +176,7 @@ class MultivaluedPropertyTest
 
         BigDecimal price1 = new BigDecimal("123.45");
         BigDecimal price2 = new BigDecimal("678.90");
-        List<BigDecimal> prices = ImmutableList.of(price1, price2);
+        List<BigDecimal> prices = List.of(price1, price2);
 
         Property property = factory.createProperty(propDef, prices);
 
@@ -191,7 +195,7 @@ class MultivaluedPropertyTest
 
         ZonedDateTime time1 = ZonedDateTime.now();
         ZonedDateTime time2 = time1.plusHours(1);
-        List<ZonedDateTime> times = ImmutableList.of(time1, time2);
+        List<ZonedDateTime> times = List.of(time1, time2);
 
         Property property = factory.createProperty(propDef, times);
 
@@ -208,7 +212,7 @@ class MultivaluedPropertyTest
         PropertyDef propDef = factory.createPropertyDef("tags", PropertyType.String,
             true, true, true, true, true);
 
-        List<String> emptyList = ImmutableList.of();
+        List<String> emptyList = List.of();
         Property property = factory.createProperty(propDef, emptyList);
 
         @SuppressWarnings("unchecked")
@@ -244,8 +248,8 @@ class MultivaluedPropertyTest
 
         Aspect aspect = factory.createObjectMapAspect(entity, aspectDef);
 
-        List<String> tags = ImmutableList.of("test", "multivalued");
-        List<Long> scores = ImmutableList.of(100L, 95L);
+        List<String> tags = List.of("test", "multivalued");
+        List<Long> scores = List.of(100L, 95L);
 
         Property tagsProperty = factory.createProperty(tagsDef, tags);
         Property scoresProperty = factory.createProperty(scoresDef, scores);
@@ -275,7 +279,7 @@ class MultivaluedPropertyTest
         PropertyDef propDef = factory.createPropertyDef("tags", PropertyType.String,
             true, true, true, true, true);
 
-        List<String> tags = ImmutableList.of("java", "cheap");
+        List<String> tags = List.of("java", "cheap");
 
         // Should return true because validation now correctly handles multivalued properties
         boolean isValid = propDef.validatePropertyValue(tags, false);
@@ -288,7 +292,7 @@ class MultivaluedPropertyTest
         PropertyDef propDef = factory.createPropertyDef("tags", PropertyType.String,
             true, true, true, true, true);
 
-        List<String> tags = ImmutableList.of("java", "cheap");
+        List<String> tags = List.of("java", "cheap");
 
         // Should not throw exception - validation should pass
         assertDoesNotThrow(() -> propDef.validatePropertyValue(tags, true),
@@ -302,7 +306,7 @@ class MultivaluedPropertyTest
             true, true, true, true, true);
 
         // Create a list with wrong element type
-        List<String> wrongTypeList = ImmutableList.of("not", "numbers");
+        List<String> wrongTypeList = List.of("not", "numbers");
 
         // Should return false
         boolean isValid = propDef.validatePropertyValue(wrongTypeList, false);
@@ -368,7 +372,7 @@ class MultivaluedPropertyTest
         assertTrue(propDef.isReadable());
         assertFalse(propDef.isWritable());
 
-        List<String> tags = ImmutableList.of("readonly", "tags");
+        List<String> tags = List.of("readonly", "tags");
         Property property = factory.createProperty(propDef, tags);
 
         @SuppressWarnings("unchecked")
@@ -379,7 +383,7 @@ class MultivaluedPropertyTest
     @Test
     void testMultivaluedProperty_WithDefaultValue()
     {
-        List<String> defaultTags = ImmutableList.of("default");
+        List<String> defaultTags = List.of("default");
         PropertyDef propDef = factory.createPropertyDef("tags", PropertyType.String,
             defaultTags, true, true, true, true, true, true);
 

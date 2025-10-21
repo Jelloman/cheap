@@ -6,7 +6,11 @@ import net.netbeing.cheap.model.PropertyType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -62,7 +66,8 @@ class MutableAspectDefImplTest
     @Test
     void constructor_WithNullPropertyMap_ThrowsException()
     {
-        assertThrows(NullPointerException.class, () -> new MutableAspectDefImpl("testAspect", UUID.randomUUID(), null));
+        UUID id = UUID.randomUUID();
+        assertThrows(NullPointerException.class, () -> new MutableAspectDefImpl("testAspect", id, null));
     }
 
     @Test
@@ -198,8 +203,7 @@ class MutableAspectDefImplTest
     void propertyDefs_IsMutable_CanAddPropertiesViaAdd()
     {
         MutableAspectDefImpl aspectDef = new MutableAspectDefImpl("testAspect");
-        Collection<? extends PropertyDef> returnedCollection = aspectDef.propertyDefs();
-        
+
         // Should be able to add properties via the add method
         assertDoesNotThrow(() -> aspectDef.add(propDef3));
         
@@ -357,12 +361,12 @@ class MutableAspectDefImplTest
     @Test
     void fullyEquals_SameInstance_ReturnsTrue()
     {
-        Map<String, PropertyDef> propertyDefs = ImmutableMap.of(
+        Map<String, PropertyDef> propertyDefs1 = ImmutableMap.of(
             "prop1", new PropertyDefBuilder().setName("prop1").setType(PropertyType.String).build(),
             "prop2", new PropertyDefBuilder().setName("prop2").setType(PropertyType.Integer).build()
         );
 
-        MutableAspectDefImpl aspectDef = new MutableAspectDefImpl("testAspect", propertyDefs);
+        MutableAspectDefImpl aspectDef = new MutableAspectDefImpl("testAspect", propertyDefs1);
 
         assertTrue(aspectDef.fullyEquals(aspectDef));
     }
@@ -370,13 +374,13 @@ class MutableAspectDefImplTest
     @Test
     void fullyEquals_DifferentNames_ReturnsFalse()
     {
-        Map<String, PropertyDef> propertyDefs = ImmutableMap.of(
+        Map<String, PropertyDef> propertyDefs1 = ImmutableMap.of(
             "prop1", new PropertyDefBuilder().setName("prop1").setType(PropertyType.String).build(),
             "prop2", new PropertyDefBuilder().setName("prop2").setType(PropertyType.Integer).build()
         );
 
-        MutableAspectDefImpl aspectDef1 = new MutableAspectDefImpl("testAspect1", propertyDefs);
-        MutableAspectDefImpl aspectDef2 = new MutableAspectDefImpl("testAspect2", propertyDefs);
+        MutableAspectDefImpl aspectDef1 = new MutableAspectDefImpl("testAspect1", propertyDefs1);
+        MutableAspectDefImpl aspectDef2 = new MutableAspectDefImpl("testAspect2", propertyDefs1);
 
         assertFalse(aspectDef1.fullyEquals(aspectDef2));
     }
@@ -403,12 +407,12 @@ class MutableAspectDefImplTest
     @Test
     void hash_SameInstance_ReturnsSameHash()
     {
-        Map<String, PropertyDef> propertyDefs = ImmutableMap.of(
+        Map<String, PropertyDef> propertyDefs1 = ImmutableMap.of(
             "prop1", new PropertyDefBuilder().setName("prop1").setType(PropertyType.String).build(),
             "prop2", new PropertyDefBuilder().setName("prop2").setType(PropertyType.Integer).build()
         );
 
-        MutableAspectDefImpl aspectDef = new MutableAspectDefImpl("testAspect", propertyDefs);
+        MutableAspectDefImpl aspectDef = new MutableAspectDefImpl("testAspect", propertyDefs1);
 
         assertEquals(aspectDef.hash(), aspectDef.hash());
     }

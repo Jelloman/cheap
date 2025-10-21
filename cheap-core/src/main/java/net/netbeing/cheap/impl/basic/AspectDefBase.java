@@ -20,7 +20,11 @@ import net.netbeing.cheap.model.AspectDef;
 import net.netbeing.cheap.model.PropertyDef;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Objects;
+import java.util.UUID;
 
 /**
  * Abstract base class for AspectDef implementations providing common functionality.
@@ -103,7 +107,7 @@ public abstract class AspectDefBase extends EntityImpl implements AspectDef
      * {@inheritDoc}
      */
     @Override
-    public @NotNull Collection<? extends PropertyDef> propertyDefs()
+    public @NotNull Collection<PropertyDef> propertyDefs()
     {
         return propertyDefs.values();
     }

@@ -19,9 +19,9 @@ package net.netbeing.cheap.impl.reflect;
 import com.google.common.collect.ImmutableMap;
 import net.netbeing.cheap.impl.basic.ImmutableAspectDefImpl;
 import net.netbeing.cheap.model.PropertyDef;
-import org.jetbrains.annotations.NotNull;
 import net.netbeing.cheap.util.reflect.GenericGetterSetter;
 import net.netbeing.cheap.util.reflect.ReflectionWrapper;
+import org.jetbrains.annotations.NotNull;
 
 import java.beans.BeanInfo;
 import java.beans.IntrospectionException;

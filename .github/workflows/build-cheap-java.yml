@@ -7,7 +7,9 @@ on:
     paths:
       - "cheap-core/**"
       - "cheap-json/**"
-      - "cheap-db/**"
+      - "cheap-db-mariadb/**"
+      - "cheap-db-postgres/**"
+      - "cheap-db-sqlite/**"
       - "*.gradle.kts"
       - "gradle/**"
       - ".github/workflows/build-cheap-java.yml"

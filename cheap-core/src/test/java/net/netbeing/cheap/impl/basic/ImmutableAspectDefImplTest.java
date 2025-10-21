@@ -73,19 +73,16 @@ class ImmutableAspectDefImplTest
     void propertyDefs_ReturnsImmutableCollection_CannotBeModified()
     {
         ImmutableAspectDefImpl aspectDef = new ImmutableAspectDefImpl("testAspect", propertyDefs);
-        Collection<? extends PropertyDef> returnedCollection = aspectDef.propertyDefs();
+        Collection<PropertyDef> returnedCollection = aspectDef.propertyDefs();
         
         // The returned collection should be immutable - verify its size and contents
         assertEquals(2, returnedCollection.size());
         assertTrue(returnedCollection.contains(propDef1));
         assertTrue(returnedCollection.contains(propDef2));
         
-        // Test immutability via casting to Collection<PropertyDef> for the operations
-        @SuppressWarnings("unchecked")
-        Collection<PropertyDef> mutableRef = (Collection<PropertyDef>) returnedCollection;
-        assertThrows(UnsupportedOperationException.class, () -> mutableRef.add(propDef3));
-        assertThrows(UnsupportedOperationException.class, () -> mutableRef.remove(propDef1));
-        assertThrows(UnsupportedOperationException.class, () -> mutableRef.clear());
+        assertThrows(UnsupportedOperationException.class, () -> returnedCollection.add(propDef3));
+        assertThrows(UnsupportedOperationException.class, () -> returnedCollection.remove(propDef1));
+        assertThrows(UnsupportedOperationException.class, returnedCollection::clear);
     }
 
     @Test
@@ -280,12 +277,12 @@ class ImmutableAspectDefImplTest
     @Test
     void fullyEquals_SameInstance_ReturnsTrue()
     {
-        Map<String, PropertyDef> propertyDefs = ImmutableMap.of(
+        Map<String, PropertyDef> propertyDefs1 = ImmutableMap.of(
             "prop1", new PropertyDefBuilder().setName("prop1").setType(PropertyType.String).build(),
             "prop2", new PropertyDefBuilder().setName("prop2").setType(PropertyType.Integer).build()
         );
 
-        ImmutableAspectDefImpl aspectDef = new ImmutableAspectDefImpl("testAspect", propertyDefs);
+        ImmutableAspectDefImpl aspectDef = new ImmutableAspectDefImpl("testAspect", propertyDefs1);
 
         assertTrue(aspectDef.fullyEquals(aspectDef));
     }
@@ -293,13 +290,13 @@ class ImmutableAspectDefImplTest
     @Test
     void fullyEquals_DifferentNames_ReturnsFalse()
     {
-        Map<String, PropertyDef> propertyDefs = ImmutableMap.of(
+        Map<String, PropertyDef> propertyDefs1 = ImmutableMap.of(
             "prop1", new PropertyDefBuilder().setName("prop1").setType(PropertyType.String).build(),
             "prop2", new PropertyDefBuilder().setName("prop2").setType(PropertyType.Integer).build()
         );
 
-        ImmutableAspectDefImpl aspectDef1 = new ImmutableAspectDefImpl("testAspect1", propertyDefs);
-        ImmutableAspectDefImpl aspectDef2 = new ImmutableAspectDefImpl("testAspect2", propertyDefs);
+        ImmutableAspectDefImpl aspectDef1 = new ImmutableAspectDefImpl("testAspect1", propertyDefs1);
+        ImmutableAspectDefImpl aspectDef2 = new ImmutableAspectDefImpl("testAspect2", propertyDefs1);
 
         assertFalse(aspectDef1.fullyEquals(aspectDef2));
     }
@@ -326,12 +323,12 @@ class ImmutableAspectDefImplTest
     @Test
     void hash_SameInstance_ReturnsSameHash()
     {
-        Map<String, PropertyDef> propertyDefs = ImmutableMap.of(
+        Map<String, PropertyDef> propertyDefs1 = ImmutableMap.of(
             "prop1", new PropertyDefBuilder().setName("prop1").setType(PropertyType.String).build(),
             "prop2", new PropertyDefBuilder().setName("prop2").setType(PropertyType.Integer).build()
         );
 
-        ImmutableAspectDefImpl aspectDef = new ImmutableAspectDefImpl("testAspect", propertyDefs);
+        ImmutableAspectDefImpl aspectDef = new ImmutableAspectDefImpl("testAspect", propertyDefs1);
 
         assertEquals(aspectDef.hash(), aspectDef.hash());
     }

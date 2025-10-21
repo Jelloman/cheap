@@ -17,7 +17,10 @@
 package net.netbeing.cheap.impl.reflect;
 
 import net.netbeing.cheap.impl.basic.AspectBuilderBase;
-import net.netbeing.cheap.model.*;
+import net.netbeing.cheap.model.Aspect;
+import net.netbeing.cheap.model.AspectBuilder;
+import net.netbeing.cheap.model.AspectDef;
+import net.netbeing.cheap.util.CheapException;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Constructor;
@@ -167,7 +170,7 @@ public class RecordAspectBuilder<R extends Record> extends AspectBuilderBase
             Constructor<R> constructor = recordClass.getDeclaredConstructor(parameterTypes);
             recordInstance = constructor.newInstance(constructorArgs.toArray());
         } catch (Exception e) {
-            throw new RuntimeException("Failed to create instance of record " + recordClass.getName() +
+            throw new CheapException("Failed to create instance of record " + recordClass.getName() +
                 ". Ensure all required properties are provided.", e);
         }
 

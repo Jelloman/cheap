@@ -21,13 +21,20 @@ import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonMappingException;
-import net.netbeing.cheap.model.*;
+import net.netbeing.cheap.model.Aspect;
+import net.netbeing.cheap.model.AspectDef;
+import net.netbeing.cheap.model.AspectMapHierarchy;
+import net.netbeing.cheap.model.Entity;
+import net.netbeing.cheap.model.EntityDirectoryHierarchy;
+import net.netbeing.cheap.model.EntityListHierarchy;
+import net.netbeing.cheap.model.EntitySetHierarchy;
+import net.netbeing.cheap.model.EntityTreeHierarchy;
+import net.netbeing.cheap.model.Hierarchy;
+import net.netbeing.cheap.model.HierarchyType;
 import net.netbeing.cheap.util.CheapFactory;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
-import java.util.LinkedHashMap;
-import java.util.Map;
 import java.util.UUID;
 
 /**

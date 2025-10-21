@@ -1,6 +1,5 @@
 package net.netbeing.cheap.impl.basic;
 
-import com.google.common.collect.ImmutableList;
 import net.netbeing.cheap.model.AspectDef;
 import net.netbeing.cheap.model.HierarchyDef;
 import net.netbeing.cheap.model.HierarchyType;
@@ -9,6 +8,7 @@ import net.netbeing.cheap.model.PropertyType;
 import org.junit.jupiter.api.Test;
 
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -39,8 +39,8 @@ class CatalogDefImplTest
         AspectDef aspectDef = new ImmutableAspectDefImpl("testAspect", propertyDefs);
 
         CatalogDefImpl catalogDef = new CatalogDefImpl(
-            ImmutableList.of(hierarchyDef),
-            ImmutableList.of(aspectDef)
+            List.of(hierarchyDef),
+            List.of(aspectDef)
         );
 
         assertEquals(hierarchyDef, catalogDef.hierarchyDef("testHierarchy"));
@@ -68,16 +68,16 @@ class CatalogDefImplTest
 
         // Create two CatalogDefs with identical content
         CatalogDefImpl catalogDef1 = new CatalogDefImpl(
-            ImmutableList.of(hierarchyDef1, hierarchyDef2),
-            ImmutableList.of(aspectDef1)
+            List.of(hierarchyDef1, hierarchyDef2),
+            List.of(aspectDef1)
         );
 
         CatalogDefImpl catalogDef2 = new CatalogDefImpl(
-            ImmutableList.of(
+            List.of(
                 new HierarchyDefImpl("hierarchy1", HierarchyType.ENTITY_SET),
                 new HierarchyDefImpl("hierarchy2", HierarchyType.ENTITY_DIR)
             ),
-            ImmutableList.of(aspectDef2)
+            List.of(aspectDef2)
         );
 
         assertEquals(catalogDef1.hash(), catalogDef2.hash(),
@@ -93,8 +93,8 @@ class CatalogDefImplTest
         AspectDef aspectDef = new ImmutableAspectDefImpl("testAspect", propertyDefs);
 
         CatalogDefImpl catalogDef = new CatalogDefImpl(
-            ImmutableList.of(hierarchyDef),
-            ImmutableList.of(aspectDef)
+            List.of(hierarchyDef),
+            List.of(aspectDef)
         );
 
         assertEquals(catalogDef.hash(), catalogDef.hash(),
@@ -109,13 +109,13 @@ class CatalogDefImplTest
         AspectDef aspectDef = new ImmutableAspectDefImpl("testAspect", propertyDefs);
 
         CatalogDefImpl catalogDef1 = new CatalogDefImpl(
-            ImmutableList.of(new HierarchyDefImpl("hierarchy1", HierarchyType.ENTITY_LIST)),
-            ImmutableList.of(aspectDef)
+            List.of(new HierarchyDefImpl("hierarchy1", HierarchyType.ENTITY_LIST)),
+            List.of(aspectDef)
         );
 
         CatalogDefImpl catalogDef2 = new CatalogDefImpl(
-            ImmutableList.of(new HierarchyDefImpl("hierarchy2", HierarchyType.ENTITY_SET)),
-            ImmutableList.of(aspectDef)
+            List.of(new HierarchyDefImpl("hierarchy2", HierarchyType.ENTITY_SET)),
+            List.of(aspectDef)
         );
 
         assertNotEquals(catalogDef1.hash(), catalogDef2.hash(),
@@ -136,13 +136,13 @@ class CatalogDefImplTest
         AspectDef aspectDef2 = new ImmutableAspectDefImpl("aspect2", propertyDefs2);
 
         CatalogDefImpl catalogDef1 = new CatalogDefImpl(
-            ImmutableList.of(hierarchyDef),
-            ImmutableList.of(aspectDef1)
+            List.of(hierarchyDef),
+            List.of(aspectDef1)
         );
 
         CatalogDefImpl catalogDef2 = new CatalogDefImpl(
-            ImmutableList.of(hierarchyDef),
-            ImmutableList.of(aspectDef2)
+            List.of(hierarchyDef),
+            List.of(aspectDef2)
         );
 
         assertNotEquals(catalogDef1.hash(), catalogDef2.hash(),
@@ -166,13 +166,13 @@ class CatalogDefImplTest
         HierarchyDef hierarchyDef2 = new HierarchyDefImpl("hierarchy2", HierarchyType.ENTITY_SET);
 
         CatalogDefImpl catalogDef1 = new CatalogDefImpl(
-            ImmutableList.of(hierarchyDef1, hierarchyDef2),
-            ImmutableList.of()
+            List.of(hierarchyDef1, hierarchyDef2),
+            List.of()
         );
 
         CatalogDefImpl catalogDef2 = new CatalogDefImpl(
-            ImmutableList.of(hierarchyDef2, hierarchyDef1),
-            ImmutableList.of()
+            List.of(hierarchyDef2, hierarchyDef1),
+            List.of()
         );
 
         assertNotEquals(catalogDef1.hash(), catalogDef2.hash(),
@@ -191,13 +191,13 @@ class CatalogDefImplTest
         AspectDef aspectDef2 = new ImmutableAspectDefImpl("aspect2", propertyDefs2);
 
         CatalogDefImpl catalogDef1 = new CatalogDefImpl(
-            ImmutableList.of(),
-            ImmutableList.of(aspectDef1, aspectDef2)
+            List.of(),
+            List.of(aspectDef1, aspectDef2)
         );
 
         CatalogDefImpl catalogDef2 = new CatalogDefImpl(
-            ImmutableList.of(),
-            ImmutableList.of(aspectDef2, aspectDef1)
+            List.of(),
+            List.of(aspectDef2, aspectDef1)
         );
 
         assertNotEquals(catalogDef1.hash(), catalogDef2.hash(),

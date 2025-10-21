@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 /**
  * Tests for verifying that identical AspectDef instances produce the same hash value,
@@ -116,8 +117,7 @@ class AspectDefHashTest
         );
 
         // Verify they have different hashes
-        assertEquals(aspectDef1.hash() != aspectDef2.hash(), true,
-            "FullAspectDefImpl instances with different mutability flags should produce different hashes");
+        assertNotEquals(aspectDef1.hash(), aspectDef2.hash(), "FullAspectDefImpl instances with different mutability flags should produce different hashes");
     }
 
     @Test
@@ -145,7 +145,6 @@ class AspectDefHashTest
         );
 
         // Verify they have different hashes due to different mutability flags
-        assertEquals(mutableAspectDef.hash() != immutableAspectDef.hash(), true,
-            "MutableAspectDefImpl and ImmutableAspectDefImpl should produce different hashes");
+        assertNotEquals(mutableAspectDef.hash(), immutableAspectDef.hash(), "MutableAspectDefImpl and ImmutableAspectDefImpl should produce different hashes");
     }
 }

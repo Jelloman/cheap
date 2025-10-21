@@ -22,7 +22,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.sqlite.SQLiteDataSource;
 
-import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -31,9 +30,8 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class SqliteCheapSchemaTest {
-
-    private DataSource dataSource;
+class SqliteCheapSchemaTest
+{
     private Connection connection;
     private CheapTestFactory testFactory;
 
@@ -42,7 +40,6 @@ class SqliteCheapSchemaTest {
         // Create an in-memory SQLite database
         SQLiteDataSource ds = new SQLiteDataSource();
         ds.setUrl("jdbc:sqlite::memory:");
-        this.dataSource = ds;
         // Keep connection open to prevent in-memory database deletion
         this.connection = ds.getConnection();
         this.testFactory = new CheapTestFactory();
@@ -55,7 +52,6 @@ class SqliteCheapSchemaTest {
             this.connection.close();
         }
         this.connection = null;
-        this.dataSource = null;
     }
 
     @Test
@@ -150,9 +146,6 @@ class SqliteCheapSchemaTest {
             // Populate all tables with at least 1 row
             UUID catalogId = UUID.randomUUID();
             testFactory.populateAllHierarchyTypes(conn, catalogId);
-
-            String entityIdStr = catalogId.toString();
-            String aspectDefIdStr = catalogId.toString();
 
             // Verify all tables have at least 1 row
             assertTrue(getRowCount(conn, "entity") >= 1, "entity should have at least 1 row");

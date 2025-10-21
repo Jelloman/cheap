@@ -157,7 +157,7 @@ public final class PropertyDefImpl implements PropertyDef
     @Override
     public boolean equals(Object other)
     {
-        return (other instanceof PropertyDef) && name == ((PropertyDef) other).name();
+        return (other instanceof PropertyDef propDef) && name == propDef.name();
     }
 
     /**

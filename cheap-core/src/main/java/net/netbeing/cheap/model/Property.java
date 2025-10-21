@@ -114,9 +114,6 @@ public interface Property
         if (!def.isReadable()) {
             throw new UnsupportedOperationException("Property '" + name + "' is not readable.");
         }
-        //if (!type.isAssignableFrom(def.type().getJavaClass())) {
-        //    throw new ClassCastException("Property '" + name + "' of type '" + def.type().getJavaClass().getTypeName() + "' cannot be assigned to type '" + type.getTypeName() + "'.");
-        //}
         return type.cast(unsafeRead());
     }
 }

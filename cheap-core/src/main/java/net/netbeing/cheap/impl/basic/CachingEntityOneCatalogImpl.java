@@ -39,7 +39,7 @@ import java.util.UUID;
 public class CachingEntityOneCatalogImpl extends LocalEntityOneCatalogImpl
 {
     /** Lazily initialized map of aspect definitions to aspects. */
-    protected volatile Cache<@NotNull AspectDef, @NotNull Aspect> aspects;
+    protected Cache<@NotNull AspectDef, @NotNull Aspect> aspects;
 
     /**
      * Creates a new CachingEntityOneCatalogImpl for the specified catalog.
@@ -47,7 +47,7 @@ public class CachingEntityOneCatalogImpl extends LocalEntityOneCatalogImpl
      *
      * @param catalog the catalog this entity has its Aspects in
      */
-    public CachingEntityOneCatalogImpl(@NotNull Catalog catalog)
+    public CachingEntityOneCatalogImpl(@NotNull Catalog catalog) // NOSONAR bug with java:S2637
     {
         super(catalog);
     }
@@ -59,7 +59,7 @@ public class CachingEntityOneCatalogImpl extends LocalEntityOneCatalogImpl
      * @param globalId the UUID for this entity
      * @param catalog the catalog this entity has its Aspects in
      */
-    public CachingEntityOneCatalogImpl(@NotNull UUID globalId, @NotNull Catalog catalog)
+    public CachingEntityOneCatalogImpl(@NotNull UUID globalId, @NotNull Catalog catalog) // NOSONAR bug with java:S2637
     {
         super(globalId, catalog);
     }

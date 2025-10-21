@@ -1,6 +1,9 @@
 package net.netbeing.cheap.impl.basic;
 
-import net.netbeing.cheap.model.*;
+import net.netbeing.cheap.model.Catalog;
+import net.netbeing.cheap.model.Entity;
+import net.netbeing.cheap.model.EntityTreeHierarchy;
+import net.netbeing.cheap.model.HierarchyType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -12,7 +15,6 @@ import static org.junit.jupiter.api.Assertions.*;
 class EntityTreeHierarchyImplTest
 {
     private Catalog catalog;
-    private HierarchyDef hierarchyDef;
     private Entity rootEntity;
     private Entity childEntity1;
     private Entity childEntity2;
@@ -23,7 +25,6 @@ class EntityTreeHierarchyImplTest
     void setUp()
     {
         catalog = new CatalogImpl();
-        hierarchyDef = new HierarchyDefImpl("testEntityTree", HierarchyType.ENTITY_TREE);
         rootEntity = new EntityImpl();
         childEntity1 = new EntityImpl();
         childEntity2 = new EntityImpl();
@@ -214,6 +215,7 @@ class EntityTreeHierarchyImplTest
         assertTrue(entries.isEmpty());
     }
 
+    @SuppressWarnings("MismatchedQueryAndUpdateOfCollection")
     @Test
     void leafNodeImpl_Size_AlwaysReturnsZero()
     {
@@ -222,6 +224,7 @@ class EntityTreeHierarchyImplTest
         assertEquals(0, leaf.size());
     }
 
+    @SuppressWarnings("MismatchedQueryAndUpdateOfCollection")
     @Test
     void leafNodeImpl_IsEmpty_AlwaysReturnsTrue()
     {
@@ -230,6 +233,7 @@ class EntityTreeHierarchyImplTest
         assertTrue(leaf.isEmpty());
     }
 
+    @SuppressWarnings("MismatchedQueryAndUpdateOfCollection")
     @Test
     void leafNodeImpl_ContainsKey_AlwaysReturnsFalse()
     {
@@ -240,6 +244,7 @@ class EntityTreeHierarchyImplTest
         assertFalse(leaf.containsKey(""));
     }
 
+    @SuppressWarnings("MismatchedQueryAndUpdateOfCollection")
     @Test
     void leafNodeImpl_ContainsValue_AlwaysReturnsFalse()
     {
@@ -250,6 +255,7 @@ class EntityTreeHierarchyImplTest
         assertFalse(leaf.containsValue(null));
     }
 
+    @SuppressWarnings("MismatchedQueryAndUpdateOfCollection")
     @Test
     void leafNodeImpl_Get_AlwaysReturnsNull()
     {

@@ -18,6 +18,7 @@ package net.netbeing.cheap.util;
 
 import net.netbeing.cheap.model.PropertyDef;
 import net.netbeing.cheap.model.PropertyType;
+import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Array;
 import java.math.BigDecimal;
@@ -28,6 +29,7 @@ import java.time.Instant;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HexFormat;
 import java.util.List;
 import java.util.TimeZone;
@@ -41,12 +43,12 @@ public class PropertyValueAdapter
 {
     private TimeZone timeZone;
 
-    PropertyValueAdapter()
+    public PropertyValueAdapter()
     {
         this(TimeZone.getDefault());
     }
 
-    PropertyValueAdapter(TimeZone timeZone)
+    public PropertyValueAdapter(TimeZone timeZone)
     {
         this.timeZone = timeZone;
     }
@@ -123,7 +125,7 @@ public class PropertyValueAdapter
      * @return the coerced value
      * @throws IllegalArgumentException if the value cannot be coerced to this type
      */
-    private Object coerceSingleValue(PropertyType type, Object value)
+    private Object coerceSingleValue(PropertyType type, @NotNull Object value)
     {
         // If value is already the correct type, return it
         if (type.getJavaClass().isInstance(value)) {
@@ -161,108 +163,132 @@ public class PropertyValueAdapter
                 " to PropertyType " + type.name() + " (Java type: " + type.getJavaClass().getName() + ")", cause);
     }
 
-
-    public Long coerceToLong(Object value)
+    public Long coerceToLong(@NotNull Object value)
     {
-        if (value instanceof Number num) {
-            return num.longValue();
-        }
-        if (value instanceof String str) {
-            return Long.parseLong(str);
-        }
-        throw illegalArgument(PropertyType.Integer, value);
+        return switch (value) {
+            case Number num -> num.longValue();
+            case String str -> Long.parseLong(str);
+            default -> throw illegalArgument(PropertyType.Integer, value);
+        };
     }
 
-    public Double coerceToDouble(Object value)
+    public Double coerceToDouble(@NotNull Object value)
     {
-        if (value instanceof Number num) {
-            return num.doubleValue();
-        }
-        if (value instanceof String str) {
-            return Double.parseDouble(str);
-        }
-        throw illegalArgument(PropertyType.Float, value);
+        return switch (value) {
+            case Number num -> num.doubleValue();
+            case String str -> Double.parseDouble(str);
+            default -> throw illegalArgument(PropertyType.Float, value);
+        };
     }
 
-    public Boolean coerceToBoolean(Object value)
+    public Boolean coerceToBoolean(@NotNull Object value)
     {
-        if (value instanceof String str) {
-            return java.lang.Boolean.parseBoolean(str);
-        }
-        if (value instanceof Number num) {
-            return num.intValue() != 0;
-        }
-        throw illegalArgument(PropertyType.Boolean, value);
+        return switch (value) {
+            case Boolean b -> b;
+            case String str -> Boolean.parseBoolean(str);
+            case Number num -> num.intValue() != 0;
+            default -> throw illegalArgument(PropertyType.Boolean, value);
+        };
     }
 
-    public String coerceToString(Object value)
+    public String coerceToString(@NotNull Object value)
     {
         return value.toString();
     }
 
-    public BigInteger coerceToBigInteger(Object value)
+    public BigInteger coerceToBigInteger(@NotNull Object value)
     {
-        if (value instanceof BigDecimal bd) {
-            return bd.toBigInteger();
-        }
-        if (value instanceof Number num) {
-            return BigInteger.valueOf(num.longValue());
-        }
-        if (value instanceof String str) {
-            return new BigInteger(str);
-        }
-        throw illegalArgument(PropertyType.BigInteger, value);
+        return switch (value) {
+            case BigInteger bi -> bi;
+            case BigDecimal bd -> bd.toBigInteger();
+            case Number num -> BigInteger.valueOf(num.longValue());
+            case String str -> new BigInteger(str);
+            default -> throw illegalArgument(PropertyType.BigInteger, value);
+        };
     }
 
-    public BigDecimal coerceToBigDecimal(Object value)
+    public BigDecimal coerceToBigDecimal(@NotNull Object value)
     {
-        if (value instanceof BigInteger bi) {
-            return new BigDecimal(bi);
-        }
-        if (value instanceof Number num) {
-            return BigDecimal.valueOf(num.doubleValue());
-        }
-        if (value instanceof String str) {
-            return new BigDecimal(str);
-        }
-        throw illegalArgument(PropertyType.BigDecimal, value);
+        return switch (value) {
+            case BigDecimal bd -> bd;
+            case BigInteger bi -> new BigDecimal(bi);
+            case Number num -> BigDecimal.valueOf(num.doubleValue());
+            case String str -> new BigDecimal(str);
+            default -> throw illegalArgument(PropertyType.BigDecimal, value);
+        };
     }
 
-    public ZonedDateTime coerceToZonedDateTime(Object value)
+    public ZonedDateTime coerceToZonedDateTime(@NotNull Object value)
     {
-        if (value instanceof String str) {
-            return ZonedDateTime.parse(str);
-        }
-        if (value instanceof Timestamp timestamp) {
-            return ZonedDateTime.ofInstant(timestamp.toInstant(), timeZone.toZoneId());
-        }
-        if (value instanceof Instant instant) {
-            return ZonedDateTime.ofInstant(instant, timeZone.toZoneId());
-        }
-        throw illegalArgument(PropertyType.DateTime, value);
+        return switch (value) {
+            case ZonedDateTime zdt -> zdt;
+            case String str -> ZonedDateTime.parse(str);
+            case java.sql.Date date -> date.toLocalDate().atStartOfDay(timeZone.toZoneId());
+            case Timestamp timestamp -> ZonedDateTime.ofInstant(timestamp.toInstant(), timeZone.toZoneId());
+            case Instant instant -> ZonedDateTime.ofInstant(instant, timeZone.toZoneId());
+            case java.util.Date date -> ZonedDateTime.ofInstant(date.toInstant(), timeZone.toZoneId());
+            default -> throw illegalArgument(PropertyType.DateTime, value);
+        };
     }
 
-    public URI coerceToURI(Object value)
+    public URI coerceToURI(@NotNull Object value)
     {
-        if (value instanceof String str) {
-            return URI.create(str);
-        }
-        throw illegalArgument(PropertyType.URI, value);
+        return switch (value) {
+            case URI uri -> uri;
+            case String str -> URI.create(str);
+            default -> throw illegalArgument(PropertyType.URI, value);
+        };
     }
 
-    public UUID coerceToUUID(Object value)
+    public UUID coerceToUUID(@NotNull Object value)
     {
-        if (value instanceof String str) {
-            return UUID.fromString(str);
-        }
-        throw illegalArgument(PropertyType.UUID, value);
+        return switch (value) {
+            case UUID uuid -> uuid;
+            case String str -> UUID.fromString(str);
+            default -> throw illegalArgument(PropertyType.UUID, value);
+        };
     }
 
-    public byte[] coerceToByteArray(Object value)
+    public byte[] coerceToByteArray(@NotNull Object value)
     {
-        if (value instanceof String str) {
-            return HexFormat.of().parseHex(str);
-        }
-        throw illegalArgument(PropertyType.BLOB, value);
+        return switch (value) {
+            case byte[] a -> a;
+            case String str -> HexFormat.of().parseHex(str);
+            default -> throw illegalArgument(PropertyType.BLOB, value);
+        };
     }
+
+    /**
+     * Convert a value object representing a specific property type to a String.
+     * This method should generally be used to write values _into_ a database, rather
+     * than when reading them out.
+     *
+     * BLOBs are converted to hex strings using HexFormat.
+     *
+     * @param value value object of the given type
+     * @param type property type
+     * @return String
+     */
+    public String convertValueToString(Object value, PropertyType type)
+    {
+        return switch (type) {
+            case DateTime -> convertToTimestamp(value).toString();
+            case BLOB -> (value instanceof byte[] ba) ? HexFormat.of().formatHex(ba) : value.toString();
+            default -> value.toString();
+        };
+    }
+
+    public Timestamp convertToTimestamp(Object value)
+    {
+        return switch (value) {
+            case Timestamp timestamp -> timestamp;
+            case java.sql.Date date -> Timestamp.from(date.toLocalDate().atStartOfDay(timeZone.toZoneId()).toInstant());
+            case Date date -> new Timestamp(date.getTime());
+            case Instant instant -> Timestamp.from(instant);
+            case ZonedDateTime zonedDateTime -> Timestamp.from(zonedDateTime.toInstant());
+            default -> throw new IllegalStateException("Unexpected value class for DateTime: " + value.getClass());
+        };
+    }
+
+
 }

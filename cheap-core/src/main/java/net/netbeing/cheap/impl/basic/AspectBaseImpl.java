@@ -49,7 +49,7 @@ public abstract class AspectBaseImpl implements Aspect
      * @param entity the entity this aspect is attached to, may be null
      * @param def the aspect definition describing this aspect's structure
      */
-    public AspectBaseImpl(Entity entity, @NotNull AspectDef def)
+    protected AspectBaseImpl(Entity entity, @NotNull AspectDef def)
     {
         Objects.requireNonNull(def, "Aspect may not have a null AspectDef.");
         this.entity = entity;

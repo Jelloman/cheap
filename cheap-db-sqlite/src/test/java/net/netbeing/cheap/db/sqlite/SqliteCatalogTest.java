@@ -16,10 +16,18 @@
 
 package net.netbeing.cheap.db.sqlite;
 
-import net.netbeing.cheap.model.*;
+import net.netbeing.cheap.model.Aspect;
+import net.netbeing.cheap.model.AspectDef;
+import net.netbeing.cheap.model.AspectMapHierarchy;
+import net.netbeing.cheap.model.HierarchyType;
+import net.netbeing.cheap.model.Property;
+import net.netbeing.cheap.model.PropertyDef;
+import net.netbeing.cheap.model.PropertyType;
+import net.netbeing.cheap.util.CheapFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.sqlite.SQLiteDataSource;
+
 import java.nio.file.Paths;
 import java.util.List;
 
@@ -28,21 +36,28 @@ import static org.junit.jupiter.api.Assertions.*;
 class SqliteCatalogTest {
     
     private SQLiteDataSource dataSource;
+    private SqliteAdapter adapter;
+    private CheapFactory factory;
     private SqliteCatalog catalog;
     
     @BeforeEach
-    void setUp() {
+    void setUp()
+    {
         String testDbPath = Paths.get("src", "test", "resources", "test-dbeaver.sqlite").toString();
         String url = "jdbc:sqlite:" + testDbPath;
         
         dataSource = new SQLiteDataSource();
         dataSource.setUrl(url);
+
+        factory = new CheapFactory();
+        adapter = new SqliteAdapter(dataSource, factory);
         
-        catalog = new SqliteCatalog(dataSource);
+        catalog = new SqliteCatalog(adapter);
     }
     
     @Test
-    void testLoadDb() {
+    void testLoadDb()
+    {
         assertNotNull(catalog, "Catalog should not be null");
         
         List<String> tables = catalog.getTables();
@@ -52,8 +67,9 @@ class SqliteCatalogTest {
     }
     
     @Test
-    void testLoadDbStaticMethod() {
-        SqliteCatalog staticCatalog = SqliteCatalog.loadDb(dataSource);
+    void testLoadDbStaticMethod()
+    {
+        SqliteCatalog staticCatalog = new SqliteCatalog(adapter);
         
         assertNotNull(staticCatalog, "Catalog should not be null");
         
@@ -64,15 +80,17 @@ class SqliteCatalogTest {
     }
     
     @Test
-    void testLoadDbInvalidPath() {
+    void testLoadDbInvalidPath()
+    {
         String invalidPath = "/invalid/path/that/cannot/exist/file.db";
         String url = "jdbc:sqlite:" + invalidPath;
 
         dataSource = new SQLiteDataSource();
         dataSource.setUrl(url);
+        adapter = new SqliteAdapter(dataSource, factory);
 
         RuntimeException exception = assertThrows(RuntimeException.class, 
-            () -> SqliteCatalog.loadDb(dataSource),
+            () ->  new SqliteCatalog(adapter),
             "Should throw RuntimeException for invalid path");
         
         assertTrue(exception.getMessage().contains("Failed to load tables from database"),
@@ -80,8 +98,8 @@ class SqliteCatalogTest {
     }
     
     @Test
-    void testLoadTableDef() {
-        
+    void testLoadTableDef()
+    {
         AspectDef tableDef = catalog.loadTableDef("test_data");
         
         assertNotNull(tableDef, "Table definition should not be null");
@@ -116,8 +134,8 @@ class SqliteCatalogTest {
     }
     
     @Test
-    void testLoadTableDefNonExistentTable() {
-        
+    void testLoadTableDefNonExistentTable()
+    {
         AspectDef tableDef = catalog.loadTableDef("non_existent_table");
         
         assertNotNull(tableDef, "Table definition should not be null even for non-existent table");
@@ -126,20 +144,8 @@ class SqliteCatalogTest {
     }
     
     @Test
-    void testLoadTableDefWithoutDataSource() {
-        SqliteCatalog emptyCatalog = new SqliteCatalog();
-        
-        IllegalStateException exception = assertThrows(IllegalStateException.class,
-            () -> emptyCatalog.loadTableDef("test_data"),
-            "Should throw IllegalStateException when DataSource not set");
-        
-        assertTrue(exception.getMessage().contains("DataSource not set"),
-            "Exception message should indicate DataSource not set");
-    }
-    
-    @Test
-    void testLoadTable() {
-        
+    void testLoadTable()
+    {
         AspectMapHierarchy table = catalog.loadTable("test_data", -1);
         
         assertNotNull(table, "Table hierarchy should not be null");
@@ -192,8 +198,8 @@ class SqliteCatalogTest {
     }
     
     @Test
-    void testLoadTableWithMaxRows() {
-        
+    void testLoadTableWithMaxRows()
+    {
         AspectMapHierarchy table = catalog.loadTable("test_data", 1);
         
         assertNotNull(table, "Table hierarchy should not be null");
@@ -207,8 +213,8 @@ class SqliteCatalogTest {
     }
     
     @Test
-    void testLoadTableNonExistentTable() {
-        
+    void testLoadTableNonExistentTable()
+    {
         RuntimeException exception = assertThrows(RuntimeException.class,
             () -> catalog.loadTable("non_existent_table", -1),
             "Should throw RuntimeException for non-existent table");
@@ -218,20 +224,8 @@ class SqliteCatalogTest {
     }
     
     @Test
-    void testLoadTableWithoutDataSource() {
-        SqliteCatalog emptyCatalog = new SqliteCatalog();
-        
-        IllegalStateException exception = assertThrows(IllegalStateException.class,
-            () -> emptyCatalog.loadTable("test_data", -1),
-            "Should throw IllegalStateException when DataSource not set");
-        
-        assertTrue(exception.getMessage().contains("DataSource not set"),
-            "Exception message should indicate DataSource not set");
-    }
-    
-    @Test
-    void testLoadTableZeroMaxRows() {
-        
+    void testLoadTableZeroMaxRows()
+    {
         AspectMapHierarchy table = catalog.loadTable("test_data", 0);
         
         assertNotNull(table, "Table hierarchy should not be null");

@@ -19,7 +19,14 @@ package net.netbeing.cheap.json.jackson.deserialize;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
-import net.netbeing.cheap.model.*;
+import net.netbeing.cheap.model.Aspect;
+import net.netbeing.cheap.model.AspectDef;
+import net.netbeing.cheap.model.Catalog;
+import net.netbeing.cheap.model.CatalogDef;
+import net.netbeing.cheap.model.EntityTreeHierarchy;
+import net.netbeing.cheap.model.Hierarchy;
+import net.netbeing.cheap.model.HierarchyDef;
+import net.netbeing.cheap.model.PropertyDef;
 import net.netbeing.cheap.util.CheapFactory;
 import org.jetbrains.annotations.NotNull;
 

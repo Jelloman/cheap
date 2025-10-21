@@ -177,6 +177,7 @@ public class MutablePojoAspectDef extends MutableAspectDefImpl
      * @return never returns normally
      * @throws UnsupportedOperationException always, as this aspect definition cannot be modified
      */
+    @Override
     public PropertyDef add(@NotNull PropertyDef prop)
     {
         throw new UnsupportedOperationException("Properties cannot be added to AspectDef '" + name() + "'.");
@@ -189,6 +190,7 @@ public class MutablePojoAspectDef extends MutableAspectDefImpl
      * @return never returns normally
      * @throws UnsupportedOperationException always, as this aspect definition cannot be modified
      */
+    @Override
     public PropertyDef remove(@NotNull PropertyDef prop)
     {
         throw new UnsupportedOperationException("Properties cannot be removed from AspectDef '" + name() + "'.");

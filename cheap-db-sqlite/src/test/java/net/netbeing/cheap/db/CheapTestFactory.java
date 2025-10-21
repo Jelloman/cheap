@@ -104,10 +104,9 @@ public class CheapTestFactory
      *
      * @param conn the database connection
      * @param catalogId the catalog ID to use
-     * @return the EntityIds containing all created IDs
      * @throws SQLException if database operation fails
      */
-    public EntityIds populateAllHierarchyTypes(Connection conn, UUID catalogId) throws SQLException
+    public void populateAllHierarchyTypes(Connection conn, UUID catalogId) throws SQLException
     {
         UUID entityId = UUID.randomUUID();
         UUID aspectDefId = UUID.randomUUID();
@@ -142,8 +141,6 @@ public class CheapTestFactory
         // Insert into hierarchy_aspect_map
         insertHierarchy(conn, catalogId, "test_aspect", "AM", 1L);
         insertHierarchyAspectMap(conn, catalogId, "test_aspect", entityId, aspectDefId, 0);
-
-        return new EntityIds(entityId, aspectDefId, catalogId, "test_hierarchy");
     }
 
     // ===== Individual Table Insert Methods =====

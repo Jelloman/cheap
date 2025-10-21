@@ -11,6 +11,7 @@
       <w>catalogdef</w>
       <w>catid</w>
       <w>cheapd</w>
+      <w>cheapdb</w>
       <w>daterange</w>
       <w>entitydirectoryhierarchy</w>
       <w>entityid</w>
@@ -24,7 +25,9 @@
       <w>hierarchydir</w>
       <w>lseg</w>
       <w>macaddr</w>
+      <w>metafactory</w>
       <w>nokey</w>
+      <w>nosonar</w>
       <w>numrange</w>
       <w>ossp</w>
       <w>plpgsql</w>
@@ -42,6 +45,7 @@
       <w>roundtrip</w>
       <w>smallserial</w>
       <w>substr</w>
+      <w>temurin</w>
       <w>timestamptz</w>
       <w>tsquery</w>
       <w>tsrange</w>

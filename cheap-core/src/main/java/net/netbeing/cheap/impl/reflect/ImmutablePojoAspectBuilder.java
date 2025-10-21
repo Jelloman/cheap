@@ -17,7 +17,9 @@
 package net.netbeing.cheap.impl.reflect;
 
 import net.netbeing.cheap.impl.basic.AspectBuilderBase;
-import net.netbeing.cheap.model.*;
+import net.netbeing.cheap.model.Aspect;
+import net.netbeing.cheap.model.AspectBuilder;
+import net.netbeing.cheap.model.AspectDef;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Map;
@@ -121,7 +123,7 @@ public class ImmutablePojoAspectBuilder<P> extends AspectBuilderBase
         try {
             pojoInstance = pojoClass.getDeclaredConstructor().newInstance();
         } catch (Exception e) {
-            throw new RuntimeException("Failed to create instance of " + pojoClass.getName() +
+            throw new IllegalStateException("Failed to create instance of " + pojoClass.getName() +
                 ". Ensure the class has a public no-argument constructor.", e);
         }
 
@@ -149,7 +151,7 @@ public class ImmutablePojoAspectBuilder<P> extends AspectBuilderBase
                     tempAspect.write(entry.getKey(), entry.getValue());
                 }
             } catch (Exception e) {
-                throw new RuntimeException("Failed to initialize POJO properties for " + pojoClass.getName(), e);
+                throw new IllegalStateException("Failed to initialize POJO properties for " + pojoClass.getName(), e);
             }
         }
 

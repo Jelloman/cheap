@@ -16,7 +16,7 @@
 
 package net.netbeing.cheap.impl.basic;
 
-import net.netbeing.cheap.model.*;
+import net.netbeing.cheap.model.Aspect;
 import org.jetbrains.annotations.NotNull;
 
 /**

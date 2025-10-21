@@ -18,8 +18,6 @@ package net.netbeing.cheap.model;
 
 import org.jetbrains.annotations.NotNull;
 
-import java.util.UUID;
-
 /**
  * A builder interface for creating Aspect instances using the builder pattern.
  * This interface allows fluent configuration of an aspect's entity, definition,

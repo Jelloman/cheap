@@ -7,7 +7,6 @@ import net.netbeing.cheap.impl.basic.LocalEntityOneCatalogImpl;
 import net.netbeing.cheap.model.*;
 import org.junit.jupiter.api.Test;
 
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -41,13 +40,11 @@ class CheapFactoryTest
         
         // Test full catalog configuration
         UUID catalogId = UUID.randomUUID();
-        CatalogDef catalogDef = factory.createCatalogDef();
         Catalog fullCatalog = factory.createCatalog(catalogId, CatalogSpecies.CACHE, upstreamCatalog);
         assertNotNull(fullCatalog);
         assertEquals(catalogId, fullCatalog.globalId());
         assertEquals(CatalogSpecies.CACHE, fullCatalog.species());
         assertEquals(upstreamCatalog, fullCatalog.upstream());
-
     }
 
     @Test
@@ -377,28 +374,28 @@ class CheapFactoryTest
         LocalEntity defaultEntity = factory.createLocalEntity(catalog);
         assertNotNull(defaultEntity);
         // Verify it's the correct implementation type by checking behavior
-        assertTrue(defaultEntity instanceof LocalEntityOneCatalogImpl);
+        assertInstanceOf(LocalEntityOneCatalogImpl.class, defaultEntity);
         
         // Test different LocalEntityType configurations
         CheapFactory singleFactory = new CheapFactory(LocalEntityType.SINGLE_CATALOG, null);
         LocalEntity singleEntity = singleFactory.createLocalEntity(catalog);
         assertNotNull(singleEntity);
-        assertTrue(singleEntity instanceof LocalEntityOneCatalogImpl);
+        assertInstanceOf(LocalEntityOneCatalogImpl.class, singleEntity);
 
         CheapFactory multiFactory = new CheapFactory(LocalEntityType.MULTI_CATALOG, null);
         LocalEntity multiEntity = multiFactory.createLocalEntity(catalog);
         assertNotNull(multiEntity);
-        assertTrue(multiEntity instanceof LocalEntityMultiCatalogImpl);
+        assertInstanceOf(LocalEntityMultiCatalogImpl.class, multiEntity);
 
         CheapFactory cachingSingleFactory = new CheapFactory(LocalEntityType.CACHING_SINGLE_CATALOG, null);
         LocalEntity cachingSingleEntity = cachingSingleFactory.createLocalEntity(catalog);
         assertNotNull(cachingSingleEntity);
-        assertTrue(cachingSingleEntity instanceof CachingEntityOneCatalogImpl);
+        assertInstanceOf(CachingEntityOneCatalogImpl.class, cachingSingleEntity);
 
         CheapFactory cachingMultiFactory = new CheapFactory(LocalEntityType.CACHING_MULTI_CATALOG, null);
         LocalEntity cachingMultiEntity = cachingMultiFactory.createLocalEntity(catalog);
         assertNotNull(cachingMultiEntity);
-        assertTrue(cachingMultiEntity instanceof CachingEntityMultiCatalogImpl);
+        assertInstanceOf(CachingEntityMultiCatalogImpl.class, cachingMultiEntity);
     }
 
     @Test
@@ -409,11 +406,11 @@ class CheapFactoryTest
         // Test creating entities with specific types
         LocalEntity singleEntity = factory.createLocalEntity(LocalEntityType.SINGLE_CATALOG, catalog);
         assertNotNull(singleEntity);
-        assertTrue(singleEntity instanceof LocalEntityOneCatalogImpl);
+        assertInstanceOf(LocalEntityOneCatalogImpl.class, singleEntity);
         
         LocalEntity multiEntity = factory.createLocalEntity(LocalEntityType.MULTI_CATALOG, catalog);
         assertNotNull(multiEntity);
-        assertTrue(multiEntity instanceof LocalEntityMultiCatalogImpl);
+        assertInstanceOf(LocalEntityMultiCatalogImpl.class, multiEntity);
         
         // Test with globalId for SINGLE_CATALOG (should work)
         UUID entityId = UUID.randomUUID();
@@ -425,20 +422,20 @@ class CheapFactoryTest
         LocalEntity multiWithId = factory.createLocalEntity(LocalEntityType.MULTI_CATALOG, entityId, catalog);
         assertNotNull(multiWithId);
         assertEquals(entityId, multiWithId.globalId());
-        assertTrue(multiWithId instanceof LocalEntityMultiCatalogImpl);
+        assertInstanceOf(LocalEntityMultiCatalogImpl.class, multiWithId);
         
         // Test with globalId for CACHING types (should work now)
         UUID cachingSingleId = UUID.randomUUID();
         LocalEntity cachingSingleWithId = factory.createLocalEntity(LocalEntityType.CACHING_SINGLE_CATALOG, cachingSingleId, catalog);
         assertNotNull(cachingSingleWithId);
         assertEquals(cachingSingleId, cachingSingleWithId.globalId());
-        assertTrue(cachingSingleWithId instanceof CachingEntityOneCatalogImpl);
+        assertInstanceOf(CachingEntityOneCatalogImpl.class, cachingSingleWithId);
         
         UUID cachingMultiId = UUID.randomUUID();
         LocalEntity cachingMultiWithId = factory.createLocalEntity(LocalEntityType.CACHING_MULTI_CATALOG, cachingMultiId, catalog);
         assertNotNull(cachingMultiWithId);
         assertEquals(cachingMultiId, cachingMultiWithId.globalId());
-        assertTrue(cachingMultiWithId instanceof CachingEntityMultiCatalogImpl);
+        assertInstanceOf(CachingEntityMultiCatalogImpl.class, cachingMultiWithId);
     }
 
     @Test
@@ -450,44 +447,44 @@ class CheapFactoryTest
         // Test explicit single catalog entity creation
         LocalEntity singleEntity = factory.createSingleCatalogEntity(catalog);
         assertNotNull(singleEntity);
-        assertTrue(singleEntity instanceof LocalEntityOneCatalogImpl);
+        assertInstanceOf(LocalEntityOneCatalogImpl.class, singleEntity);
         
         LocalEntity singleEntityWithId = factory.createSingleCatalogEntity(entityId, catalog);
         assertNotNull(singleEntityWithId);
         assertEquals(entityId, singleEntityWithId.globalId());
-        assertTrue(singleEntityWithId instanceof LocalEntityOneCatalogImpl);
+        assertInstanceOf(LocalEntityOneCatalogImpl.class, singleEntityWithId);
         
         // Test explicit multi-catalog entity creation
         LocalEntity multiEntity = factory.createMultiCatalogEntity(catalog);
         assertNotNull(multiEntity);
-        assertTrue(multiEntity instanceof LocalEntityMultiCatalogImpl);
+        assertInstanceOf(LocalEntityMultiCatalogImpl.class, multiEntity);
         
         UUID multiEntityId = UUID.randomUUID();
         LocalEntity multiEntityWithId = factory.createMultiCatalogEntity(multiEntityId, catalog);
         assertNotNull(multiEntityWithId);
         assertEquals(multiEntityId, multiEntityWithId.globalId());
-        assertTrue(multiEntityWithId instanceof LocalEntityMultiCatalogImpl);
+        assertInstanceOf(LocalEntityMultiCatalogImpl.class, multiEntityWithId);
         
         // Test explicit caching entity creation
         LocalEntity cachingEntity = factory.createCachingEntity(catalog);
         assertNotNull(cachingEntity);
-        assertTrue(cachingEntity instanceof CachingEntityOneCatalogImpl);
+        assertInstanceOf(CachingEntityOneCatalogImpl.class, cachingEntity);
         
         UUID cachingEntityId = UUID.randomUUID();
         LocalEntity cachingEntityWithId = factory.createCachingEntity(cachingEntityId, catalog);
         assertNotNull(cachingEntityWithId);
         assertEquals(cachingEntityId, cachingEntityWithId.globalId());
-        assertTrue(cachingEntityWithId instanceof CachingEntityOneCatalogImpl);
+        assertInstanceOf(CachingEntityOneCatalogImpl.class, cachingEntityWithId);
         
         LocalEntity cachingMultiEntity = factory.createCachingMultiCatalogEntity(catalog);
         assertNotNull(cachingMultiEntity);
-        assertTrue(cachingMultiEntity instanceof CachingEntityMultiCatalogImpl);
+        assertInstanceOf(CachingEntityMultiCatalogImpl.class, cachingMultiEntity);
         
         UUID cachingMultiEntityId = UUID.randomUUID();
         LocalEntity cachingMultiEntityWithId = factory.createCachingMultiCatalogEntity(cachingMultiEntityId, catalog);
         assertNotNull(cachingMultiEntityWithId);
         assertEquals(cachingMultiEntityId, cachingMultiEntityWithId.globalId());
-        assertTrue(cachingMultiEntityWithId instanceof CachingEntityMultiCatalogImpl);
+        assertInstanceOf(CachingEntityMultiCatalogImpl.class, cachingMultiEntityWithId);
     }
 
     @Test
@@ -515,20 +512,20 @@ class CheapFactoryTest
             // Verify correct implementation type
             switch (type) {
                 case SINGLE_CATALOG -> {
-                    assertTrue(randomEntity instanceof LocalEntityOneCatalogImpl);
-                    assertTrue(specificEntity instanceof LocalEntityOneCatalogImpl);
+                    assertInstanceOf(LocalEntityOneCatalogImpl.class, randomEntity);
+                    assertInstanceOf(LocalEntityOneCatalogImpl.class, specificEntity);
                 }
                 case MULTI_CATALOG -> {
-                    assertTrue(randomEntity instanceof LocalEntityMultiCatalogImpl);
-                    assertTrue(specificEntity instanceof LocalEntityMultiCatalogImpl);
+                    assertInstanceOf(LocalEntityMultiCatalogImpl.class, randomEntity);
+                    assertInstanceOf(LocalEntityMultiCatalogImpl.class, specificEntity);
                 }
                 case CACHING_SINGLE_CATALOG -> {
-                    assertTrue(randomEntity instanceof CachingEntityOneCatalogImpl);
-                    assertTrue(specificEntity instanceof CachingEntityOneCatalogImpl);
+                    assertInstanceOf(CachingEntityOneCatalogImpl.class, randomEntity);
+                    assertInstanceOf(CachingEntityOneCatalogImpl.class, specificEntity);
                 }
                 case CACHING_MULTI_CATALOG -> {
-                    assertTrue(randomEntity instanceof CachingEntityMultiCatalogImpl);
-                    assertTrue(specificEntity instanceof CachingEntityMultiCatalogImpl);
+                    assertInstanceOf(CachingEntityMultiCatalogImpl.class, randomEntity);
+                    assertInstanceOf(CachingEntityMultiCatalogImpl.class, specificEntity);
                 }
             }
             
@@ -544,6 +541,7 @@ class CheapFactoryTest
         }
     }
 
+    @SuppressWarnings("DataFlowIssue")
     @Test
     void testNullValidation()
     {

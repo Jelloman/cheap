@@ -38,9 +38,10 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-class PostgresPostgresDaoJsonRoundtripTest
+class PostgresJsonRoundtripTest
 {
     @RegisterExtension
     public static PreparedDbExtension flywayDB = EmbeddedPostgresExtension.preparedDatabase(FlywayPreparer.forClasspathLocation("db/pg"));
@@ -49,11 +50,12 @@ class PostgresPostgresDaoJsonRoundtripTest
     static volatile boolean schemaInitialized = false;
 
     PostgresDao postgresDao;
+    PostgresAdapter adapter;
     CheapFactory factory;
     ObjectMapper objectMapper;
     CheapJacksonDeserializer deserializer;
 
-    void setUp() throws SQLException, IOException, URISyntaxException
+    void setupDatabase() throws SQLException, IOException, URISyntaxException
     {
         // Get the datasource (will be initialized by JUnit extension)
         dataSource = flywayDB.getTestDatabase();
@@ -65,7 +67,8 @@ class PostgresPostgresDaoJsonRoundtripTest
         }
 
         factory = new CheapFactory();
-        postgresDao = new PostgresDao(dataSource, factory);
+        adapter = new PostgresAdapter(dataSource, factory);
+        postgresDao = new PostgresDao(adapter);
         objectMapper = new ObjectMapper();
         deserializer = new CheapJacksonDeserializer(factory);
 
@@ -91,7 +94,7 @@ class PostgresPostgresDaoJsonRoundtripTest
     @SuppressWarnings("DataFlowIssue")
     private static String loadResourceFile(String resourcePath) throws IOException, URISyntaxException
     {
-        Path path = Paths.get(PostgresPostgresDaoJsonRoundtripTest.class.getResource(resourcePath).toURI());
+        Path path = Paths.get(PostgresJsonRoundtripTest.class.getResource(resourcePath).toURI());
         return Files.readString(path);
     }
 
@@ -108,7 +111,7 @@ class PostgresPostgresDaoJsonRoundtripTest
     @Test
     void testFullCatalogJsonRoundtrip() throws SQLException, IOException, URISyntaxException
     {
-        setUp();
+        setupDatabase();
 
         // Load the original JSON
         String originalJson = loadResourceFile("/jackson/full-catalog.json");

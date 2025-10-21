@@ -16,14 +16,19 @@
 
 package net.netbeing.cheap.json.jackson.serialize;
 
-import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.module.SimpleModule;
-import net.netbeing.cheap.model.*;
+import net.netbeing.cheap.model.Aspect;
+import net.netbeing.cheap.model.AspectDef;
+import net.netbeing.cheap.model.Catalog;
+import net.netbeing.cheap.model.CatalogDef;
+import net.netbeing.cheap.model.Hierarchy;
+import net.netbeing.cheap.model.HierarchyDef;
 
 import java.io.IOException;
 import java.io.StringWriter;
+import java.io.UncheckedIOException;
 
 /**
  * Jackson-based JSON serializer for Cheap data model objects.
@@ -77,7 +82,7 @@ public class CheapJacksonSerializer
             mapper.writeValue(writer, catalog);
             return writer.toString();
         } catch (IOException e) {
-            throw new RuntimeException("Failed to serialize catalog to JSON", e);
+            throw new UncheckedIOException("Failed to serialize catalog to JSON", e);
         }
     }
     

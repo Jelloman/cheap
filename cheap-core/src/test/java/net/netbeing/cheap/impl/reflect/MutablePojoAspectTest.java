@@ -2,10 +2,8 @@ package net.netbeing.cheap.impl.reflect;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import net.netbeing.cheap.impl.basic.CatalogImpl;
 import net.netbeing.cheap.impl.basic.EntityImpl;
 import net.netbeing.cheap.impl.basic.PropertyImpl;
-import net.netbeing.cheap.model.Catalog;
 import net.netbeing.cheap.model.Entity;
 import net.netbeing.cheap.model.Property;
 import org.junit.jupiter.api.AfterEach;
@@ -18,7 +16,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class MutablePojoAspectTest
+class MutablePojoAspectTest
 {
     @Data @AllArgsConstructor
     public static class TestClass
@@ -57,12 +55,6 @@ public class MutablePojoAspectTest
         pojo1 = null;
         pojo2 = null;
         mutablePojoAspect = null;
-    }
-
-    @Test
-    void construct()
-    {
-        mutablePojoAspect = new MutablePojoAspect<>(testEntity, def, pojo1);
     }
 
     @Test

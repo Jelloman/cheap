@@ -3,7 +3,13 @@ package net.netbeing.cheap.impl.reflect;
 import net.netbeing.cheap.impl.basic.EntityImpl;
 import net.netbeing.cheap.impl.basic.PropertyDefBuilder;
 import net.netbeing.cheap.impl.basic.PropertyImpl;
-import net.netbeing.cheap.model.*;
+import net.netbeing.cheap.model.Aspect;
+import net.netbeing.cheap.model.AspectBuilder;
+import net.netbeing.cheap.model.AspectDef;
+import net.netbeing.cheap.model.Entity;
+import net.netbeing.cheap.model.Property;
+import net.netbeing.cheap.model.PropertyDef;
+import net.netbeing.cheap.model.PropertyType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -24,8 +30,6 @@ class MutablePojoAspectBuilderTest
         private int age;
         private boolean active;
         private Double salary;
-
-        public TestPojo() {} // Required no-arg constructor
 
         public String getName() { return name; }
         public void setName(String name) { this.name = name; }
@@ -188,8 +192,9 @@ class MutablePojoAspectBuilderTest
     @Test
     void build_NoEntity_ThrowsException()
     {
-        IllegalStateException exception = assertThrows(IllegalStateException.class, () ->
-            builder.property("name", "test").build());
+        builder.property("name", "test");
+
+        IllegalStateException exception = assertThrows(IllegalStateException.class, () -> builder.build());
 
         assertEquals("Entity must be set before building aspect", exception.getMessage());
     }

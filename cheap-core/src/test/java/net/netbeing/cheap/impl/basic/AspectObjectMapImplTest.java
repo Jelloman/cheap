@@ -1,6 +1,10 @@
 package net.netbeing.cheap.impl.basic;
 
-import net.netbeing.cheap.model.*;
+import net.netbeing.cheap.model.Entity;
+import net.netbeing.cheap.model.MutableAspectDef;
+import net.netbeing.cheap.model.Property;
+import net.netbeing.cheap.model.PropertyDef;
+import net.netbeing.cheap.model.PropertyType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -8,7 +12,6 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class AspectObjectMapImplTest
 {
-    private Catalog catalog;
     private Entity entity;
     private MutableAspectDef aspectDef;
     private PropertyDef propDef1;
@@ -20,7 +23,6 @@ class AspectObjectMapImplTest
     @BeforeEach
     void setUp()
     {
-        catalog = new CatalogImpl();
         entity = new EntityImpl();
         aspectDef = new MutableAspectDefImpl("testAspect");
         propDef1 = new PropertyDefBuilder().setName("prop1").setType(PropertyType.String).build();
@@ -33,34 +35,34 @@ class AspectObjectMapImplTest
     @Test
     void constructor_DefaultCapacity_CreatesEmptyAspect()
     {
-        AspectObjectMapImpl aspect = new AspectObjectMapImpl(entity, aspectDef);
+        AspectObjectMapImpl a = new AspectObjectMapImpl(entity, aspectDef);
         
-        assertSame(entity, aspect.entity());
-        assertSame(aspectDef, aspect.def());
-        assertNotNull(aspect.props);
-        assertTrue(aspect.props.isEmpty());
+        assertSame(entity, a.entity());
+        assertSame(aspectDef, a.def());
+        assertNotNull(a.props);
+        assertTrue(a.props.isEmpty());
     }
 
     @Test
     void constructor_WithInitialCapacity_CreatesEmptyAspect()
     {
-        AspectObjectMapImpl aspect = new AspectObjectMapImpl(entity, aspectDef, 10);
+        AspectObjectMapImpl a = new AspectObjectMapImpl(entity, aspectDef, 10);
         
-        assertSame(entity, aspect.entity());
-        assertSame(aspectDef, aspect.def());
-        assertNotNull(aspect.props);
-        assertTrue(aspect.props.isEmpty());
+        assertSame(entity, a.entity());
+        assertSame(aspectDef, a.def());
+        assertNotNull(a.props);
+        assertTrue(a.props.isEmpty());
     }
 
     @Test
     void constructor_WithCapacityAndLoadFactor_CreatesEmptyAspect()
     {
-        AspectObjectMapImpl aspect = new AspectObjectMapImpl(entity, aspectDef, 10, 0.8f);
+        AspectObjectMapImpl a = new AspectObjectMapImpl(entity, aspectDef, 10, 0.8f);
         
-        assertSame(entity, aspect.entity());
-        assertSame(aspectDef, aspect.def());
-        assertNotNull(aspect.props);
-        assertTrue(aspect.props.isEmpty());
+        assertSame(entity, a.entity());
+        assertSame(aspectDef, a.def());
+        assertNotNull(a.props);
+        assertTrue(a.props.isEmpty());
     }
 
     @Test

@@ -18,7 +18,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class ImmutablePojoAspectTest
+class ImmutablePojoAspectTest
 {
     @Data @AllArgsConstructor
     public static class TestClass
@@ -68,7 +68,7 @@ public class ImmutablePojoAspectTest
     @Test
     void construct()
     {
-        immutablePojoAspect = new ImmutablePojoAspect<>(testEntity, def, pojo1);
+        assertDoesNotThrow(() -> new ImmutablePojoAspect<>(testEntity, def, pojo1));
     }
 
     @Test
@@ -124,7 +124,7 @@ public class ImmutablePojoAspectTest
         assertEquals("bar", prop.read());
 
         Property newProp = new PropertyImpl(prop.def(), "baz");
-        Throwable exception = assertThrows(UnsupportedOperationException.class, () -> immutablePojoAspect.put(newProp));
+        assertThrows(UnsupportedOperationException.class, () -> immutablePojoAspect.put(newProp));
     }
 
     @Test

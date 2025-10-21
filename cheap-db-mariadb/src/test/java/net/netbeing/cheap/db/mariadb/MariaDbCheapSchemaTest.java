@@ -32,7 +32,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class MariaDbCheapSchemaTest
 {
     static final String DB_NAME = "cheap";
-    volatile static MariaDbTestDb db;
+    static volatile MariaDbTestDb db;
 
     @BeforeAll
     static void setUp() throws Exception
@@ -137,7 +137,7 @@ class MariaDbCheapSchemaTest
             // Populate all tables with at least 1 row
             CheapTestFactory testFactory = new CheapTestFactory();
             UUID catalogId = UUID.randomUUID();
-            CheapTestFactory.EntityIds ids = testFactory.populateAllHierarchyTypes(conn, catalogId);
+            testFactory.populateAllHierarchyTypes(conn, catalogId);
 
             // Verify all tables have at least 1 row
             assertTrue(getRowCount(conn, "entity") >= 1, "entity should have at least 1 row");

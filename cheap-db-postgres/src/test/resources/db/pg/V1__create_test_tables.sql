@@ -1,3 +1,4 @@
+SET TIME ZONE 'UTC';
 
 CREATE TABLE test_table (
 	id SERIAL PRIMARY KEY,
@@ -5,7 +6,7 @@ CREATE TABLE test_table (
 	integer_col INTEGER,
 	float_col DOUBLE PRECISION,
 	date_col DATE,
-	timestamp_col TIMESTAMP,
+	timestamp_col TIMESTAMP WITH TIME ZONE,
 	boolean_col BOOLEAN,
 	uuid_col UUID,
 	blob_col BYTEA

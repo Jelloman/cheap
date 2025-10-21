@@ -22,13 +22,9 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.sql.DataSource;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.sql.Timestamp;
-import java.time.Instant;
-import java.time.ZonedDateTime;
-import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -45,7 +41,7 @@ import java.util.UUID;
  * <h2>Responsibilities</h2>
  * <ul>
  *   <li>Managing AspectTableMapping registration and lookup</li>
- *   <li>Orchestrating multi-step save operations (catalog, hierarchies, aspects)</li>
+ *   <li>Orchestrating multistep save operations (catalog, hierarchies, aspects)</li>
  *   <li>Routing save/load operations to appropriate mapped or default table handlers</li>
  *   <li>Providing common type conversion utilities</li>
  * </ul>
@@ -66,20 +62,14 @@ import java.util.UUID;
 public abstract class AbstractCheapDao implements CheapDao
 {
     /**
+     * The database adapter used by this DAO.
+     */
+    protected final CheapJdbcAdapter adapter;
+
+    /**
      * Logger for database operations. Subclasses may use this for logging.
      */
     protected final Logger logger;
-
-    /**
-     * Data source providing database connections.
-     */
-    protected final DataSource dataSource;
-
-    /**
-     * Factory for creating Cheap model objects (entities, aspects, hierarchies, etc.).
-     * Maintains entity registry to ensure entity identity is preserved across loads.
-     */
-    protected final CheapFactory factory;
 
     /**
      * Registry of AspectTableMappings, keyed by AspectDef name.
@@ -88,19 +78,16 @@ public abstract class AbstractCheapDao implements CheapDao
      */
     protected final Map<String, AspectTableMapping> aspectTableMappings = new LinkedHashMap<>();
 
+
     /**
-     * Constructs a new AbstractCheapDao with the given data source, factory, and logger.
-     * This constructor allows sharing a CheapFactory instance across multiple DAOs
-     * to maintain a consistent entity registry.
+     * Constructs a new AbstractCheapDao with the given database adapter and logger.
      *
-     * @param dataSource the data source to use for database connections
-     * @param factory the CheapFactory to use for object creation and entity management
+     * @param adapter the database adapter
      * @param logger the logger to use for database operations, or null to use default logger
      */
-    protected AbstractCheapDao(@NotNull DataSource dataSource, @NotNull CheapFactory factory, Logger logger)
+    protected AbstractCheapDao(@NotNull CheapJdbcAdapter adapter, Logger logger)
     {
-        this.dataSource = dataSource;
-        this.factory = factory;
+        this.adapter = adapter;
         this.logger = logger != null ? logger : LoggerFactory.getLogger(AbstractCheapDao.class);
     }
 
@@ -119,11 +106,11 @@ public abstract class AbstractCheapDao implements CheapDao
     @Override
     public void saveCatalog(@NotNull Catalog catalog) throws SQLException
     {
-        if (catalog == null) {
+        if (catalog == null) { // NOSONAR
             throw new IllegalArgumentException("Catalog cannot be null");
         }
 
-        try (Connection conn = dataSource.getConnection()) {
+        try (Connection conn = adapter.getConnection()) {
             conn.setAutoCommit(false);
             try {
                 saveCatalog(conn, catalog);
@@ -169,7 +156,7 @@ public abstract class AbstractCheapDao implements CheapDao
      * @param aspectDef the AspectDef to link
      * @throws SQLException if database operation fails
      */
-    protected abstract void linkCatalogToAspectDef(Connection conn, Catalog catalog, AspectDef aspectDef) throws SQLException;
+    protected abstract void linkCatalogToAspectDef(@NotNull Connection conn, @NotNull Catalog catalog, @NotNull AspectDef aspectDef) throws SQLException;
 
     /**
      * Persists the catalog metadata record to the database.
@@ -179,7 +166,7 @@ public abstract class AbstractCheapDao implements CheapDao
      * @param catalog the Catalog whose metadata should be saved
      * @throws SQLException if database operation fails
      */
-    protected abstract void saveCatalogRecord(Connection conn, Catalog catalog) throws SQLException;
+    protected abstract void saveCatalogRecord(@NotNull Connection conn, @NotNull Catalog catalog) throws SQLException;
 
     /**
      * Saves the content of a hierarchy based on its type.
@@ -189,7 +176,7 @@ public abstract class AbstractCheapDao implements CheapDao
      * @param hierarchy the Hierarchy whose content should be saved
      * @throws SQLException if database operation fails
      */
-    protected void saveHierarchyContent(Connection conn, Hierarchy hierarchy) throws SQLException
+    protected void saveHierarchyContent(@NotNull Connection conn, @NotNull Hierarchy hierarchy) throws SQLException
     {
         switch (hierarchy.type()) {
             case ENTITY_LIST -> saveEntityListContent(conn, (EntityListHierarchy) hierarchy);
@@ -208,7 +195,7 @@ public abstract class AbstractCheapDao implements CheapDao
      * @param hierarchy the EntityListHierarchy to save
      * @throws SQLException if database operation fails
      */
-    protected abstract void saveEntityListContent(Connection conn, EntityListHierarchy hierarchy) throws SQLException;
+    protected abstract void saveEntityListContent(@NotNull Connection conn, @NotNull EntityListHierarchy hierarchy) throws SQLException;
 
     /**
      * Persists the content of an EntitySetHierarchy to the database.
@@ -218,7 +205,7 @@ public abstract class AbstractCheapDao implements CheapDao
      * @param hierarchy the EntitySetHierarchy to save
      * @throws SQLException if database operation fails
      */
-    protected abstract void saveEntitySetContent(Connection conn, EntitySetHierarchy hierarchy) throws SQLException;
+    protected abstract void saveEntitySetContent(@NotNull Connection conn, @NotNull EntitySetHierarchy hierarchy) throws SQLException;
 
     /**
      * Persists the content of an EntityDirectoryHierarchy to the database.
@@ -228,7 +215,7 @@ public abstract class AbstractCheapDao implements CheapDao
      * @param hierarchy the EntityDirectoryHierarchy to save
      * @throws SQLException if database operation fails
      */
-    protected abstract void saveEntityDirectoryContent(Connection conn, EntityDirectoryHierarchy hierarchy) throws SQLException;
+    protected abstract void saveEntityDirectoryContent(@NotNull Connection conn, @NotNull EntityDirectoryHierarchy hierarchy) throws SQLException;
 
     /**
      * Persists the content of an EntityTreeHierarchy to the database.
@@ -238,7 +225,7 @@ public abstract class AbstractCheapDao implements CheapDao
      * @param hierarchy the EntityTreeHierarchy to save
      * @throws SQLException if database operation fails
      */
-    protected abstract void saveEntityTreeContent(Connection conn, EntityTreeHierarchy hierarchy) throws SQLException;
+    protected abstract void saveEntityTreeContent(@NotNull Connection conn, @NotNull EntityTreeHierarchy hierarchy) throws SQLException;
 
     /**
      * Saves the content of an AspectMapHierarchy, routing to either mapped table
@@ -268,7 +255,7 @@ public abstract class AbstractCheapDao implements CheapDao
      * @param hierarchy the AspectMapHierarchy to save
      * @throws SQLException if database operation fails
      */
-    protected abstract void saveAspectMapContentToDefaultTables(Connection conn, AspectMapHierarchy hierarchy) throws SQLException;
+    protected abstract void saveAspectMapContentToDefaultTables(@NotNull Connection conn, @NotNull AspectMapHierarchy hierarchy) throws SQLException;
 
     /**
      * Persists the content of an AspectMapHierarchy to a custom mapped table.
@@ -279,28 +266,69 @@ public abstract class AbstractCheapDao implements CheapDao
      * @param mapping the AspectTableMapping defining the custom table structure
      * @throws SQLException if database operation fails
      */
-    protected abstract void saveAspectMapContentToMappedTable(Connection conn, AspectMapHierarchy hierarchy, AspectTableMapping mapping) throws SQLException;
-
-    @Override
-    public String convertValueToString(Object value, PropertyType type) throws SQLException
+    protected void saveAspectMapContentToMappedTable(Connection conn, AspectMapHierarchy hierarchy, AspectTableMapping mapping) throws SQLException
     {
-        return switch (type) {
-            case DateTime -> convertToTimestamp(value).toString();
-            default -> value.toString();
-        };
+        final UUID catalogId = hierarchy.catalog().globalId();
+        // Pre-save cleanup based on flags
+        clearMappedTable(conn, mapping, catalogId);
+        // If hasEntityId, no pre-save cleanup needed (will use ON DUPLICATE KEY UPDATE)
+
+        StringBuilder sql = buildAspectMapSql(mapping);
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
+            for (Map.Entry<Entity, Aspect> entry : hierarchy.entrySet()) {
+                saveEntity(conn, entry.getKey());
+                if (entry.getValue() != null) {
+                    saveAspectToMappedTable(mapping, entry.getKey(), entry.getValue(), stmt, catalogId);
+                }
+            }
+        }
     }
+
+    protected abstract void clearMappedTable(@NotNull Connection conn, @NotNull AspectTableMapping mapping, @NotNull UUID catalogId) throws SQLException;
+
+    protected abstract StringBuilder buildAspectMapSql(@NotNull AspectTableMapping mapping);
+
+    protected abstract void setPropertyValue(@NotNull PreparedStatement stmt, int paramIndex, Object value, @NotNull PropertyType type) throws SQLException;
+
+    protected void saveAspectToMappedTable(@NotNull AspectTableMapping mapping, @NotNull Entity entity, Aspect aspect, @NotNull PreparedStatement stmt, @NotNull UUID catalogId) throws SQLException
+    {
+        int paramIndex = 1;
+
+        if (mapping.hasCatalogId()) {
+            stmt.setString(paramIndex++, catalogId.toString());
+        }
+
+        if (mapping.hasEntityId()) {
+            stmt.setString(paramIndex++, entity.globalId().toString());
+        }
+
+        for (String propName : mapping.propertyToColumnMap().keySet()) {
+            Object value = aspect.readObj(propName);
+            PropertyDef propDef = aspect.def().propertyDef(propName);
+            if (propDef != null) {
+                setPropertyValue(stmt, paramIndex++, value, propDef.type());
+            } else {
+                stmt.setObject(paramIndex++, value);
+            }
+        }
+
+        stmt.executeUpdate();
+    }
+
 
     @Override
     public Catalog loadCatalog(@NotNull UUID catalogId) throws SQLException
     {
-        try (Connection conn = dataSource.getConnection()) {
+        try (Connection conn = adapter.getConnection()) {
             return loadCatalogWithConnection(conn, catalogId);
         }
     }
 
     @Override
-    public Hierarchy createAndLoadHierarchy(Connection conn, Catalog catalog, HierarchyType type, String hierarchyName, long version) throws SQLException
+    public Hierarchy createAndLoadHierarchy(@NotNull Connection conn, @NotNull Catalog catalog, @NotNull HierarchyType type, @NotNull String hierarchyName, long version) throws SQLException
     {
+        CheapFactory factory = adapter.getFactory();
         switch (type) {
             case ENTITY_LIST -> {
                 EntityListHierarchy hierarchy = factory.createEntityListHierarchy(catalog, hierarchyName, version);
@@ -425,19 +453,4 @@ public abstract class AbstractCheapDao implements CheapDao
      * @throws SQLException if database operation fails or AspectDef not found
      */
     protected abstract AspectDef loadAspectDefForHierarchy(Connection conn, UUID catalogId, String hierarchyName) throws SQLException;
-
-    // ===== Value Conversion Methods =====
-
-    @Override
-    public Timestamp convertToTimestamp(Object value)
-    {
-        return switch (value) {
-            case Timestamp timestamp -> timestamp;
-            case Date date -> new Timestamp(date.getTime());
-            case Instant instant -> Timestamp.from(instant);
-            case ZonedDateTime zonedDateTime -> Timestamp.from(zonedDateTime.toInstant());
-            default -> throw new IllegalStateException("Unexpected value class for DateTime: " + value.getClass());
-        };
-    }
-
 }

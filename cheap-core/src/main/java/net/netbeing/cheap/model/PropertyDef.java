@@ -152,7 +152,7 @@ public interface PropertyDef
         hasher.update(isRemovable());
         hasher.update(hasDefaultValue());
         if (hasDefaultValue() && defaultValue() != null) {
-            hasher.update((long) defaultValue().hashCode());
+            hasher.update(defaultValue().hashCode());
         }
         hasher.update(type().typeCode());
         hasher.update(name());
@@ -170,6 +170,7 @@ public interface PropertyDef
      * @param throwExceptions whether this method should throw exceptions or merely return true/false
      * @throws IllegalArgumentException if the value is invalid for the property definition, and throwExceptions is true
      */
+    @SuppressWarnings("java:S3776")
     default boolean validatePropertyValue(Object value, boolean throwExceptions)
     {
         // Check nullability

@@ -19,7 +19,8 @@ package net.netbeing.cheap.json.jackson.serialize;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
-import net.netbeing.cheap.model.*;
+import net.netbeing.cheap.model.AspectDef;
+import net.netbeing.cheap.model.PropertyDef;
 
 import java.io.IOException;
 
@@ -54,8 +55,10 @@ class AspectDefSerializer extends JsonSerializer<AspectDef>
     public void serialize(AspectDef aspectDef, JsonGenerator gen, SerializerProvider serializers) throws IOException
     {
         gen.writeStartObject();
-        
+
         gen.writeStringField("name", aspectDef.name());
+
+        gen.writeStringField("globalId", aspectDef.globalId().toString());
 
         // Only serialize these flags when they are non-default
         if (!aspectDef.isReadable()) {
@@ -74,38 +77,43 @@ class AspectDefSerializer extends JsonSerializer<AspectDef>
         gen.writeFieldName("propertyDefs");
         gen.writeStartArray();
         for (PropertyDef propertyDef : aspectDef.propertyDefs()) {
-            gen.writeStartObject();
-
-            gen.writeStringField("name", propertyDef.name());
-            gen.writeStringField("type", propertyDef.type().name());
-
-            // Only write no-default values for all the following fields
-
-            if (propertyDef.hasDefaultValue()) {
-                gen.writeFieldName("defaultValue");
-                writeValue(propertyDef.defaultValue(), gen);
-            }
-
-            if (propertyDef.isReadable() != aspectDef.isReadable()) {
-                gen.writeBooleanField("isReadable", propertyDef.isReadable());
-            }
-            if (propertyDef.isWritable() != aspectDef.isWritable()) {
-                gen.writeBooleanField("isWritable", propertyDef.isWritable());
-            }
-            if (!propertyDef.isNullable()) {
-                gen.writeBooleanField("isNullable", false);
-            }
-            if (aspectDef.canRemoveProperties() && propertyDef.isRemovable()) {
-                gen.writeBooleanField("isRemovable", true);
-            }
-            if (propertyDef.isMultivalued()) {
-                gen.writeBooleanField("isMultivalued", true);
-            }
-
-            gen.writeEndObject();
+            serializePropertyDef(aspectDef, gen, propertyDef);
         }
         gen.writeEndArray();
         
+        gen.writeEndObject();
+    }
+
+    private void serializePropertyDef(AspectDef aspectDef, JsonGenerator gen, PropertyDef propertyDef) throws IOException
+    {
+        gen.writeStartObject();
+
+        gen.writeStringField("name", propertyDef.name());
+        gen.writeStringField("type", propertyDef.type().name());
+
+        // Only write no-default values for all the following fields
+
+        if (propertyDef.hasDefaultValue()) {
+            gen.writeFieldName("defaultValue");
+            writeValue(propertyDef.defaultValue(), gen);
+        }
+
+        if (propertyDef.isReadable() != aspectDef.isReadable()) {
+            gen.writeBooleanField("isReadable", propertyDef.isReadable());
+        }
+        if (propertyDef.isWritable() != aspectDef.isWritable()) {
+            gen.writeBooleanField("isWritable", propertyDef.isWritable());
+        }
+        if (!propertyDef.isNullable()) {
+            gen.writeBooleanField("isNullable", false);
+        }
+        if (aspectDef.canRemoveProperties() && propertyDef.isRemovable()) {
+            gen.writeBooleanField("isRemovable", true);
+        }
+        if (propertyDef.isMultivalued()) {
+            gen.writeBooleanField("isMultivalued", true);
+        }
+
         gen.writeEndObject();
     }
 
@@ -114,7 +122,7 @@ class AspectDefSerializer extends JsonSerializer<AspectDef>
         switch (value) {
             case null -> gen.writeNull();
             case String s -> gen.writeString(s);
-            case Number number -> gen.writeNumber(value.toString());
+            case Number _ -> gen.writeNumber(value.toString());
             case Boolean b -> gen.writeBoolean(b);
             default -> gen.writeString(value.toString());
         }

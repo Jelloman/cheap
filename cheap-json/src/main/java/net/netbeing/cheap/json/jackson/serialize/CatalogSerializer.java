@@ -18,12 +18,12 @@ package net.netbeing.cheap.json.jackson.serialize;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonSerializer;
-import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.SerializerProvider;
-import net.netbeing.cheap.model.*;
+import net.netbeing.cheap.model.AspectDef;
+import net.netbeing.cheap.model.Catalog;
+import net.netbeing.cheap.model.Hierarchy;
 
 import java.io.IOException;
-import java.util.Map;
 
 /**
  * Jackson serializer for {@link Catalog} objects in the Cheap data model.

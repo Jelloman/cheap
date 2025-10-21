@@ -1,6 +1,9 @@
 package net.netbeing.cheap.impl.basic;
 
-import net.netbeing.cheap.model.*;
+import net.netbeing.cheap.model.Entity;
+import net.netbeing.cheap.model.Property;
+import net.netbeing.cheap.model.PropertyDef;
+import net.netbeing.cheap.model.PropertyType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -8,7 +11,6 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class AspectPropertyMapImplTest
 {
-    private Catalog catalog;
     private Entity entity;
     private MutableAspectDefImpl aspectDef;
     private PropertyDef propDef1;
@@ -20,7 +22,6 @@ class AspectPropertyMapImplTest
     @BeforeEach
     void setUp()
     {
-        catalog = new CatalogImpl();
         entity = new EntityImpl();
         aspectDef = new MutableAspectDefImpl("testAspect");
         propDef1 = new PropertyDefBuilder().setName("prop1").setType(PropertyType.String).build();
@@ -33,34 +34,34 @@ class AspectPropertyMapImplTest
     @Test
     void constructor_DefaultCapacity_CreatesEmptyAspect()
     {
-        AspectPropertyMapImpl aspect = new AspectPropertyMapImpl(entity, aspectDef);
-        
-        assertSame(entity, aspect.entity());
-        assertSame(aspectDef, aspect.def());
-        assertNotNull(aspect.props);
-        assertTrue(aspect.props.isEmpty());
+        AspectPropertyMapImpl a = new AspectPropertyMapImpl(entity, aspectDef);
+
+        assertSame(entity, a.entity());
+        assertSame(aspectDef, a.def());
+        assertNotNull(a.props);
+        assertTrue(a.props.isEmpty());
     }
 
     @Test
     void constructor_WithInitialCapacity_CreatesEmptyAspect()
     {
-        AspectPropertyMapImpl aspect = new AspectPropertyMapImpl(entity, aspectDef, 10);
-        
-        assertSame(entity, aspect.entity());
-        assertSame(aspectDef, aspect.def());
-        assertNotNull(aspect.props);
-        assertTrue(aspect.props.isEmpty());
+        AspectPropertyMapImpl a = new AspectPropertyMapImpl(entity, aspectDef, 10);
+
+        assertSame(entity, a.entity());
+        assertSame(aspectDef, a.def());
+        assertNotNull(a.props);
+        assertTrue(a.props.isEmpty());
     }
 
     @Test
     void constructor_WithCapacityAndLoadFactor_CreatesEmptyAspect()
     {
-        AspectPropertyMapImpl aspect = new AspectPropertyMapImpl(entity, aspectDef, 10, 0.8f);
-        
-        assertSame(entity, aspect.entity());
-        assertSame(aspectDef, aspect.def());
-        assertNotNull(aspect.props);
-        assertTrue(aspect.props.isEmpty());
+        AspectPropertyMapImpl a = new AspectPropertyMapImpl(entity, aspectDef, 10, 0.8f);
+
+        assertSame(entity, a.entity());
+        assertSame(aspectDef, a.def());
+        assertNotNull(a.props);
+        assertTrue(a.props.isEmpty());
     }
 
     @Test
@@ -73,7 +74,7 @@ class AspectPropertyMapImplTest
     void contains_PropertyPresent_ReturnsTrue()
     {
         aspect.put(property1);
-        
+
         assertTrue(aspect.contains("prop1"));
     }
 
@@ -87,7 +88,7 @@ class AspectPropertyMapImplTest
     void unsafeReadObj_PropertyPresent_ReturnsPropertyValue()
     {
         aspect.put(property1);
-        
+
         Object result = aspect.unsafeReadObj("prop1");
         assertEquals("test-value", result);
     }
@@ -96,18 +97,19 @@ class AspectPropertyMapImplTest
     void get_AspectNotReadable_ThrowsException()
     {
         // Create a non-readable aspect def
-        aspectDef = new MutableAspectDefImpl("testAspect") {
+        aspectDef = new MutableAspectDefImpl("testAspect")
+        {
             @Override
-            public boolean isReadable() { return false; }
+            public boolean isReadable()
+            {
+                return false;
+            }
         };
         aspect = new AspectPropertyMapImpl(entity, aspectDef);
         aspect.put(property1);
-        
-        UnsupportedOperationException exception = assertThrows(
-            UnsupportedOperationException.class,
-            () -> aspect.get("prop1")
-        );
-        
+
+        UnsupportedOperationException exception = assertThrows(UnsupportedOperationException.class, () -> aspect.get("prop1"));
+
         assertTrue(exception.getMessage().contains("is not readable"));
     }
 
@@ -117,12 +119,9 @@ class AspectPropertyMapImplTest
         // Create a readable aspect def
         aspectDef = new MutableAspectDefImpl("testAspect");
         aspect = new AspectPropertyMapImpl(entity, aspectDef);
-        
-        IllegalArgumentException exception = assertThrows(
-            IllegalArgumentException.class,
-            () -> aspect.get("nonexistent")
-        );
-        
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> aspect.get("nonexistent"));
+
         assertTrue(exception.getMessage().contains("does not contain prop named"));
     }
 
@@ -132,15 +131,13 @@ class AspectPropertyMapImplTest
         // Create a readable aspect def
         aspectDef = new MutableAspectDefImpl("testAspect");
         aspect = new AspectPropertyMapImpl(entity, aspectDef);
-        PropertyDefImpl nonReadablePropDef = new PropertyDefBuilder().setName("readonly").setType(PropertyType.String).setIsReadable(false).setIsWritable(true).setIsNullable(true).setIsRemovable(true).setIsMultivalued(false).build();
+        PropertyDefImpl nonReadablePropDef =
+            new PropertyDefBuilder().setName("readonly").setType(PropertyType.String).setIsReadable(false).setIsWritable(true).setIsNullable(true).setIsRemovable(true).setIsMultivalued(false).build();
         Property nonReadableProperty = new PropertyImpl(nonReadablePropDef, "value");
         aspect.put(nonReadableProperty);
-        
-        UnsupportedOperationException exception = assertThrows(
-            UnsupportedOperationException.class,
-            () -> aspect.get("readonly")
-        );
-        
+
+        UnsupportedOperationException exception = assertThrows(UnsupportedOperationException.class, () -> aspect.get("readonly"));
+
         assertTrue(exception.getMessage().contains("is not readable"));
     }
 
@@ -150,12 +147,13 @@ class AspectPropertyMapImplTest
         // Create a readable aspect def
         aspectDef = new MutableAspectDefImpl("testAspect");
         aspect = new AspectPropertyMapImpl(entity, aspectDef);
-        PropertyDefImpl readablePropDef = new PropertyDefBuilder().setName("readable").setType(PropertyType.String).setIsReadable(true).setIsWritable(true).setIsNullable(true).setIsRemovable(true).setIsMultivalued(false).build();
+        PropertyDefImpl readablePropDef =
+            new PropertyDefBuilder().setName("readable").setType(PropertyType.String).setIsReadable(true).setIsWritable(true).setIsNullable(true).setIsRemovable(true).setIsMultivalued(false).build();
         Property readableProperty = new PropertyImpl(readablePropDef, "value");
         aspect.put(readableProperty);
-        
+
         Property result = aspect.get("readable");
-        
+
         assertSame(readableProperty, result);
     }
 
@@ -163,17 +161,18 @@ class AspectPropertyMapImplTest
     void put_AspectNotWritable_ThrowsException()
     {
         // Create a non-writable aspect def
-        aspectDef = new MutableAspectDefImpl("testAspect") {
+        aspectDef = new MutableAspectDefImpl("testAspect")
+        {
             @Override
-            public boolean isWritable() { return false; }
+            public boolean isWritable()
+            {
+                return false;
+            }
         };
         aspect = new AspectPropertyMapImpl(entity, aspectDef);
-        
-        UnsupportedOperationException exception = assertThrows(
-            UnsupportedOperationException.class,
-            () -> aspect.put(property1)
-        );
-        
+
+        UnsupportedOperationException exception = assertThrows(UnsupportedOperationException.class, () -> aspect.put(property1));
+
         assertTrue(exception.getMessage().contains("is not writable"));
     }
 
@@ -181,17 +180,18 @@ class AspectPropertyMapImplTest
     void put_NewPropertyAndNotExtensible_ThrowsException()
     {
         // Create a writable but non-extensible aspect def
-        aspectDef = new MutableAspectDefImpl("testAspect") {
+        aspectDef = new MutableAspectDefImpl("testAspect")
+        {
             @Override
-            public boolean canAddProperties() { return false; }
+            public boolean canAddProperties()
+            {
+                return false;
+            }
         };
         aspect = new AspectPropertyMapImpl(entity, aspectDef);
-        
-        IllegalArgumentException exception = assertThrows(
-            IllegalArgumentException.class,
-            () -> aspect.put(property1)
-        );
-        
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> aspect.put(property1));
+
         assertTrue(exception.getMessage().contains("is not extensible"));
     }
 
@@ -201,9 +201,9 @@ class AspectPropertyMapImplTest
         // Create a writable and extensible aspect def
         aspectDef = new MutableAspectDefImpl("testAspect");
         aspect = new AspectPropertyMapImpl(entity, aspectDef);
-        
+
         aspect.put(property1);
-        
+
         assertTrue(aspect.contains("prop1"));
         assertSame(property1, aspect.props.get("prop1"));
     }
@@ -214,17 +214,15 @@ class AspectPropertyMapImplTest
         // Create a writable aspect def
         aspectDef = new MutableAspectDefImpl("testAspect");
         aspect = new AspectPropertyMapImpl(entity, aspectDef);
-        PropertyDefImpl nonWritablePropDef = new PropertyDefBuilder().setName("readonly").setType(PropertyType.String).setIsReadable(true).setIsWritable(false).setIsNullable(true).setIsRemovable(true).setIsMultivalued(false).build();
+        PropertyDefImpl nonWritablePropDef =
+            new PropertyDefBuilder().setName("readonly").setType(PropertyType.String).setIsReadable(true).setIsWritable(false).setIsNullable(true).setIsRemovable(true).setIsMultivalued(false).build();
         Property existingProperty = new PropertyImpl(nonWritablePropDef, "old-value");
         aspect.props.put("readonly", existingProperty);
-        
+
         Property newProperty = new PropertyImpl(nonWritablePropDef, "new-value");
-        
-        UnsupportedOperationException exception = assertThrows(
-            UnsupportedOperationException.class,
-            () -> aspect.put(newProperty)
-        );
-        
+
+        UnsupportedOperationException exception = assertThrows(UnsupportedOperationException.class, () -> aspect.put(newProperty));
+
         assertTrue(exception.getMessage().contains("is marked not writable"));
     }
 
@@ -234,21 +232,20 @@ class AspectPropertyMapImplTest
         // Create a writable aspect def
         aspectDef = new MutableAspectDefImpl("testAspect");
         aspect = new AspectPropertyMapImpl(entity, aspectDef);
-        PropertyDefImpl propDef1 = new PropertyDefBuilder().setName("prop").setType(PropertyType.String).setIsReadable(true).setIsWritable(true).setIsNullable(true).setIsRemovable(true).setIsMultivalued(false).build();
-        aspectDef.add(propDef1);
+        PropertyDefImpl pd1 =
+            new PropertyDefBuilder().setName("prop").setType(PropertyType.String).setIsReadable(true).setIsWritable(true).setIsNullable(true).setIsRemovable(true).setIsMultivalued(false).build();
+        aspectDef.add(pd1);
 
-        PropertyDefImpl propDef2 = new PropertyDefBuilder().setName("prop").setType(PropertyType.Integer).setIsReadable(true).setIsWritable(true).setIsNullable(true).setIsRemovable(true).setIsMultivalued(false).build();
-        
-        Property existingProperty = new PropertyImpl(propDef1, "value");
+        PropertyDefImpl pd2 =
+            new PropertyDefBuilder().setName("prop").setType(PropertyType.Integer).setIsReadable(true).setIsWritable(true).setIsNullable(true).setIsRemovable(true).setIsMultivalued(false).build();
+
+        Property existingProperty = new PropertyImpl(pd1, "value");
         aspect.props.put("prop", existingProperty);
-        
-        Property newProperty = new PropertyImpl(propDef2, 42);
 
-        IllegalArgumentException exception = assertThrows(
-            IllegalArgumentException.class,
-            () -> aspect.put(newProperty)
-        );
-        
+        Property newProperty = new PropertyImpl(pd2, 42);
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> aspect.put(newProperty));
+
         assertTrue(exception.getMessage().contains("conflicts with the existing definition"));
     }
 
@@ -258,14 +255,15 @@ class AspectPropertyMapImplTest
         // Create a writable aspect def
         aspectDef = new MutableAspectDefImpl("testAspect");
         aspect = new AspectPropertyMapImpl(entity, aspectDef);
-        PropertyDefImpl writablePropDef = new PropertyDefBuilder().setName("writable").setType(PropertyType.String).setIsReadable(true).setIsWritable(true).setIsNullable(true).setIsRemovable(true).setIsMultivalued(false).build();
-        
+        PropertyDefImpl writablePropDef =
+            new PropertyDefBuilder().setName("writable").setType(PropertyType.String).setIsReadable(true).setIsWritable(true).setIsNullable(true).setIsRemovable(true).setIsMultivalued(false).build();
+
         Property existingProperty = new PropertyImpl(writablePropDef, "old-value");
         aspect.props.put("writable", existingProperty);
-        
+
         Property newProperty = new PropertyImpl(writablePropDef, "new-value");
         aspect.put(newProperty);
-        
+
         assertSame(newProperty, aspect.props.get("writable"));
     }
 
@@ -273,7 +271,7 @@ class AspectPropertyMapImplTest
     void unsafeAdd_NewProperty_AddsProperty()
     {
         aspect.unsafeAdd(property1);
-        
+
         assertTrue(aspect.contains("prop1"));
         assertSame(property1, aspect.props.get("prop1"));
     }
@@ -283,7 +281,7 @@ class AspectPropertyMapImplTest
     {
         aspect.unsafeAdd(property1);
         aspect.unsafeAdd(property2);
-        
+
         assertTrue(aspect.contains("prop1"));
         assertTrue(aspect.contains("prop2"));
         assertSame(property1, aspect.props.get("prop1"));
@@ -293,11 +291,8 @@ class AspectPropertyMapImplTest
     @Test
     void unsafeWrite_PropertyNotPresent_ThrowsException()
     {
-        IllegalArgumentException exception = assertThrows(
-            IllegalArgumentException.class,
-            () -> aspect.unsafeWrite("nonexistent", "value")
-        );
-        
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> aspect.unsafeWrite("nonexistent", "value"));
+
         assertTrue(exception.getMessage().contains("does not contain prop named 'nonexistent'"));
     }
 
@@ -305,9 +300,9 @@ class AspectPropertyMapImplTest
     void unsafeWrite_PropertyPresent_UpdatesProperty()
     {
         aspect.props.put("prop1", property1);
-        
+
         aspect.unsafeWrite("prop1", "new-value");
-        
+
         Property result = aspect.props.get("prop1");
         assertNotSame(property1, result);
         assertEquals("new-value", result.unsafeRead());
@@ -319,9 +314,9 @@ class AspectPropertyMapImplTest
     {
         aspect.put(property1);
         assertTrue(aspect.contains("prop1"));
-        
+
         aspect.unsafeRemove("prop1");
-        
+
         assertFalse(aspect.contains("prop1"));
         assertNull(aspect.props.get("prop1"));
     }

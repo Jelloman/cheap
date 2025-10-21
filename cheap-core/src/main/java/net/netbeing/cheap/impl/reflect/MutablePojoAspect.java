@@ -231,14 +231,14 @@ public class MutablePojoAspect<P> implements Aspect
         if (propDef.isJavaPrimitive()) {
             // Handle primitive types by calling the appropriate setter method
             switch (value) {
-                case Integer i -> setter.set(object, (int) value);
-                case Long l -> setter.set(object, (long) value);
-                case Double v -> setter.set(object, (double) value);
-                case Float v -> setter.set(object, (float) value);
-                case Boolean b -> setter.set(object, (boolean) value);
-                case Byte b -> setter.set(object, (byte) value);
-                case Short i -> setter.set(object, (short) value);
-                case Character c -> setter.set(object, (char) value);
+                case Integer _ -> setter.set(object, (int) value);
+                case Long _ -> setter.set(object, (long) value);
+                case Double _ -> setter.set(object, (double) value);
+                case Float _ -> setter.set(object, (float) value);
+                case Boolean _ -> setter.set(object, (boolean) value);
+                case Byte _ -> setter.set(object, (byte) value);
+                case Short _ -> setter.set(object, (short) value);
+                case Character _ -> setter.set(object, (char) value);
                 default -> throw new IllegalStateException("Property '" + propName + "' is flagged as primitive but is not of a primitive type.");
             }
         } else {

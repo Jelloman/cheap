@@ -16,7 +16,13 @@
 
 package net.netbeing.cheap.impl.basic;
 
-import net.netbeing.cheap.model.*;
+import net.netbeing.cheap.model.AspectDef;
+import net.netbeing.cheap.model.AspectMapHierarchy;
+import net.netbeing.cheap.model.Catalog;
+import net.netbeing.cheap.model.CatalogDef;
+import net.netbeing.cheap.model.CatalogSpecies;
+import net.netbeing.cheap.model.Hierarchy;
+import net.netbeing.cheap.model.LocalEntity;
 import org.jetbrains.annotations.NotNull;
 
 import java.net.URI;
@@ -210,11 +216,14 @@ public class CatalogImpl extends LocalEntityOneCatalogImpl implements Catalog
         }
         String hName = hierarchy.name();
         Hierarchy existing = hierarchy(hName);
+        if (hierarchy == existing) {
+            return hierarchy;
+        }
         if (existing instanceof AspectMapHierarchy) {
             throw new UnsupportedOperationException("A hierarchy may not be added to a Catalog with the same name as an existing AspectMapHierarchy.");
         }
-        if (hierarchy instanceof AspectMapHierarchy) {
-            AspectDef aspectDef = ((AspectMapHierarchy) hierarchy).aspectDef();
+        if (hierarchy instanceof AspectMapHierarchy amh) {
+            AspectDef aspectDef = amh.aspectDef();
             aspectage.put(aspectDef.name(), aspectDef);
         }
         return hierarchies.put(hName, hierarchy);
@@ -223,10 +232,7 @@ public class CatalogImpl extends LocalEntityOneCatalogImpl implements Catalog
     @Override
     public boolean containsAspects(@NotNull String name)
     {
-        if (hierarchies.get(name) instanceof AspectMapHierarchy) {
-            return true; //!aMap.isEmpty();
-        }
-        return false;
+        return hierarchies.get(name) instanceof AspectMapHierarchy;
     }
 
     /**

@@ -1,6 +1,8 @@
 package net.netbeing.cheap.impl.basic;
 
-import net.netbeing.cheap.model.*;
+import net.netbeing.cheap.model.Catalog;
+import net.netbeing.cheap.model.Entity;
+import net.netbeing.cheap.model.HierarchyType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -13,7 +15,6 @@ import static org.junit.jupiter.api.Assertions.*;
 class EntitySetHierarchyImplTest
 {
     private Catalog catalog;
-    private HierarchyDef hierarchyDef;
     private EntitySetHierarchyImpl entitySet;
     private Entity entity1;
     private Entity entity2;
@@ -23,7 +24,6 @@ class EntitySetHierarchyImplTest
     void setUp()
     {
         catalog = new CatalogImpl();
-        hierarchyDef = new HierarchyDefImpl("testEntitySet", HierarchyType.ENTITY_SET);
         entitySet = new EntitySetHierarchyImpl(catalog, "testEntitySet");
 
         entity1 = new EntityImpl();
@@ -31,6 +31,7 @@ class EntitySetHierarchyImplTest
         entity3 = new EntityImpl();
     }
 
+    @SuppressWarnings("ConstantValue")
     @Test
     void constructor_ValidHierarchyDef_CreatesEmptySet()
     {
@@ -138,6 +139,7 @@ class EntitySetHierarchyImplTest
         assertTrue(entitySet.contains(null));
     }
 
+    @SuppressWarnings("ConstantValue")
     @Test
     void clear_PopulatedSet_RemovesAllEntities()
     {

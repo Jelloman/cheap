@@ -138,7 +138,7 @@ public class SqliteCheapSchema
      * - String literals (')
      * Only semicolons outside of these contexts are treated as statement terminators.
      */
-    private static List<String> parseSqlStatements(String ddlContent)
+    private static List<String> parseSqlStatements(String ddlContent) // NOSONAR
     {
         List<String> statements = new ArrayList<>();
         StringBuilder currentStatement = new StringBuilder();
@@ -149,7 +149,7 @@ public class SqliteCheapSchema
         boolean inBlockComment = false;
         boolean inString = false;
 
-        while (i < ddlContent.length()) {
+        while (i < ddlContent.length()) { // NOSONAR
             char c = ddlContent.charAt(i);
             char next = (i + 1 < ddlContent.length()) ? ddlContent.charAt(i + 1) : '\0';
 
@@ -268,9 +268,7 @@ public class SqliteCheapSchema
         // Must be followed by whitespace/end of string/semicolon/parenthesis
         if (pos + keyword.length() < content.length()) {
             char after = content.charAt(pos + keyword.length());
-            if (Character.isLetterOrDigit(after) || after == '_') {
-                return false;
-            }
+            return !Character.isLetterOrDigit(after) && after != '_';
         }
 
         return true;

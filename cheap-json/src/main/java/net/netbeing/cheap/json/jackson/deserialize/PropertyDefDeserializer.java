@@ -21,7 +21,8 @@ import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonMappingException;
-import net.netbeing.cheap.model.*;
+import net.netbeing.cheap.model.PropertyDef;
+import net.netbeing.cheap.model.PropertyType;
 import net.netbeing.cheap.util.CheapFactory;
 import org.jetbrains.annotations.NotNull;
 
