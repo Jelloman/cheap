@@ -78,20 +78,20 @@ public class RecordAspect<R extends Record> implements Aspect
     private final RecordAspectDef def;
     
     /** The underlying Java record instance. */
-    private final R record;
+    private final R record; // NOSONAR
 
     /**
      * Constructs a new RecordAspect with null entity.
      *
-     * @param def the aspect definition describing the record structure
-     * @param record the Java record instance to wrap
+     * @param def the aspect definition describing the rec structure
+     * @param rec the Java rec instance to wrap
      * @throws NullPointerException if any parameter is null
      */
-    public RecordAspect(@NotNull RecordAspectDef def, @NotNull R record)
+    public RecordAspect(@NotNull RecordAspectDef def, @NotNull R rec)
     {
         this.entity = null;
         this.def = def;
-        this.record = record;
+        this.record = rec;
     }
 
     /**
@@ -102,14 +102,14 @@ public class RecordAspect<R extends Record> implements Aspect
      *
      * @param entity the entity that this aspect is associated with; may be null
      * @param def the aspect definition describing the record structure
-     * @param record the Java record instance to wrap
+     * @param rec the Java record instance to wrap
      * @throws NullPointerException if any parameter is null
      */
-    public RecordAspect(Entity entity, @NotNull RecordAspectDef def, @NotNull R record)
+    public RecordAspect(Entity entity, @NotNull RecordAspectDef def, @NotNull R rec)
     {
         this.entity = entity;
         this.def = def;
-        this.record = record;
+        this.record = rec;
     }
 
     /**
@@ -156,7 +156,7 @@ public class RecordAspect<R extends Record> implements Aspect
      * 
      * @return the record instance wrapped by this aspect
      */
-    public R record()
+    public R record() // NOSONAR
     {
         return record;
     }

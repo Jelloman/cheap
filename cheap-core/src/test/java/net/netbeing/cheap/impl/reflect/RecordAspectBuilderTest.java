@@ -17,6 +17,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@SuppressWarnings("DataFlowIssue")
 class RecordAspectBuilderTest
 {
     private RecordAspectBuilder<TestRecord> builder;
@@ -71,16 +72,9 @@ class RecordAspectBuilderTest
     @Test
     void constructor_NonRecordClass_ThrowsException()
     {
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-            try {
-                @SuppressWarnings("unchecked")
-                Class<? extends Record> fakeRecordClass = (Class<? extends Record>) (Class<?>) NotARecord.class;
-                new RecordAspectBuilder<>(fakeRecordClass);
-            } catch (ClassCastException e) {
-                // This shouldn't happen at runtime, but if it does, re-throw as IllegalArgumentException
-                throw new IllegalArgumentException("Class is not a record class", e);
-            }
-        });
+        @SuppressWarnings("unchecked")
+        Class<? extends Record> fakeRecordClass = (Class<? extends Record>) (Class<?>) NotARecord.class;
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> new RecordAspectBuilder<>(fakeRecordClass) );
 
         assertTrue(exception.getMessage().contains("is not a record class"));
     }
@@ -196,8 +190,8 @@ class RecordAspectBuilderTest
     @Test
     void build_NoEntity_ThrowsException()
     {
-        IllegalStateException exception = assertThrows(IllegalStateException.class, () ->
-            builder.property("name", "test").build());
+        builder.property("name", "test");
+        IllegalStateException exception = assertThrows(IllegalStateException.class, builder::build);
 
         assertEquals("Entity must be set before building aspect", exception.getMessage());
     }
@@ -417,7 +411,7 @@ class RecordAspectBuilderTest
         assertEquals("Fallback Test", result.readObj("name"));
         // Should have fallen back to creating a new definition for TestRecord.class
         assertNotSame(genericDef, result.def());
-        assertTrue(result.def() instanceof RecordAspectDef);
+        assertInstanceOf(RecordAspectDef.class, result.def());
         // Verify it's using TestRecord definition, not SimpleRecord definition
         assertEquals(TestRecord.class.getCanonicalName(), result.def().name());
     }
@@ -441,11 +435,11 @@ class RecordAspectBuilderTest
         assertInstanceOf(TestRecord.class, result.record());
 
         // Verify the underlying record was properly created
-        TestRecord record = result.record();
-        assertEquals("Test", record.name());
-        assertEquals(35, record.age());
-        assertEquals(true, record.active());
-        assertEquals(50000.0, record.salary());
+        TestRecord rec = result.record();
+        assertEquals("Test", rec.name());
+        assertEquals(35, rec.age());
+        assertTrue(rec.active());
+        assertEquals(50000.0, rec.salary());
     }
 
     @Test
@@ -463,17 +457,17 @@ class RecordAspectBuilderTest
         RecordAspect<TestRecord> recordAspect = (RecordAspect<TestRecord>) result;
 
         // Records are immutable by nature
-        TestRecord record = recordAspect.record();
-        assertEquals("Initial", record.name());
-        assertEquals(25, record.age());
+        TestRecord rec = recordAspect.record();
+        assertEquals("Initial", rec.name());
+        assertEquals(25, rec.age());
 
         // The aspect should throw on write attempts (records don't have setters)
         assertThrows(UnsupportedOperationException.class, () -> result.unsafeWrite("name", "Modified"));
 
         // The record values should remain unchanged
         assertEquals("Initial", result.readObj("name"));
-        assertEquals("Initial", record.name());
-        assertEquals(25, record.age());
+        assertEquals("Initial", rec.name());
+        assertEquals(25, rec.age());
     }
 
     @Test

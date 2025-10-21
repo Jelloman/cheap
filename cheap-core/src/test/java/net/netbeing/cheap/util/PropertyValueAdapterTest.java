@@ -1,6 +1,5 @@
 package net.netbeing.cheap.util;
 
-import com.google.common.collect.ImmutableList;
 import net.netbeing.cheap.impl.basic.PropertyDefImpl;
 import net.netbeing.cheap.model.PropertyDef;
 import net.netbeing.cheap.model.PropertyType;
@@ -98,7 +97,8 @@ class PropertyValueAdapterTest
     @Test
     void testCoerceToBoolean_invalidInput()
     {
-        assertThrows(IllegalArgumentException.class, () -> adapter.coerceToBoolean(UUID.randomUUID()));
+        UUID id = UUID.randomUUID();
+        assertThrows(IllegalArgumentException.class, () -> adapter.coerceToBoolean(id));
     }
 
     // Test String coercion

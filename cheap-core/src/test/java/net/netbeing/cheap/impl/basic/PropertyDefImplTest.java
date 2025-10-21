@@ -27,19 +27,33 @@ class PropertyDefImplTest
     @Test
     void constructor_WithNullType_ThrowsNullPointerException()
     {
-        assertThrows(NullPointerException.class, () -> new PropertyDefBuilder().setName("testProp").setType(null).build());
+        PropertyDefBuilder builder = new PropertyDefBuilder();
+        builder.setName("testProp");
+        builder.setType(null);
+        assertThrows(NullPointerException.class, builder::build);
     }
 
     @Test
     void constructor_WithEmptyName_ThrowsIllegalArgumentException()
     {
-        assertThrows(IllegalArgumentException.class, () -> new PropertyDefBuilder().setName("").setType(PropertyType.String).build());
+        PropertyDefBuilder builder = new PropertyDefBuilder();
+        builder.setName("");
+        builder.setType(PropertyType.String);
+        assertThrows(IllegalArgumentException.class, builder::build);
     }
 
     @Test
     void constructor_WithAllParameters_CreatesProperty()
     {
-        PropertyDefImpl propDef = new PropertyDefBuilder().setName("testProp").setType(PropertyType.Integer).setIsReadable(true).setIsWritable(false).setIsNullable(false).setIsRemovable(true).setIsMultivalued(true).build();
+        PropertyDefImpl propDef = new PropertyDefBuilder()
+            .setName("testProp")
+            .setType(PropertyType.Integer)
+            .setIsReadable(true)
+            .setIsWritable(false)
+            .setIsNullable(false)
+            .setIsRemovable(true)
+            .setIsMultivalued(true)
+            .build();
 
         assertEquals("testProp", propDef.name());
         assertEquals(PropertyType.Integer, propDef.type());

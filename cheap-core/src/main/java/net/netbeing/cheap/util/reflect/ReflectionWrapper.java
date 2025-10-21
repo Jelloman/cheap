@@ -16,6 +16,8 @@
 
 package net.netbeing.cheap.util.reflect;
 
+import net.netbeing.cheap.util.CheapException;
+
 import java.lang.invoke.CallSite;
 import java.lang.invoke.LambdaMetafactory;
 import java.lang.invoke.MethodHandle;
@@ -76,14 +78,15 @@ public final class ReflectionWrapper
      * 
      * @param <T> the return type of the operation
      */
-    public interface ThrowingGetter<T> {
+    public interface ThrowingGetter<T>
+    {
         /**
          * Performs an operation that may throw any exception.
          * 
          * @return the result of the operation
          * @throws Throwable if the operation fails
          */
-        T get() throws Throwable;
+        T get() throws Throwable; //NOSONAR
     }
 
     // Static initialization: build the signature mapping for all GenericGetterSetter methods
@@ -113,7 +116,7 @@ public final class ReflectionWrapper
         try {
             return getter.get();
         } catch (Throwable t) {
-            throw new RuntimeException(t);
+            throw new CheapException(t);
         }
     }
 
@@ -141,7 +144,7 @@ public final class ReflectionWrapper
         try {
             return getNoCheckedExceptions(() -> (F) createCallSite(method).getTarget().invoke());
         } catch (Throwable throwable) {
-            throw new RuntimeException(throwable);
+            throw new CheapException(throwable);
         }
     }
 
@@ -156,8 +159,7 @@ public final class ReflectionWrapper
      * @return a call site that can generate lambda implementations
      * @throws Exception if method handle creation or lambda metafactory fails
      */
-    private static CallSite createCallSite(Method method)
-        throws Exception
+    private static CallSite createCallSite(Method method) throws Exception // NOSONAR - this needs to be a generic Exception
     {
         MethodHandle methodHandle = lookup.unreflect(method);
         MethodDef def = getDef(method);
@@ -176,11 +178,12 @@ public final class ReflectionWrapper
      * @return the method definition for the matching wrapper interface method
      * @throws RuntimeException if no matching signature is found in the wrapper interface
      */
-    private static MethodDef getDef(Method method) {
+    private static MethodDef getDef(Method method)
+    {
         GetterSetterSignature signature = GetterSetterSignature.from(method);
         MethodDef def = genericMethods.get(signature);
         if (def == null) {
-            throw new RuntimeException("No generic form found for method " + method.getName() + ".");
+            throw new CheapException("No generic form found for method " + method.getName() + ".");
         }
         return def;
     }

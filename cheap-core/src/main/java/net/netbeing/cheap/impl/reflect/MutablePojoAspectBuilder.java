@@ -21,6 +21,7 @@ import net.netbeing.cheap.model.AspectBuilder;
 import net.netbeing.cheap.model.AspectDef;
 import net.netbeing.cheap.model.Entity;
 import net.netbeing.cheap.model.Property;
+import net.netbeing.cheap.util.CheapException;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
@@ -158,7 +159,7 @@ public class MutablePojoAspectBuilder<P> implements AspectBuilder
         try {
             pojoInstance = pojoClass.getDeclaredConstructor().newInstance();
         } catch (Exception e) {
-            throw new RuntimeException("Failed to create instance of " + pojoClass.getName() +
+            throw new CheapException("Failed to create instance of " + pojoClass.getName() +
                 ". Ensure the class has a public no-argument constructor.", e);
         }
 

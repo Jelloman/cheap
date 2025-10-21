@@ -42,13 +42,13 @@ dependencies {
 
     testImplementation(platform("org.junit:junit-bom:5.10.0"))
     testImplementation(libs.junit.jupiter)
-    testRuntimeOnly(libs.junit.platform.launcher)
     testImplementation(libs.mariaDB4j)
     testImplementation(libs.embedded.postgres)
     testImplementation(libs.flyway)
     testImplementation(libs.flyway.pg)
     testImplementation(project(":cheap-json"))
     testImplementation(libs.guava)
+    testRuntimeOnly(libs.junit.platform.launcher)
 }
 
 // Apply a specific Java toolchain to ease working on different environments.

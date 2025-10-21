@@ -31,8 +31,6 @@ class MutablePojoAspectBuilderTest
         private boolean active;
         private Double salary;
 
-        public TestPojo() {} // Required no-arg constructor
-
         public String getName() { return name; }
         public void setName(String name) { this.name = name; }
 
@@ -194,8 +192,9 @@ class MutablePojoAspectBuilderTest
     @Test
     void build_NoEntity_ThrowsException()
     {
-        IllegalStateException exception = assertThrows(IllegalStateException.class, () ->
-            builder.property("name", "test").build());
+        builder.property("name", "test");
+
+        IllegalStateException exception = assertThrows(IllegalStateException.class, () -> builder.build());
 
         assertEquals("Entity must be set before building aspect", exception.getMessage());
     }

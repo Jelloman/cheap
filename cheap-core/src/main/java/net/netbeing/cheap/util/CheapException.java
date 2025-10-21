@@ -18,22 +18,23 @@ package net.netbeing.cheap.util;
 
 public class CheapException extends RuntimeException
 {
+    @SuppressWarnings({"unused"})
     public CheapException(String message)
     {
         super(message);
     }
 
-    public CheapException(Exception cause)
+    public CheapException(Throwable cause)
     {
         super(cause);
     }
 
-    public CheapException(String message, Exception cause)
+    public CheapException(String message, Throwable cause)
     {
         super(message, cause);
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked", "unused"})
     public static <T extends Throwable> void sneakyThrow(Throwable t) throws T
     {
         throw (T) t;

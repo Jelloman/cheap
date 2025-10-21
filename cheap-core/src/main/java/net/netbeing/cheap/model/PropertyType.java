@@ -162,6 +162,7 @@ public enum PropertyType
         return LOOKUP.get(typeCode.toUpperCase());
     }
 
+    @Override
     public String toString()
     {
         return typeCode;

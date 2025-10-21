@@ -16,7 +16,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class MutablePojoAspectTest
+class MutablePojoAspectTest
 {
     @Data @AllArgsConstructor
     public static class TestClass
@@ -55,12 +55,6 @@ public class MutablePojoAspectTest
         pojo1 = null;
         pojo2 = null;
         mutablePojoAspect = null;
-    }
-
-    @Test
-    void construct()
-    {
-        mutablePojoAspect = new MutablePojoAspect<>(testEntity, def, pojo1);
     }
 
     @Test

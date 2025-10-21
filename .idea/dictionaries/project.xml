@@ -25,6 +25,7 @@
       <w>hierarchydir</w>
       <w>lseg</w>
       <w>macaddr</w>
+      <w>metafactory</w>
       <w>nokey</w>
       <w>nosonar</w>
       <w>numrange</w>
