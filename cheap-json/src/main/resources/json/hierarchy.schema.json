@@ -33,7 +33,7 @@
           "contents": {
             "type": "object",
             "additionalProperties": {
-              "$ref": "aspect.schema.json"
+              "$ref": "./aspect.schema.json"
             },
             "description": "Map of entity UUID to aspect instance for AspectMap hierarchy"
           }

@@ -23,14 +23,14 @@
     "hierarchies": {
       "type": "object",
       "additionalProperties": {
-        "$ref": "hierarchy.schema.json"
+        "$ref": "./hierarchy.schema.json"
       },
       "description": "Directory of hierarchies contained within this catalog, keyed by hierarchy name"
     },
     "aspectDefs": {
       "type": "object",
       "additionalProperties": {
-        "$ref": "aspectdef.schema.json"
+        "$ref": "./aspectdef.schema.json"
       },
       "description": "All aspect definitions in this catalog, keyed by aspect definition name"
     }

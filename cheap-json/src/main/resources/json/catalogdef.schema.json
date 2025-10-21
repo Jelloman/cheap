@@ -9,13 +9,13 @@
       "description": "Directory of aspect definitions that are typically found in catalogs with this definition",
       "type": "object",
       "additionalProperties": {
-        "$ref": "aspectdef.schema.json"
+        "$ref": "./aspectdef.schema.json"
       }
     },
     "hierarchyDefs": {
       "type": "array",
       "items": {
-        "$ref": "hierarchydef.schema.json"
+        "$ref": "./hierarchydef.schema.json"
       },
       "description": "Collection of hierarchy definitions that are typically found in catalogs with this definition"
     }

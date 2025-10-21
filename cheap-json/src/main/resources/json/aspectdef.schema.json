@@ -17,7 +17,7 @@
     "propertyDefs": {
       "type": "array",
       "items": {
-        "$ref": "propertydef.schema.json"
+        "$ref": "./propertydef.schema.json"
       },
       "description": "All property definitions that belong to this aspect"
     },

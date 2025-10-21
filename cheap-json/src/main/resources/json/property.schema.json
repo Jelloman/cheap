@@ -6,7 +6,7 @@
   "type": "object",
   "properties": {
     "def": {
-      "$ref": "propertydef.schema.json",
+      "$ref": "./propertydef.schema.json",
       "description": "The property definition that describes this property's type and constraints"
     },
     "value": {
