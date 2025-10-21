@@ -11,8 +11,8 @@
     },
     "type": {
       "type": "string",
-      "enum": ["hierarchy_dir", "aspect_def_dir", "entity_list", "entity_set", "entity_dir", "entity_tree", "aspect_map"],
-      "description": "The type of hierarchy this definition describes"
+      "enum": ["AM", "EL", "ES", "ED", "ET"],
+      "description": "The type of hierarchy: AM=AspectMap, EL=EntityList, ES=EntitySet, ED=EntityDirectory, ET=EntityTree"
     },
     "isModifiable": {
       "type": "boolean",

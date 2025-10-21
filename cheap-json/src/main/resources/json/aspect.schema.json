@@ -16,9 +16,6 @@
         "type": "number"
       },
       {
-        "type": "integer"
-      },
-      {
         "type": "string"
       },
       {
@@ -33,9 +30,6 @@
             },
             {
               "type": "number"
-            },
-            {
-              "type": "integer"
             },
             {
               "type": "string"
