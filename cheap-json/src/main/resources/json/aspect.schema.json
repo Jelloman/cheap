@@ -2,20 +2,8 @@
   "$id": "https://netbeing.net/cheap/aspect.schema.json",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Aspect",
-  "description": "An aspect instance with arbitrary properties but no sub-objects",
+  "description": "An aspect instance with arbitrary properties but no sub-objects. Properties can be simple values or arrays of simple values.",
   "type": "object",
-  "properties": {
-    "aspectDefName": {
-      "type": "string",
-      "description": "The name of the aspect definition this aspect conforms to"
-    },
-    "entityId": {
-      "type": "string",
-      "format": "uuid",
-      "description": "The UUID of the entity this aspect belongs to"
-    }
-  },
-  "required": ["aspectDefName", "entityId"],
   "additionalProperties": {
     "oneOf": [
       {
@@ -26,9 +14,6 @@
       },
       {
         "type": "number"
-      },
-      {
-        "type": "integer"
       },
       {
         "type": "string"
@@ -45,9 +30,6 @@
             },
             {
               "type": "number"
-            },
-            {
-              "type": "integer"
             },
             {
               "type": "string"

@@ -4,20 +4,6 @@
   "title": "Catalog",
   "description": "A complete Catalog in the Cheap data model, serving as the top-level container for hierarchies and aspects",
   "type": "object",
-  "$defs": {
-    "catalogRef": {
-      "type": "string",
-      "anyOf": [
-        {
-          "format": "uuid"
-        },
-        {
-          "format": "uri"
-        }
-      ],
-      "minLength": 1
-    }
-  },
   "properties": {
     "globalId": {
       "type": "string",
@@ -25,53 +11,29 @@
       "description": "The globally unique identifier for this catalog entity"
     },
     "uri": {
-      "type": "string",
+      "type": ["string", "null"],
       "format": "uri",
       "description": "The URI for this catalog entity; typically a URL"
     },
     "species": {
       "type": "string",
-      "enum": ["source","sink","mirror","cache","clone","fork"],
+      "enum": ["source", "sink", "mirror", "cache", "clone", "fork"],
       "description": "The species of this catalog"
-    },
-    "strict": {
-      "type": "boolean",
-      "default": false,
-      "description": "Whether this catalog allows new hierarchies and aspect defs to be added"
-    },
-    "def": {
-      "$ref": "catalogdef.schema.json",
-      "description": "The catalog definition that describes this catalog's characteristics"
-    },
-    "upstream": {
-      "$ref": "#/$defs/catalogRef",
-      "description": "The upstream catalog that this catalog derives its data from (null for root catalogs)"
     },
     "hierarchies": {
       "type": "object",
       "additionalProperties": {
-        "$ref": "hierarchy.schema.json"
+        "$ref": "./hierarchy.schema.json"
       },
       "description": "Directory of hierarchies contained within this catalog, keyed by hierarchy name"
     },
     "aspectDefs": {
       "type": "object",
       "additionalProperties": {
-        "$ref": "aspectdef.schema.json"
+        "$ref": "./aspectdef.schema.json"
       },
       "description": "All aspect definitions in this catalog, keyed by aspect definition name"
-    },
-    "aspects": {
-      "type": "object",
-      "description": "Aspect collections organized by aspect definition name",
-      "additionalProperties": {
-        "type": "object",
-        "description": "Map of entity UUID to aspect instance for a specific aspect definition",
-        "additionalProperties": {
-          "$ref": "aspect.schema.json"
-        }
-      }
     }
   },
-  "required": ["globalId", "def", "species", "strict", "hierarchies", "aspectDefs", "aspects"]
+  "required": ["globalId", "species", "hierarchies", "aspectDefs"]
 }

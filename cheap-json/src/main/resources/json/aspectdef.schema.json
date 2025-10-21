@@ -9,10 +9,15 @@
       "type": "string",
       "description": "The unique name identifier for this aspect definition"
     },
+    "globalId": {
+      "type": "string",
+      "format": "uuid",
+      "description": "The globally unique identifier for this aspect definition"
+    },
     "propertyDefs": {
       "type": "array",
       "items": {
-        "$ref": "propertydef.schema.json"
+        "$ref": "./propertydef.schema.json"
       },
       "description": "All property definitions that belong to this aspect"
     },
@@ -37,5 +42,5 @@
       "description": "Whether properties can be dynamically removed from aspects of this type"
     }
   },
-  "required": ["name", "propertyDefs"]
+  "required": ["name", "globalId", "propertyDefs"]
 }

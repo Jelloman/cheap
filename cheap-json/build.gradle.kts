@@ -44,6 +44,7 @@ dependencies {
     compileOnly(libs.jetbrains.annotations)
 
     testImplementation(libs.junit.jupiter)
+    testImplementation(libs.json.schema.validator)
     testRuntimeOnly(libs.junit.platform.launcher)
 }
 
