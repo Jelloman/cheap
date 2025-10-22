@@ -6,6 +6,36 @@ spring:
   application:
     name: cheap-rest
 
+# Actuator configuration
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when-authorized
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+# OpenAPI/Swagger configuration
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operationsSorter: method
+    tagsSorter: alpha
+  info:
+    title: Cheap REST API
+    description: REST API for the Cheap data caching system
+    version: 0.1
+    contact:
+      name: Cheap Project
+      url: https://github.com/cheap
+
 cheap:
   pagination:
     default-page-size: 20

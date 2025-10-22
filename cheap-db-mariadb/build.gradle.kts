@@ -39,7 +39,7 @@ dependencies {
     compileOnly(libs.jetbrains.annotations)
 
     testImplementation(libs.junit.jupiter)
-    testImplementation(platform("org.junit:junit-bom:5.10.0"))
+    //testImplementation(platform("org.junit:junit-bom:5.10.0"))
     testImplementation(libs.mariaDB4j)
     testImplementation(project(":cheap-json"))
     testImplementation(libs.guava)

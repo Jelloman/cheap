@@ -40,7 +40,7 @@ dependencies {
 
     compileOnly(libs.jetbrains.annotations)
 
-    testImplementation(platform("org.junit:junit-bom:5.10.0"))
+    //testImplementation(platform("org.junit:junit-bom:5.10.0"))
     testImplementation(libs.junit.jupiter)
     testImplementation(libs.mariaDB4j)
     testImplementation(libs.embedded.postgres)

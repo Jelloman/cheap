@@ -45,9 +45,13 @@ dependencies {
     implementation(project(":cheap-db-mariadb"))
 
     // Spring Boot starters
-    implementation("org.springframework.boot:spring-boot-starter-web")
-    implementation("org.springframework.boot:spring-boot-starter-jdbc")
-    implementation("org.springframework.boot:spring-boot-starter-validation")
+    implementation(libs.spring.boot.starter.web)
+    implementation(libs.spring.boot.starter.jdbc)
+    implementation(libs.spring.boot.starter.validation)
+    implementation(libs.spring.boot.starter.actuator)
+
+    // OpenAPI/Swagger documentation
+    implementation(libs.openapi.starter.ui)
 
     // Logging
     implementation(libs.slf4j)
@@ -61,11 +65,25 @@ dependencies {
     compileOnly(libs.jetbrains.annotations)
 
     // Testing
-    testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testImplementation(libs.spring.boot.starter.test)
     testImplementation(libs.junit.jupiter)
+    testImplementation(libs.sqlite.jdbc) // For SQLite-based service tests
     testImplementation(libs.embedded.postgres)
     testImplementation(libs.mariaDB4j)
     testRuntimeOnly(libs.junit.platform.launcher)
+    testImplementation(libs.junit.platform.reporting)
+
+    constraints {
+        implementation(libs.json.smart) {
+            because("CVE-2024-57699")
+        }
+        implementation(libs.commons.lang3) {
+            because("CVE-2025-48924")
+        }
+        implementation(libs.tomcat.embed.core) {
+            because("CVE-2025-41242")
+        }
+    }
 }
 
 // Apply a specific Java toolchain to ease working on different environments.
@@ -84,6 +102,8 @@ idea {
 
 tasks.named<Test>("test") {
     useJUnitPlatform()
+    // Disable module path for tests to avoid JUnit Platform classpath issues
+    //modularity.inferModulePath.set(false)
 }
 
 gradle.projectsEvaluated {
