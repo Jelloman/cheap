@@ -42,7 +42,10 @@ class MariaDbTestDb
         this.dbName = dbName;
 
         // Create embedded MariaDB instance
-        dbConfig = DBConfigurationBuilder.newBuilder().setPort(0).build();
+        dbConfig = DBConfigurationBuilder.newBuilder()
+            .setPort(0)
+            .addArg("--innodb-lock-wait-timeout=300")  // Increase from default 50s to 300s
+            .build();
 
         mariaDB = DB.newEmbeddedDB(dbConfig);
         mariaDB.start();
