@@ -19,7 +19,7 @@ class EntityTreeHierarchyImplTest
     private Entity childEntity1;
     private Entity childEntity2;
     private Entity leafEntity;
-    private EntityTreeHierarchyImpl entityTree;
+    private EntityTreeHierarchy entityTree;
 
     @BeforeEach
     void setUp()
@@ -29,13 +29,15 @@ class EntityTreeHierarchyImplTest
         childEntity1 = new EntityImpl();
         childEntity2 = new EntityImpl();
         leafEntity = new EntityImpl();
-        entityTree = new EntityTreeHierarchyImpl(catalog, "testEntityTree", rootEntity);
+        entityTree = catalog.createEntityTree("testEntityTree", 0L);
+        entityTree.root().setValue(rootEntity);
     }
 
     @Test
     void constructor_ValidParameters_CreatesTreeWithRoot()
     {
-        EntityTreeHierarchyImpl tree = new EntityTreeHierarchyImpl(catalog, "testEntityTree", rootEntity);
+        EntityTreeHierarchyImpl tree = (EntityTreeHierarchyImpl) catalog.createEntityTree("testEntityTree", 0L);
+        tree.root().setValue(rootEntity);
 
         assertEquals("testEntityTree", tree.name());
         assertEquals(HierarchyType.ENTITY_TREE, tree.type());
@@ -50,7 +52,7 @@ class EntityTreeHierarchyImplTest
     @Test
     void constructor_NullRootEntity_AcceptsNull()
     {
-        EntityTreeHierarchyImpl tree = new EntityTreeHierarchyImpl(catalog, "testEntityTree");
+        EntityTreeHierarchyImpl tree = (EntityTreeHierarchyImpl) catalog.createEntityTree("testEntityTree", 0L);
 
         assertEquals("testEntityTree", tree.name());
         assertEquals(HierarchyType.ENTITY_TREE, tree.type());

@@ -16,7 +16,7 @@
 
 package net.netbeing.cheap.db;
 
-import net.netbeing.cheap.util.CheapFactory;
+import net.netbeing.cheap.impl.basic.CheapFactory;
 import net.netbeing.cheap.util.PropertyValueAdapter;
 import org.jetbrains.annotations.NotNull;
 

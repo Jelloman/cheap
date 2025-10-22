@@ -14,10 +14,10 @@
  *  limitations under the License.
  */
 
-package net.netbeing.cheap.util;
+package net.netbeing.cheap.impl.basic;
 
-import net.netbeing.cheap.impl.basic.*;
 import net.netbeing.cheap.model.*;
+import net.netbeing.cheap.util.PropertyValueAdapter;
 import org.jetbrains.annotations.NotNull;
 
 import java.net.URI;
@@ -40,6 +40,7 @@ import java.util.UUID;
  * This factory simplifies object creation and provides a clean API for
  * instantiating Cheap model objects without directly depending on implementation classes.
  */
+@SuppressWarnings("unused")
 public class CheapFactory
 {
     /**
@@ -536,6 +537,17 @@ public class CheapFactory
     }
 
     /**
+     * Creates a new entity directory hierarchy in the current catalog.
+     *
+     * @param name the name of this hierarchy in the catalog
+     * @return a new EntityDirectoryHierarchy instance
+     */
+    public @NotNull EntityDirectoryHierarchy createEntityDirectoryHierarchy(@NotNull String name, long version)
+    {
+        return createEntityDirectoryHierarchy(catalog, name, version);
+    }
+
+    /**
      * Creates a new entity directory hierarchy.
      *
      * @param catalog the owning catalog
@@ -642,6 +654,17 @@ public class CheapFactory
     }
 
     /**
+     * Creates a new entity set hierarchy in the current catalog.
+     *
+     * @param name the name of this hierarchy in the catalog
+     * @return a new EntitySetHierarchy instance
+     */
+    public @NotNull EntitySetHierarchy createEntitySetHierarchy(@NotNull String name, long version)
+    {
+        return createEntitySetHierarchy(catalog, name, version);
+    }
+
+    /**
      * Creates a new entity set hierarchy.
      *
      * @param name the name of this hierarchy in the catalog
@@ -699,13 +722,37 @@ public class CheapFactory
      * Creates a new entity tree hierarchy in the current catalog.
      *
      * @param name     the name of this hierarchy in the catalog
+     * @return a new EntityTreeHierarchy instance
+     */
+    public @NotNull EntityTreeHierarchy createEntityTreeHierarchy(@NotNull String name, long version)
+    {
+        return createEntityTreeHierarchy(catalog, name, null, version);
+    }
+
+    /**
+     * Creates a new entity tree hierarchy in the current catalog.
+     *
+     * @param name     the name of this hierarchy in the catalog
      * @param rootNode the node to use as the root of the tree
      * @return a new EntityTreeHierarchy instance
      */
     public @NotNull EntityTreeHierarchy createEntityTreeHierarchy(@NotNull String name,
                                                                   @NotNull EntityTreeHierarchy.Node rootNode)
     {
-        return createEntityTreeHierarchy(catalog, name, null, 0L);
+        return createEntityTreeHierarchy(catalog, name, rootNode, 0L);
+    }
+
+    /**
+     * Creates a new entity tree hierarchy in the current catalog.
+     *
+     * @param name     the name of this hierarchy in the catalog
+     * @param rootNode the node to use as the root of the tree
+     * @return a new EntityTreeHierarchy instance
+     */
+    public @NotNull EntityTreeHierarchy createEntityTreeHierarchy(@NotNull String name,
+                                                                  @NotNull EntityTreeHierarchy.Node rootNode, long version)
+    {
+        return createEntityTreeHierarchy(catalog, name, rootNode, version);
     }
 
     /**
@@ -882,6 +929,18 @@ public class CheapFactory
     }
 
     // ===== Property Factory Methods =====
+
+    /**
+     * Creates a new property definition with default settings.
+     *
+     * @param name the name of the property
+     * @param type the data type of the property
+     * @return a new PropertyDef instance
+     */
+    public @NotNull PropertyDefBuilder createPropertyDefBuilder()
+    {
+        return new PropertyDefBuilder();
+    }
 
     /**
      * Creates a new property definition.

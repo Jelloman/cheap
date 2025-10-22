@@ -46,6 +46,7 @@ import java.util.stream.Stream;
  * @see Entity
  * @see HierarchyDef
  */
+@SuppressWarnings("unused")
 public class EntitySetHierarchyImpl implements EntitySetHierarchy
 {
     /** The catalog containing this hierarchy. */
@@ -62,60 +63,60 @@ public class EntitySetHierarchyImpl implements EntitySetHierarchy
 
     /**
      * Creates a new EntitySetHierarchyImpl with the specified hierarchy definition.
+     * Package-private for use by CatalogImpl factory methods.
      *
      * @param catalog the catalog containing this hierarchy
      * @param name the name of this hierarchy in the catalog
      */
-    public EntitySetHierarchyImpl(@NotNull Catalog catalog, @NotNull String name)
+    protected EntitySetHierarchyImpl(@NotNull Catalog catalog, @NotNull String name)
     {
         this(catalog, name, 0L);
     }
 
     /**
      * Creates a new EntitySetHierarchyImpl with the specified hierarchy definition and
-     * initial capacity.
+     * initial capacity. Public for use by CheapFactory.
      *
      * @param catalog the catalog containing this hierarchy
      * @param name the name of this hierarchy in the catalog
      * @param initialCapacity initial capacity of set
      */
-    public EntitySetHierarchyImpl(@NotNull Catalog catalog, @NotNull String name, int initialCapacity)
+    protected EntitySetHierarchyImpl(@NotNull Catalog catalog, @NotNull String name, int initialCapacity)
     {
         this(catalog, name, initialCapacity, 0L);
     }
 
     /**
      * Creates a new EntitySetHierarchyImpl with the specified hierarchy definition and version.
+     * Public for use by CheapFactory.
      *
      * @param catalog the catalog containing this hierarchy
      * @param name the name of this hierarchy in the catalog
      * @param version the version number of this hierarchy
      */
-    public EntitySetHierarchyImpl(@NotNull Catalog catalog, @NotNull String name, long version)
+    protected EntitySetHierarchyImpl(@NotNull Catalog catalog, @NotNull String name, long version)
     {
         this.catalog = catalog;
         this.name = name;
         this.version = version;
         this.entities = new LinkedHashSet<>();
-        catalog.addHierarchy(this);
     }
 
     /**
      * Creates a new EntitySetHierarchyImpl with the specified hierarchy definition,
-     * initial capacity, and version.
+     * initial capacity, and version. Public for use by CheapFactory.
      *
      * @param catalog the catalog containing this hierarchy
      * @param name the name of this hierarchy in the catalog
      * @param initialCapacity initial capacity of set
      * @param version the version number of this hierarchy
      */
-    public EntitySetHierarchyImpl(@NotNull Catalog catalog, @NotNull String name, int initialCapacity, long version)
+    protected EntitySetHierarchyImpl(@NotNull Catalog catalog, @NotNull String name, int initialCapacity, long version)
     {
         this.catalog = catalog;
         this.name = name;
         this.version = version;
         this.entities = LinkedHashSet.newLinkedHashSet(initialCapacity);
-        catalog.addHierarchy(this);
     }
 
     /**
@@ -280,8 +281,7 @@ public class EntitySetHierarchyImpl implements EntitySetHierarchy
     public boolean equals(Object o)
     {
         if (this == o) return true;
-        if (!(o instanceof EntitySetHierarchyImpl)) return false;
-        EntitySetHierarchyImpl that = (EntitySetHierarchyImpl) o;
+        if (!(o instanceof EntitySetHierarchyImpl that)) return false;
         return entities.equals(that.entities);
     }
 

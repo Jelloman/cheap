@@ -24,7 +24,7 @@ class EntityDirectoryHierarchyImplTest
     void setUp()
     {
         catalog = new CatalogImpl();
-        entityDirectory = new EntityDirectoryHierarchyImpl(catalog, "testEntityDirectory");
+        entityDirectory = (EntityDirectoryHierarchyImpl) catalog.createEntityDirectory("testEntityDirectory", 0L);
 
         entity1 = new EntityImpl();
         entity2 = new EntityImpl();
@@ -34,7 +34,7 @@ class EntityDirectoryHierarchyImplTest
     @Test
     void constructor_ValidHierarchyDef_CreatesEmptyDirectory()
     {
-        EntityDirectoryHierarchyImpl directory = new EntityDirectoryHierarchyImpl(catalog, "testEntityDirectory");
+        EntityDirectoryHierarchyImpl directory = (EntityDirectoryHierarchyImpl) catalog.createEntityDirectory("testEntityDirectory", 0L);
 
         assertEquals("testEntityDirectory", directory.name());
         assertEquals(HierarchyType.ENTITY_DIR, directory.type());
@@ -262,8 +262,8 @@ class EntityDirectoryHierarchyImplTest
     @Test
     void hashCode_SameEntries_ProducesSameHashCode()
     {
-        EntityDirectoryHierarchyImpl dir1 = new EntityDirectoryHierarchyImpl(catalog, "testEntityDirectory");
-        EntityDirectoryHierarchyImpl dir2 = new EntityDirectoryHierarchyImpl(catalog, "testEntityDirectory");
+        EntityDirectoryHierarchyImpl dir1 = (EntityDirectoryHierarchyImpl) catalog.createEntityDirectory("testEntityDirectory", 0L);
+        EntityDirectoryHierarchyImpl dir2 = (EntityDirectoryHierarchyImpl) catalog.createEntityDirectory("testEntityDirectory", 0L);
 
         dir1.put("entity1", entity1);
         dir1.put("entity2", entity2);
@@ -277,8 +277,8 @@ class EntityDirectoryHierarchyImplTest
     @Test
     void hashCode_DifferentEntries_ProducesDifferentHashCode()
     {
-        EntityDirectoryHierarchyImpl dir1 = new EntityDirectoryHierarchyImpl(catalog, "testEntityDirectory");
-        EntityDirectoryHierarchyImpl dir2 = new EntityDirectoryHierarchyImpl(catalog, "testEntityDirectory");
+        EntityDirectoryHierarchyImpl dir1 = (EntityDirectoryHierarchyImpl) catalog.createEntityDirectory("testEntityDirectory", 0L);
+        EntityDirectoryHierarchyImpl dir2 = (EntityDirectoryHierarchyImpl) catalog.createEntityDirectory("testEntityDirectory", 0L);
 
         dir1.put("entity1", entity1);
 
@@ -290,8 +290,8 @@ class EntityDirectoryHierarchyImplTest
     @Test
     void equals_SameEntries_ReturnsTrue()
     {
-        EntityDirectoryHierarchyImpl dir1 = new EntityDirectoryHierarchyImpl(catalog, "testEntityDirectory");
-        EntityDirectoryHierarchyImpl dir2 = new EntityDirectoryHierarchyImpl(catalog, "testEntityDirectory");
+        EntityDirectoryHierarchyImpl dir1 = (EntityDirectoryHierarchyImpl) catalog.createEntityDirectory("testEntityDirectory", 0L);
+        EntityDirectoryHierarchyImpl dir2 = (EntityDirectoryHierarchyImpl) catalog.createEntityDirectory("testEntityDirectory", 0L);
 
         dir1.put("entity1", entity1);
         dir1.put("entity2", entity2);

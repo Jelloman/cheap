@@ -18,7 +18,7 @@ package net.netbeing.cheap.db.sqlite;
 
 import net.netbeing.cheap.db.AspectTableMapping;
 import net.netbeing.cheap.model.*;
-import net.netbeing.cheap.util.CheapFactory;
+import net.netbeing.cheap.impl.basic.CheapFactory;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

@@ -28,6 +28,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
@@ -45,6 +46,7 @@ import java.util.function.Function;
  * @see Entity
  * @see HierarchyDef
  */
+@SuppressWarnings("unused")
 public class EntityTreeHierarchyImpl implements EntityTreeHierarchy
 {
     /**
@@ -66,54 +68,44 @@ public class EntityTreeHierarchyImpl implements EntityTreeHierarchy
 
     /**
      * Creates a new EntityTreeHierarchyImpl with the specified hierarchy definition and a root with a null entity.
+     * Package-private for use by CatalogImpl factory methods.
      *
      * @param catalog the catalog containing this hierarchy
      * @param name    the name of this hierarchy in the catalog
      */
-    public EntityTreeHierarchyImpl(@NotNull Catalog catalog, @NotNull String name)
+    protected EntityTreeHierarchyImpl(@NotNull Catalog catalog, @NotNull String name)
     {
         this(catalog, name, new NodeImpl(null), 0L);
     }
 
     /**
-     * Creates a new EntityTreeHierarchyImpl with the specified hierarchy definition and root entity.
-     *
-     * @param catalog    the catalog containing this hierarchy
-     * @param name       the name of this hierarchy in the catalog
-     * @param rootEntity the entity to use as the root of the tree
-     */
-    public EntityTreeHierarchyImpl(@NotNull Catalog catalog, @NotNull String name, Entity rootEntity)
-    {
-        this(catalog, name, new NodeImpl(rootEntity), 0L);
-    }
-
-    /**
      * Creates a new EntityTreeHierarchyImpl with the specified hierarchy definition and root node.
+     * Public for use by CheapFactory.
      *
      * @param catalog  the catalog containing this hierarchy
      * @param name     the name of this hierarchy in the catalog
      * @param rootNode the node to use as the root of the tree
      */
-    public EntityTreeHierarchyImpl(@NotNull Catalog catalog, @NotNull String name, Node rootNode)
+    protected EntityTreeHierarchyImpl(@NotNull Catalog catalog, @NotNull String name, Node rootNode)
     {
         this(catalog, name, rootNode, 0L);
     }
 
     /**
      * Creates a new EntityTreeHierarchyImpl with the specified hierarchy definition, root node, and version.
+     * Public for use by CheapFactory.
      *
      * @param catalog  the catalog containing this hierarchy
      * @param name     the name of this hierarchy in the catalog
      * @param rootNode the node to use as the root of the tree
      * @param version  the version number of this hierarchy
      */
-    public EntityTreeHierarchyImpl(@NotNull Catalog catalog, @NotNull String name, Node rootNode, long version)
+    protected EntityTreeHierarchyImpl(@NotNull Catalog catalog, @NotNull String name, Node rootNode, long version)
     {
         this.catalog = catalog;
         this.name = name;
         this.version = version;
         this.root = rootNode;
-        catalog.addHierarchy(this);
     }
 
     /**
@@ -183,7 +175,7 @@ public class EntityTreeHierarchyImpl implements EntityTreeHierarchy
      * Implementation of a tree node that can have child nodes.
      * This node type uses composition with an internal map to provide string-to-node mappings.
      */
-    public static class NodeImpl implements Node
+    protected static class NodeImpl implements Node
     {
         /**
          * The parent node, or null for root nodes.
@@ -203,7 +195,7 @@ public class EntityTreeHierarchyImpl implements EntityTreeHierarchy
          *
          * @param value the entity value to store at this node
          */
-        public NodeImpl(Entity value)
+        protected NodeImpl(Entity value)
         {
             this(value, null);
         }
@@ -425,7 +417,7 @@ public class EntityTreeHierarchyImpl implements EntityTreeHierarchy
      * This node type implements the Map interface by extending AbstractMap and
      * providing an empty entry set to indicate no children are allowed.
      */
-    public static class LeafNodeImpl extends AbstractMap<String, Node> implements Node
+    protected static class LeafNodeImpl extends AbstractMap<String, Node> implements Node
     {
         /**
          * The parent node, or null for root leaf nodes.
@@ -441,7 +433,7 @@ public class EntityTreeHierarchyImpl implements EntityTreeHierarchy
          *
          * @param value the entity value to store at this leaf node
          */
-        public LeafNodeImpl(Entity value)
+        protected LeafNodeImpl(Entity value)
         {
             this(value, null);
         }
@@ -452,7 +444,7 @@ public class EntityTreeHierarchyImpl implements EntityTreeHierarchy
          * @param value  the entity value to store at this leaf node
          * @param parent the parent node, or null for root leaf nodes
          */
-        public LeafNodeImpl(Entity value, Node parent)
+        protected LeafNodeImpl(Entity value, Node parent)
         {
             this.value = value;
             this.parent = parent;
@@ -516,14 +508,14 @@ public class EntityTreeHierarchyImpl implements EntityTreeHierarchy
         public boolean equals(Object o)
         {
             if (this == o) return true;
-            if (!(o instanceof LeafNodeImpl)) return false;
-            return super.equals(o);
+            if (!(o instanceof LeafNodeImpl that)) return false;
+            return Objects.equals(value, that.value);
         }
 
         @Override
         public int hashCode()
         {
-            return super.hashCode();
+            return Objects.hashCode(value);
         }
     }
 }

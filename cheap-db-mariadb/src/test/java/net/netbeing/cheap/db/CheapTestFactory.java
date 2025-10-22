@@ -16,7 +16,7 @@
 
 package net.netbeing.cheap.db;
 
-import net.netbeing.cheap.util.CheapFactory;
+import net.netbeing.cheap.impl.basic.CheapFactory;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;

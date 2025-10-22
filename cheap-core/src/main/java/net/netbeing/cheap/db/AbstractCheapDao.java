@@ -17,7 +17,7 @@
 package net.netbeing.cheap.db;
 
 import net.netbeing.cheap.model.*;
-import net.netbeing.cheap.util.CheapFactory;
+import net.netbeing.cheap.impl.basic.CheapFactory;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -356,7 +356,8 @@ public abstract class AbstractCheapDao implements CheapDao
             }
             case ENTITY_TREE -> {
                 Entity rootEntity = factory.createEntity();
-                EntityTreeHierarchy hierarchy = factory.createEntityTreeHierarchy(catalog, hierarchyName, rootEntity);
+                EntityTreeHierarchy hierarchy = factory.createEntityTreeHierarchy(catalog, hierarchyName, null, 0L);
+                hierarchy.root().setValue(rootEntity);
                 loadEntityTreeContent(conn, hierarchy);
                 return hierarchy;
             }

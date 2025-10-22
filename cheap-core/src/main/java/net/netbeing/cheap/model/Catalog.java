@@ -16,7 +16,6 @@
 
 package net.netbeing.cheap.model;
 
-import net.netbeing.cheap.impl.basic.EntityTreeHierarchyImpl;
 import org.jetbrains.annotations.NotNull;
 
 import java.net.URI;
@@ -239,7 +238,7 @@ public interface Catalog extends Entity
      */
     default EntityTreeHierarchy createEntityTree(@NotNull String name, long version)
     {
-        return createEntityTree(name, new EntityTreeHierarchyImpl.NodeImpl(null), version);
+        return createEntityTree(name, null, version);
     }
 
     /**
@@ -252,7 +251,7 @@ public interface Catalog extends Entity
      * @param version the version number of this hierarchy
      * @return the newly created EntityTreeHierarchy
      */
-    EntityTreeHierarchy createEntityTree(@NotNull String name, @NotNull EntityTreeHierarchy.Node root, long version);
+    EntityTreeHierarchy createEntityTree(@NotNull String name, EntityTreeHierarchy.Node root, long version);
 
     /**
      * Creates a new AspectMapHierarchy for the specified AspectDef and adds it to this catalog.

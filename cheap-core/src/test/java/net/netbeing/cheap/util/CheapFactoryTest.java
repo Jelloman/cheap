@@ -2,6 +2,7 @@ package net.netbeing.cheap.util;
 
 import net.netbeing.cheap.impl.basic.CachingEntityMultiCatalogImpl;
 import net.netbeing.cheap.impl.basic.CachingEntityOneCatalogImpl;
+import net.netbeing.cheap.impl.basic.CheapFactory;
 import net.netbeing.cheap.impl.basic.LocalEntityMultiCatalogImpl;
 import net.netbeing.cheap.impl.basic.LocalEntityOneCatalogImpl;
 import net.netbeing.cheap.model.*;
@@ -194,7 +195,8 @@ class CheapFactoryTest
 
         // Test entity tree hierarchy
         Entity rootEntity = factory.createEntity();
-        EntityTreeHierarchy entityTree = factory.createEntityTreeHierarchy(catalog, "testEntityTree", rootEntity);
+        EntityTreeHierarchy entityTree = factory.createEntityTreeHierarchy(catalog, "testEntityTree", null, 0L);
+        entityTree.root().setValue(rootEntity);
         assertNotNull(entityTree);
         assertEquals("testEntityTree", entityTree.name());
         assertEquals(HierarchyType.ENTITY_TREE, entityTree.type());

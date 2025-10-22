@@ -26,7 +26,7 @@ class EntityListHierarchyImplTest
     void setUp()
     {
         catalog = new CatalogImpl();
-        entityList = new EntityListHierarchyImpl(catalog, "testEntityList");
+        entityList = (EntityListHierarchyImpl) catalog.createEntityList("testEntityList", 0L);
 
         entity1 = new EntityImpl();
         entity2 = new EntityImpl();
@@ -37,7 +37,7 @@ class EntityListHierarchyImplTest
     @Test
     void constructor_ValidHierarchyDef_CreatesEmptyList()
     {
-        EntityListHierarchyImpl list = new EntityListHierarchyImpl(catalog, "testEntityList");
+        EntityListHierarchyImpl list = (EntityListHierarchyImpl) catalog.createEntityList("testEntityList", 0L);
 
         assertEquals("testEntityList", list.name());
         assertEquals(HierarchyType.ENTITY_LIST, list.type());

@@ -27,7 +27,7 @@ import net.netbeing.cheap.model.EntityTreeHierarchy;
 import net.netbeing.cheap.model.Hierarchy;
 import net.netbeing.cheap.model.HierarchyDef;
 import net.netbeing.cheap.model.PropertyDef;
-import net.netbeing.cheap.util.CheapFactory;
+import net.netbeing.cheap.impl.basic.CheapFactory;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;

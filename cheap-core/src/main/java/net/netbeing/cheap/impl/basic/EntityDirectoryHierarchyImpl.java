@@ -44,6 +44,7 @@ import java.util.function.Function;
  * @see Entity
  * @see HierarchyDef
  */
+@SuppressWarnings("unused")
 public class EntityDirectoryHierarchyImpl implements EntityDirectoryHierarchy
 {
     /** The catalog containing this hierarchy. */
@@ -59,30 +60,35 @@ public class EntityDirectoryHierarchyImpl implements EntityDirectoryHierarchy
     private final Map<String, Entity> entities;
 
     /**
-     * Creates a new EntityDirectoryHierarchyImpl with the specified hierarchy definition.
-     *
-     * @param catalog the owning catalog
-     * @param name the name of this hierarchy in the catalog
-     */
-    public EntityDirectoryHierarchyImpl(@NotNull Catalog catalog, @NotNull String name)
-    {
-        this(catalog, name, 0L);
-    }
-
-    /**
      * Creates a new EntityDirectoryHierarchyImpl with the specified hierarchy definition and version.
+     * Public for use by CheapFactory.
      *
      * @param catalog the catalog containing this hierarchy
      * @param name the name of this hierarchy in the catalog
      * @param version the version number of this hierarchy
      */
-    public EntityDirectoryHierarchyImpl(@NotNull Catalog catalog, @NotNull String name, long version)
+    protected EntityDirectoryHierarchyImpl(@NotNull Catalog catalog, @NotNull String name, long version)
     {
         this.catalog = catalog;
         this.name = name;
         this.version = version;
         this.entities = new LinkedHashMap<>();
-        catalog.addHierarchy(this);
+    }
+
+    /**
+     * Creates a new EntityDirectoryHierarchyImpl with the specified hierarchy definition and version.
+     * Public for use by CheapFactory.
+     *
+     * @param catalog the catalog containing this hierarchy
+     * @param name the name of this hierarchy in the catalog
+     * @param version the version number of this hierarchy
+     */
+    protected EntityDirectoryHierarchyImpl(@NotNull Catalog catalog, @NotNull String name, long version, int initialCapacity)
+    {
+        this.catalog = catalog;
+        this.name = name;
+        this.version = version;
+        this.entities = LinkedHashMap.newLinkedHashMap(initialCapacity);
     }
 
     /**
@@ -272,8 +278,7 @@ public class EntityDirectoryHierarchyImpl implements EntityDirectoryHierarchy
     public boolean equals(Object o)
     {
         if (this == o) return true;
-        if (!(o instanceof EntityDirectoryHierarchyImpl)) return false;
-        EntityDirectoryHierarchyImpl that = (EntityDirectoryHierarchyImpl) o;
+        if (!(o instanceof EntityDirectoryHierarchyImpl that)) return false;
         return entities.equals(that.entities);
     }
 

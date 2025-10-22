@@ -20,7 +20,7 @@ import net.netbeing.cheap.db.AbstractCheapDao;
 import net.netbeing.cheap.db.AspectTableMapping;
 import net.netbeing.cheap.db.CheapDao;
 import net.netbeing.cheap.model.*;
-import net.netbeing.cheap.util.CheapFactory;
+import net.netbeing.cheap.impl.basic.CheapFactory;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.LoggerFactory;
 
@@ -807,7 +807,8 @@ public class PostgresDao extends AbstractCheapDao
             }
             case ENTITY_TREE -> {
                 Entity rootEntity = adapter.getFactory().createEntity();
-                EntityTreeHierarchy hierarchy = adapter.getFactory().createEntityTreeHierarchy(catalog, hierarchyName, rootEntity);
+                EntityTreeHierarchy hierarchy = adapter.getFactory().createEntityTreeHierarchy(catalog, hierarchyName, null, 0L);
+                hierarchy.root().setValue(rootEntity);
                 loadEntityTreeContent(conn, hierarchy);
                 return hierarchy;
             }

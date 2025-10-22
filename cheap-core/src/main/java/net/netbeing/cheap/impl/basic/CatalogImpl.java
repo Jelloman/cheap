@@ -299,8 +299,11 @@ public class CatalogImpl extends LocalEntityOneCatalogImpl implements Catalog
      * @return the newly created EntityTreeHierarchy
      */
     @Override
-    public EntityTreeHierarchy createEntityTree(@NotNull String name, @NotNull EntityTreeHierarchy.Node root, long version)
+    public EntityTreeHierarchy createEntityTree(@NotNull String name, EntityTreeHierarchy.Node root, long version)
     {
+        if (root == null) {
+            root = new EntityTreeHierarchyImpl.NodeImpl(null);
+        }
         EntityTreeHierarchy hierarchy = new EntityTreeHierarchyImpl(this, name, root, version);
         addHierarchy(hierarchy);
         return hierarchy;

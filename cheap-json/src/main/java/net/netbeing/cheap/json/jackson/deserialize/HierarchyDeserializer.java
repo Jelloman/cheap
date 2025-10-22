@@ -31,7 +31,7 @@ import net.netbeing.cheap.model.EntitySetHierarchy;
 import net.netbeing.cheap.model.EntityTreeHierarchy;
 import net.netbeing.cheap.model.Hierarchy;
 import net.netbeing.cheap.model.HierarchyType;
-import net.netbeing.cheap.util.CheapFactory;
+import net.netbeing.cheap.impl.basic.CheapFactory;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
@@ -88,6 +88,7 @@ class HierarchyDeserializer extends JsonDeserializer<Hierarchy>
 
         HierarchyType type = null;
         String name = null;
+        long version = 0L;
 
         // Need to peek ahead to determine type
         while (p.nextToken() != JsonToken.END_OBJECT) {
@@ -102,16 +103,17 @@ class HierarchyDeserializer extends JsonDeserializer<Hierarchy>
                     }
                 }
                 case "name" -> name = p.getValueAsString();
+                case "version" -> version = p.getValueAsLong();
                 case "contents" -> {
                     if (type == null || name == null) {
                         throw new JsonMappingException(p, "Expected type and name as first two fields of hierarchy element.");
                     }
                     switch (type) {
-                        case ASPECT_MAP -> { return readAspectMapHierarchy(name, p, context); }
-                        case ENTITY_DIR -> { return readEntityDirectoryHierarchy(name, p); }
-                        case ENTITY_LIST -> { return readEntityListHierarchy(name, p); }
-                        case ENTITY_SET -> { return readEntitySetHierarchy(name, p); }
-                        case ENTITY_TREE -> { return readEntityTreeHierarchy(name, p); }
+                        case ASPECT_MAP -> { return readAspectMapHierarchy(name, version, p, context); }
+                        case ENTITY_DIR -> { return readEntityDirectoryHierarchy(name, version, p); }
+                        case ENTITY_LIST -> { return readEntityListHierarchy(name, version, p); }
+                        case ENTITY_SET -> { return readEntitySetHierarchy(name, version, p); }
+                        case ENTITY_TREE -> { return readEntityTreeHierarchy(name, version, p); }
                         default -> throw new JsonMappingException(p, "Unknown hierarchy type: " + type);
                     }
 
@@ -122,7 +124,7 @@ class HierarchyDeserializer extends JsonDeserializer<Hierarchy>
         throw new JsonMappingException(p, "Badly formed hierarchy JSON.");
     }
 
-    AspectMapHierarchy readAspectMapHierarchy(String name, JsonParser p, DeserializationContext context) throws IOException
+    AspectMapHierarchy readAspectMapHierarchy(String name, long version, JsonParser p, DeserializationContext context) throws IOException
     {
         if (p.currentToken() != JsonToken.START_OBJECT) {
             throw new JsonMappingException(p, "Expected START_OBJECT token");
@@ -132,7 +134,7 @@ class HierarchyDeserializer extends JsonDeserializer<Hierarchy>
         if (aspectDef == null) {
             throw new JsonMappingException(p, "AspectDef named '" + name + "' not found.");
         }
-        AspectMapHierarchy hierarchy = factory.createAspectMapHierarchy(name, aspectDef);
+        AspectMapHierarchy hierarchy = factory.createAspectMapHierarchy(aspectDef, version);
 
         context.setAttribute("CheapAspectDef", aspectDef);
         while (p.nextToken() != JsonToken.END_OBJECT) {
@@ -150,12 +152,12 @@ class HierarchyDeserializer extends JsonDeserializer<Hierarchy>
         return hierarchy;
     }
 
-    EntityDirectoryHierarchy readEntityDirectoryHierarchy(String name, JsonParser p) throws IOException
+    EntityDirectoryHierarchy readEntityDirectoryHierarchy(String name, long version, JsonParser p) throws IOException
     {
         if (p.currentToken() != JsonToken.START_OBJECT) {
             throw new JsonMappingException(p, "Expected START_OBJECT token");
         }
-        EntityDirectoryHierarchy hierarchy = factory.createEntityDirectoryHierarchy(name);
+        EntityDirectoryHierarchy hierarchy = factory.createEntityDirectoryHierarchy(name, version);
         while (p.nextToken() != JsonToken.END_OBJECT) {
             String key = p.currentName();
             p.nextToken();
@@ -165,12 +167,12 @@ class HierarchyDeserializer extends JsonDeserializer<Hierarchy>
         return hierarchy;
     }
 
-    EntityListHierarchy readEntityListHierarchy(String name, JsonParser p) throws IOException
+    EntityListHierarchy readEntityListHierarchy(String name, long version, JsonParser p) throws IOException
     {
         if (p.currentToken() != JsonToken.START_ARRAY) {
             throw new JsonMappingException(p, "Expected START_ARRAY token");
         }
-        EntityListHierarchy hierarchy = factory.createEntityListHierarchy(name);
+        EntityListHierarchy hierarchy = factory.createEntityListHierarchy(name, version);
         while (p.nextToken() != JsonToken.END_ARRAY) {
             UUID id = UUID.fromString(p.getValueAsString());
             hierarchy.add(factory.getOrRegisterNewEntity(id));
@@ -178,12 +180,12 @@ class HierarchyDeserializer extends JsonDeserializer<Hierarchy>
         return hierarchy;
     }
 
-    EntitySetHierarchy readEntitySetHierarchy(String name, JsonParser p) throws IOException
+    EntitySetHierarchy readEntitySetHierarchy(String name, long version, JsonParser p) throws IOException
     {
         if (p.currentToken() != JsonToken.START_ARRAY) {
             throw new JsonMappingException(p, "Expected START_ARRAY token");
         }
-        EntitySetHierarchy hierarchy = factory.createEntitySetHierarchy(name);
+        EntitySetHierarchy hierarchy = factory.createEntitySetHierarchy(name, version);
         while (p.nextToken() != JsonToken.END_ARRAY) {
             UUID id = UUID.fromString(p.getValueAsString());
             hierarchy.add(factory.getOrRegisterNewEntity(id));
@@ -191,12 +193,12 @@ class HierarchyDeserializer extends JsonDeserializer<Hierarchy>
         return hierarchy;
     }
 
-    EntityTreeHierarchy readEntityTreeHierarchy(String name, JsonParser p) throws IOException
+    EntityTreeHierarchy readEntityTreeHierarchy(String name, long version, JsonParser p) throws IOException
     {
         if (p.currentToken() != JsonToken.START_OBJECT) {
             throw new JsonMappingException(p, "Expected START_OBJECT token");
         }
         EntityTreeHierarchy.Node root = p.readValueAs(EntityTreeHierarchy.Node.class);
-        return factory.createEntityTreeHierarchy(name, root);
+        return factory.createEntityTreeHierarchy(name, root, version);
     }
 }
