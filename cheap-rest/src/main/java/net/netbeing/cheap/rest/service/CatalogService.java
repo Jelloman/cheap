@@ -72,6 +72,17 @@ public class CatalogService
     }
 
     /**
+     * Sets the service reference for Spring proxy injection.
+     * Package-private for testing purposes.
+     *
+     * @param service the service reference
+     */
+    void setService(CatalogService service)
+    {
+        this.service = service;
+    }
+
+    /**
      * Creates a new catalog from a CatalogDef.
      *
      * @param catalogDef the catalog definition

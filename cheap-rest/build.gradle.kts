@@ -108,6 +108,9 @@ tasks.named<Test>("test") {
     useJUnitPlatform()
     // Disable module path for tests to avoid JUnit Platform classpath issues
     //modularity.inferModulePath.set(false)
+
+    // Enable native access for SQLite JDBC driver in Java 24+
+    jvmArgs("--enable-native-access=ALL-UNNAMED")
 }
 
 gradle.projectsEvaluated {
