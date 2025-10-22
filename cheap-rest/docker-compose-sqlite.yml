@@ -1,0 +1,25 @@
+# Docker Compose for cheap-rest with SQLite
+version: '3.8'
+
+services:
+  cheap-rest:
+    build:
+      context: ..
+      dockerfile: cheap-rest/Dockerfile
+    container_name: cheap-rest-sqlite
+    environment:
+      SPRING_PROFILES_ACTIVE: sqlite
+      CHEAP_DB_PATH: /data/cheap.db
+    ports:
+      - "8080:8080"
+    volumes:
+      - sqlite-data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  sqlite-data:

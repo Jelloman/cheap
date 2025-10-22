@@ -39,11 +39,16 @@ dependencies {
     compileOnly(libs.jetbrains.annotations)
 
     testImplementation(libs.junit.jupiter)
-    testImplementation(platform("org.junit:junit-bom:5.10.0"))
     testImplementation(libs.mariaDB4j)
     testImplementation(project(":cheap-json"))
     testImplementation(libs.guava)
     testRuntimeOnly(libs.junit.platform.launcher)
+
+    constraints {
+        implementation(libs.commons.lang3) {
+            because("CVE-2025-48924")
+        }
+    }
 }
 
 // Apply a specific Java toolchain to ease working on different environments.

@@ -1,0 +1,19 @@
+spring:
+  datasource:
+    # Embedded PostgreSQL will override this
+    url: jdbc:postgresql://localhost:5432/test
+    driver-class-name: org.postgresql.Driver
+
+cheap:
+  database:
+    type: postgres
+  pagination:
+    default-page-size: 20
+    max-page-size: 100
+  aspect-upsert:
+    max-batch-size: 1000
+
+logging:
+  level:
+    net.netbeing.cheap: DEBUG
+    org.springframework: INFO

@@ -40,7 +40,7 @@ import java.util.UUID;
  * This factory simplifies object creation and provides a clean API for
  * instantiating Cheap model objects without directly depending on implementation classes.
  */
-@SuppressWarnings("unused")
+@SuppressWarnings({"unused", "UnusedReturnValue"})
 public class CheapFactory
 {
     /**
@@ -178,7 +178,6 @@ public class CheapFactory
      * @param hierarchyDef the hierarchyDef to register
      * @return the existing HierarchyDef registered under that name, if any
      */
-    @SuppressWarnings("UnusedReturnValue")
     public HierarchyDef registerHierarchyDef(HierarchyDef hierarchyDef)
     {
         return hierarchyDefs.put(hierarchyDef.name(), hierarchyDef);
@@ -931,11 +930,9 @@ public class CheapFactory
     // ===== Property Factory Methods =====
 
     /**
-     * Creates a new property definition with default settings.
+     * Creates a new property definition builder.
      *
-     * @param name the name of the property
-     * @param type the data type of the property
-     * @return a new PropertyDef instance
+     * @return a new PropertyDefBuilder instance
      */
     public @NotNull PropertyDefBuilder createPropertyDefBuilder()
     {

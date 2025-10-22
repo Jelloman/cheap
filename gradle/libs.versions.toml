@@ -4,10 +4,11 @@ slf4j = "2.0.17"
 logback-core = "1.5.19"
 logback-classic = "1.5.19"
 commons-math3 = "3.6.1"
+commons-lang3 = "3.19.0"
 guava = "33.5.0-jre"
-junit-jupiter = "5.13.4"
+junit-jupiter = "5.14.0"
 jetbrains-annotations = "26.0.2"
-junit-platform-launcher = "1.13.4"
+junit-platform = "1.14.0"
 sqlite-jdbc = "3.50.3.0"
 postgresql = "42.7.4"
 tempus-fugit = "1.1"
@@ -18,15 +19,24 @@ jackson = "2.20.0"
 mariaDB4j = "3.3.0"
 mariaDB = "3.5.6"
 json-schema-validator = "1.5.5"
+openapi-starter-ui = "2.8.13"
+junit-platform-reporting = "1.14.0"
+spring-boot = "3.5.6"
+json-smart = "2.5.2"
+tomcat-embed-core = "11.0.13"
 
 [libraries]
 slf4j = { module = "org.slf4j:slf4j-api", version.ref = "slf4j" }
 logback-core = { module = "ch.qos.logback:logback-core", version.ref = "logback-core" }
 logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback-classic" }
 commons-math3 = { module = "org.apache.commons:commons-math3", version.ref = "commons-math3" }
+commons-lang3 = { module = "org.apache.commons:commons-lang3", version.ref = "commons-lang3" }
 guava = { module = "com.google.guava:guava", version.ref = "guava" }
 junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit-jupiter" }
-junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher", version.ref = "junit-platform-launcher" }
+junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher", version.ref = "junit-platform" }
+junit-platform-engine = { module = "org.junit.platform:junit-platform-engine", version.ref = "junit-platform" }
+junit-platform-commons = { module = "org.junit.platform:junit-platform-commons", version.ref = "junit-platform" }
+junit-platform-reporting = { module = "org.junit.platform:junit-platform-reporting", version.ref = "junit-platform" }
 jetbrains-annotations = { module = "org.jetbrains:annotations", version.ref = "jetbrains-annotations"  }
 sqlite-jdbc = { module = "org.xerial:sqlite-jdbc", version.ref = "sqlite-jdbc" }
 postgresql = { module = "org.postgresql:postgresql", version.ref = "postgresql" }
@@ -39,3 +49,13 @@ jackson-databind = { module = "com.fasterxml.jackson.core:jackson-databind", ver
 mariaDB4j = { module = "ch.vorburger.mariaDB4j:mariaDB4j", version.ref = "mariaDB4j" }
 mariaDB = { module = "org.mariadb.jdbc:mariadb-java-client", version.ref = "mariaDB" }
 json-schema-validator = { module = "com.networknt:json-schema-validator", version.ref = "json-schema-validator" }
+openapi-starter-ui = { module = "org.springdoc:springdoc-openapi-starter-webmvc-ui", version.ref = "openapi-starter-ui" }
+spring-boot-starter-test = { module = "org.springframework.boot:spring-boot-starter-test", version.ref = "spring-boot" }
+spring-boot-starter-web = { module = "org.springframework.boot:spring-boot-starter-web", version.ref = "spring-boot" }
+spring-boot-starter-jdbc = { module = "org.springframework.boot:spring-boot-starter-jdbc", version.ref = "spring-boot" }
+spring-boot-starter-validation = { module = "org.springframework.boot:spring-boot-starter-validation", version.ref = "spring-boot" }
+spring-boot-starter-actuator = { module = "org.springframework.boot:spring-boot-starter-actuator", version.ref = "spring-boot" }
+json-smart = { module = "net.minidev:json-smart", version.ref = "json-smart" }
+tomcat-embed-core = { module = "org.apache.tomcat.embed:tomcat-embed-core", version.ref = "tomcat-embed-core" }
+
+

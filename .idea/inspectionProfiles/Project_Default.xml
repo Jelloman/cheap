@@ -44,16 +44,19 @@
       <option name="ignoredModules">
         <list>
           <option value="cheap.cheap-core" />
+          <option value="cheap.cheap-rest" />
         </list>
       </option>
       <option name="ignoredPackages">
         <list>
           <option value="junit:junit:4.7" />
+          <option value="org.apache.commons:commons-lang3:3.17.0" />
         </list>
       </option>
       <option name="ignoredReasons">
         <list>
           <option value="Not exploitable" />
+          <option value="fixed but IDEA won't see it for some reason (it sees the same mitigation in other modules)" />
         </list>
       </option>
     </inspection_tool>

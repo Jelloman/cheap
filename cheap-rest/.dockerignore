@@ -1,0 +1,36 @@
+# Git
+.git
+.gitignore
+
+# Build outputs
+build/
+target/
+*.jar
+*.war
+*.class
+
+# IDE
+.idea/
+*.iml
+.vscode/
+*.sw?
+
+# Gradle
+.gradle/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Documentation
+README.md
+PLAN.md
+*.md
+
+# Docker
+Dockerfile
+docker-compose*.yml
+.dockerignore
+
+# Test
+src/test/
