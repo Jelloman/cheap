@@ -63,33 +63,19 @@ public class AspectService
     }
 
     /**
-     * Result of an aspect upsert operation for a single entity.
-     */
-    public record UpsertResult(
-        UUID entityId,
-        boolean success,
-        boolean created,
-        String message
-    )
-    {
-    }
-
-    /**
      * Upserts aspects for multiple entities.
      *
-     * @param catalogId the catalog ID
-     * @param aspectDefName the AspectDef name
+     * @param catalogId       the catalog ID
+     * @param aspectDefName   the AspectDef name
      * @param aspectsByEntity map of entity ID to property values
-     * @param createEntities whether to auto-create entities that don't exist
      * @return map of entity ID to upsert result
-     * @throws ValidationException if validation fails
-     * @throws ResourceNotFoundException if catalog or AspectDef is not found
+     * @throws ValidationException          if validation fails
+     * @throws ResourceNotFoundException    if catalog or AspectDef is not found
      * @throws UnprocessableEntityException if entities don't exist and createEntities is false
      */
     @Transactional
     public Map<UUID, UpsertResult> upsertAspects(@NotNull UUID catalogId, @NotNull String aspectDefName,
-                                                 @NotNull Map<UUID, Map<String, Object>> aspectsByEntity,
-                                                 boolean createEntities)
+                                                 @NotNull Map<UUID, Map<String, Object>> aspectsByEntity)
     {
         logger.info("Upserting {} aspects of type {} in catalog {}",
             aspectsByEntity.size(), aspectDefName, catalogId);
@@ -102,7 +88,7 @@ public class AspectService
                 throw new ResourceNotFoundException("Catalog not found: " + catalogId);
             }
         } catch (SQLException e) {
-            logger.error("Failed to load catalog");
+            logger.error("Failed to load catalog in upsertAspects");
             throw new CheapException("Failed to load catalog: " + e.getMessage(), e);
         }
 
@@ -125,6 +111,23 @@ public class AspectService
         }
 
         // Process each aspect
+        Map<UUID, UpsertResult> results = processAspectsForUpsert(aspectDefName, aspectsByEntity, aspectDef, aspectMap);
+
+        // Save the catalog with all changes
+        try {
+            dao.saveCatalog(catalog);
+            logger.info("Successfully upserted aspects in catalog {}", catalogId);
+        } catch (SQLException e) {
+            logger.error("Failed to save catalog with upserted aspects");
+            throw new CheapException("Failed to save aspects: " + e.getMessage(), e);
+        }
+
+        return results;
+    }
+
+    private @NotNull Map<UUID, UpsertResult> processAspectsForUpsert(@NotNull String aspectDefName, @NotNull Map<UUID
+        , Map<String, Object>> aspectsByEntity, AspectDef aspectDef, AspectMapHierarchy aspectMap)
+    {
         Map<UUID, UpsertResult> results = new LinkedHashMap<>();
         for (Map.Entry<UUID, Map<String, Object>> entry : aspectsByEntity.entrySet()) {
             UUID entityId = entry.getKey();
@@ -135,19 +138,7 @@ public class AspectService
                 validateAspectData(aspectDef, properties);
 
                 // Get or create the entity
-                Entity entity = factory.getEntity(entityId);
-                if (entity == null) {
-                    if (!createEntities) {
-                        results.put(entityId, new UpsertResult(
-                            entityId, false, false, "Entity does not exist and createEntities is false"
-                        ));
-                        continue;
-                    }
-                    // Create new entity
-                    entity = factory.createEntity(entityId);
-                    factory.registerEntity(entity);
-                    logger.debug("Created new entity: {}", entityId);
-                }
+                Entity entity = factory.getOrRegisterNewEntity(entityId);
 
                 // Check if aspect already exists
                 Aspect existingAspect = aspectMap.get(entity);
@@ -199,26 +190,17 @@ public class AspectService
                 ));
             }
         }
-
-        // Save the catalog with all changes
-        try {
-            dao.saveCatalog(catalog);
-            logger.info("Successfully upserted aspects in catalog {}", catalogId);
-        } catch (SQLException e) {
-            logger.error("Failed to save catalog with upserted aspects");
-            throw new CheapException("Failed to save aspects: " + e.getMessage(), e);
-        }
-
         return results;
     }
 
     /**
      * Validates aspect data against an AspectDef.
      *
-     * @param aspectDef the aspect definition
+     * @param aspectDef  the aspect definition
      * @param properties the property values to validate
      * @throws ValidationException if validation fails
      */
+    @SuppressWarnings("java:S2583")
     public void validateAspectData(@NotNull AspectDef aspectDef, @NotNull Map<String, Object> properties)
     {
         List<ValidationException.ValidationError> errors = new ArrayList<>();
@@ -246,16 +228,16 @@ public class AspectService
     /**
      * Queries aspects for multiple entities.
      *
-     * @param catalogId the catalog ID
-     * @param entityIds the set of entity IDs to query
+     * @param catalogId      the catalog ID
+     * @param entityIds      the set of entity IDs to query
      * @param aspectDefNames the set of AspectDef names to retrieve (empty = all)
      * @return map of entity ID to map of AspectDef name to Aspect
      * @throws ResourceNotFoundException if catalog is not found
      */
     @Transactional(readOnly = true)
     public Map<UUID, Map<String, Aspect>> queryAspects(@NotNull UUID catalogId,
-                                                        @NotNull java.util.Set<UUID> entityIds,
-                                                        java.util.Set<String> aspectDefNames)
+                                                       @NotNull java.util.Set<UUID> entityIds,
+                                                       java.util.Set<String> aspectDefNames)
     {
         logger.info("Querying aspects for {} entities in catalog {}", entityIds.size(), catalogId);
 
@@ -316,5 +298,17 @@ public class AspectService
         }
 
         return results;
+    }
+
+    /**
+     * Result of an aspect upsert operation for a single entity.
+     */
+    public record UpsertResult(
+        UUID entityId,
+        boolean success,
+        boolean created,
+        String message
+    )
+    {
     }
 }

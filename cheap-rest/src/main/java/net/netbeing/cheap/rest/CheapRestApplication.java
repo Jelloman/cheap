@@ -22,7 +22,6 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 /**
  * Main Spring Boot application class for the Cheap REST API.
- * 
  * This application provides a REST API for creating and querying Cheap catalogs,
  * AspectDefs, hierarchies, and aspects. It supports multiple database backends
  * (PostgreSQL, SQLite, MariaDB) selected via Spring profiles.

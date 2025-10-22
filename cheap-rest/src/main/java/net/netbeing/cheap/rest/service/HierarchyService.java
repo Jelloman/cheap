@@ -16,9 +16,17 @@
 
 package net.netbeing.cheap.rest.service;
 
+import com.google.common.collect.Iterables;
 import net.netbeing.cheap.db.CheapDao;
-import net.netbeing.cheap.impl.basic.CheapFactory;
-import net.netbeing.cheap.model.*;
+import net.netbeing.cheap.model.Aspect;
+import net.netbeing.cheap.model.AspectMapHierarchy;
+import net.netbeing.cheap.model.Catalog;
+import net.netbeing.cheap.model.Entity;
+import net.netbeing.cheap.model.EntityDirectoryHierarchy;
+import net.netbeing.cheap.model.EntityListHierarchy;
+import net.netbeing.cheap.model.EntitySetHierarchy;
+import net.netbeing.cheap.model.EntityTreeHierarchy;
+import net.netbeing.cheap.model.Hierarchy;
 import net.netbeing.cheap.rest.exception.ResourceNotFoundException;
 import net.netbeing.cheap.util.CheapException;
 import org.jetbrains.annotations.NotNull;
@@ -44,12 +52,10 @@ public class HierarchyService
     private static final Logger logger = LoggerFactory.getLogger(HierarchyService.class);
 
     private final CheapDao dao;
-    private final CheapFactory factory;
 
-    public HierarchyService(CheapDao dao, CheapFactory factory)
+    public HierarchyService(CheapDao dao)
     {
         this.dao = dao;
-        this.factory = factory;
     }
 
     /**
@@ -143,10 +149,7 @@ public class HierarchyService
      */
     public Map<String, UUID> getEntityDirectoryContents(EntityDirectoryHierarchy hierarchy, int page, int size)
     {
-        List<Map.Entry<String, Entity>> allEntries = new ArrayList<>();
-        for (Map.Entry<String, Entity> entry : hierarchy.entrySet()) {
-            allEntries.add(entry);
-        }
+        List<Map.Entry<String, Entity>> allEntries = new ArrayList<>(hierarchy.entrySet());
 
         int start = page * size;
         int end = Math.min(start + size, allEntries.size());
@@ -183,10 +186,7 @@ public class HierarchyService
      */
     public Map<UUID, Aspect> getAspectMapContents(AspectMapHierarchy hierarchy, int page, int size)
     {
-        List<Map.Entry<Entity, Aspect>> allEntries = new ArrayList<>();
-        for (Map.Entry<Entity, Aspect> entry : hierarchy.entrySet()) {
-            allEntries.add(entry);
-        }
+        List<Map.Entry<Entity, Aspect>> allEntries = new ArrayList<>(hierarchy.entrySet());
 
         int start = page * size;
         int end = Math.min(start + size, allEntries.size());
@@ -210,33 +210,12 @@ public class HierarchyService
      */
     public long countHierarchyItems(Hierarchy hierarchy)
     {
-        if (hierarchy instanceof EntityListHierarchy list) {
-            int count = 0;
-            for (Entity ignored : list) {
-                count++;
-            }
-            return count;
-        } else if (hierarchy instanceof EntitySetHierarchy set) {
-            int count = 0;
-            for (Entity ignored : set) {
-                count++;
-            }
-            return count;
-        } else if (hierarchy instanceof EntityDirectoryHierarchy dir) {
-            int count = 0;
-            for (Map.Entry<String, Entity> ignored : dir.entrySet()) {
-                count++;
-            }
-            return count;
-        } else if (hierarchy instanceof AspectMapHierarchy map) {
-            int count = 0;
-            for (Map.Entry<Entity, Aspect> ignored : map.entrySet()) {
-                count++;
-            }
-            return count;
-        } else {
-            // EntityTree - not counted
-            return 0;
-        }
+        return switch (hierarchy) {
+            case EntityListHierarchy list -> Iterables.size(list);
+            case EntitySetHierarchy set -> Iterables.size(set);
+            case EntityDirectoryHierarchy dir -> Iterables.size(dir.entrySet());
+            case AspectMapHierarchy map -> Iterables.size(map.entrySet());
+            default -> 0;
+        };
     }
 }

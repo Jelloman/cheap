@@ -77,19 +77,15 @@ public class HierarchyController
         Hierarchy hierarchy = hierarchyService.getHierarchy(catalogId, hierarchyName);
 
         // Handle based on hierarchy type
-        if (hierarchy instanceof EntityListHierarchy entityList) {
-            return handleEntityList(catalogId, hierarchyName, entityList, page, size);
-        } else if (hierarchy instanceof EntitySetHierarchy entitySet) {
-            return handleEntitySet(catalogId, hierarchyName, entitySet, page, size);
-        } else if (hierarchy instanceof EntityDirectoryHierarchy entityDir) {
-            return handleEntityDirectory(catalogId, hierarchyName, entityDir, page, size);
-        } else if (hierarchy instanceof EntityTreeHierarchy entityTree) {
-            return handleEntityTree(catalogId, hierarchyName, entityTree);
-        } else if (hierarchy instanceof AspectMapHierarchy aspectMap) {
-            return handleAspectMap(catalogId, hierarchyName, aspectMap, page, size);
-        } else {
-            throw new IllegalStateException("Unknown hierarchy type: " + hierarchy.getClass().getName());
-        }
+        return switch (hierarchy) {
+            case EntityListHierarchy entityList -> handleEntityList(catalogId, hierarchyName, entityList, page, size);
+            case EntitySetHierarchy entitySet -> handleEntitySet(catalogId, hierarchyName, entitySet, page, size);
+            case EntityDirectoryHierarchy entityDir ->
+                handleEntityDirectory(catalogId, hierarchyName, entityDir, page, size);
+            case EntityTreeHierarchy entityTree -> handleEntityTree(catalogId, hierarchyName, entityTree);
+            case AspectMapHierarchy aspectMap -> handleAspectMap(catalogId, hierarchyName, aspectMap, page, size);
+            default -> throw new IllegalStateException("Unknown hierarchy type: " + hierarchy.getClass().getName());
+        };
     }
 
     private ResponseEntity<EntityListResponse> handleEntityList(

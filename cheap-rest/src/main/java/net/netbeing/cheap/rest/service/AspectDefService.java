@@ -16,8 +16,8 @@
 
 package net.netbeing.cheap.rest.service;
 
+import com.google.common.collect.Iterables;
 import net.netbeing.cheap.db.CheapDao;
-import net.netbeing.cheap.impl.basic.CheapFactory;
 import net.netbeing.cheap.model.AspectDef;
 import net.netbeing.cheap.model.Catalog;
 import net.netbeing.cheap.model.PropertyDef;
@@ -48,12 +48,10 @@ public class AspectDefService
     private static final Logger logger = LoggerFactory.getLogger(AspectDefService.class);
 
     private final CheapDao dao;
-    private final CheapFactory factory;
 
-    public AspectDefService(CheapDao dao, CheapFactory factory)
+    public AspectDefService(CheapDao dao)
     {
         this.dao = dao;
-        this.factory = factory;
     }
 
     /**
@@ -81,7 +79,7 @@ public class AspectDefService
                 throw new ResourceNotFoundException("Catalog not found: " + catalogId);
             }
         } catch (SQLException e) {
-            logger.error("Failed to load catalog");
+            logger.error("Failed to load catalog during createAspectDef()");
             throw new CheapException("Failed to load catalog: " + e.getMessage(), e);
         }
 
@@ -106,7 +104,9 @@ public class AspectDefService
         // Save the catalog (which includes the new AspectDef and hierarchy)
         try {
             dao.saveCatalog(catalog);
-            logger.info("Successfully created AspectDef {} in catalog {}", aspectDef.name(), catalogId);
+            if (logger.isInfoEnabled()) {
+                logger.info("Successfully created AspectDef {} in catalog {}", aspectDef.name(), catalogId);
+            }
             return aspectDef;
         } catch (SQLException e) {
             logger.error("Failed to save catalog with new AspectDef");
@@ -136,7 +136,7 @@ public class AspectDefService
                 throw new ResourceNotFoundException("Catalog not found: " + catalogId);
             }
         } catch (SQLException e) {
-            logger.error("Failed to load catalog");
+            logger.error("Failed to load catalog when listing AspectDefs");
             throw new CheapException("Failed to load catalog: " + e.getMessage(), e);
         }
 
@@ -173,11 +173,7 @@ public class AspectDefService
                 throw new ResourceNotFoundException("Catalog not found: " + catalogId);
             }
 
-            int count = 0;
-            for (AspectDef ignored : catalog.aspectDefs()) {
-                count++;
-            }
-            return count;
+            return Iterables.size(catalog.aspectDefs());
         } catch (SQLException e) {
             logger.error("Failed to count AspectDefs");
             throw new CheapException("Failed to count AspectDefs: " + e.getMessage(), e);
@@ -195,7 +191,7 @@ public class AspectDefService
     @Transactional(readOnly = true)
     public AspectDef getAspectDefByName(@NotNull UUID catalogId, @NotNull String name)
     {
-        logger.debug("Getting AspectDef {} from catalog {}", name, catalogId);
+        logger.debug("Getting AspectDef by name({}) from catalog {}", name, catalogId);
 
         try {
             Catalog catalog = dao.loadCatalog(catalogId);
@@ -211,7 +207,7 @@ public class AspectDefService
 
             throw new ResourceNotFoundException("AspectDef not found: " + name);
         } catch (SQLException e) {
-            logger.error("Failed to load catalog");
+            logger.error("Failed to load catalog in getAspectDefByName");
             throw new CheapException("Failed to load catalog: " + e.getMessage(), e);
         }
     }
@@ -227,7 +223,7 @@ public class AspectDefService
     @Transactional(readOnly = true)
     public AspectDef getAspectDefById(@NotNull UUID catalogId, @NotNull UUID aspectDefId)
     {
-        logger.debug("Getting AspectDef {} from catalog {}", aspectDefId, catalogId);
+        logger.debug("Getting AspectDef by id({}) from catalog {}", aspectDefId, catalogId);
 
         try {
             Catalog catalog = dao.loadCatalog(catalogId);
@@ -243,7 +239,7 @@ public class AspectDefService
 
             throw new ResourceNotFoundException("AspectDef not found: " + aspectDefId);
         } catch (SQLException e) {
-            logger.error("Failed to load catalog");
+            logger.error("Failed to load catalog in getAspectDefById");
             throw new CheapException("Failed to load catalog: " + e.getMessage(), e);
         }
     }

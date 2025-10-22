@@ -33,7 +33,7 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class AspectDefServiceTest extends BaseServiceTest
 {
-    private UUID setupTestCatalog() throws Exception
+    private UUID setupTestCatalog()
     {
         CatalogDef catalogDef = factory.createCatalogDef(
             Collections.emptyList(),
@@ -43,7 +43,7 @@ class AspectDefServiceTest extends BaseServiceTest
     }
 
     @Test
-    void testCreateAspectDef() throws Exception
+    void testCreateAspectDef()
     {
         UUID catalogId = setupTestCatalog();
 
@@ -81,13 +81,11 @@ class AspectDefServiceTest extends BaseServiceTest
             "testProp", PropertyType.String, true, true, false, false, false
         ));
 
-        assertThrows(ResourceNotFoundException.class, () -> {
-            aspectDefService.createAspectDef(nonExistentCatalogId, aspectDef);
-        });
+        assertThrows(ResourceNotFoundException.class, () -> aspectDefService.createAspectDef(nonExistentCatalogId, aspectDef));
     }
 
     @Test
-    void testCreateDuplicateAspectDef() throws Exception
+    void testCreateDuplicateAspectDef()
     {
         UUID catalogId = setupTestCatalog();
 
@@ -113,13 +111,11 @@ class AspectDefServiceTest extends BaseServiceTest
             "prop", PropertyType.String, true, true, false, false, false
         ));
 
-        assertThrows(ResourceConflictException.class, () -> {
-            aspectDefService.createAspectDef(catalogId, duplicate);
-        });
+        assertThrows(ResourceConflictException.class, () -> aspectDefService.createAspectDef(catalogId, duplicate));
     }
 
     @Test
-    void testListAspectDefs() throws Exception
+    void testListAspectDefs()
     {
         UUID catalogId = setupTestCatalog();
 
@@ -143,7 +139,7 @@ class AspectDefServiceTest extends BaseServiceTest
     }
 
     @Test
-    void testListAspectDefsPagination() throws Exception
+    void testListAspectDefsPagination()
     {
         UUID catalogId = setupTestCatalog();
 
@@ -174,7 +170,7 @@ class AspectDefServiceTest extends BaseServiceTest
     }
 
     @Test
-    void testCountAspectDefs() throws Exception
+    void testCountAspectDefs()
     {
         UUID catalogId = setupTestCatalog();
 
@@ -197,7 +193,7 @@ class AspectDefServiceTest extends BaseServiceTest
     }
 
     @Test
-    void testGetAspectDefByName() throws Exception
+    void testGetAspectDefByName()
     {
         UUID catalogId = setupTestCatalog();
 
@@ -221,17 +217,15 @@ class AspectDefServiceTest extends BaseServiceTest
     }
 
     @Test
-    void testGetAspectDefByNameNotFound() throws Exception
+    void testGetAspectDefByNameNotFound()
     {
         UUID catalogId = setupTestCatalog();
 
-        assertThrows(ResourceNotFoundException.class, () -> {
-            aspectDefService.getAspectDefByName(catalogId, "nonexistent.Aspect");
-        });
+        assertThrows(ResourceNotFoundException.class, () -> aspectDefService.getAspectDefByName(catalogId, "nonexistent.Aspect"));
     }
 
     @Test
-    void testGetAspectDefById() throws Exception
+    void testGetAspectDefById()
     {
         UUID catalogId = setupTestCatalog();
 
@@ -255,13 +249,11 @@ class AspectDefServiceTest extends BaseServiceTest
     }
 
     @Test
-    void testGetAspectDefByIdNotFound() throws Exception
+    void testGetAspectDefByIdNotFound()
     {
         UUID catalogId = setupTestCatalog();
         UUID nonExistentId = UUID.randomUUID();
 
-        assertThrows(ResourceNotFoundException.class, () -> {
-            aspectDefService.getAspectDefById(catalogId, nonExistentId);
-        });
+        assertThrows(ResourceNotFoundException.class, () -> aspectDefService.getAspectDefById(catalogId, nonExistentId));
     }
 }

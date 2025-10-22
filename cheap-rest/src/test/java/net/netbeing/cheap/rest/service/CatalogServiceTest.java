@@ -34,7 +34,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class CatalogServiceTest extends BaseServiceTest
 {
     @Test
-    void testCreateCatalog() throws Exception
+    void testCreateCatalog()
     {
         // Create a simple AspectDef
         MutableAspectDef personAspect = factory.createMutableAspectDef(
@@ -75,7 +75,7 @@ class CatalogServiceTest extends BaseServiceTest
     }
 
     @Test
-    void testCreateCatalogWithUpstream() throws Exception
+    void testCreateCatalogWithUpstream()
     {
         // Create upstream catalog first
         CatalogDef upstreamDef = factory.createCatalogDef(
@@ -108,7 +108,7 @@ class CatalogServiceTest extends BaseServiceTest
     }
 
     @Test
-    void testListCatalogIds() throws Exception
+    void testListCatalogIds()
     {
         // Create multiple catalogs
         CatalogDef catalogDef = factory.createCatalogDef(
@@ -130,7 +130,7 @@ class CatalogServiceTest extends BaseServiceTest
     }
 
     @Test
-    void testListCatalogIdsPagination() throws Exception
+    void testListCatalogIdsPagination()
     {
         // Create multiple catalogs
         CatalogDef catalogDef = factory.createCatalogDef(
@@ -156,7 +156,7 @@ class CatalogServiceTest extends BaseServiceTest
     }
 
     @Test
-    void testCountCatalogs() throws Exception
+    void testCountCatalogs()
     {
         // Initially should be 0
         assertEquals(0, catalogService.countCatalogs());
@@ -178,7 +178,7 @@ class CatalogServiceTest extends BaseServiceTest
     }
 
     @Test
-    void testGetCatalog() throws Exception
+    void testGetCatalog()
     {
         // Create catalog
         CatalogDef catalogDef = factory.createCatalogDef(
@@ -204,13 +204,11 @@ class CatalogServiceTest extends BaseServiceTest
     void testGetCatalogNotFound()
     {
         UUID nonExistentId = UUID.randomUUID();
-        assertThrows(ResourceNotFoundException.class, () -> {
-            catalogService.getCatalog(nonExistentId);
-        });
+        assertThrows(ResourceNotFoundException.class, () -> catalogService.getCatalog(nonExistentId));
     }
 
     @Test
-    void testGetCatalogDef() throws Exception
+    void testGetCatalogDef()
     {
         // Create catalog with AspectDef and HierarchyDef
         MutableAspectDef personAspect = factory.createMutableAspectDef(
@@ -257,11 +255,10 @@ class CatalogServiceTest extends BaseServiceTest
         assertTrue(foundHierarchy, "people hierarchy should be in CatalogDef");
     }
 
+    @SuppressWarnings("DataFlowIssue")
     @Test
     void testValidateCatalogDefNull()
     {
-        assertThrows(ValidationException.class, () -> {
-            catalogService.validateCatalogDef(null);
-        });
+        assertThrows(ValidationException.class, () -> catalogService.validateCatalogDef(null));
     }
 }

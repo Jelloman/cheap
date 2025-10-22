@@ -59,18 +59,14 @@ class HierarchyServiceTest extends BaseServiceTest
     @Test
     void testGetHierarchyNotFound()
     {
-        assertThrows(ResourceNotFoundException.class, () -> {
-            hierarchyService.getHierarchy(catalogId, "nonexistent");
-        });
+        assertThrows(ResourceNotFoundException.class, () -> hierarchyService.getHierarchy(catalogId, "nonexistent"));
     }
 
     @Test
     void testGetHierarchyCatalogNotFound()
     {
         UUID nonExistentCatalogId = UUID.randomUUID();
-        assertThrows(ResourceNotFoundException.class, () -> {
-            hierarchyService.getHierarchy(nonExistentCatalogId, "myList");
-        });
+        assertThrows(ResourceNotFoundException.class, () -> hierarchyService.getHierarchy(nonExistentCatalogId, "myList"));
     }
 
     @Test

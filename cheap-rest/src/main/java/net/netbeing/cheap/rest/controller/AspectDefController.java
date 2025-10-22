@@ -141,7 +141,7 @@ public class AspectDefController
         try {
             UUID uuid = UUID.fromString(aspectDefId);
             aspectDef = aspectDefService.getAspectDefById(catalogId, uuid);
-        } catch (IllegalArgumentException e) {
+        } catch (IllegalArgumentException _) {
             // Not a UUID, treat as name
             aspectDef = aspectDefService.getAspectDefByName(catalogId, aspectDefId);
         }

@@ -26,8 +26,7 @@ import java.util.UUID;
  * Request DTO for upserting aspects.
  */
 public record UpsertAspectsRequest(
-    @JsonProperty("aspects") List<AspectData> aspects,
-    @JsonProperty("createEntities") Boolean createEntities
+    @JsonProperty("aspects") List<AspectData> aspects
 )
 {
     /**

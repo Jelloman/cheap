@@ -70,9 +70,10 @@ dependencies {
     testImplementation(libs.sqlite.jdbc) // For SQLite-based service tests
     testImplementation(libs.embedded.postgres)
     testImplementation(libs.mariaDB4j)
+    testImplementation(libs.junit.platform.reporting)
+
     testRuntimeOnly(libs.junit.platform.launcher)
     testRuntimeOnly(libs.junit.platform.engine)
-    testImplementation(libs.junit.platform.reporting)
 
     constraints {
         implementation(libs.json.smart) {

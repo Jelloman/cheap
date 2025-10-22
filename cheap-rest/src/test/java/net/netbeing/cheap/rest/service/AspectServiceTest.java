@@ -33,7 +33,7 @@ class AspectServiceTest extends BaseServiceTest
     private String aspectDefName;
 
     @BeforeEach
-    void setupAspectTest() throws Exception
+    void setupAspectTest()
     {
         // Create a catalog with an AspectDef
         MutableAspectDef personAspect = factory.createMutableAspectDef(
@@ -58,7 +58,7 @@ class AspectServiceTest extends BaseServiceTest
     }
 
     @Test
-    void testUpsertAspectsCreate() throws Exception
+    void testUpsertAspectsCreate()
     {
         UUID entityId = UUID.randomUUID();
 
@@ -73,8 +73,7 @@ class AspectServiceTest extends BaseServiceTest
         Map<UUID, AspectService.UpsertResult> results = aspectService.upsertAspects(
             catalogId,
             aspectDefName,
-            aspectsByEntity,
-            true
+            aspectsByEntity
         );
 
         // Verify
@@ -86,7 +85,7 @@ class AspectServiceTest extends BaseServiceTest
     }
 
     @Test
-    void testUpsertAspectsUpdate() throws Exception
+    void testUpsertAspectsUpdate()
     {
         UUID entityId = UUID.randomUUID();
 
@@ -98,7 +97,7 @@ class AspectServiceTest extends BaseServiceTest
         Map<UUID, Map<String, Object>> aspectsByEntity1 = new HashMap<>();
         aspectsByEntity1.put(entityId, properties1);
 
-        aspectService.upsertAspects(catalogId, aspectDefName, aspectsByEntity1, true);
+        aspectService.upsertAspects(catalogId, aspectDefName, aspectsByEntity1);
 
         // Second upsert - update
         Map<String, Object> properties2 = new HashMap<>();
@@ -111,8 +110,7 @@ class AspectServiceTest extends BaseServiceTest
         Map<UUID, AspectService.UpsertResult> results = aspectService.upsertAspects(
             catalogId,
             aspectDefName,
-            aspectsByEntity2,
-            true
+            aspectsByEntity2
         );
 
         // Verify
@@ -124,12 +122,30 @@ class AspectServiceTest extends BaseServiceTest
     }
 
     @Test
-    void testUpsertMultipleAspects() throws Exception
+    void testUpsertMultipleAspects()
     {
         UUID entityId1 = UUID.randomUUID();
         UUID entityId2 = UUID.randomUUID();
         UUID entityId3 = UUID.randomUUID();
 
+        Map<UUID, Map<String, Object>> aspectsByEntity = createTestAspectsByEntity(entityId1, entityId2, entityId3);
+
+        // Upsert all
+        Map<UUID, AspectService.UpsertResult> results = aspectService.upsertAspects(
+            catalogId,
+            aspectDefName,
+            aspectsByEntity
+        );
+
+        // Verify
+        assertEquals(3, results.size());
+        assertTrue(results.get(entityId1).success());
+        assertTrue(results.get(entityId2).success());
+        assertTrue(results.get(entityId3).success());
+    }
+
+    private static Map<UUID, Map<String, Object>> createTestAspectsByEntity(UUID entityId1, UUID entityId2, UUID entityId3)
+    {
         Map<UUID, Map<String, Object>> aspectsByEntity = new HashMap<>();
 
         Map<String, Object> props1 = new HashMap<>();
@@ -146,24 +162,11 @@ class AspectServiceTest extends BaseServiceTest
         props3.put("name", "Bob");
         props3.put("age", 35);
         aspectsByEntity.put(entityId3, props3);
-
-        // Upsert all
-        Map<UUID, AspectService.UpsertResult> results = aspectService.upsertAspects(
-            catalogId,
-            aspectDefName,
-            aspectsByEntity,
-            true
-        );
-
-        // Verify
-        assertEquals(3, results.size());
-        assertTrue(results.get(entityId1).success());
-        assertTrue(results.get(entityId2).success());
-        assertTrue(results.get(entityId3).success());
+        return aspectsByEntity;
     }
 
     @Test
-    void testQueryAspects() throws Exception
+    void testQueryAspects()
     {
         // Create some aspects
         UUID entityId1 = UUID.randomUUID();
@@ -181,7 +184,7 @@ class AspectServiceTest extends BaseServiceTest
         props2.put("age", 28);
         aspectsByEntity.put(entityId2, props2);
 
-        aspectService.upsertAspects(catalogId, aspectDefName, aspectsByEntity, true);
+        aspectService.upsertAspects(catalogId, aspectDefName, aspectsByEntity);
 
         // Query aspects
         Set<UUID> entityIds = new HashSet<>(Arrays.asList(entityId1, entityId2));
@@ -209,7 +212,7 @@ class AspectServiceTest extends BaseServiceTest
     }
 
     @Test
-    void testQueryAspectsPartialResults() throws Exception
+    void testQueryAspectsPartialResults()
     {
         // Create aspect for only one entity
         UUID entityId1 = UUID.randomUUID();
@@ -222,7 +225,7 @@ class AspectServiceTest extends BaseServiceTest
         props1.put("age", 30);
         aspectsByEntity.put(entityId1, props1);
 
-        aspectService.upsertAspects(catalogId, aspectDefName, aspectsByEntity, true);
+        aspectService.upsertAspects(catalogId, aspectDefName, aspectsByEntity);
 
         // Query for both entities
         Set<UUID> entityIds = new HashSet<>(Arrays.asList(entityId1, entityId2));

@@ -88,15 +88,11 @@ public class AspectController
             aspectsByEntity.put(aspectData.entityId(), aspectData.properties());
         }
 
-        // Default createEntities to true if not specified
-        boolean createEntities = request.createEntities() != null ? request.createEntities() : true;
-
         // Call service
         Map<UUID, AspectService.UpsertResult> results = aspectService.upsertAspects(
             catalogId,
             aspectDefName,
-            aspectsByEntity,
-            createEntities
+            aspectsByEntity
         );
 
         // Convert results to response format
