@@ -10,10 +10,12 @@
         <module name="cheap.cheap-db-mariadb.test" />
         <module name="cheap.cheap-db-sqlite.main" />
         <module name="cheap.cheap-core.test" />
+        <module name="cheap.cheap-rest.main" />
         <module name="cheap.cheap-db-postgres.main" />
         <module name="cheap.cheap-core.main" />
         <module name="cheap.cheap-json.test" />
         <module name="cheap.cheap-db-postgres.test" />
+        <module name="cheap.cheap-rest.test" />
         <module name="cheap.cheap-json.main" />
         <module name="cheap.cheap-db-mariadb.main" />
         <module name="cheap.cheap-db-sqlite.test" />
@@ -40,6 +42,9 @@
       <module name="cheap.cheap-json" options="-Xlint:-processing -Xlint:unchecked" />
       <module name="cheap.cheap-json.main" options="-Xlint:-processing -Xlint:unchecked" />
       <module name="cheap.cheap-json.test" options="-Xlint:-processing -Xlint:unchecked" />
+      <module name="cheap.cheap-rest" options="-Xlint:-processing -parameters -Xlint:unchecked" />
+      <module name="cheap.cheap-rest.main" options="-Xlint:-processing -parameters -Xlint:unchecked" />
+      <module name="cheap.cheap-rest.test" options="-Xlint:-processing -parameters -Xlint:unchecked" />
     </option>
   </component>
 </project>

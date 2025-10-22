@@ -13,6 +13,7 @@
             <option value="$PROJECT_DIR$/cheap-db-postgres" />
             <option value="$PROJECT_DIR$/cheap-db-sqlite" />
             <option value="$PROJECT_DIR$/cheap-json" />
+            <option value="$PROJECT_DIR$/cheap-rest" />
           </set>
         </option>
       </GradleProjectSettings>

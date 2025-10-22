@@ -1,0 +1,14 @@
+# PostgreSQL configuration
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/cheap
+    username: cheap_user
+    password: ${DB_PASSWORD:changeme}
+    driver-class-name: org.postgresql.Driver
+  sql:
+    init:
+      mode: never
+
+cheap:
+  database:
+    type: postgres
