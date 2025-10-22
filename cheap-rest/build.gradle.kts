@@ -23,7 +23,7 @@ plugins {
     `java-library`
     idea
     id("io.freefair.lombok") version "8.14.2"
-    id("org.springframework.boot") version "3.4.1"
+    id("org.springframework.boot") version "3.5.6"
     id("io.spring.dependency-management") version "1.1.7"
 }
 
@@ -71,6 +71,7 @@ dependencies {
     testImplementation(libs.embedded.postgres)
     testImplementation(libs.mariaDB4j)
     testRuntimeOnly(libs.junit.platform.launcher)
+    testRuntimeOnly(libs.junit.platform.engine)
     testImplementation(libs.junit.platform.reporting)
 
     constraints {
@@ -82,6 +83,9 @@ dependencies {
         }
         implementation(libs.tomcat.embed.core) {
             because("CVE-2025-41242")
+        }
+        testImplementation(libs.junit.platform.commons) {
+            because("JUnit Platform version alignment")
         }
     }
 }
