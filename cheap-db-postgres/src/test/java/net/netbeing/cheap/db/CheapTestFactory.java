@@ -89,12 +89,12 @@ public class CheapTestFactory
     {
         insertEntity(conn, entityId);
         insertAspectDef(conn, aspectDefId, "test_aspect", 123L);
-        insertPropertyDef(conn, aspectDefId, "test_prop");
+        insertPropertyDef(conn, aspectDefId, "test_prop", 0);
         insertCatalog(conn, catalogId);
         insertCatalogAspectDef(conn, catalogId, aspectDefId);
         insertHierarchy(conn, catalogId, "test_hierarchy", "EL", 1L);
         insertAspect(conn, entityId, aspectDefId, catalogId, "test_hierarchy");
-        insertPropertyValue(conn, entityId, aspectDefId, catalogId, "test_prop", "test_value");
+        insertPropertyValue(conn, entityId, aspectDefId, catalogId, "test_prop", 0, "test_value");
 
         return new EntityIds(entityId, aspectDefId, catalogId, "test_hierarchy");
     }
@@ -114,14 +114,14 @@ public class CheapTestFactory
 
         insertEntity(conn, entityId);
         insertAspectDef(conn, aspectDefId, "test_aspect", 123L);
-        insertPropertyDef(conn, aspectDefId, "test_prop");
+        insertPropertyDef(conn, aspectDefId, "test_prop", 0);
         insertCatalog(conn, catalogId);
         insertCatalogAspectDef(conn, catalogId, aspectDefId);
 
         // Insert into hierarchy_entity_list
         insertHierarchy(conn, catalogId, "test_hierarchy", "EL", 1L);
         insertAspect(conn, entityId, aspectDefId, catalogId, "test_hierarchy");
-        insertPropertyValue(conn, entityId, aspectDefId, catalogId, "test_prop", "test_value");
+        insertPropertyValue(conn, entityId, aspectDefId, catalogId, "test_prop", 0, "test_value");
         insertHierarchyEntityList(conn, catalogId, "test_hierarchy", entityId, 0);
 
         // Insert into hierarchy_entity_set
@@ -183,15 +183,16 @@ public class CheapTestFactory
      * @param conn the database connection
      * @param aspectDefId the aspect definition ID
      * @param name the property name
+     * @param propertyIndex the property index
      * @throws SQLException if database operation fails
      */
-    public void insertPropertyDef(Connection conn, Object aspectDefId, String name) throws SQLException
+    public void insertPropertyDef(Connection conn, Object aspectDefId, String name, int propertyIndex) throws SQLException
     {
         executeUpdate(conn,
-            "INSERT INTO property_def (aspect_def_id, name, property_type, default_value, has_default_value, " +
+            "INSERT INTO property_def (aspect_def_id, name, property_index, property_type, default_value, has_default_value, " +
                 "is_readable, is_writable, is_nullable, is_removable, is_multivalued) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            aspectDefId, name, "STR", null, false, true, true, true, false, false);
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            aspectDefId, name, propertyIndex, "STR", null, false, true, true, true, false, false);
     }
 
     /**
@@ -265,16 +266,17 @@ public class CheapTestFactory
      * @param aspectDefId the aspect definition ID
      * @param catalogId the catalog ID
      * @param propertyName the property name
+     * @param propertyIndex the property index
      * @param valueText the text value
      * @throws SQLException if database operation fails
      */
     public void insertPropertyValue(Connection conn, Object entityId, Object aspectDefId, Object catalogId,
-                                     String propertyName, String valueText) throws SQLException
+                                     String propertyName, int propertyIndex, String valueText) throws SQLException
     {
         executeUpdate(conn,
-            "INSERT INTO property_value (entity_id, aspect_def_id, catalog_id, property_name, value_text, value_binary) " +
-                "VALUES (?, ?, ?, ?, ?, ?)",
-            entityId, aspectDefId, catalogId, propertyName, valueText, null);
+            "INSERT INTO property_value (entity_id, aspect_def_id, catalog_id, property_name, property_index, value_index, value_text, value_binary) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            entityId, aspectDefId, catalogId, propertyName, propertyIndex, 0, valueText, null);
     }
 
     /**

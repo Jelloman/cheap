@@ -33,7 +33,7 @@
         <appender-ref ref="FILE"/>
     </root>
 
-    <logger name="net.netbeing.cheap" level="DEBUG">
+    <logger name="net.netbeing.cheap" level="DEBUG" additivity="false">
         <appender-ref ref="CONSOLE"/>
         <appender-ref ref="FILE"/>
     </logger>

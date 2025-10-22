@@ -19,8 +19,8 @@ package net.netbeing.cheap.db.sqlite;
 import net.netbeing.cheap.db.AbstractCheapDao;
 import net.netbeing.cheap.db.AspectTableMapping;
 import net.netbeing.cheap.db.CheapDao;
-import net.netbeing.cheap.model.*;
 import net.netbeing.cheap.impl.basic.CheapFactory;
+import net.netbeing.cheap.model.*;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.LoggerFactory;
 
@@ -221,20 +221,22 @@ public class SqliteDao extends AbstractCheapDao
             stmt.executeUpdate();
         }
 
-        // Save property definitions
+        // Save property definitions with their indices
+        int propertyIndex = 0;
         for (PropertyDef propDef : aspectDef.propertyDefs()) {
-            savePropertyDef(conn, aspectDef, propDef);
+            savePropertyDef(conn, aspectDef, propDef, propertyIndex++);
         }
     }
 
-    private void savePropertyDef(Connection conn, AspectDef aspectDef, PropertyDef propDef) throws SQLException
+    private void savePropertyDef(Connection conn, AspectDef aspectDef, PropertyDef propDef, int propertyIndex) throws SQLException
     {
         String aspectDefId = aspectDef.globalId().toString();
 
-        String sql = "INSERT INTO property_def (aspect_def_id, name, property_type, default_value, " +
+        String sql = "INSERT INTO property_def (aspect_def_id, name, property_index, property_type, default_value, " +
             "has_default_value, is_readable, is_writable, is_nullable, is_removable, is_multivalued) " +
-            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) " +
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) " +
             "ON CONFLICT (aspect_def_id, name) DO UPDATE SET " +
+            "property_index = excluded.property_index, " +
             "property_type = excluded.property_type, " +
             "default_value = excluded.default_value, " +
             "has_default_value = excluded.has_default_value, " +
@@ -246,14 +248,15 @@ public class SqliteDao extends AbstractCheapDao
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, aspectDefId);
             stmt.setString(2, propDef.name());
-            stmt.setString(3, propDef.type().typeCode());
-            stmt.setString(4, propDef.hasDefaultValue() && propDef.defaultValue() != null ? propDef.defaultValue().toString() : null);
-            stmt.setInt(5, propDef.hasDefaultValue() ? 1 : 0);
-            stmt.setInt(6, propDef.isReadable() ? 1 : 0);
-            stmt.setInt(7, propDef.isWritable() ? 1 : 0);
-            stmt.setInt(8, propDef.isNullable() ? 1 : 0);
-            stmt.setInt(9, propDef.isRemovable() ? 1 : 0);
-            stmt.setInt(10, propDef.isMultivalued() ? 1 : 0);
+            stmt.setInt(3, propertyIndex);
+            stmt.setString(4, propDef.type().typeCode());
+            stmt.setString(5, propDef.hasDefaultValue() && propDef.defaultValue() != null ? propDef.defaultValue().toString() : null);
+            stmt.setInt(6, propDef.hasDefaultValue() ? 1 : 0);
+            stmt.setInt(7, propDef.isReadable() ? 1 : 0);
+            stmt.setInt(8, propDef.isWritable() ? 1 : 0);
+            stmt.setInt(9, propDef.isNullable() ? 1 : 0);
+            stmt.setInt(10, propDef.isRemovable() ? 1 : 0);
+            stmt.setInt(11, propDef.isMultivalued() ? 1 : 0);
             stmt.executeUpdate();
         }
     }
@@ -613,8 +616,8 @@ public class SqliteDao extends AbstractCheapDao
             deleteStmt.executeUpdate();
         }
 
-        String sql = "INSERT INTO property_value (entity_id, aspect_def_id, catalog_id, property_name, value_index, " +
-            "value_text, value_binary) VALUES (?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO property_value (entity_id, aspect_def_id, catalog_id, property_name, property_index, value_index, " +
+            "value_text, value_binary) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 
         AspectDef aspectDef = aspect.def();
 
@@ -622,6 +625,7 @@ public class SqliteDao extends AbstractCheapDao
             stmt.setString(1, entityId);
             stmt.setString(2, aspectDefId);
             stmt.setString(3, catalogId);
+            int propertyIndex = 0;
             for (PropertyDef propDef : aspectDef.propertyDefs()) {
                 String propName = propDef.name();
                 Object value = aspect.readObj(propName);
@@ -633,9 +637,10 @@ public class SqliteDao extends AbstractCheapDao
                     // - Multivalued: don't insert any rows (null will be distinguished from empty list during load)
                     if (!propDef.isMultivalued()) {
                         stmt.setString(4, propName);
-                        stmt.setInt(5, 0); // NOSONAR - sonar bug, doesn't see setInt(5,i) below
-                        stmt.setString(6, null); // value_text
-                        stmt.setBytes(7, null);  // value_binary
+                        stmt.setInt(5, propertyIndex);
+                        stmt.setInt(6, 0); // NOSONAR - sonar bug, doesn't see setInt(6,i) below
+                        stmt.setString(7, null); // value_text
+                        stmt.setBytes(8, null);  // value_binary
                         stmt.addBatch();
                     }
                 } else if (propDef.isMultivalued() && value instanceof List) {
@@ -643,35 +648,38 @@ public class SqliteDao extends AbstractCheapDao
                     @SuppressWarnings("unchecked")
                     List<Object> listValues = (List<Object>) value;
                     stmt.setString(4, propName);
+                    stmt.setInt(5, propertyIndex);
 
                     // If empty list, don't insert any rows (empty list represented by no rows)
                     for (int i = 0; i < listValues.size(); i++) {
                         Object itemValue = listValues.get(i);
-                        stmt.setInt(5, i); // value_index
+                        stmt.setInt(6, i); // value_index
 
                         if (type == PropertyType.BLOB) {
-                            stmt.setString(6, null); // value_text
-                            stmt.setBytes(7, (byte[]) itemValue); // value_binary
+                            stmt.setString(7, null); // value_text
+                            stmt.setBytes(8, (byte[]) itemValue); // value_binary
                         } else {
-                            stmt.setString(6, adapter.getValueAdapter().convertValueToString(itemValue, type)); // value_text
-                            stmt.setBytes(7, null); // value_binary
+                            stmt.setString(7, adapter.getValueAdapter().convertValueToString(itemValue, type)); // value_text
+                            stmt.setBytes(8, null); // value_binary
                         }
                         stmt.addBatch();
                     }
                 } else {
                     // For single-valued properties, insert one row with value_index 0
                     stmt.setString(4, propName);
-                    stmt.setInt(5, 0); // NOSONAR - sonar bug, doesn't see setInt(5,i) above
+                    stmt.setInt(5, propertyIndex);
+                    stmt.setInt(6, 0); // NOSONAR - sonar bug, doesn't see setInt(6,i) above
 
                     if (type == PropertyType.BLOB) {
-                        stmt.setString(6, null); // value_text
-                        stmt.setBytes(7, (byte[]) value); // value_binary
+                        stmt.setString(7, null); // value_text
+                        stmt.setBytes(8, (byte[]) value); // value_binary
                     } else {
-                        stmt.setString(6, adapter.getValueAdapter().convertValueToString(value, type)); // value_text
-                        stmt.setBytes(7, null); // value_binary
+                        stmt.setString(7, adapter.getValueAdapter().convertValueToString(value, type)); // value_text
+                        stmt.setBytes(8, null); // value_binary
                     }
                     stmt.addBatch();
                 }
+                propertyIndex++;
             }
 
             stmt.executeBatch();
@@ -955,7 +963,7 @@ public class SqliteDao extends AbstractCheapDao
         String sql = "SELECT property_name, value_index, value_text, value_binary " +
             "FROM property_value " +
             "WHERE entity_id = ? AND aspect_def_id = ? AND catalog_id = ? " +
-            "ORDER BY property_name, value_index";
+            "ORDER BY property_index, value_index";
 
         String aspectDefId = aspectDef.globalId().toString();
 
@@ -973,16 +981,21 @@ public class SqliteDao extends AbstractCheapDao
 
                 while (rs.next()) {
                     String propertyName = rs.getString("property_name");
+                    int valueIndex = rs.getInt("value_index");
                     String valueText = rs.getString("value_text");
                     byte[] valueBinary = rs.getBytes("value_binary");
 
+                    logger.debug("loadAspect - prop name={} index={} entity={}", propertyName, valueIndex, entity.globalId());
+
                     PropertyDef propDef = aspectDef.propertyDef(propertyName);
                     if (propDef == null) {
+                        logger.debug("loadAspect - skip unknown prop {}", propertyName);
                         continue; // Skip unknown properties
                     }
 
                     // Check if we've moved to a new property
                     if (!propertyName.equals(currentPropertyName)) {
+                        logger.debug("loadAspect - prop names diff old {}, new {}", currentPropertyName, propertyName);
                         // Save the previous property if it exists
                         if (currentPropertyName != null) {
                             saveLoadedProperty(aspect, currentPropDef, multivaluedValues);
@@ -998,6 +1011,7 @@ public class SqliteDao extends AbstractCheapDao
                     // Extract and add the value
                     Object value = extractPropertyValue(propDef.type(), valueText, valueBinary);
                     multivaluedValues.add(value);
+                    logger.debug("loadAspect - multivalues size {}", multivaluedValues.size());
                 }
 
                 // Save the last property
@@ -1062,11 +1076,11 @@ public class SqliteDao extends AbstractCheapDao
             }
         }
 
-        // Load property definitions first
+        // Load property definitions first, ordered by property_index to maintain insertion order
         String propSql = "SELECT pd.name, pd.property_type, pd.default_value, pd.has_default_value, " +
             "pd.is_readable, pd.is_writable, pd.is_nullable, pd.is_removable, pd.is_multivalued " +
             "FROM property_def pd JOIN aspect_def ad ON pd.aspect_def_id = ad.aspect_def_id " +
-            "WHERE ad.aspect_def_id = ?";
+            "WHERE ad.aspect_def_id = ? ORDER BY pd.property_index";
 
         Map<String, PropertyDef> propertyDefMap = new LinkedHashMap<>();
 
