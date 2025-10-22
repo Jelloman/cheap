@@ -33,7 +33,7 @@ class HierarchyServiceTest extends BaseServiceTest
     private UUID catalogId;
 
     @BeforeEach
-    void setupHierarchyTest() throws Exception
+    void setupHierarchyTest()
     {
         // Create a catalog with various hierarchy types
         HierarchyDef listHierarchy = factory.createHierarchyDef("myList", HierarchyType.ENTITY_LIST);
@@ -48,7 +48,7 @@ class HierarchyServiceTest extends BaseServiceTest
     }
 
     @Test
-    void testGetHierarchy() throws Exception
+    void testGetHierarchy()
     {
         Hierarchy hierarchy = hierarchyService.getHierarchy(catalogId, "myList");
         assertNotNull(hierarchy);
@@ -81,9 +81,9 @@ class HierarchyServiceTest extends BaseServiceTest
         EntityListHierarchy listHierarchy = (EntityListHierarchy) catalog.hierarchy("myList");
 
         // Add some entities
-        Entity entity1 = factory.getEntity(UUID.randomUUID());
-        Entity entity2 = factory.getEntity(UUID.randomUUID());
-        Entity entity3 = factory.getEntity(UUID.randomUUID());
+        Entity entity1 = factory.createEntity();
+        Entity entity2 = factory.createEntity();
+        Entity entity3 = factory.createEntity();
 
         listHierarchy.add(entity1);
         listHierarchy.add(entity2);
@@ -106,7 +106,7 @@ class HierarchyServiceTest extends BaseServiceTest
 
         // Add 5 entities
         for (int i = 0; i < 5; i++) {
-            Entity entity = factory.getEntity(UUID.randomUUID());
+            Entity entity = factory.createEntity();
             listHierarchy.add(entity);
         }
 
@@ -133,8 +133,8 @@ class HierarchyServiceTest extends BaseServiceTest
         EntityDirectoryHierarchy dirHierarchy = (EntityDirectoryHierarchy) catalog.hierarchy("myDir");
 
         // Add some entities
-        Entity entity1 = factory.getEntity(UUID.randomUUID());
-        Entity entity2 = factory.getEntity(UUID.randomUUID());
+        Entity entity1 = factory.createEntity();
+        Entity entity2 = factory.createEntity();
 
         dirHierarchy.put("key1", entity1);
         dirHierarchy.put("key2", entity2);
@@ -150,7 +150,7 @@ class HierarchyServiceTest extends BaseServiceTest
     }
 
     @Test
-    void testCountHierarchyItems() throws Exception
+    void testCountHierarchyItems()
     {
         // Load catalog
         Catalog catalog = catalogService.getCatalog(catalogId);
@@ -159,8 +159,8 @@ class HierarchyServiceTest extends BaseServiceTest
         EntityListHierarchy listHierarchy = (EntityListHierarchy) catalog.hierarchy("myList");
         assertEquals(0, hierarchyService.countHierarchyItems(listHierarchy));
 
-        Entity entity1 = factory.getEntity(UUID.randomUUID());
-        Entity entity2 = factory.getEntity(UUID.randomUUID());
+        Entity entity1 = factory.createEntity();
+        Entity entity2 = factory.createEntity();
         listHierarchy.add(entity1);
         listHierarchy.add(entity2);
 

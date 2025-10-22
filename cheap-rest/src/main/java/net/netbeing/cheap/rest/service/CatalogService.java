@@ -16,6 +16,7 @@
 
 package net.netbeing.cheap.rest.service;
 
+import jakarta.annotation.Resource;
 import net.netbeing.cheap.db.CheapDao;
 import net.netbeing.cheap.impl.basic.CheapFactory;
 import net.netbeing.cheap.model.AspectDef;
@@ -59,6 +60,9 @@ public class CatalogService
     private final CheapDao dao;
     private final CheapFactory factory;
     private final DataSource dataSource;
+
+    @Resource
+    private CatalogService service;
 
     public CatalogService(CheapDao dao, CheapFactory factory, DataSource dataSource)
     {
@@ -133,10 +137,10 @@ public class CatalogService
             String sql = "SELECT catalog_id FROM catalog ORDER BY catalog_id";
 
             try (PreparedStatement stmt = conn.prepareStatement(sql);
-                 ResultSet rs = stmt.executeQuery()) {
+                ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
-                    allCatalogIds.add((UUID) rs.getObject("catalog_id"));
-                }
+                    String catalogIdStr = rs.getString("catalog_id");
+                    allCatalogIds.add(UUID.fromString(catalogIdStr));                }
             }
 
             // Calculate pagination
@@ -211,7 +215,7 @@ public class CatalogService
     @Transactional(readOnly = true)
     public CatalogDef getCatalogDef(@NotNull UUID catalogId)
     {
-        Catalog catalog = getCatalog(catalogId);
+        Catalog catalog = service.getCatalog(catalogId);
 
         // Convert Hierarchies to HierarchyDefs
         List<HierarchyDef> hierarchyDefs = new ArrayList<>();
@@ -237,6 +241,7 @@ public class CatalogService
      * @param catalogDef the catalog definition to validate
      * @throws ValidationException if validation fails
      */
+    @SuppressWarnings("java:S2583")
     public void validateCatalogDef(@NotNull CatalogDef catalogDef)
     {
         List<ValidationException.ValidationError> errors = new ArrayList<>();
@@ -246,51 +251,18 @@ public class CatalogService
         }
 
         // Validate HierarchyDefs
-        Set<String> hierarchyNames = new HashSet<>();
-        int hierarchyIndex = 0;
-        for (HierarchyDef hierarchyDef : catalogDef.hierarchyDefs()) {
-            if (hierarchyDef == null) {
-                errors.add(new ValidationException.ValidationError(
-                    "catalogDef.hierarchyDefs[" + hierarchyIndex + "]",
-                    "HierarchyDef cannot be null"
-                ));
-                hierarchyIndex++;
-                continue;
-            }
-
-            if (hierarchyDef.name() == null || hierarchyDef.name().trim().isEmpty()) {
-                errors.add(new ValidationException.ValidationError(
-                    "catalogDef.hierarchyDefs[" + hierarchyIndex + "].name",
-                    "HierarchyDef name cannot be null or empty"
-                ));
-            } else {
-                if (!hierarchyNames.add(hierarchyDef.name())) {
-                    errors.add(new ValidationException.ValidationError(
-                        "catalogDef.hierarchyDefs[" + hierarchyIndex + "].name",
-                        "Duplicate HierarchyDef name: " + hierarchyDef.name()
-                    ));
-                }
-            }
-
-            if (hierarchyDef.type() == null) {
-                errors.add(new ValidationException.ValidationError(
-                    "catalogDef.hierarchyDefs[" + hierarchyIndex + "].type",
-                    "HierarchyDef type cannot be null"
-                ));
-            }
-
-            // Do not allow AspectMap hierarchies in the hierarchyDefs - they are auto-created
-            if (hierarchyDef.type() == HierarchyType.ASPECT_MAP) {
-                errors.add(new ValidationException.ValidationError(
-                    "catalogDef.hierarchyDefs[" + hierarchyIndex + "].type",
-                    "AspectMap hierarchies are auto-created from AspectDefs and should not be in hierarchyDefs"
-                ));
-            }
-
-            hierarchyIndex++;
-        }
+        validateHierarchyDefs(catalogDef, errors);
 
         // Validate AspectDefs
+        validateAspectDefs(catalogDef, errors);
+
+        if (!errors.isEmpty()) {
+            throw new ValidationException("CatalogDef validation failed", errors);
+        }
+    }
+
+    private static void validateAspectDefs(@NotNull CatalogDef catalogDef, List<ValidationException.ValidationError> errors)
+    {
         Set<String> aspectDefNames = new HashSet<>();
         Set<UUID> aspectDefIds = new HashSet<>();
         int aspectIndex = 0;
@@ -335,9 +307,52 @@ public class CatalogService
 
             aspectIndex++;
         }
+    }
 
-        if (!errors.isEmpty()) {
-            throw new ValidationException("CatalogDef validation failed", errors);
+    private static void validateHierarchyDefs(@NotNull CatalogDef catalogDef, List<ValidationException.ValidationError> errors)
+    {
+        Set<String> hierarchyNames = new HashSet<>();
+        int hierarchyIndex = 0;
+        for (HierarchyDef hierarchyDef : catalogDef.hierarchyDefs()) {
+            if (hierarchyDef == null) {
+                errors.add(new ValidationException.ValidationError(
+                    "catalogDef.hierarchyDefs[" + hierarchyIndex + "]",
+                    "HierarchyDef cannot be null"
+                ));
+                hierarchyIndex++;
+                continue;
+            }
+
+            if (hierarchyDef.name() == null || hierarchyDef.name().trim().isEmpty()) {
+                errors.add(new ValidationException.ValidationError(
+                    "catalogDef.hierarchyDefs[" + hierarchyIndex + "].name",
+                    "HierarchyDef name cannot be null or empty"
+                ));
+            } else {
+                if (!hierarchyNames.add(hierarchyDef.name())) {
+                    errors.add(new ValidationException.ValidationError(
+                        "catalogDef.hierarchyDefs[" + hierarchyIndex + "].name",
+                        "Duplicate HierarchyDef name: " + hierarchyDef.name()
+                    ));
+                }
+            }
+
+            if (hierarchyDef.type() == null) {
+                errors.add(new ValidationException.ValidationError(
+                    "catalogDef.hierarchyDefs[" + hierarchyIndex + "].type",
+                    "HierarchyDef type cannot be null"
+                ));
+            }
+
+            // Do not allow AspectMap hierarchies in the hierarchyDefs - they are auto-created
+            if (hierarchyDef.type() == HierarchyType.ASPECT_MAP) {
+                errors.add(new ValidationException.ValidationError(
+                    "catalogDef.hierarchyDefs[" + hierarchyIndex + "].type",
+                    "AspectMap hierarchies are auto-created from AspectDefs and should not be in hierarchyDefs"
+                ));
+            }
+
+            hierarchyIndex++;
         }
     }
 
@@ -393,7 +408,7 @@ public class CatalogService
             case ASPECT_MAP -> throw new IllegalStateException(
                 "AspectMap hierarchies should not be in hierarchyDefs"
             );
-        };
+        }
 
         if (logger.isDebugEnabled()) {
             logger.debug("Created hierarchy: {} of type {}", hierarchyDef.name(), hierarchyDef.type());
