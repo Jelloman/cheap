@@ -26,6 +26,7 @@ CREATE TABLE aspect_def (
 CREATE TABLE property_def (
     aspect_def_id CHAR(36) NOT NULL,
     name TEXT NOT NULL,
+    property_index INTEGER NOT NULL,
     property_type VARCHAR(3) NOT NULL CHECK (property_type IN (
         'INT', 'FLT', 'BLN', 'STR', 'TXT', 'BGI', 'BGF',
         'DAT', 'URI', 'UID', 'CLB', 'BLB'
@@ -104,6 +105,7 @@ CREATE TABLE property_value (
     aspect_def_id CHAR(36) NOT NULL,
     catalog_id CHAR(36) NOT NULL,
     property_name TEXT NOT NULL,
+    property_index INTEGER NOT NULL,
     value_index INTEGER NOT NULL DEFAULT 0,
 
     -- Value storage columns - use value_text for all types except BLOB (which uses value_binary)

@@ -41,6 +41,8 @@ dependencies {
     testImplementation(libs.junit.jupiter)
     testImplementation(libs.mariaDB4j)
     testImplementation(project(":cheap-json"))
+    testImplementation(libs.jackson.core)
+    testImplementation(libs.jackson.databind)
     testImplementation(libs.guava)
     testRuntimeOnly(libs.junit.platform.launcher)
 

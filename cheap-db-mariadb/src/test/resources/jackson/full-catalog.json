@@ -5,6 +5,7 @@
   "aspectDefs" : {
     "person" : {
       "name" : "person",
+      "globalId" : "12348400-e24b-41d4-a716-446644440000",
       "propertyDefs" : [ {
         "name" : "age",
         "type" : "Integer"
@@ -16,6 +17,7 @@
     },
     "document" : {
       "name" : "document",
+      "globalId" : "73737400-e24b-41d4-a716-446644440000",
       "propertyDefs" : [ {
         "name" : "title",
         "type" : "String",

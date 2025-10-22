@@ -41,6 +41,8 @@ dependencies {
     //testImplementation(platform("org.junit:junit-bom:5.10.0"))
     testImplementation(libs.junit.jupiter)
     testImplementation(project(":cheap-json"))
+    testImplementation(libs.jackson.core)
+    testImplementation(libs.jackson.databind)
     testImplementation(libs.guava)
     testRuntimeOnly(libs.junit.platform.launcher)
 }

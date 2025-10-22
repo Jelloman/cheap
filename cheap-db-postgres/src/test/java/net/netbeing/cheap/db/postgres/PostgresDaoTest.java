@@ -1306,5 +1306,59 @@ class PostgresDaoTest
         assertEquals("bothids1", loadedBothIdsAsp.readObj("string_col"));
         assertEquals(400L, loadedBothIdsAsp.readObj("integer_col"));
     }
+
+    @Test
+    void testPropertyInsertionOrderIsPreserved() throws Exception
+    {
+        setupEach();
+
+        // Create an AspectDef with properties in a specific order
+        Map<String, PropertyDef> propDefs = new LinkedHashMap<>();
+        propDefs.put("zebra", factory.createPropertyDef("zebra", PropertyType.String, null, false, true, true, true, false, false));
+        propDefs.put("alpha", factory.createPropertyDef("alpha", PropertyType.Integer, null, false, true, true, true, false, false));
+        propDefs.put("middle", factory.createPropertyDef("middle", PropertyType.Boolean, null, false, true, true, true, false, false));
+        propDefs.put("beta", factory.createPropertyDef("beta", PropertyType.Float, null, false, true, true, true, false, false));
+
+        AspectDef originalDef = factory.createImmutableAspectDef("ordered_aspect", propDefs);
+
+        // Create catalog and save the AspectDef
+        UUID catalogId = UUID.randomUUID();
+        Catalog catalog = factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
+        catalog.extend(originalDef);
+
+        postgresDao.saveCatalog(catalog);
+
+        // Load the catalog back
+        Catalog loadedCatalog = postgresDao.loadCatalog(catalogId);
+        assertNotNull(loadedCatalog);
+
+        // Get the loaded AspectDef
+        AspectDef loadedDef = null;
+        for (AspectDef aspectDef : loadedCatalog.aspectDefs()) {
+            if ("ordered_aspect".equals(aspectDef.name())) {
+                loadedDef = aspectDef;
+                break;
+            }
+        }
+        assertNotNull(loadedDef, "AspectDef 'ordered_aspect' should be found in loaded catalog");
+
+        // Verify that the property order is preserved
+        List<String> originalPropNames = originalDef.propertyDefs().stream()
+            .map(PropertyDef::name)
+            .toList();
+
+        List<String> loadedPropNames = loadedDef.propertyDefs().stream()
+            .map(PropertyDef::name)
+            .toList();
+
+        assertEquals(originalPropNames, loadedPropNames,
+            "Property insertion order should be preserved after database round-trip");
+
+        // Explicitly check the order
+        assertEquals("zebra", loadedPropNames.get(0));
+        assertEquals("alpha", loadedPropNames.get(1));
+        assertEquals("middle", loadedPropNames.get(2));
+        assertEquals("beta", loadedPropNames.get(3));
+    }
 }
 
