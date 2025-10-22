@@ -19,11 +19,14 @@ package net.netbeing.cheap.rest.service;
 import net.netbeing.cheap.db.CheapDao;
 import net.netbeing.cheap.impl.basic.CheapFactory;
 import net.netbeing.cheap.model.AspectDef;
+import net.netbeing.cheap.model.AspectMapHierarchy;
 import net.netbeing.cheap.model.Catalog;
 import net.netbeing.cheap.model.CatalogDef;
 import net.netbeing.cheap.model.CatalogSpecies;
+import net.netbeing.cheap.model.Hierarchy;
 import net.netbeing.cheap.model.HierarchyDef;
 import net.netbeing.cheap.model.HierarchyType;
+import net.netbeing.cheap.rest.exception.ResourceNotFoundException;
 import net.netbeing.cheap.rest.exception.ValidationException;
 import net.netbeing.cheap.util.CheapException;
 import org.jetbrains.annotations.NotNull;
@@ -32,7 +35,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.sql.DataSource;
 import java.net.URI;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -51,11 +58,13 @@ public class CatalogService
 
     private final CheapDao dao;
     private final CheapFactory factory;
+    private final DataSource dataSource;
 
-    public CatalogService(CheapDao dao, CheapFactory factory)
+    public CatalogService(CheapDao dao, CheapFactory factory, DataSource dataSource)
     {
         this.dao = dao;
         this.factory = factory;
+        this.dataSource = dataSource;
     }
 
     /**
@@ -104,6 +113,122 @@ public class CatalogService
             logger.error("Failed to save catalog");
             throw new CheapException("Failed to save catalog: " + e.getMessage(), e);
         }
+    }
+
+    /**
+     * Lists all catalog IDs with pagination.
+     *
+     * @param page the page number (zero-indexed)
+     * @param size the page size
+     * @return list of catalog IDs for the requested page
+     */
+    @Transactional(readOnly = true)
+    public List<UUID> listCatalogIds(int page, int size)
+    {
+        logger.debug("Listing catalog IDs - page: {}, size: {}", page, size);
+
+        try (Connection conn = dataSource.getConnection()) {
+            // Query all catalog IDs from the database
+            List<UUID> allCatalogIds = new ArrayList<>();
+            String sql = "SELECT catalog_id FROM catalog ORDER BY catalog_id";
+
+            try (PreparedStatement stmt = conn.prepareStatement(sql);
+                 ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    allCatalogIds.add((UUID) rs.getObject("catalog_id"));
+                }
+            }
+
+            // Calculate pagination
+            int start = page * size;
+            int end = Math.min(start + size, allCatalogIds.size());
+
+            if (start >= allCatalogIds.size()) {
+                return new ArrayList<>();
+            }
+
+            return new ArrayList<>(allCatalogIds.subList(start, end));
+        } catch (SQLException e) {
+            logger.error("Failed to list catalog IDs");
+            throw new CheapException("Failed to list catalog IDs: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Gets the total count of catalogs.
+     *
+     * @return total number of catalogs
+     */
+    @Transactional(readOnly = true)
+    public long countCatalogs()
+    {
+        try (Connection conn = dataSource.getConnection()) {
+            String sql = "SELECT COUNT(*) FROM catalog";
+            try (PreparedStatement stmt = conn.prepareStatement(sql);
+                 ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getLong(1);
+                }
+                return 0;
+            }
+        } catch (SQLException e) {
+            logger.error("Failed to count catalogs");
+            throw new CheapException("Failed to count catalogs: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Gets a catalog by ID.
+     *
+     * @param catalogId the catalog ID
+     * @return the catalog
+     * @throws ResourceNotFoundException if catalog is not found
+     */
+    @Transactional(readOnly = true)
+    public Catalog getCatalog(@NotNull UUID catalogId)
+    {
+        logger.debug("Getting catalog: {}", catalogId);
+
+        try {
+            Catalog catalog = dao.loadCatalog(catalogId);
+            if (catalog == null) {
+                throw new ResourceNotFoundException("Catalog not found: " + catalogId);
+            }
+            return catalog;
+        } catch (SQLException e) {
+            logger.error("Failed to load catalog");
+            throw new CheapException("Failed to load catalog: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Gets a catalog definition by catalog ID.
+     *
+     * @param catalogId the catalog ID
+     * @return the catalog definition
+     * @throws ResourceNotFoundException if catalog is not found
+     */
+    @Transactional(readOnly = true)
+    public CatalogDef getCatalogDef(@NotNull UUID catalogId)
+    {
+        Catalog catalog = getCatalog(catalogId);
+
+        // Convert Hierarchies to HierarchyDefs
+        List<HierarchyDef> hierarchyDefs = new ArrayList<>();
+        for (Hierarchy hierarchy : catalog.hierarchies()) {
+            // Skip AspectMap hierarchies as they are not part of the CatalogDef
+            if (!(hierarchy instanceof AspectMapHierarchy)) {
+                hierarchyDefs.add(factory.createHierarchyDef(hierarchy.name(), hierarchy.type()));
+            }
+        }
+
+        // Get AspectDefs from catalog
+        List<AspectDef> aspectDefs = new ArrayList<>();
+        for (AspectDef aspectDef : catalog.aspectDefs()) {
+            aspectDefs.add(aspectDef);
+        }
+
+        return factory.createCatalogDef(hierarchyDefs, aspectDefs);
     }
 
     /**

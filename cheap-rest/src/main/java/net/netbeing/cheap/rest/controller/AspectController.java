@@ -16,6 +16,9 @@
 
 package net.netbeing.cheap.rest.controller;
 
+import net.netbeing.cheap.model.Aspect;
+import net.netbeing.cheap.rest.dto.AspectQueryRequest;
+import net.netbeing.cheap.rest.dto.AspectQueryResponse;
 import net.netbeing.cheap.rest.dto.UpsertAspectsRequest;
 import net.netbeing.cheap.rest.dto.UpsertAspectsResponse;
 import net.netbeing.cheap.rest.service.AspectService;
@@ -127,5 +130,34 @@ public class AspectController
         // Return 200 if all succeeded, 207 if partial success
         HttpStatus status = failureCount > 0 ? HttpStatus.MULTI_STATUS : HttpStatus.OK;
         return ResponseEntity.status(status).body(response);
+    }
+
+    /**
+     * Queries aspects for multiple entities and AspectDefs.
+     *
+     * @param catalogId the catalog ID
+     * @param request the query request containing entity IDs and AspectDef names
+     * @return map of entity IDs to maps of AspectDef names to aspects
+     */
+    @PostMapping("/query")
+    public ResponseEntity<AspectQueryResponse> queryAspects(
+        @PathVariable UUID catalogId,
+        @RequestBody AspectQueryRequest request)
+    {
+        logger.info("Received request to query {} entities for {} AspectDefs in catalog {}",
+            request.entityIds().size(), request.aspectDefNames().size(), catalogId);
+
+        Map<UUID, Map<String, Aspect>> results = aspectService.queryAspects(
+            catalogId,
+            request.entityIds(),
+            request.aspectDefNames()
+        );
+
+        AspectQueryResponse response = new AspectQueryResponse(
+            catalogId,
+            results
+        );
+
+        return ResponseEntity.ok(response);
     }
 }

@@ -115,6 +115,140 @@ public class AspectDefService
     }
 
     /**
+     * Lists all AspectDefs in a catalog with pagination.
+     *
+     * @param catalogId the catalog ID
+     * @param page the page number (zero-indexed)
+     * @param size the page size
+     * @return list of AspectDefs for the requested page
+     * @throws ResourceNotFoundException if catalog is not found
+     */
+    @Transactional(readOnly = true)
+    public List<AspectDef> listAspectDefs(@NotNull UUID catalogId, int page, int size)
+    {
+        logger.debug("Listing AspectDefs for catalog {} - page: {}, size: {}", catalogId, page, size);
+
+        // Load the catalog
+        Catalog catalog;
+        try {
+            catalog = dao.loadCatalog(catalogId);
+            if (catalog == null) {
+                throw new ResourceNotFoundException("Catalog not found: " + catalogId);
+            }
+        } catch (SQLException e) {
+            logger.error("Failed to load catalog");
+            throw new CheapException("Failed to load catalog: " + e.getMessage(), e);
+        }
+
+        // Get all AspectDefs and paginate
+        List<AspectDef> allAspectDefs = new ArrayList<>();
+        for (AspectDef aspectDef : catalog.aspectDefs()) {
+            allAspectDefs.add(aspectDef);
+        }
+
+        // Calculate pagination
+        int start = page * size;
+        int end = Math.min(start + size, allAspectDefs.size());
+
+        if (start >= allAspectDefs.size()) {
+            return new ArrayList<>();
+        }
+
+        return new ArrayList<>(allAspectDefs.subList(start, end));
+    }
+
+    /**
+     * Gets the total count of AspectDefs in a catalog.
+     *
+     * @param catalogId the catalog ID
+     * @return total number of AspectDefs
+     * @throws ResourceNotFoundException if catalog is not found
+     */
+    @Transactional(readOnly = true)
+    public long countAspectDefs(@NotNull UUID catalogId)
+    {
+        try {
+            Catalog catalog = dao.loadCatalog(catalogId);
+            if (catalog == null) {
+                throw new ResourceNotFoundException("Catalog not found: " + catalogId);
+            }
+
+            int count = 0;
+            for (AspectDef ignored : catalog.aspectDefs()) {
+                count++;
+            }
+            return count;
+        } catch (SQLException e) {
+            logger.error("Failed to count AspectDefs");
+            throw new CheapException("Failed to count AspectDefs: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Gets an AspectDef by name.
+     *
+     * @param catalogId the catalog ID
+     * @param name the AspectDef name
+     * @return the AspectDef
+     * @throws ResourceNotFoundException if catalog or AspectDef is not found
+     */
+    @Transactional(readOnly = true)
+    public AspectDef getAspectDefByName(@NotNull UUID catalogId, @NotNull String name)
+    {
+        logger.debug("Getting AspectDef {} from catalog {}", name, catalogId);
+
+        try {
+            Catalog catalog = dao.loadCatalog(catalogId);
+            if (catalog == null) {
+                throw new ResourceNotFoundException("Catalog not found: " + catalogId);
+            }
+
+            for (AspectDef aspectDef : catalog.aspectDefs()) {
+                if (aspectDef.name().equals(name)) {
+                    return aspectDef;
+                }
+            }
+
+            throw new ResourceNotFoundException("AspectDef not found: " + name);
+        } catch (SQLException e) {
+            logger.error("Failed to load catalog");
+            throw new CheapException("Failed to load catalog: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Gets an AspectDef by ID.
+     *
+     * @param catalogId the catalog ID
+     * @param aspectDefId the AspectDef ID
+     * @return the AspectDef
+     * @throws ResourceNotFoundException if catalog or AspectDef is not found
+     */
+    @Transactional(readOnly = true)
+    public AspectDef getAspectDefById(@NotNull UUID catalogId, @NotNull UUID aspectDefId)
+    {
+        logger.debug("Getting AspectDef {} from catalog {}", aspectDefId, catalogId);
+
+        try {
+            Catalog catalog = dao.loadCatalog(catalogId);
+            if (catalog == null) {
+                throw new ResourceNotFoundException("Catalog not found: " + catalogId);
+            }
+
+            for (AspectDef aspectDef : catalog.aspectDefs()) {
+                if (aspectDef.globalId().equals(aspectDefId)) {
+                    return aspectDef;
+                }
+            }
+
+            throw new ResourceNotFoundException("AspectDef not found: " + aspectDefId);
+        } catch (SQLException e) {
+            logger.error("Failed to load catalog");
+            throw new CheapException("Failed to load catalog: " + e.getMessage(), e);
+        }
+    }
+
+    /**
      * Validates an AspectDef.
      *
      * @param aspectDef the aspect definition to validate

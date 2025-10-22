@@ -242,4 +242,79 @@ public class AspectService
             throw new ValidationException("Aspect data validation failed", errors);
         }
     }
+
+    /**
+     * Queries aspects for multiple entities.
+     *
+     * @param catalogId the catalog ID
+     * @param entityIds the set of entity IDs to query
+     * @param aspectDefNames the set of AspectDef names to retrieve (empty = all)
+     * @return map of entity ID to map of AspectDef name to Aspect
+     * @throws ResourceNotFoundException if catalog is not found
+     */
+    @Transactional(readOnly = true)
+    public Map<UUID, Map<String, Aspect>> queryAspects(@NotNull UUID catalogId,
+                                                        @NotNull java.util.Set<UUID> entityIds,
+                                                        java.util.Set<String> aspectDefNames)
+    {
+        logger.info("Querying aspects for {} entities in catalog {}", entityIds.size(), catalogId);
+
+        // Load the catalog
+        Catalog catalog;
+        try {
+            catalog = dao.loadCatalog(catalogId);
+            if (catalog == null) {
+                throw new ResourceNotFoundException("Catalog not found: " + catalogId);
+            }
+        } catch (SQLException e) {
+            logger.error("Failed to load catalog");
+            throw new CheapException("Failed to load catalog: " + e.getMessage(), e);
+        }
+
+        Map<UUID, Map<String, Aspect>> results = new LinkedHashMap<>();
+
+        // For each entity
+        for (UUID entityId : entityIds) {
+            Entity entity = factory.getEntity(entityId);
+            if (entity == null) {
+                // Entity doesn't exist, skip it
+                continue;
+            }
+
+            Map<String, Aspect> aspectsByName = new LinkedHashMap<>();
+
+            // Determine which AspectDefs to query
+            Iterable<AspectDef> aspectDefsToQuery;
+            if (aspectDefNames == null || aspectDefNames.isEmpty()) {
+                // Query all AspectDefs
+                aspectDefsToQuery = catalog.aspectDefs();
+            } else {
+                // Query only specified AspectDefs
+                List<AspectDef> filtered = new ArrayList<>();
+                for (AspectDef aspectDef : catalog.aspectDefs()) {
+                    if (aspectDefNames.contains(aspectDef.name())) {
+                        filtered.add(aspectDef);
+                    }
+                }
+                aspectDefsToQuery = filtered;
+            }
+
+            // Get aspects for each AspectDef
+            for (AspectDef aspectDef : aspectDefsToQuery) {
+                AspectMapHierarchy aspectMap = catalog.aspects(aspectDef);
+                if (aspectMap != null) {
+                    Aspect aspect = aspectMap.get(entity);
+                    if (aspect != null) {
+                        aspectsByName.put(aspectDef.name(), aspect);
+                    }
+                }
+            }
+
+            if (!aspectsByName.isEmpty()) {
+                results.put(entityId, aspectsByName);
+            }
+        }
+
+        return results;
+    }
 }
