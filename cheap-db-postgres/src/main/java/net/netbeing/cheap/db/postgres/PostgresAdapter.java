@@ -17,7 +17,7 @@
 package net.netbeing.cheap.db.postgres;
 
 import net.netbeing.cheap.db.CheapJdbcAdapter;
-import net.netbeing.cheap.util.CheapFactory;
+import net.netbeing.cheap.impl.basic.CheapFactory;
 import org.jetbrains.annotations.NotNull;
 
 import javax.sql.DataSource;

@@ -24,7 +24,7 @@ class EntitySetHierarchyImplTest
     void setUp()
     {
         catalog = new CatalogImpl();
-        entitySet = new EntitySetHierarchyImpl(catalog, "testEntitySet");
+        entitySet = (EntitySetHierarchyImpl) catalog.createEntitySet("testEntitySet", 0L);
 
         entity1 = new EntityImpl();
         entity2 = new EntityImpl();
@@ -35,7 +35,7 @@ class EntitySetHierarchyImplTest
     @Test
     void constructor_ValidHierarchyDef_CreatesEmptySet()
     {
-        EntitySetHierarchyImpl set = new EntitySetHierarchyImpl(catalog, "testEntitySet");
+        EntitySetHierarchyImpl set = (EntitySetHierarchyImpl) catalog.createEntitySet("testEntitySet", 0L);
 
         assertEquals("testEntitySet", set.name());
         assertEquals(HierarchyType.ENTITY_SET, set.type());
@@ -312,8 +312,8 @@ class EntitySetHierarchyImplTest
     @Test
     void hashCode_SameEntities_ProducesSameHashCode()
     {
-        EntitySetHierarchyImpl set1 = new EntitySetHierarchyImpl(catalog, "testEntitySet");
-        EntitySetHierarchyImpl set2 = new EntitySetHierarchyImpl(catalog, "testEntitySet");
+        EntitySetHierarchyImpl set1 = (EntitySetHierarchyImpl) catalog.createEntitySet("testEntitySet", 0L);
+        EntitySetHierarchyImpl set2 = (EntitySetHierarchyImpl) catalog.createEntitySet("testEntitySet", 0L);
 
         set1.add(entity1);
         set1.add(entity2);
@@ -327,8 +327,8 @@ class EntitySetHierarchyImplTest
     @Test
     void equals_SameEntities_ReturnsTrue()
     {
-        EntitySetHierarchyImpl set1 = new EntitySetHierarchyImpl(catalog, "testEntitySet");
-        EntitySetHierarchyImpl set2 = new EntitySetHierarchyImpl(catalog, "testEntitySet");
+        EntitySetHierarchyImpl set1 = (EntitySetHierarchyImpl) catalog.createEntitySet("testEntitySet", 0L);
+        EntitySetHierarchyImpl set2 = (EntitySetHierarchyImpl) catalog.createEntitySet("testEntitySet", 0L);
 
         set1.add(entity1);
         set1.add(entity2);

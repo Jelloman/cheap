@@ -26,7 +26,7 @@ import net.netbeing.cheap.model.AspectDef;
 import net.netbeing.cheap.model.Catalog;
 import net.netbeing.cheap.model.CatalogSpecies;
 import net.netbeing.cheap.model.Hierarchy;
-import net.netbeing.cheap.util.CheapFactory;
+import net.netbeing.cheap.impl.basic.CheapFactory;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;

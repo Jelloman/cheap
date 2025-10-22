@@ -23,7 +23,7 @@ import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import net.netbeing.cheap.model.HierarchyDef;
 import net.netbeing.cheap.model.HierarchyType;
-import net.netbeing.cheap.util.CheapFactory;
+import net.netbeing.cheap.impl.basic.CheapFactory;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;

@@ -50,6 +50,7 @@ import java.util.stream.Stream;
  * @see Entity
  * @see HierarchyDef
  */
+@SuppressWarnings("unused")
 public class EntityListHierarchyImpl implements EntityListHierarchy
 {
     /** The catalog containing this hierarchy. */
@@ -66,60 +67,47 @@ public class EntityListHierarchyImpl implements EntityListHierarchy
 
     /**
      * Creates a new EntityListHierarchyImpl with the specified hierarchy definition.
+     * Package-private for use by CatalogImpl factory methods.
      *
      * @param catalog the catalog containing this hierarchy
      * @param name the name of this hierarchy in the catalog
      */
-    public EntityListHierarchyImpl(@NotNull Catalog catalog, @NotNull String name)
+    protected EntityListHierarchyImpl(@NotNull Catalog catalog, @NotNull String name)
     {
         this(catalog, name, 0L);
     }
 
     /**
-     * Creates a new EntityListHierarchyImpl with the specified hierarchy definition and
-     * initial capacity.
-     *
-     * @param catalog the catalog containing this hierarchy
-     * @param name the name of this hierarchy in the catalog
-     * @param initialCapacity initial capacity of list
-     */
-    public EntityListHierarchyImpl(@NotNull Catalog catalog, @NotNull String name, int initialCapacity)
-    {
-        this(catalog, name, initialCapacity, 0L);
-    }
-
-    /**
      * Creates a new EntityListHierarchyImpl with the specified hierarchy definition and version.
+     * Public for use by CheapFactory.
      *
      * @param catalog the catalog containing this hierarchy
      * @param name the name of this hierarchy in the catalog
      * @param version the version number of this hierarchy
      */
-    public EntityListHierarchyImpl(@NotNull Catalog catalog, @NotNull String name, long version)
+    protected  EntityListHierarchyImpl(@NotNull Catalog catalog, @NotNull String name, long version)
     {
         this.catalog = catalog;
         this.name = name;
         this.version = version;
         this.entities = new ArrayList<>();
-        catalog.addHierarchy(this);
     }
 
     /**
      * Creates a new EntityListHierarchyImpl with the specified hierarchy definition,
-     * initial capacity, and version.
+     * initial capacity, and version. Public for use by CheapFactory.
      *
      * @param catalog the catalog containing this hierarchy
      * @param name the name of this hierarchy in the catalog
      * @param initialCapacity initial capacity of list
      * @param version the version number of this hierarchy
      */
-    public EntityListHierarchyImpl(@NotNull Catalog catalog, @NotNull String name, int initialCapacity, long version)
+    protected  EntityListHierarchyImpl(@NotNull Catalog catalog, @NotNull String name, int initialCapacity, long version)
     {
         this.catalog = catalog;
         this.name = name;
         this.version = version;
         this.entities = new ArrayList<>(initialCapacity);
-        catalog.addHierarchy(this);
     }
 
     /**

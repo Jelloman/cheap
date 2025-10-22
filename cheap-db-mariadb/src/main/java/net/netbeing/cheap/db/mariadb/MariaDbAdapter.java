@@ -17,7 +17,7 @@
 package net.netbeing.cheap.db.mariadb;
 
 import net.netbeing.cheap.db.CheapJdbcAdapter;
-import net.netbeing.cheap.util.CheapFactory;
+import net.netbeing.cheap.impl.basic.CheapFactory;
 
 import javax.sql.DataSource;
 

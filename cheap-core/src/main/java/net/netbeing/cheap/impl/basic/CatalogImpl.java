@@ -21,6 +21,10 @@ import net.netbeing.cheap.model.AspectMapHierarchy;
 import net.netbeing.cheap.model.Catalog;
 import net.netbeing.cheap.model.CatalogDef;
 import net.netbeing.cheap.model.CatalogSpecies;
+import net.netbeing.cheap.model.EntityDirectoryHierarchy;
+import net.netbeing.cheap.model.EntityListHierarchy;
+import net.netbeing.cheap.model.EntitySetHierarchy;
+import net.netbeing.cheap.model.EntityTreeHierarchy;
 import net.netbeing.cheap.model.Hierarchy;
 import net.netbeing.cheap.model.LocalEntity;
 import org.jetbrains.annotations.NotNull;
@@ -244,5 +248,78 @@ public class CatalogImpl extends LocalEntityOneCatalogImpl implements Catalog
     public long version()
     {
         return version;
+    }
+
+    /**
+     * Creates a new EntityListHierarchy with the specified name and adds it to this catalog.
+     *
+     * @param name the name of the hierarchy to create
+     * @return the newly created EntityListHierarchy
+     */
+    @Override
+    public EntityListHierarchy createEntityList(@NotNull String name, long version, int initialCapacity)
+    {
+        EntityListHierarchy hierarchy = new EntityListHierarchyImpl(this, name);
+        addHierarchy(hierarchy);
+        return hierarchy;
+    }
+
+    /**
+     * Creates a new EntitySetHierarchy with the specified name and adds it to this catalog.
+     *
+     * @param name the name of the hierarchy to create
+     * @return the newly created EntitySetHierarchy
+     */
+    @Override
+    public EntitySetHierarchy createEntitySet(@NotNull String name, long version, int initialCapacity)
+    {
+        EntitySetHierarchy hierarchy = new EntitySetHierarchyImpl(this, name);
+        addHierarchy(hierarchy);
+        return hierarchy;
+    }
+
+    /**
+     * Creates a new EntityDirectoryHierarchy with the specified name and adds it to this catalog.
+     *
+     * @param name the name of the hierarchy to create
+     * @return the newly created EntityDirectoryHierarchy
+     */
+    @Override
+    public EntityDirectoryHierarchy createEntityDirectory(@NotNull String name, long version, int initialCapacity)
+    {
+        EntityDirectoryHierarchy hierarchy = new EntityDirectoryHierarchyImpl(this, name, version, initialCapacity);
+        addHierarchy(hierarchy);
+        return hierarchy;
+    }
+
+    /**
+     * Creates a new EntityTreeHierarchy with the specified name and adds it to this catalog.
+     *
+     * @param name the name of the hierarchy to create
+     * @return the newly created EntityTreeHierarchy
+     */
+    @Override
+    public EntityTreeHierarchy createEntityTree(@NotNull String name, EntityTreeHierarchy.Node root, long version)
+    {
+        if (root == null) {
+            root = new EntityTreeHierarchyImpl.NodeImpl(null);
+        }
+        EntityTreeHierarchy hierarchy = new EntityTreeHierarchyImpl(this, name, root, version);
+        addHierarchy(hierarchy);
+        return hierarchy;
+    }
+
+    /**
+     * Creates a new AspectMapHierarchy for the specified AspectDef and adds it to this catalog.
+     *
+     * @param aspectDef the aspect definition for aspects in this hierarchy
+     * @return the newly created AspectMapHierarchy
+     */
+    @Override
+    public AspectMapHierarchy createAspectMap(@NotNull AspectDef aspectDef, long version)
+    {
+        AspectMapHierarchy hierarchy = new AspectMapHierarchyImpl(this, aspectDef);
+        addHierarchy(hierarchy);
+        return hierarchy;
     }
 }

@@ -62,31 +62,29 @@ public class AspectMapHierarchyImpl implements AspectMapHierarchy
 
     /**
      * Creates a new AspectMapHierarchyImpl to contain the given AspectDef.
-     * AA new HierarchyDef will be constructed.
+     * Package-private for use by CatalogImpl factory methods.
      *
      * @param aspectDef the aspect definition for aspects in this hierarchy
      */
-    public AspectMapHierarchyImpl(@NotNull Catalog catalog, @NotNull AspectDef aspectDef)
+    protected AspectMapHierarchyImpl(@NotNull Catalog catalog, @NotNull AspectDef aspectDef)
     {
         this(catalog, aspectDef, 0L);
     }
 
     /**
      * Creates a new AspectMapHierarchyImpl to contain the given AspectDef with version.
-     * A new HierarchyDef will be constructed.
      *
      * @param catalog the catalog containing this hierarchy
      * @param aspectDef the aspect definition for aspects in this hierarchy
      * @param version the version number of this hierarchy
      */
-    public AspectMapHierarchyImpl(@NotNull Catalog catalog, @NotNull AspectDef aspectDef, long version)
+    protected AspectMapHierarchyImpl(@NotNull Catalog catalog, @NotNull AspectDef aspectDef, long version)
     {
         this.catalog = catalog;
         this.aspectDef = aspectDef;
         this.version = version;
         this.name = aspectDef.name();
         this.aspects = new LinkedHashMap<>();
-        catalog.addHierarchy(this);
     }
 
     /**

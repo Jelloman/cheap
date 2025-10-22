@@ -17,10 +17,8 @@
 package net.netbeing.cheap.util;
 
 import lombok.experimental.UtilityClass;
+import net.netbeing.cheap.impl.basic.CheapFactory;
 import net.netbeing.cheap.impl.basic.EntityImpl;
-import net.netbeing.cheap.impl.basic.EntityTreeHierarchyImpl;
-import net.netbeing.cheap.impl.basic.EntityTreeHierarchyImpl.LeafNodeImpl;
-import net.netbeing.cheap.impl.basic.EntityTreeHierarchyImpl.NodeImpl;
 import net.netbeing.cheap.impl.basic.LocalEntityOneCatalogImpl;
 import net.netbeing.cheap.impl.reflect.RecordAspect;
 import net.netbeing.cheap.impl.reflect.RecordAspectDef;
@@ -114,7 +112,7 @@ public class CheapFileUtil
      * @return a stream of FileRec objects for directory contents
      * @throws IOException if an I/O error occurs during directory traversal
      */
-    public Stream<FileRec> streamDir(Path dir) throws IOException
+    public Stream<FileRec> streamDir(@NotNull Path dir) throws IOException
     {
         return stream(dir, 1);
     }
@@ -132,7 +130,8 @@ public class CheapFileUtil
      * @return a stream of FileRec objects representing files and directories found
      * @throws IOException if an I/O error occurs during directory traversal
      */
-    public Stream<FileRec> stream(Path dir, int maxDepth, FileVisitOption... options) throws IOException
+    @SuppressWarnings("resource")
+    public Stream<FileRec> stream(@NotNull Path dir, int maxDepth, FileVisitOption... options) throws IOException
     {
         final HashMap<Path,BasicFileAttributes> attrs = new HashMap<>();
 
@@ -152,7 +151,7 @@ public class CheapFileUtil
      * @return a map from Path to FileRec for all files and directories found
      * @throws IOException if an I/O error occurs during directory traversal
      */
-    public Map<Path,FileRec> walkAll(Path dir, int maxDepth, FileVisitOption... options) throws IOException
+    public Map<Path,FileRec> walkAll(@NotNull Path dir, int maxDepth, FileVisitOption... options) throws IOException
     {
         try (Stream<FileRec> stream = stream(dir, maxDepth, options)) {
             return stream.collect(Collectors.toMap(FileRec::path, f -> f));
@@ -177,7 +176,7 @@ public class CheapFileUtil
      * @throws IOException if an I/O error occurs during directory traversal
      * @throws ClassCastException if the catalog's FileRec aspect definition is not a RecordAspectDef
      */
-    public void loadFileRecordsOnly(Catalog catalog, Path dir, int maxDepth, FileVisitOption... options) throws IOException
+    public void loadFileRecordsOnly(@NotNull Catalog catalog, @NotNull Path dir, int maxDepth, FileVisitOption... options) throws IOException
     {
         AspectMapHierarchy aspects = catalog.aspects(FILE_REC_ASPECT_NAME);
         if (aspects == null) {
@@ -200,7 +199,7 @@ public class CheapFileUtil
      *   <li>Entities with local aspect maps containing the FileRec information</li>
      * </ul>
      * <p>
-     * The tree hierarchy uses {@link NodeImpl} for directories and {@link LeafNodeImpl} for files.
+     * The tree hierarchy uses regular nodes for directories and leaf nodes for files.
      * Note that empty directories are treated as nodes (not leaves) to allow future child additions.
      * <p>
      * The catalog must already have a {@link RecordAspectDef} registered for the FileRec type.
@@ -215,7 +214,7 @@ public class CheapFileUtil
      * @throws ClassCastException if the catalog's FileRec aspect definition is not a RecordAspectDef
      */
     public void loadFileHierarchy(@NotNull Catalog catalog, @NotNull HierarchyDef hierarchyDef,
-                                  @NotNull Path dir, int maxDepth, FileVisitOption... options) throws IOException
+                                  @NotNull Path dir, int maxDepth, @NotNull CheapFactory factory, FileVisitOption... options) throws IOException
     {
         AspectMapHierarchy aspects = catalog.aspects(FILE_REC_ASPECT_NAME);
         if (aspects == null) {
@@ -224,7 +223,7 @@ public class CheapFileUtil
         RecordAspectDef aspectDef = (RecordAspectDef) aspects.aspectDef();
 
         var walkState = new Object() {
-            EntityTreeHierarchyImpl hierarchy;
+            EntityTreeHierarchy hierarchy;
             Node root;
             Node currentNode;
             FileRec currentFile;
@@ -241,8 +240,9 @@ public class CheapFileUtil
 
                 // Create the hierarchy and root entity the first time through
                 if (walkState.hierarchy == null) {
-                    walkState.hierarchy = new EntityTreeHierarchyImpl(catalog, hierarchyDef.name(), nodeEntity);
+                    walkState.hierarchy = catalog.createEntityTree(hierarchyDef.name(), 0L);
                     walkState.root = walkState.hierarchy.root();
+                    walkState.root.setValue(nodeEntity);
                     walkState.currentNode = walkState.root;
                     walkState.currentFile = newFile;
                     return;
@@ -270,7 +270,7 @@ public class CheapFileUtil
                     } while (!parentPath.equals(ancestorFile.path));
                 }
                 // Create the proper type of tree node; note that this means empty directories are NOT leaves
-                Node node = newFile.isDirectory ? new NodeImpl(nodeEntity, parent) : new LeafNodeImpl(nodeEntity, parent);
+                Node node = newFile.isDirectory ? factory.createTreeNode(nodeEntity, parent) : factory.createTreeLeafNode(nodeEntity, parent);
                 parent.put(newFile.name, node);
                 walkState.currentNode = node;
                 walkState.currentFile = newFile;

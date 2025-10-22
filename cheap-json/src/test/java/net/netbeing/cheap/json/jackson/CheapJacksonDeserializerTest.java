@@ -19,7 +19,7 @@ package net.netbeing.cheap.json.jackson;
 import com.google.common.collect.Iterables;
 import net.netbeing.cheap.json.jackson.deserialize.CheapJacksonDeserializer;
 import net.netbeing.cheap.model.*;
-import net.netbeing.cheap.util.CheapFactory;
+import net.netbeing.cheap.impl.basic.CheapFactory;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -120,7 +120,7 @@ class CheapJacksonDeserializerTest
         assertEquals(HierarchyType.ENTITY_LIST, entityList.type());
         assertEquals(2, entityList.size());
 
-        Entity firstEntity = entityList.get(0);
+        Entity firstEntity = entityList.getFirst();
         assertEquals(UUID.fromString("550e8400-e29b-41d4-a716-446655440000"), firstEntity.globalId());
     }
 
@@ -384,7 +384,7 @@ class CheapJacksonDeserializerTest
         @SuppressWarnings("unchecked")
         List<String> tags = (List<String>) product1.readObj("tags");
         assertEquals(3, tags.size());
-        assertEquals("electronics", tags.get(0));
+        assertEquals("electronics", tags.getFirst());
     }
 
     private String loadJsonResource(String filename) throws IOException

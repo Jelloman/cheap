@@ -6,7 +6,6 @@ import net.netbeing.cheap.model.MutableAspectDef;
 import net.netbeing.cheap.model.Property;
 import net.netbeing.cheap.model.PropertyDef;
 import net.netbeing.cheap.model.PropertyType;
-import net.netbeing.cheap.util.CheapFactory;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;

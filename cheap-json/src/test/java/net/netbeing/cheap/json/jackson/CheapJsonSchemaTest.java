@@ -18,23 +18,21 @@ package net.netbeing.cheap.json.jackson;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.networknt.schema.JsonSchema;
 import com.networknt.schema.JsonSchemaFactory;
 import com.networknt.schema.SpecVersion;
 import com.networknt.schema.ValidationMessage;
-import net.netbeing.cheap.impl.basic.*;
+import net.netbeing.cheap.impl.basic.AspectObjectMapImpl;
+import net.netbeing.cheap.impl.basic.CatalogDefImpl;
+import net.netbeing.cheap.impl.basic.CatalogImpl;
+import net.netbeing.cheap.impl.basic.CheapFactory;
+import net.netbeing.cheap.impl.basic.EntityImpl;
+import net.netbeing.cheap.impl.basic.HierarchyDefImpl;
+import net.netbeing.cheap.impl.basic.ImmutableAspectDefImpl;
+import net.netbeing.cheap.impl.basic.PropertyDefBuilder;
+import net.netbeing.cheap.impl.basic.PropertyImpl;
 import net.netbeing.cheap.json.jackson.serialize.CheapJacksonSerializer;
-import net.netbeing.cheap.model.AspectDef;
-import net.netbeing.cheap.model.AspectMapHierarchy;
-import net.netbeing.cheap.model.Entity;
-import net.netbeing.cheap.model.EntityTreeHierarchy;
-import net.netbeing.cheap.model.HierarchyDef;
-import net.netbeing.cheap.model.HierarchyType;
-import net.netbeing.cheap.model.Property;
-import net.netbeing.cheap.model.PropertyDef;
-import net.netbeing.cheap.model.PropertyType;
+import net.netbeing.cheap.model.*;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -66,6 +64,8 @@ class CheapJsonSchemaTest
     private static final Map<String, JsonSchema> SCHEMAS = new HashMap<>();
 
     private static final UUID CATALOG_ID = UUID.fromString("550e8400-e29b-41d4-a716-444444444444");
+
+    private static final CheapFactory factory = new CheapFactory();
 
     @BeforeAll
     static void loadSchemas() throws IOException
@@ -161,7 +161,7 @@ class CheapJsonSchemaTest
             .setType(PropertyType.Integer)
             .build();
 
-        Map<String, PropertyDef> personProps = ImmutableMap.of("name", nameProp, "age", ageProp);
+        Map<String, PropertyDef> personProps = Map.of("name", nameProp, "age", ageProp);
         UUID aspectDefId = UUID.fromString("12348400-e24b-41d4-a716-446644440000");
         AspectDef personAspectDef = new ImmutableAspectDefImpl("person", aspectDefId, personProps);
         catalog.extend(personAspectDef);
@@ -175,30 +175,31 @@ class CheapJsonSchemaTest
         Entity entity3 = new EntityImpl(entityId3);
 
         // EntityList Hierarchy
-        EntityListHierarchyImpl entityList = new EntityListHierarchyImpl(catalog, "taskQueue");
+        EntityListHierarchy entityList = catalog.createEntityList("taskQueue", 0L);
         entityList.add(entity1);
         entityList.add(entity2);
         entityList.add(entity3);
         entityList.add(entity1); // Duplicate allowed in list
 
         // EntitySet Hierarchy
-        EntitySetHierarchyImpl entitySet = new EntitySetHierarchyImpl(catalog, "activeUsers");
+        EntitySetHierarchy entitySet = catalog.createEntitySet("activeUsers", 0L);
         entitySet.add(entity1);
         entitySet.add(entity2);
         entitySet.add(entity3);
 
         // EntityDirectory Hierarchy
-        EntityDirectoryHierarchyImpl entityDirectory = new EntityDirectoryHierarchyImpl(catalog, "userDirectory");
+        EntityDirectoryHierarchy entityDirectory = catalog.createEntityDirectory("userDirectory", 0L);
         entityDirectory.put("admin", entity1);
         entityDirectory.put("user1", entity2);
         entityDirectory.put("guest", entity3);
 
         // EntityTree Hierarchy
         Entity rootEntity = new EntityImpl(UUID.fromString("10000000-0000-0000-0000-000000000010"));
-        EntityTreeHierarchyImpl entityTree = new EntityTreeHierarchyImpl(catalog, "fileSystem", rootEntity);
+        EntityTreeHierarchy entityTree = catalog.createEntityTree("fileSystem", 0L);
+        entityTree.root().setValue(rootEntity);
         EntityTreeHierarchy.Node root = entityTree.root();
-        EntityTreeHierarchy.Node documentsNode = new EntityTreeHierarchyImpl.NodeImpl(entity2);
-        EntityTreeHierarchy.Node imagesNode = new EntityTreeHierarchyImpl.NodeImpl(entity3);
+        EntityTreeHierarchy.Node documentsNode = factory.createTreeNode(entity2);
+        EntityTreeHierarchy.Node imagesNode = factory.createTreeNode(entity3);
         root.put("documents", documentsNode);
         root.put("images", imagesNode);
 
@@ -219,7 +220,7 @@ class CheapJsonSchemaTest
     }
 
     @Test
-    void testCatalogWithMultipleAspectMaps() throws IOException
+    void testCatalogWithMultipleAspectMaps()
     {
         CatalogImpl catalog = new CatalogImpl(CATALOG_ID);
 
@@ -234,7 +235,7 @@ class CheapJsonSchemaTest
             .setType(PropertyType.String)
             .build();
 
-        Map<String, PropertyDef> documentProps = ImmutableMap.of("title", titleProp, "description", descProp);
+        Map<String, PropertyDef> documentProps = Map.of("title", titleProp, "description", descProp);
         UUID docAspectDefId = UUID.fromString("73737400-e24b-41d4-a716-446644440000");
         AspectDef documentAspectDef = new ImmutableAspectDefImpl("document", docAspectDefId, documentProps);
         catalog.extend(documentAspectDef);
@@ -250,7 +251,7 @@ class CheapJsonSchemaTest
             .setType(PropertyType.Integer)
             .build();
 
-        Map<String, PropertyDef> personProps = ImmutableMap.of("name", nameProp, "age", ageProp);
+        Map<String, PropertyDef> personProps = Map.of("name", nameProp, "age", ageProp);
         UUID personAspectDefId = UUID.fromString("12348400-e24b-41d4-a716-446644440000");
         AspectDef personAspectDef = new ImmutableAspectDefImpl("person", personAspectDefId, personProps);
         catalog.extend(personAspectDef);
@@ -294,7 +295,7 @@ class CheapJsonSchemaTest
     }
 
     @Test
-    void testCatalogWithMultivaluedProperties() throws IOException
+    void testCatalogWithMultivaluedProperties()
     {
         CatalogImpl catalog = new CatalogImpl(CATALOG_ID);
 
@@ -320,7 +321,7 @@ class CheapJsonSchemaTest
             .setIsNullable(false)
             .build();
 
-        Map<String, PropertyDef> productProps = ImmutableMap.of(
+        Map<String, PropertyDef> productProps = Map.of(
             "tags", tagsProp,
             "scores", scoresProp,
             "ratings", ratingsProp,
@@ -341,16 +342,16 @@ class CheapJsonSchemaTest
 
         AspectObjectMapImpl product1 = new AspectObjectMapImpl(entity1, productAspectDef);
         product1.put(new PropertyImpl(titleProp, "Smart Watch"));
-        product1.put(new PropertyImpl(tagsProp, ImmutableList.of("electronics", "gadget", "popular")));
-        product1.put(new PropertyImpl(scoresProp, ImmutableList.of(100L, 95L, 87L)));
-        product1.put(new PropertyImpl(ratingsProp, ImmutableList.of(4.5, 4.8, 4.2)));
+        product1.put(new PropertyImpl(tagsProp, List.of("electronics", "gadget", "popular")));
+        product1.put(new PropertyImpl(scoresProp, List.of(100L, 95L, 87L)));
+        product1.put(new PropertyImpl(ratingsProp, List.of(4.5, 4.8, 4.2)));
         productMap.put(entity1, product1);
 
         AspectObjectMapImpl product2 = new AspectObjectMapImpl(entity2, productAspectDef);
         product2.put(new PropertyImpl(titleProp, "Office Suite"));
-        product2.put(new PropertyImpl(tagsProp, ImmutableList.of("software", "productivity")));
-        product2.put(new PropertyImpl(scoresProp, ImmutableList.of(98L, 92L)));
-        product2.put(new PropertyImpl(ratingsProp, ImmutableList.of(4.7, 4.9)));
+        product2.put(new PropertyImpl(tagsProp, List.of("software", "productivity")));
+        product2.put(new PropertyImpl(scoresProp, List.of(98L, 92L)));
+        product2.put(new PropertyImpl(ratingsProp, List.of(4.7, 4.9)));
         productMap.put(entity2, product2);
 
         String json = CheapJacksonSerializer.toJson(catalog, true);
@@ -358,7 +359,7 @@ class CheapJsonSchemaTest
     }
 
     @Test
-    void testCatalogWithDeepEntityTree() throws IOException
+    void testCatalogWithDeepEntityTree()
     {
         CatalogImpl catalog = new CatalogImpl(CATALOG_ID);
 
@@ -371,19 +372,20 @@ class CheapJsonSchemaTest
         UUID videoId = UUID.fromString("10000000-0000-0000-0000-000000000006");
 
         Entity rootEntity = new EntityImpl(rootId);
-        EntityTreeHierarchyImpl tree = new EntityTreeHierarchyImpl(catalog, "fileSystem", rootEntity);
+        EntityTreeHierarchy tree = catalog.createEntityTree("fileSystem", 0L);
+        tree.root().setValue(rootEntity);
 
         EntityTreeHierarchy.Node root = tree.root();
-        EntityTreeHierarchy.Node documentsNode = new EntityTreeHierarchyImpl.NodeImpl(new EntityImpl(docId));
-        EntityTreeHierarchy.Node imagesNode = new EntityTreeHierarchyImpl.NodeImpl(new EntityImpl(imgId));
+        EntityTreeHierarchy.Node documentsNode = factory.createTreeNode(new EntityImpl(docId));
+        EntityTreeHierarchy.Node imagesNode = factory.createTreeNode(new EntityImpl(imgId));
 
         // Add children to documents
-        EntityTreeHierarchy.Node reportsNode = new EntityTreeHierarchyImpl.NodeImpl(new EntityImpl(reportId));
+        EntityTreeHierarchy.Node reportsNode = factory.createTreeNode(new EntityImpl(reportId));
         documentsNode.put("reports", reportsNode);
 
         // Add children to images
-        EntityTreeHierarchy.Node photosNode = new EntityTreeHierarchyImpl.NodeImpl(new EntityImpl(photoId));
-        EntityTreeHierarchy.Node videosNode = new EntityTreeHierarchyImpl.NodeImpl(new EntityImpl(videoId));
+        EntityTreeHierarchy.Node photosNode = factory.createTreeNode(new EntityImpl(photoId));
+        EntityTreeHierarchy.Node videosNode = factory.createTreeNode(new EntityImpl(videoId));
         imagesNode.put("photos", photosNode);
         imagesNode.put("videos", videosNode);
 
@@ -395,11 +397,11 @@ class CheapJsonSchemaTest
     }
 
     @Test
-    void testCatalogWithLargeEntityList() throws IOException
+    void testCatalogWithLargeEntityList()
     {
         CatalogImpl catalog = new CatalogImpl(CATALOG_ID);
 
-        EntityListHierarchyImpl entityList = new EntityListHierarchyImpl(catalog, "eventQueue");
+        EntityListHierarchy entityList = catalog.createEntityList("eventQueue", 0L);
 
         // Add many entities including duplicates
         for (int i = 1; i <= 20; i++) {
@@ -420,7 +422,7 @@ class CheapJsonSchemaTest
     // ===== Tests: Individual Schema Types =====
 
     @Test
-    void testAspectDefSchema() throws IOException
+    void testAspectDefSchema()
     {
         PropertyDef prop1 = new PropertyDefBuilder()
             .setName("email")
@@ -432,7 +434,7 @@ class CheapJsonSchemaTest
             .setType(PropertyType.Boolean)
             .build();
 
-        Map<String, PropertyDef> props = ImmutableMap.of("email", prop1, "verified", prop2);
+        Map<String, PropertyDef> props = Map.of("email", prop1, "verified", prop2);
         UUID aspectDefId = UUID.fromString("aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee");
         AspectDef aspectDef = new ImmutableAspectDefImpl("user", aspectDefId, props);
 
@@ -441,7 +443,7 @@ class CheapJsonSchemaTest
     }
 
     @Test
-    void testPropertyDefSchema() throws IOException
+    void testPropertyDefSchema()
     {
         PropertyDef propDef = new PropertyDefBuilder()
             .setName("timestamp")
@@ -455,7 +457,7 @@ class CheapJsonSchemaTest
     }
 
     @Test
-    void testPropertyDefSchemaWithMultivalued() throws IOException
+    void testPropertyDefSchemaWithMultivalued()
     {
         PropertyDef propDef = new PropertyDefBuilder()
             .setName("phoneNumbers")
@@ -469,10 +471,10 @@ class CheapJsonSchemaTest
     }
 
     @Test
-    void testHierarchySchemaEntityList() throws IOException
+    void testHierarchySchemaEntityList()
     {
         CatalogImpl catalog = new CatalogImpl(CATALOG_ID);
-        EntityListHierarchyImpl hierarchy = new EntityListHierarchyImpl(catalog, "myList");
+        EntityListHierarchy hierarchy = catalog.createEntityList("myList", 0L);
 
         UUID entityId1 = UUID.fromString("aaaaaaaa-0000-0000-0000-000000000001");
         UUID entityId2 = UUID.fromString("aaaaaaaa-0000-0000-0000-000000000002");
@@ -484,10 +486,10 @@ class CheapJsonSchemaTest
     }
 
     @Test
-    void testHierarchySchemaEntitySet() throws IOException
+    void testHierarchySchemaEntitySet()
     {
         CatalogImpl catalog = new CatalogImpl(CATALOG_ID);
-        EntitySetHierarchyImpl hierarchy = new EntitySetHierarchyImpl(catalog, "mySet");
+        EntitySetHierarchy hierarchy = catalog.createEntitySet("mySet", 0L);
 
         UUID entityId1 = UUID.fromString("bbbbbbbb-0000-0000-0000-000000000001");
         UUID entityId2 = UUID.fromString("bbbbbbbb-0000-0000-0000-000000000002");
@@ -499,10 +501,10 @@ class CheapJsonSchemaTest
     }
 
     @Test
-    void testHierarchySchemaEntityDirectory() throws IOException
+    void testHierarchySchemaEntityDirectory()
     {
         CatalogImpl catalog = new CatalogImpl(CATALOG_ID);
-        EntityDirectoryHierarchyImpl hierarchy = new EntityDirectoryHierarchyImpl(catalog, "myDirectory");
+        EntityDirectoryHierarchy hierarchy = catalog.createEntityDirectory("myDirectory", 0L);
 
         UUID entityId1 = UUID.fromString("cccccccc-0000-0000-0000-000000000001");
         UUID entityId2 = UUID.fromString("cccccccc-0000-0000-0000-000000000002");
@@ -514,15 +516,16 @@ class CheapJsonSchemaTest
     }
 
     @Test
-    void testHierarchySchemaEntityTree() throws IOException
+    void testHierarchySchemaEntityTree()
     {
         CatalogImpl catalog = new CatalogImpl(CATALOG_ID);
         UUID rootId = UUID.fromString("dddddddd-0000-0000-0000-000000000001");
-        EntityTreeHierarchyImpl hierarchy = new EntityTreeHierarchyImpl(catalog, "myTree", new EntityImpl(rootId));
+        EntityTreeHierarchy hierarchy = catalog.createEntityTree("myTree", 0L);
+        hierarchy.root().setValue(new EntityImpl(rootId));
 
         EntityTreeHierarchy.Node root = hierarchy.root();
         UUID childId = UUID.fromString("dddddddd-0000-0000-0000-000000000002");
-        EntityTreeHierarchy.Node child = new EntityTreeHierarchyImpl.NodeImpl(new EntityImpl(childId));
+        EntityTreeHierarchy.Node child = factory.createTreeNode(new EntityImpl(childId));
         root.put("child", child);
 
         String json = CheapJacksonSerializer.toJson(hierarchy, true);
@@ -530,7 +533,7 @@ class CheapJsonSchemaTest
     }
 
     @Test
-    void testHierarchySchemaAspectMap() throws IOException
+    void testHierarchySchemaAspectMap()
     {
         CatalogImpl catalog = new CatalogImpl(CATALOG_ID);
 
@@ -540,7 +543,7 @@ class CheapJsonSchemaTest
             .setIsNullable(false)
             .build();
 
-        Map<String, PropertyDef> props = ImmutableMap.of("name", nameProp);
+        Map<String, PropertyDef> props = Map.of("name", nameProp);
         UUID aspectDefId = UUID.fromString("eeeeeeee-0000-0000-0000-000000000000");
         AspectDef aspectDef = new ImmutableAspectDefImpl("testAspect", aspectDefId, props);
         catalog.extend(aspectDef);
@@ -559,7 +562,7 @@ class CheapJsonSchemaTest
     }
 
     @Test
-    void testAspectSchema() throws IOException
+    void testAspectSchema()
     {
         UUID aspectDefId = UUID.fromString("12345678-1234-1234-1234-123456789012");
         UUID entityId = UUID.fromString("87654321-4321-4321-4321-210987654321");
@@ -574,7 +577,7 @@ class CheapJsonSchemaTest
             .setType(PropertyType.Integer)
             .build();
 
-        Map<String, PropertyDef> props = ImmutableMap.of("name", nameProp, "age", ageProp);
+        Map<String, PropertyDef> props = Map.of("name", nameProp, "age", ageProp);
         AspectDef aspectDef = new ImmutableAspectDefImpl("person", aspectDefId, props);
         Entity entity = new EntityImpl(entityId);
 
@@ -587,7 +590,7 @@ class CheapJsonSchemaTest
     }
 
     @Test
-    void testAspectSchemaWithMultivaluedProperties() throws IOException
+    void testAspectSchemaWithMultivaluedProperties()
     {
         UUID aspectDefId = UUID.fromString("12345678-1234-1234-1234-123456789012");
         UUID entityId = UUID.fromString("87654321-4321-4321-4321-210987654321");
@@ -603,20 +606,20 @@ class CheapJsonSchemaTest
             .setIsMultivalued(true)
             .build();
 
-        Map<String, PropertyDef> props = ImmutableMap.of("tags", tagsProp, "scores", scoresProp);
+        Map<String, PropertyDef> props = Map.of("tags", tagsProp, "scores", scoresProp);
         AspectDef aspectDef = new ImmutableAspectDefImpl("tagged", aspectDefId, props);
         Entity entity = new EntityImpl(entityId);
 
         AspectObjectMapImpl aspect = new AspectObjectMapImpl(entity, aspectDef);
-        aspect.put(new PropertyImpl(tagsProp, ImmutableList.of("tag1", "tag2", "tag3")));
-        aspect.put(new PropertyImpl(scoresProp, ImmutableList.of(100L, 200L, 300L)));
+        aspect.put(new PropertyImpl(tagsProp, List.of("tag1", "tag2", "tag3")));
+        aspect.put(new PropertyImpl(scoresProp, List.of(100L, 200L, 300L)));
 
         String json = CheapJacksonSerializer.toJson(aspect, true);
         validateJson(json, "aspect");
     }
 
     @Test
-    void testPropertySchema() throws IOException
+    void testPropertySchema()
     {
         PropertyDef propDef = new PropertyDefBuilder()
             .setName("username")
@@ -631,7 +634,7 @@ class CheapJsonSchemaTest
     }
 
     @Test
-    void testCatalogDefSchema() throws IOException
+    void testCatalogDefSchema()
     {
         CatalogDefImpl catalogDef = new CatalogDefImpl();
 
@@ -640,7 +643,7 @@ class CheapJsonSchemaTest
     }
 
     @Test
-    void testHierarchyDefSchema() throws IOException
+    void testHierarchyDefSchema()
     {
         HierarchyDef hierarchyDef = new HierarchyDefImpl("testHierarchy", HierarchyType.ENTITY_LIST);
 
@@ -649,7 +652,7 @@ class CheapJsonSchemaTest
     }
 
     @Test
-    void testHierarchyDefSchemaAllTypes() throws IOException
+    void testHierarchyDefSchemaAllTypes()
     {
         for (HierarchyType type : HierarchyType.values()) {
             HierarchyDef hierarchyDef = new HierarchyDefImpl("test_" + type.typeCode(), type);

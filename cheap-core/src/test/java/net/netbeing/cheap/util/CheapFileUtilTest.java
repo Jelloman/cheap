@@ -1,6 +1,6 @@
 package net.netbeing.cheap.util;
 
-import net.netbeing.cheap.impl.basic.CatalogImpl;
+import net.netbeing.cheap.impl.basic.CheapFactory;
 import net.netbeing.cheap.impl.basic.HierarchyDefImpl;
 import net.netbeing.cheap.impl.reflect.RecordAspect;
 import net.netbeing.cheap.impl.reflect.RecordAspectDef;
@@ -35,6 +35,7 @@ class CheapFileUtilTest
     private Path file2;
     private Catalog catalog;
     private RecordAspectDef fileRecAspectDef;
+    private CheapFactory factory;
 
     @BeforeEach
     void setUp()
@@ -44,8 +45,9 @@ class CheapFileUtilTest
         file1 = Paths.get("src/test/resources/hierarchyTestDir/subdir/file1.txt");
         subdir2 = Paths.get("src/test/resources/hierarchyTestDir/subdir/subdir2");
         file2 = Paths.get("src/test/resources/hierarchyTestDir/subdir/subdir2/file2.txt");
-        
-        catalog = new CatalogImpl();
+
+        factory = new CheapFactory();
+        catalog = factory.createCatalog();
         fileRecAspectDef = new RecordAspectDef(FileRec.class);
         
         // Add the FileRec aspect definition to the catalog
@@ -311,7 +313,7 @@ class CheapFileUtilTest
     {
         HierarchyDefImpl treeHierarchyDef = new HierarchyDefImpl("fileTree", HierarchyType.ENTITY_TREE);
         
-        CheapFileUtil.loadFileHierarchy(catalog, treeHierarchyDef, testRoot, 10);
+        CheapFileUtil.loadFileHierarchy(catalog, treeHierarchyDef, testRoot, 10, factory);
         
         // Verify hierarchy was added to catalog
         EntityTreeHierarchy hierarchy = (EntityTreeHierarchy) catalog.hierarchy("fileTree");
@@ -327,6 +329,7 @@ class CheapFileUtilTest
         
         // Verify root has FileRec aspect
         Entity rootEntity = root.value();
+        assertNotNull(rootEntity);
         Aspect rootAspect = rootEntity.getAspect(fileRecAspectDef, catalog);
         assertNotNull(rootAspect);
         @SuppressWarnings("unchecked")
@@ -344,7 +347,7 @@ class CheapFileUtilTest
     {
         HierarchyDefImpl treeHierarchyDef = new HierarchyDefImpl("fileTree", HierarchyType.ENTITY_TREE);
         
-        CheapFileUtil.loadFileHierarchy(catalog, treeHierarchyDef, testRoot, 10);
+        CheapFileUtil.loadFileHierarchy(catalog, treeHierarchyDef, testRoot, 10, factory);
         
         EntityTreeHierarchy hierarchy = (EntityTreeHierarchy) catalog.hierarchy("fileTree");
         Node root = hierarchy.root();
@@ -408,7 +411,7 @@ class CheapFileUtilTest
         HierarchyDefImpl treeHierarchyDef = new HierarchyDefImpl("fileTree", HierarchyType.ENTITY_TREE);
         
         // Load with depth 2 (should exclude file2.txt at depth 3)
-        CheapFileUtil.loadFileHierarchy(catalog, treeHierarchyDef, testRoot, 2);
+        CheapFileUtil.loadFileHierarchy(catalog, treeHierarchyDef, testRoot, 2, factory);
         
         EntityTreeHierarchy hierarchy = (EntityTreeHierarchy) catalog.hierarchy("fileTree");
         Node root = hierarchy.root();
@@ -436,7 +439,7 @@ class CheapFileUtilTest
     {
         HierarchyDefImpl treeHierarchyDef = new HierarchyDefImpl("fileTree", HierarchyType.ENTITY_TREE);
         
-        CheapFileUtil.loadFileHierarchy(catalog, treeHierarchyDef, testRoot, 10, FileVisitOption.FOLLOW_LINKS);
+        CheapFileUtil.loadFileHierarchy(catalog, treeHierarchyDef, testRoot, 10, factory, FileVisitOption.FOLLOW_LINKS);
         
         EntityTreeHierarchy hierarchy = (EntityTreeHierarchy) catalog.hierarchy("fileTree");
         assertNotNull(hierarchy);
@@ -465,7 +468,7 @@ class CheapFileUtilTest
         Path emptyDir = Paths.get("src/test/resources/hierarchyTestDir/subdir/subdir2"); // This only contains file2.txt
         
         // Load with depth 1 to get only the directory itself
-        CheapFileUtil.loadFileHierarchy(catalog, treeHierarchyDef, emptyDir, 1);
+        CheapFileUtil.loadFileHierarchy(catalog, treeHierarchyDef, emptyDir, 1, factory);
         
         EntityTreeHierarchy hierarchy = (EntityTreeHierarchy) catalog.hierarchy("fileTree");
         Node root = hierarchy.root();
@@ -490,7 +493,7 @@ class CheapFileUtilTest
         HierarchyDefImpl treeHierarchyDef = new HierarchyDefImpl("fileTree", HierarchyType.ENTITY_TREE);
         Path singleFile = Paths.get("src/test/resources/hierarchyTestDir/subdir/file1.txt");
         
-        CheapFileUtil.loadFileHierarchy(catalog, treeHierarchyDef, singleFile, 1);
+        CheapFileUtil.loadFileHierarchy(catalog, treeHierarchyDef, singleFile, 1, factory);
         
         EntityTreeHierarchy hierarchy = (EntityTreeHierarchy) catalog.hierarchy("fileTree");
         Node root = hierarchy.root();
@@ -520,7 +523,7 @@ class CheapFileUtilTest
         // Verify hierarchy doesn't exist before
         assertNull(catalog.hierarchy("myFileTree"));
         
-        CheapFileUtil.loadFileHierarchy(catalog, treeHierarchyDef, testRoot, 10);
+        CheapFileUtil.loadFileHierarchy(catalog, treeHierarchyDef, testRoot, 10, factory);
         
         // Verify hierarchy was added to catalog
         Hierarchy hierarchy = catalog.hierarchy("myFileTree");
@@ -537,11 +540,11 @@ class CheapFileUtilTest
         HierarchyDefImpl treeHierarchyDef2 = new HierarchyDefImpl("fileTree", HierarchyType.ENTITY_TREE);
         
         // First call
-        CheapFileUtil.loadFileHierarchy(catalog, treeHierarchyDef1, testRoot, 2);
+        CheapFileUtil.loadFileHierarchy(catalog, treeHierarchyDef1, testRoot, 2, factory);
         EntityTreeHierarchy hierarchy1 = (EntityTreeHierarchy) catalog.hierarchy("fileTree");
         
         // Second call with same name should replace the first
-        CheapFileUtil.loadFileHierarchy(catalog, treeHierarchyDef2, testRoot, 1);
+        CheapFileUtil.loadFileHierarchy(catalog, treeHierarchyDef2, testRoot, 1, factory);
         EntityTreeHierarchy hierarchy2 = (EntityTreeHierarchy) catalog.hierarchy("fileTree");
         
         assertNotEquals(hierarchy1, hierarchy2); // Should be different instances

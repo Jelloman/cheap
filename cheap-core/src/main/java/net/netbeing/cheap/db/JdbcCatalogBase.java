@@ -16,16 +16,13 @@
 
 package net.netbeing.cheap.db;
 
-import net.netbeing.cheap.impl.basic.AspectMapHierarchyImpl;
-import net.netbeing.cheap.impl.basic.AspectPropertyMapImpl;
 import net.netbeing.cheap.impl.basic.CatalogImpl;
-import net.netbeing.cheap.impl.basic.MutableAspectDefImpl;
-import net.netbeing.cheap.impl.basic.PropertyDefBuilder;
-import net.netbeing.cheap.impl.basic.PropertyDefImpl;
-import net.netbeing.cheap.impl.basic.PropertyImpl;
+import net.netbeing.cheap.model.Aspect;
 import net.netbeing.cheap.model.AspectDef;
 import net.netbeing.cheap.model.AspectMapHierarchy;
 import net.netbeing.cheap.model.Entity;
+import net.netbeing.cheap.model.MutableAspectDef;
+import net.netbeing.cheap.model.Property;
 import net.netbeing.cheap.model.PropertyDef;
 import net.netbeing.cheap.model.PropertyType;
 import net.netbeing.cheap.util.CheapException;
@@ -133,7 +130,7 @@ public abstract class JdbcCatalogBase extends CatalogImpl
      */
     public AspectDef loadTableDef(@NotNull String tableName)
     {
-        MutableAspectDefImpl aspectDef = new MutableAspectDefImpl(tableName);
+        MutableAspectDef aspectDef = adapter.getFactory().createMutableAspectDef(tableName);
 
         try (Connection connection = adapter.getConnection()) {
             DatabaseMetaData metaData = connection.getMetaData();
@@ -145,8 +142,13 @@ public abstract class JdbcCatalogBase extends CatalogImpl
                     boolean isNullable = columns.getInt("NULLABLE") == DatabaseMetaData.columnNullable;
 
                     PropertyType propertyType = mapDbTypeToPropertyType(dbTypeName);
-                    PropertyDefImpl propertyDef = new PropertyDefBuilder().setName(columnName).setType(propertyType)
-                        .setIsReadable(true).setIsWritable(true).setIsNullable(isNullable).setIsRemovable(true)
+                    PropertyDef propertyDef = adapter.factory.createPropertyDefBuilder()
+                        .setName(columnName)
+                        .setType(propertyType)
+                        .setIsReadable(true)
+                        .setIsWritable(true)
+                        .setIsNullable(isNullable)
+                        .setIsRemovable(true)
                         .setIsMultivalued(false).build();
 
                     aspectDef.add(propertyDef);
@@ -186,7 +188,7 @@ public abstract class JdbcCatalogBase extends CatalogImpl
         }
 
         AspectDef aspectDef = getTableDef(tableName);
-        AspectMapHierarchyImpl hierarchy = new AspectMapHierarchyImpl(this, aspectDef);
+        AspectMapHierarchy hierarchy = createAspectMap(aspectDef, 0L);
 
         String query = "SELECT * FROM " + tableName;
         if (maxRows >= 0) {
@@ -202,7 +204,7 @@ public abstract class JdbcCatalogBase extends CatalogImpl
 
             while (resultSet.next()) {
                 Entity entity = createEntity();
-                AspectPropertyMapImpl aspect = new AspectPropertyMapImpl(entity, aspectDef);
+                Aspect aspect = adapter.getFactory().createPropertyMapAspect(entity, aspectDef);
 
                 // Create properties for each column
                 for (int i = 1; i <= columnCount; i++) {
@@ -211,7 +213,7 @@ public abstract class JdbcCatalogBase extends CatalogImpl
 
                     PropertyDef propDef = aspectDef.propertyDef(columnName);
                     if (propDef != null) {
-                        PropertyImpl property = new PropertyImpl(propDef, convertValue(value, propDef));
+                        Property property = adapter.getFactory().createProperty(propDef, convertValue(value, propDef));
                         aspect.unsafeAdd(property);
                     }
                 }

@@ -16,7 +16,6 @@
 
 package net.netbeing.cheap.model;
 
-import net.netbeing.cheap.impl.basic.AspectMapHierarchyImpl;
 import org.jetbrains.annotations.NotNull;
 
 import java.net.URI;
@@ -39,8 +38,11 @@ import java.util.UUID;
  * <p>Catalogs extend Entity, meaning they have their own global identity and can
  * have aspects attached to them, allowing for metadata about the catalog itself.</p>
  */
+@SuppressWarnings({"UnusedReturnValue", "unused"})
 public interface Catalog extends Entity
 {
+    int DEFAULT_HIERARCHY_COLLECTION_SIZE = 10;
+
     /**
      * Returns the globally unique identifier for this catalog.
      *
@@ -153,6 +155,115 @@ public interface Catalog extends Entity
     }
 
     /**
+     * Creates a new EntityListHierarchy with the specified name and adds it to this catalog.
+     * Entity lists maintain insertion order and allow duplicate entities.
+     *
+     * @param name the name of the hierarchy to create
+     * @param version the version number of this hierarchy
+     * @return the newly created EntityListHierarchy
+     */
+    default EntityListHierarchy createEntityList(@NotNull String name, long version)
+    {
+        return createEntityList(name, version, DEFAULT_HIERARCHY_COLLECTION_SIZE);
+    }
+
+    /**
+     * Creates a new EntityListHierarchy with the specified name and adds it to this catalog.
+     * Entity lists maintain insertion order and allow duplicate entities.
+     *
+     * @param name the name of the hierarchy to create
+     * @param version the version number of this hierarchy
+     * @param initialCapacity the initial capacity of the collection
+     * @return the newly created EntityListHierarchy
+     */
+    EntityListHierarchy createEntityList(@NotNull String name, long version, int initialCapacity);
+
+    /**
+     * Creates a new EntitySetHierarchy with the specified name and adds it to this catalog.
+     * Entity sets prevent duplicates and optionally maintain insertion order.
+     *
+     * @param name the name of the hierarchy to create
+     * @param version the version number of this hierarchy
+     * @return the newly created EntitySetHierarchy
+     */
+    default EntitySetHierarchy createEntitySet(@NotNull String name, long version)
+    {
+        return createEntitySet(name, version, DEFAULT_HIERARCHY_COLLECTION_SIZE);
+    }
+
+
+    /**
+     * Creates a new EntitySetHierarchy with the specified name and adds it to this catalog.
+     * Entity sets prevent duplicates and optionally maintain insertion order.
+     *
+     * @param name the name of the hierarchy to create
+     * @param version the version number of this hierarchy
+     * @param initialCapacity the initial capacity of the collection
+     * @return the newly created EntitySetHierarchy
+     */
+    EntitySetHierarchy createEntitySet(@NotNull String name, long version, int initialCapacity);
+
+    /**
+     * Creates a new EntityDirectoryHierarchy with the specified name and adds it to this catalog.
+     * Entity directories provide string-to-entity mappings.
+     *
+     * @param name the name of the hierarchy to create
+     * @param version the version number of this hierarchy
+     * @return the newly created EntityDirectoryHierarchy
+     */
+    default EntityDirectoryHierarchy createEntityDirectory(@NotNull String name, long version)
+    {
+        return createEntityDirectory(name, version, DEFAULT_HIERARCHY_COLLECTION_SIZE);
+    }
+
+
+    /**
+     * Creates a new EntityDirectoryHierarchy with the specified name and adds it to this catalog.
+     * Entity directories provide string-to-entity mappings.
+     *
+     * @param name the name of the hierarchy to create
+     * @param version the version number of this hierarchy
+     * @param initialCapacity the initial capacity of the collection
+     * @return the newly created EntityDirectoryHierarchy
+     */
+    EntityDirectoryHierarchy createEntityDirectory(@NotNull String name, long version, int initialCapacity);
+
+    /**
+     * Creates a new EntityTreeHierarchy with the specified name and adds it to this catalog.
+     * Entity trees organize entities in a hierarchical tree structure.
+     *
+     * @param name the name of the hierarchy to create
+     * @param version the version number of this hierarchy
+     * @return the newly created EntityTreeHierarchy
+     */
+    default EntityTreeHierarchy createEntityTree(@NotNull String name, long version)
+    {
+        return createEntityTree(name, null, version);
+    }
+
+    /**
+     * Creates a new EntityTreeHierarchy with the specified name and existing root Node,
+     * and adds it to this catalog.
+     * Entity trees organize entities in a hierarchical tree structure.
+     *
+     * @param name the name of the hierarchy to create
+     * @param root the root node of the tree
+     * @param version the version number of this hierarchy
+     * @return the newly created EntityTreeHierarchy
+     */
+    EntityTreeHierarchy createEntityTree(@NotNull String name, EntityTreeHierarchy.Node root, long version);
+
+    /**
+     * Creates a new AspectMapHierarchy for the specified AspectDef and adds it to this catalog.
+     * Aspect maps store all aspects of a specific type, organized by entity.
+     *
+     * @param aspectDef the aspect definition for aspects in this hierarchy
+     * @param version the version number of this hierarchy
+     * @return the newly created AspectMapHierarchy
+     */
+    AspectMapHierarchy createAspectMap(@NotNull AspectDef aspectDef, long version);
+
+    /**
      * Extend the catalog with a new type of Aspects to store. If the AspectDef is
      * already included in this catalog, this is a no-op. If it's not part of the
      * CatalogDef and this catalog is flagged as strict, an exception will be
@@ -171,6 +282,6 @@ public interface Catalog extends Entity
             }
             return aMap;
         }
-        return new AspectMapHierarchyImpl(this, aspectDef);
+        return createAspectMap(aspectDef, 0L);
     }
 }

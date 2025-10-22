@@ -40,6 +40,9 @@ dependencies {
     implementation(libs.guava)
     implementation(libs.jackson.core)
     implementation(libs.jackson.databind)
+    implementation(libs.slf4j)
+    implementation(libs.logback.core)
+    implementation(libs.logback.classic)
 
     compileOnly(libs.jetbrains.annotations)
 

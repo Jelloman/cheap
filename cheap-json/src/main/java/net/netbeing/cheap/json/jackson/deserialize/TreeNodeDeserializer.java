@@ -21,9 +21,10 @@ import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonMappingException;
+import net.netbeing.cheap.impl.basic.CheapFactory;
 import net.netbeing.cheap.model.Entity;
 import net.netbeing.cheap.model.EntityTreeHierarchy;
-import net.netbeing.cheap.util.CheapFactory;
+import net.netbeing.cheap.model.EntityTreeHierarchy.Node;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
@@ -32,7 +33,7 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * Jackson deserializer for {@link EntityTreeHierarchy.Node} objects in the Cheap data model.
+ * Jackson deserializer for {@link Node} objects in the Cheap data model.
  * <p>
  * This deserializer recursively reconstructs tree node structures from JSON format,
  * handling both leaf nodes and internal nodes with children. Each node can optionally
@@ -57,12 +58,12 @@ import java.util.UUID;
  * when deserializing EntityTreeHierarchy objects.
  * </p>
  *
- * @see EntityTreeHierarchy.Node
+ * @see Node
  * @see EntityTreeHierarchy
  * @see HierarchyDeserializer
  * @see CheapFactory
  */
-class TreeNodeDeserializer extends JsonDeserializer<EntityTreeHierarchy.Node>
+class TreeNodeDeserializer extends JsonDeserializer<Node>
 {
     private final CheapFactory factory;
 
@@ -72,15 +73,17 @@ class TreeNodeDeserializer extends JsonDeserializer<EntityTreeHierarchy.Node>
     }
 
     @Override
-    public EntityTreeHierarchy.Node deserialize(JsonParser p, DeserializationContext context) throws IOException
+    public Node deserialize(JsonParser p, DeserializationContext context) throws IOException
     {
         if (p.currentToken() != JsonToken.START_OBJECT) {
             throw new JsonMappingException(p, "Expected START_OBJECT token");
         }
 
+        final Node parent = (Node) context.getAttribute("CheapParentTreeNode");
         UUID entityId = null;
-        Map<String, EntityTreeHierarchy.Node> children = new LinkedHashMap<>();
+        Map<String, Node> children = new LinkedHashMap<>();
         boolean isLeaf = false;
+        Node thisNode = null;
 
         while (p.nextToken() != JsonToken.END_OBJECT) {
             String fieldName = p.currentName();
@@ -99,11 +102,14 @@ class TreeNodeDeserializer extends JsonDeserializer<EntityTreeHierarchy.Node>
                 }
                 case "children" -> {
                     if (p.currentToken() == JsonToken.START_OBJECT) {
+                        thisNode = factory.createTreeNode(null, parent);
+                        context.setAttribute("CheapParentTreeNode", thisNode);
                         while (p.nextToken() != JsonToken.END_OBJECT) {
                             String key = p.currentName();
                             p.nextToken();
-                            children.put(key, p.readValueAs(EntityTreeHierarchy.Node.class));
+                            children.put(key, p.readValueAs(Node.class));
                         }
+                        context.setAttribute("CheapParentTreeNode", parent);
                     }
                 }
                 default -> p.skipChildren();
@@ -115,19 +121,18 @@ class TreeNodeDeserializer extends JsonDeserializer<EntityTreeHierarchy.Node>
         if (entityId != null) {
             entity = factory.getOrRegisterNewEntity(entityId);
         }
-
-        // Create appropriate node type
-        EntityTreeHierarchy.Node node;
         if (isLeaf) {
-            node = factory.createTreeLeafNode(entity);
+            return factory.createTreeLeafNode(entity, parent);
+        }
+        if (thisNode != null) {
+            thisNode.setValue(entity);
         } else {
-            node = factory.createTreeNode(entity);
-            // Add children to non-leaf nodes
-            for (Map.Entry<String, EntityTreeHierarchy.Node> entry : children.entrySet()) {
-                node.put(entry.getKey(), entry.getValue());
-            }
+            thisNode = factory.createTreeNode(entity, parent);
         }
 
-        return node;
+        // Add children to non-leaf nodes
+        thisNode.putAll(children);
+
+        return thisNode;
     }
 }

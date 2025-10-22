@@ -28,7 +28,7 @@ class AspectMapHierarchyImplTest
         catalog = new CatalogImpl();
         String uniqueName = "test" + System.nanoTime();
         aspectDef = new MutableAspectDefImpl(uniqueName);
-        hierarchy = new AspectMapHierarchyImpl(catalog, aspectDef);
+        hierarchy = (AspectMapHierarchyImpl) catalog.createAspectMap(aspectDef, 0L);
 
         entity1 = new EntityImpl();
         entity2 = new EntityImpl();
