@@ -6,7 +6,8 @@
       "Bash(./gradlew:*)",
       "Bash(find:*)",
       "Bash(test:*)",
-      "Bash(mkdir:*)"
+      "Bash(mkdir:*)",
+      "Bash(xargs:*)"
     ],
     "deny": [],
     "ask": []

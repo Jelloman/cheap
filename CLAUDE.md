@@ -109,6 +109,7 @@ For detailed information about Cheap's core concepts (Catalogs, Hierarchies, Ent
 - Lombok managed via Gradle plugin rather than direct dependencies
 - Dependencies managed through Gradle version catalogs (`libs.*`)
 - Null safety enforced with JetBrains annotations
+- Do NOT use Java modules or generate module-info.java files.
 
 # Code style
 - ALWAYS put a newline at the end of every text file (.java, .js, .ts, .json, .sql, .md, etc.)
