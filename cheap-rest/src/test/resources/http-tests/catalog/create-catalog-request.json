@@ -1,0 +1,48 @@
+{
+  "catalogDef": {
+    "hierarchyDefs": [
+      {
+        "name": "people",
+        "type": "ES"
+      }
+    ],
+    "aspectDefs": {
+      "person": {
+        "name": "person",
+        "globalId": "550e8400-e29b-41d4-a716-446655440001",
+        "propertyDefs": [
+          {
+            "name": "firstName",
+            "type": "String",
+            "isNullable": false,
+            "isReadable": true,
+            "isWritable": true,
+            "isSearchable": false,
+            "isUnique": false
+          },
+          {
+            "name": "lastName",
+            "type": "String",
+            "isNullable": false,
+            "isReadable": true,
+            "isWritable": true,
+            "isSearchable": false,
+            "isUnique": false
+          },
+          {
+            "name": "age",
+            "type": "Integer",
+            "isNullable": true,
+            "isReadable": true,
+            "isWritable": true,
+            "isSearchable": false,
+            "isUnique": false
+          }
+        ]
+      }
+    }
+  },
+  "species": "SINK",
+  "upstream": null,
+  "uri": "http://example.com/test-catalog"
+}

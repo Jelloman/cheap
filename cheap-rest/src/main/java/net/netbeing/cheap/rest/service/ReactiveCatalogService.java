@@ -111,4 +111,26 @@ public class ReactiveCatalogService
         return Mono.fromCallable(() -> catalogService.getCatalogDef(catalogId))
             .subscribeOn(jdbcScheduler);
     }
+
+    /**
+     * Gets a catalog definition by ID as a response DTO reactively.
+     * This method converts the CatalogDef to a DTO with Lists instead of Iterables
+     * to avoid WebFlux treating it as a streaming response.
+     *
+     * @param catalogId the catalog ID
+     * @return Mono emitting the catalog definition response DTO
+     */
+    public Mono<net.netbeing.cheap.rest.dto.GetCatalogDefResponse> getCatalogDefResponse(@NotNull UUID catalogId)
+    {
+        return getCatalogDef(catalogId)
+            .map(catalogDef -> {
+                var hierarchyDefs = new java.util.ArrayList<net.netbeing.cheap.model.HierarchyDef>();
+                catalogDef.hierarchyDefs().forEach(hierarchyDefs::add);
+
+                var aspectDefs = new java.util.ArrayList<net.netbeing.cheap.model.AspectDef>();
+                catalogDef.aspectDefs().forEach(aspectDefs::add);
+
+                return new net.netbeing.cheap.rest.dto.GetCatalogDefResponse(hierarchyDefs, aspectDefs);
+            });
+    }
 }

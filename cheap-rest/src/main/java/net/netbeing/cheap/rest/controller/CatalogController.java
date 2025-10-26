@@ -20,9 +20,12 @@ import net.netbeing.cheap.model.CatalogDef;
 import net.netbeing.cheap.rest.dto.CatalogListResponse;
 import net.netbeing.cheap.rest.dto.CreateCatalogRequest;
 import net.netbeing.cheap.rest.dto.CreateCatalogResponse;
+import net.netbeing.cheap.rest.dto.GetCatalogDefResponse;
 import net.netbeing.cheap.rest.service.ReactiveCatalogService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -127,13 +130,13 @@ public class CatalogController
      * Gets a catalog definition by ID reactively.
      *
      * @param catalogId the catalog ID
-     * @return Mono emitting the catalog definition
+     * @return Mono emitting the catalog definition response DTO
      */
     @GetMapping("/{catalogId}")
-    public Mono<CatalogDef> getCatalog(@PathVariable UUID catalogId)
+    public Mono<GetCatalogDefResponse> getCatalog(@PathVariable UUID catalogId)
     {
         logger.info("Received request to get catalog {}", catalogId);
 
-        return catalogService.getCatalogDef(catalogId);
+        return catalogService.getCatalogDefResponse(catalogId);
     }
 }

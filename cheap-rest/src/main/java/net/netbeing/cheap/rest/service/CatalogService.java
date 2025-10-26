@@ -33,6 +33,7 @@ import net.netbeing.cheap.util.CheapException;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -62,6 +63,7 @@ public class CatalogService
     private final DataSource dataSource;
 
     @Resource
+    @Lazy
     private CatalogService service;
 
     public CatalogService(CheapDao dao, CheapFactory factory, DataSource dataSource)

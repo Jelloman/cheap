@@ -92,6 +92,30 @@ public class CheapJacksonDeserializer
     }
 
     /**
+     * Creates a Jackson SimpleModule with Cheap custom deserializers.
+     * This module can be registered with any ObjectMapper to enable Cheap deserialization.
+     *
+     * @param factory the CheapFactory to use for object creation
+     * @return a configured SimpleModule with Cheap deserializers
+     */
+    public static @NotNull SimpleModule createCheapModule(@NotNull CheapFactory factory)
+    {
+        SimpleModule module = new SimpleModule("CheapDeserializerModule");
+
+        // Register custom deserializers for each Cheap type
+        module.addDeserializer(Catalog.class, new CatalogDeserializer(factory));
+        module.addDeserializer(CatalogDef.class, new CatalogDefDeserializer(factory));
+        module.addDeserializer(AspectDef.class, new AspectDefDeserializer(factory));
+        module.addDeserializer(PropertyDef.class, new PropertyDefDeserializer(factory));
+        module.addDeserializer(HierarchyDef.class, new HierarchyDefDeserializer(factory));
+        module.addDeserializer(Hierarchy.class, new HierarchyDeserializer(factory));
+        module.addDeserializer(Aspect.class, new AspectDeserializer(factory));
+        module.addDeserializer(EntityTreeHierarchy.Node.class, new TreeNodeDeserializer(factory));
+
+        return module;
+    }
+
+    /**
      * Deserializes a JSON string to a Catalog object.
      *
      * @param json the JSON string to deserialize
