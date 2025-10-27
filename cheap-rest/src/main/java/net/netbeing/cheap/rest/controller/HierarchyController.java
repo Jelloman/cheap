@@ -17,7 +17,7 @@
 package net.netbeing.cheap.rest.controller;
 
 import net.netbeing.cheap.model.*;
-import net.netbeing.cheap.rest.dto.*;
+import net.netbeing.cheap.json.dto.*;
 import net.netbeing.cheap.rest.service.ReactiveHierarchyService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -14,22 +14,20 @@
  *  limitations under the License.
  */
 
-package net.netbeing.cheap.rest.dto;
+package net.netbeing.cheap.json.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import net.netbeing.cheap.model.Aspect;
 
 import java.util.Map;
 import java.util.UUID;
 
 /**
- * Response DTO for AspectMap hierarchy contents.
+ * Response DTO for EntityDirectory hierarchy contents.
  */
-public record AspectMapResponse(
+public record EntityDirectoryResponse(
     @JsonProperty("catalogId") UUID catalogId,
     @JsonProperty("hierarchyName") String hierarchyName,
-    @JsonProperty("aspectDefName") String aspectDefName,
-    @JsonProperty("content") Map<UUID, Aspect> content,
+    @JsonProperty("content") Map<String, UUID> content,
     @JsonProperty("page") int page,
     @JsonProperty("size") int size,
     @JsonProperty("totalElements") long totalElements,

@@ -14,20 +14,19 @@
  *  limitations under the License.
  */
 
-package net.netbeing.cheap.rest.dto;
+package net.netbeing.cheap.json.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import java.net.URI;
+import java.util.Set;
 import java.util.UUID;
 
 /**
- * Response DTO for catalog creation.
+ * Request DTO for querying aspects.
  */
-public record CreateCatalogResponse(
-    @JsonProperty("catalogId") UUID catalogId,
-    @JsonProperty("uri") URI uri,
-    @JsonProperty("message") String message
+public record AspectQueryRequest(
+    @JsonProperty("entityIds") Set<UUID> entityIds,
+    @JsonProperty("aspectDefNames") Set<String> aspectDefNames
 )
 {
 }

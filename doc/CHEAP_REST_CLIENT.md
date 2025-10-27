@@ -189,11 +189,9 @@ To: `cheap-json/src/main/java/net/netbeing/cheap/json/dto/`
        // JetBrains annotations
        compileOnly(libs.jetbrains.annotations)
 
-       // Testing
+       // Testing (unit tests only - integration tests will be in separate module)
        testImplementation(libs.junit.jupiter)
        testImplementation(libs.spring.boot.starter.test)
-       testImplementation(project(":cheap-rest")) // For integration tests
-       testImplementation(libs.sqlite.jdbc)
 
        testRuntimeOnly(libs.junit.platform.launcher)
    }
@@ -871,26 +869,46 @@ public class CheapRestServerException extends CheapRestClientException
 
 ## Phase 4: Testing
 
-**Objective:** Create comprehensive tests for the client library.
+**Objective:** Create comprehensive unit tests for the client library using mocked WebClient responses.
+
+### Test Resource Setup
+
+**Copy test JSON files from cheap-rest:**
+
+1. Copy test JSON files from `cheap-rest/src/test/resources/http-tests/` to `cheap-rest-client/src/test/resources/http-tests/`
+2. These JSON files contain realistic response samples from the cheap-rest API
+3. Use these files to mock WebClient responses in unit tests, ensuring tests match actual API behavior
 
 ### Test Structure
 
 ```
-cheap-rest-client/src/test/java/net/netbeing/cheap/rest/client/
-├── CheapRestClientTest.java           # Unit tests with mocked WebClient
+cheap-rest-client/src/test/
+├── java/net/netbeing/cheap/rest/client/
+│   └── CheapRestClientTest.java           # Unit tests with mocked WebClient
+└── resources/
+    └── http-tests/                        # JSON response samples copied from cheap-rest
+        ├── catalog-create-response.json
+        ├── catalog-list-response.json
+        ├── aspectdef-create-response.json
+        └── ... (other test JSON files)
 ```
 
 ### Unit Tests (CheapRestClientTest.java)
 
-- Mock WebClient responses
+- Mock WebClient responses using JSON files from test resources
 - Test successful requests for all endpoints
 - Test error handling (400, 404, 500 status codes)
-- Test serialization/deserialization
+- Test serialization/deserialization using real JSON samples
 - Test pagination parameters
+- Verify proper exception mapping
+
+**Note:** Integration tests (tests that start an actual cheap-rest server) will be implemented later in an independent module. This phase focuses only on unit tests with mocked responses.
 
 ### Validation Checklist
 
-- [ ] Unit tests created for all client methods
+- [ ] Test JSON files copied from cheap-rest to cheap-rest-client
+- [ ] Unit tests created for all client methods using mocked responses
+- [ ] Tests use JSON files from resources for realistic mocking
 - [ ] Error handling tests pass
 - [ ] All tests pass with `./gradlew :cheap-rest-client:test`
 - [ ] Test coverage > 80%
@@ -995,7 +1013,8 @@ AspectQueryResponse queryResponse = client.queryAspects(
 - [ ] Add JavaDoc to all public APIs
 
 ### Phase 4: Testing
-- [ ] Create unit tests
+- [ ] Copy test JSON files from cheap-rest/src/test/resources/http-tests
+- [ ] Create unit tests using mocked WebClient with JSON files
 - [ ] Verify all tests pass
 - [ ] Verify test coverage > 80%
 
@@ -1077,13 +1096,14 @@ cheap-rest
 ## Success Criteria
 
 - [ ] cheap-rest-client module builds successfully
-- [ ] All tests pass (unit and integration)
+- [ ] All unit tests pass with mocked WebClient responses
 - [ ] Test coverage > 80%
 - [ ] No dependencies on cheap-rest module (only cheap-json)
 - [ ] All public APIs documented with JavaDoc
 - [ ] README.md with usage examples
-- [ ] Integration test demonstrates full workflow
+- [ ] Test JSON files copied and used for realistic mocking
 - [ ] `./gradlew build` succeeds for entire project
+- [ ] Integration tests deferred to separate module (future work)
 
 ## Timeline Estimate
 

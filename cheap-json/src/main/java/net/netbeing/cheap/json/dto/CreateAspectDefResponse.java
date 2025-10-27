@@ -14,20 +14,19 @@
  *  limitations under the License.
  */
 
-package net.netbeing.cheap.rest.dto;
+package net.netbeing.cheap.json.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import net.netbeing.cheap.model.EntityTreeHierarchy;
 
 import java.util.UUID;
 
 /**
- * Response DTO for EntityTree hierarchy contents.
+ * Response DTO for AspectDef creation.
  */
-public record EntityTreeResponse(
-    @JsonProperty("catalogId") UUID catalogId,
-    @JsonProperty("hierarchyName") String hierarchyName,
-    @JsonProperty("root") EntityTreeHierarchy.Node root
+public record CreateAspectDefResponse(
+    @JsonProperty("aspectDefId") UUID aspectDefId,
+    @JsonProperty("aspectDefName") String aspectDefName,
+    @JsonProperty("message") String message
 )
 {
 }

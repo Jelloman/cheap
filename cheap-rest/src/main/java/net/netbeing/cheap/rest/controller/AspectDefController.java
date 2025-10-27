@@ -17,8 +17,8 @@
 package net.netbeing.cheap.rest.controller;
 
 import net.netbeing.cheap.model.AspectDef;
-import net.netbeing.cheap.rest.dto.AspectDefListResponse;
-import net.netbeing.cheap.rest.dto.CreateAspectDefResponse;
+import net.netbeing.cheap.json.dto.AspectDefListResponse;
+import net.netbeing.cheap.json.dto.CreateAspectDefResponse;
 import net.netbeing.cheap.rest.service.ReactiveAspectDefService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -120,7 +120,7 @@ public class ReactiveCatalogService
      * @param catalogId the catalog ID
      * @return Mono emitting the catalog definition response DTO
      */
-    public Mono<net.netbeing.cheap.rest.dto.GetCatalogDefResponse> getCatalogDefResponse(@NotNull UUID catalogId)
+    public Mono<net.netbeing.cheap.json.dto.GetCatalogDefResponse> getCatalogDefResponse(@NotNull UUID catalogId)
     {
         return getCatalogDef(catalogId)
             .map(catalogDef -> {
@@ -130,7 +130,7 @@ public class ReactiveCatalogService
                 var aspectDefs = new java.util.ArrayList<net.netbeing.cheap.model.AspectDef>();
                 catalogDef.aspectDefs().forEach(aspectDefs::add);
 
-                return new net.netbeing.cheap.rest.dto.GetCatalogDefResponse(hierarchyDefs, aspectDefs);
+                return new net.netbeing.cheap.json.dto.GetCatalogDefResponse(hierarchyDefs, aspectDefs);
             });
     }
 }

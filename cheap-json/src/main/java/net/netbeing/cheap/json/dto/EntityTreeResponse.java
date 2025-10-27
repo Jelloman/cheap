@@ -14,23 +14,20 @@
  *  limitations under the License.
  */
 
-package net.netbeing.cheap.rest.dto;
+package net.netbeing.cheap.json.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import net.netbeing.cheap.model.CatalogDef;
-import net.netbeing.cheap.model.CatalogSpecies;
+import net.netbeing.cheap.model.EntityTreeHierarchy;
 
-import java.net.URI;
 import java.util.UUID;
 
 /**
- * Request DTO for creating a new catalog.
+ * Response DTO for EntityTree hierarchy contents.
  */
-public record CreateCatalogRequest(
-    @JsonProperty("catalogDef") CatalogDef catalogDef,
-    @JsonProperty("species") CatalogSpecies species,
-    @JsonProperty("upstream") UUID upstream,
-    @JsonProperty("uri") URI uri
+public record EntityTreeResponse(
+    @JsonProperty("catalogId") UUID catalogId,
+    @JsonProperty("hierarchyName") String hierarchyName,
+    @JsonProperty("root") EntityTreeHierarchy.Node root
 )
 {
 }

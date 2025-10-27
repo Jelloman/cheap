@@ -17,10 +17,10 @@
 package net.netbeing.cheap.rest.controller;
 
 import net.netbeing.cheap.model.Aspect;
-import net.netbeing.cheap.rest.dto.AspectQueryRequest;
-import net.netbeing.cheap.rest.dto.AspectQueryResponse;
-import net.netbeing.cheap.rest.dto.UpsertAspectsRequest;
-import net.netbeing.cheap.rest.dto.UpsertAspectsResponse;
+import net.netbeing.cheap.json.dto.AspectQueryRequest;
+import net.netbeing.cheap.json.dto.AspectQueryResponse;
+import net.netbeing.cheap.json.dto.UpsertAspectsRequest;
+import net.netbeing.cheap.json.dto.UpsertAspectsResponse;
 import net.netbeing.cheap.rest.service.AspectService;
 import net.netbeing.cheap.rest.service.ReactiveAspectService;
 import org.slf4j.Logger;

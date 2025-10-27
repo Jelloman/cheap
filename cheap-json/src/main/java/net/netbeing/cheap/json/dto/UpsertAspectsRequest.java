@@ -14,19 +14,28 @@
  *  limitations under the License.
  */
 
-package net.netbeing.cheap.rest.dto;
+package net.netbeing.cheap.json.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import java.util.Set;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /**
- * Request DTO for querying aspects.
+ * Request DTO for upserting aspects.
  */
-public record AspectQueryRequest(
-    @JsonProperty("entityIds") Set<UUID> entityIds,
-    @JsonProperty("aspectDefNames") Set<String> aspectDefNames
+public record UpsertAspectsRequest(
+    @JsonProperty("aspects") List<AspectData> aspects
 )
 {
+    /**
+     * Aspect data for a single entity.
+     */
+    public record AspectData(
+        @JsonProperty("entityId") UUID entityId,
+        @JsonProperty("properties") Map<String, Object> properties
+    )
+    {
+    }
 }

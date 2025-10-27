@@ -14,6 +14,7 @@
             <option value="$PROJECT_DIR$/cheap-db-sqlite" />
             <option value="$PROJECT_DIR$/cheap-json" />
             <option value="$PROJECT_DIR$/cheap-rest" />
+            <option value="$PROJECT_DIR$/cheap-rest-client" />
           </set>
         </option>
       </GradleProjectSettings>

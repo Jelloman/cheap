@@ -14,24 +14,20 @@
  *  limitations under the License.
  */
 
-package net.netbeing.cheap.rest.dto;
+package net.netbeing.cheap.json.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import net.netbeing.cheap.model.AspectDef;
 
-import java.util.List;
+import java.net.URI;
 import java.util.UUID;
 
 /**
- * Response DTO for paginated AspectDef list.
+ * Response DTO for catalog creation.
  */
-public record AspectDefListResponse(
+public record CreateCatalogResponse(
     @JsonProperty("catalogId") UUID catalogId,
-    @JsonProperty("content") List<AspectDef> content,
-    @JsonProperty("page") int page,
-    @JsonProperty("size") int size,
-    @JsonProperty("totalElements") long totalElements,
-    @JsonProperty("totalPages") int totalPages
+    @JsonProperty("uri") URI uri,
+    @JsonProperty("message") String message
 )
 {
 }

@@ -14,24 +14,20 @@
  *  limitations under the License.
  */
 
-package net.netbeing.cheap.rest.dto;
-
-import com.fasterxml.jackson.annotation.JsonProperty;
-
-import java.util.List;
-import java.util.UUID;
+package net.netbeing.cheap.rest.client.exception;
 
 /**
- * Response DTO for EntityList and EntitySet hierarchy contents.
+ * Base exception for all Cheap REST client errors.
  */
-public record EntityListResponse(
-    @JsonProperty("catalogId") UUID catalogId,
-    @JsonProperty("hierarchyName") String hierarchyName,
-    @JsonProperty("content") List<UUID> content,
-    @JsonProperty("page") int page,
-    @JsonProperty("size") int size,
-    @JsonProperty("totalElements") long totalElements,
-    @JsonProperty("totalPages") int totalPages
-)
+public class CheapRestClientException extends RuntimeException
 {
+    public CheapRestClientException(String message)
+    {
+        super(message);
+    }
+
+    public CheapRestClientException(String message, Throwable cause)
+    {
+        super(message, cause);
+    }
 }

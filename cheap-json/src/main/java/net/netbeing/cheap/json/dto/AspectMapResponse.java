@@ -14,21 +14,26 @@
  *  limitations under the License.
  */
 
-package net.netbeing.cheap.rest.dto;
+package net.netbeing.cheap.json.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import net.netbeing.cheap.model.AspectDef;
-import net.netbeing.cheap.model.HierarchyDef;
+import net.netbeing.cheap.model.Aspect;
 
-import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 /**
- * Response DTO for getting a catalog definition.
- * This DTO uses Lists instead of Iterables to avoid WebFlux treating the response as a stream.
+ * Response DTO for AspectMap hierarchy contents.
  */
-public record GetCatalogDefResponse(
-    @JsonProperty("hierarchyDefs") List<HierarchyDef> hierarchyDefs,
-    @JsonProperty("aspectDefs") List<AspectDef> aspectDefs
+public record AspectMapResponse(
+    @JsonProperty("catalogId") UUID catalogId,
+    @JsonProperty("hierarchyName") String hierarchyName,
+    @JsonProperty("aspectDefName") String aspectDefName,
+    @JsonProperty("content") Map<UUID, Aspect> content,
+    @JsonProperty("page") int page,
+    @JsonProperty("size") int size,
+    @JsonProperty("totalElements") long totalElements,
+    @JsonProperty("totalPages") int totalPages
 )
 {
 }
