@@ -21,11 +21,22 @@ package net.netbeing.cheap.rest.client.exception;
  */
 public class CheapRestClientException extends RuntimeException
 {
+    /**
+     * Creates a new exception with the specified message.
+     *
+     * @param message the error message
+     */
     public CheapRestClientException(String message)
     {
         super(message);
     }
 
+    /**
+     * Creates a new exception with the specified message and cause.
+     *
+     * @param message the error message
+     * @param cause   the underlying cause
+     */
     public CheapRestClientException(String message, Throwable cause)
     {
         super(message, cause);

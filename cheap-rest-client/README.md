@@ -40,12 +40,11 @@ import net.netbeing.cheap.json.dto.CatalogListResponse;
 CheapFactory factory = new CheapFactory();
 
 // Create a catalog
-CatalogDef catalogDef = factory.createImmutableCatalogDef("MyDataCatalog");
+CatalogDef catalogDef = factory.createCatalogDef();
 CreateCatalogResponse response = client.createCatalog(
     catalogDef,
     CatalogSpecies.DATA_CACHE,
-    null,  // no upstream
-    null   // no URI
+    null  // no upstream
 );
 UUID catalogId = response.catalogId();
 
@@ -68,14 +67,18 @@ import net.netbeing.cheap.json.dto.AspectDefListResponse;
 import java.util.Map;
 
 // Create an aspect definition
-AspectDef personDef = factory.createImmutableAspectDef("person", Map.of(
-    "name", factory.createPropertyDef("name", PropertyType.String, false),
-    "age", factory.createPropertyDef("age", PropertyType.Integer, false),
-    "email", factory.createPropertyDef("email", PropertyType.String, false)
-));
+AspectDef personDef = factory.createImmutableAspectDef(
+    "person",
+    UUID.randomUUID(),
+    Map.of(
+        "name", factory.createPropertyDef("name", PropertyType.String),
+        "age", factory.createPropertyDef("age", PropertyType.Integer),
+        "email", factory.createPropertyDef("email", PropertyType.String)
+    )
+);
 
 CreateAspectDefResponse aspectDefResponse = client.createAspectDef(catalogId, personDef);
-System.out.println("Created AspectDef: " + aspectDefResponse.aspectDefName());
+System.out.println("Created AspectDef: " + aspectDefResponse.aspectDefId());
 
 // List aspect definitions
 AspectDefListResponse aspectDefs = client.listAspectDefs(catalogId, 0, 20);

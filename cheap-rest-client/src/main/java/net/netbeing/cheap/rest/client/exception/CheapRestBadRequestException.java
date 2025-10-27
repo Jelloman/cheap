@@ -22,11 +22,22 @@ package net.netbeing.cheap.rest.client.exception;
 @SuppressWarnings("unused")
 public class CheapRestBadRequestException extends CheapRestClientException
 {
+    /**
+     * Creates a new exception with the specified message.
+     *
+     * @param message the error message
+     */
     public CheapRestBadRequestException(String message)
     {
         super(message);
     }
 
+    /**
+     * Creates a new exception with the specified message and cause.
+     *
+     * @param message the error message
+     * @param cause   the underlying cause
+     */
     public CheapRestBadRequestException(String message, Throwable cause)
     {
         super(message, cause);

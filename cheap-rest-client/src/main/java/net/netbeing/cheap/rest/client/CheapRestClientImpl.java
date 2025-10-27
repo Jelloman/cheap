@@ -21,6 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 import net.netbeing.cheap.impl.basic.CheapFactory;
 import net.netbeing.cheap.json.dto.*;
 import net.netbeing.cheap.json.jackson.deserialize.CheapJacksonDeserializer;
+import net.netbeing.cheap.json.jackson.serialize.CheapJacksonSerializer;
 import net.netbeing.cheap.model.AspectDef;
 import net.netbeing.cheap.model.CatalogDef;
 import net.netbeing.cheap.model.CatalogSpecies;
@@ -55,9 +56,10 @@ public class CheapRestClientImpl implements CheapRestClient
      */
     public CheapRestClientImpl(@NotNull String baseUrl)
     {
-        // Configure ObjectMapper with Cheap deserializers
+        // Configure ObjectMapper with Cheap serializers and deserializers
         ObjectMapper objectMapper = new ObjectMapper();
         CheapFactory factory = new CheapFactory();
+        objectMapper.registerModule(CheapJacksonSerializer.createCheapModule());
         objectMapper.registerModule(CheapJacksonDeserializer.createCheapModule(factory));
 
         // Configure WebClient with custom ObjectMapper

@@ -54,6 +54,7 @@ dependencies {
     // Testing (unit tests only - integration tests will be in separate module)
     testImplementation(libs.junit.jupiter)
     testImplementation(libs.spring.boot.starter.test)
+    testImplementation(libs.okhttp3.mockwebserver)
 
     testRuntimeOnly(libs.junit.platform.launcher)
 }
