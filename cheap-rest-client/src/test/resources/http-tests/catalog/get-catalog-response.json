@@ -2,40 +2,27 @@
   "hierarchyDefs": [
     {
       "name": "people",
-      "type": "ENTITY_SET"
+      "type": "ES"
     }
   ],
   "aspectDefs": [
     {
       "name": "person",
-      "globalId": "550e8400-e29b-41d4-a716-446655440001",
+      "globalId": "$ASPECT_DEF_ID",
       "propertyDefs": [
         {
           "name": "firstName",
           "type": "String",
-          "isNullable": false,
-          "isReadable": true,
-          "isWritable": true,
-          "isSearchable": false,
-          "isUnique": false
+          "isNullable": false
         },
         {
           "name": "lastName",
           "type": "String",
-          "isNullable": false,
-          "isReadable": true,
-          "isWritable": true,
-          "isSearchable": false,
-          "isUnique": false
+          "isNullable": false
         },
         {
           "name": "age",
-          "type": "Integer",
-          "isNullable": true,
-          "isReadable": true,
-          "isWritable": true,
-          "isSearchable": false,
-          "isUnique": false
+          "type": "Integer"
         }
       ]
     }

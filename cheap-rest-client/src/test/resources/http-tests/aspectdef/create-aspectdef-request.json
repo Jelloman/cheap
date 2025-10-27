@@ -1,0 +1,33 @@
+{
+  "name": "com.example.ProductAspect",
+  "globalId": "770e8400-e29b-41d4-a716-446655440001",
+  "propertyDefs": [
+    {
+      "name": "productName",
+      "type": "String",
+      "isNullable": false,
+      "isReadable": true,
+      "isWritable": true,
+      "isRemovable": false,
+      "isMultivalued": false
+    },
+    {
+      "name": "price",
+      "type": "Float",
+      "isNullable": false,
+      "isReadable": true,
+      "isWritable": true,
+      "isRemovable": false,
+      "isMultivalued": false
+    },
+    {
+      "name": "sku",
+      "type": "String",
+      "isNullable": false,
+      "isReadable": true,
+      "isWritable": false,
+      "isRemovable": false,
+      "isMultivalued": false
+    }
+  ]
+}
