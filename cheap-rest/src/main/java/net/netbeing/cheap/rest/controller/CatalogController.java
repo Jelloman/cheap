@@ -16,6 +16,13 @@
 
 package net.netbeing.cheap.rest.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import net.netbeing.cheap.model.CatalogDef;
 import net.netbeing.cheap.rest.dto.CatalogListResponse;
 import net.netbeing.cheap.rest.dto.CreateCatalogRequest;
@@ -46,6 +53,7 @@ import java.util.UUID;
  */
 @RestController
 @RequestMapping("/api/catalogs")
+@Tag(name = "Catalogs", description = "Catalog management endpoints for creating and querying catalogs")
 public class CatalogController
 {
     private static final Logger logger = LoggerFactory.getLogger(CatalogController.class);
@@ -71,7 +79,17 @@ public class CatalogController
      */
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public Mono<CreateCatalogResponse> createCatalog(@RequestBody CreateCatalogRequest request)
+    @Operation(summary = "Create a new catalog",
+               description = "Creates a new catalog with the specified definition, species, and optional upstream catalog")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "201", description = "Catalog created successfully",
+                     content = @Content(schema = @Schema(implementation = CreateCatalogResponse.class))),
+        @ApiResponse(responseCode = "400", description = "Invalid catalog definition or validation failed"),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    public Mono<CreateCatalogResponse> createCatalog(
+            @Parameter(description = "Catalog creation request with catalogDef, species, and optional URI/upstream")
+            @RequestBody CreateCatalogRequest request)
     {
         logger.info("Received request to create catalog with species: {}", request.species());
 
@@ -96,8 +114,18 @@ public class CatalogController
      * @return Mono emitting paginated list of catalog IDs
      */
     @GetMapping
+    @Operation(summary = "List all catalogs",
+               description = "Returns a paginated list of all catalog IDs with metadata (total count, page info)")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Catalog list retrieved successfully",
+                     content = @Content(schema = @Schema(implementation = CatalogListResponse.class))),
+        @ApiResponse(responseCode = "400", description = "Invalid page size (exceeds maximum)"),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
     public Mono<CatalogListResponse> listCatalogs(
+        @Parameter(description = "Page number (zero-indexed)", example = "0")
         @RequestParam(defaultValue = "0") int page,
+        @Parameter(description = "Page size (defaults to configured value)", example = "20")
         @RequestParam(required = false) Integer size)
     {
         int pageSize = size != null ? size : defaultPageSize;
@@ -133,7 +161,17 @@ public class CatalogController
      * @return Mono emitting the catalog definition response DTO
      */
     @GetMapping("/{catalogId}")
-    public Mono<GetCatalogDefResponse> getCatalog(@PathVariable UUID catalogId)
+    @Operation(summary = "Get catalog definition by ID",
+               description = "Retrieves the complete catalog definition including all hierarchy and aspect definitions")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Catalog definition retrieved successfully",
+                     content = @Content(schema = @Schema(implementation = GetCatalogDefResponse.class))),
+        @ApiResponse(responseCode = "404", description = "Catalog not found"),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    public Mono<GetCatalogDefResponse> getCatalog(
+            @Parameter(description = "Catalog UUID", example = "550e8400-e29b-41d4-a716-446655440000")
+            @PathVariable UUID catalogId)
     {
         logger.info("Received request to get catalog {}", catalogId);
 

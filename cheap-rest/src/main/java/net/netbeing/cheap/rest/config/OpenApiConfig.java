@@ -28,6 +28,7 @@ import java.util.List;
 
 /**
  * OpenAPI/Swagger configuration for the Cheap REST API.
+ * Configured for Spring WebFlux reactive endpoints.
  */
 @Configuration
 public class OpenApiConfig
@@ -38,8 +39,9 @@ public class OpenApiConfig
         return new OpenAPI()
             .info(new Info()
                 .title("Cheap REST API")
-                .description("REST API for the Cheap data caching system. " +
-                    "Provides endpoints for creating and querying catalogs, AspectDefs, hierarchies, and aspects.")
+                .description("Reactive REST API for the Cheap data caching system using Spring WebFlux. " +
+                    "Provides non-blocking endpoints for creating and querying catalogs, AspectDefs, " +
+                    "hierarchies, and aspects. All endpoints return Mono or Flux for reactive processing.")
                 .version("0.1")
                 .contact(new Contact()
                     .name("Cheap Project")
@@ -50,7 +52,7 @@ public class OpenApiConfig
             .servers(List.of(
                 new Server()
                     .url("http://localhost:8080")
-                    .description("Development server")
+                    .description("Development server (WebFlux/Netty)")
             ));
     }
 }
