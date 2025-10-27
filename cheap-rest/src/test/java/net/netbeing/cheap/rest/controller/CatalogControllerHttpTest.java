@@ -18,13 +18,18 @@ package net.netbeing.cheap.rest.controller;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.springframework.http.MediaType;
+import org.springframework.test.annotation.DirtiesContext;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * HTTP integration tests for CatalogController using JSON files.
  */
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
+@Execution(ExecutionMode.SAME_THREAD)
 class CatalogControllerHttpTest extends BaseControllerHttpTest
 {
     @Test

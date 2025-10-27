@@ -3,7 +3,19 @@
     "hierarchyDefs": [
       {
         "name": "people",
+        "type": "EL"
+      },
+      {
+        "name": "users",
         "type": "ES"
+      },
+      {
+        "name": "documents",
+        "type": "ED"
+      },
+      {
+        "name": "categories",
+        "type": "ET"
       }
     ],
     "aspectDefs": {
@@ -24,15 +36,6 @@
             "name": "lastName",
             "type": "String",
             "isNullable": false,
-            "isReadable": true,
-            "isWritable": true,
-            "isRemovable": false,
-            "isMultivalued": false
-          },
-          {
-            "name": "age",
-            "type": "Integer",
-            "isNullable": true,
             "isReadable": true,
             "isWritable": true,
             "isRemovable": false,

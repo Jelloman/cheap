@@ -7,7 +7,9 @@
       "Bash(find:*)",
       "Bash(test:*)",
       "Bash(mkdir:*)",
-      "Bash(xargs:*)"
+      "Bash(xargs:*)",
+      "Bash(python -m json.tool:*)",
+      "Bash(/dev/null)"
     ],
     "deny": [],
     "ask": []
