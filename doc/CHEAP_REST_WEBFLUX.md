@@ -590,7 +590,7 @@ class CatalogControllerHttpTest extends BaseControllerHttpTest
 
         // Send POST request and verify response
         String responseJson = webTestClient.post()
-            .uri("/api/catalogs")
+            .uri("/api/catalog")
             .contentType(MediaType.APPLICATION_JSON)
             .bodyValue(requestJson)
             .exchange()
@@ -625,7 +625,7 @@ class CatalogControllerHttpTest extends BaseControllerHttpTest
         // First create a catalog
         String createRequest = loadJson("catalog/create-catalog-request.json");
         webTestClient.post()
-            .uri("/api/catalogs")
+            .uri("/api/catalog")
             .contentType(MediaType.APPLICATION_JSON)
             .bodyValue(createRequest)
             .exchange()
@@ -633,7 +633,7 @@ class CatalogControllerHttpTest extends BaseControllerHttpTest
 
         // Then list catalogs
         String responseJson = webTestClient.get()
-            .uri("/api/catalogs?page=0&size=20")
+            .uri("/api/catalog?page=0&size=20")
             .exchange()
             .expectStatus().isOk()
             .expectHeader().contentType(MediaType.APPLICATION_JSON)
@@ -663,7 +663,7 @@ class CatalogControllerHttpTest extends BaseControllerHttpTest
         // Create a catalog
         String createRequest = loadJson("catalog/create-catalog-request.json");
         String createResponse = webTestClient.post()
-            .uri("/api/catalogs")
+            .uri("/api/catalog")
             .contentType(MediaType.APPLICATION_JSON)
             .bodyValue(createRequest)
             .exchange()
@@ -678,7 +678,7 @@ class CatalogControllerHttpTest extends BaseControllerHttpTest
 
         // Get the catalog
         String responseJson = webTestClient.get()
-            .uri("/api/catalogs/" + catalogId)
+            .uri("/api/catalog/" + catalogId)
             .exchange()
             .expectStatus().isOk()
             .expectHeader().contentType(MediaType.APPLICATION_JSON)
@@ -705,7 +705,7 @@ class CatalogControllerHttpTest extends BaseControllerHttpTest
 
         // Send request and expect 400 Bad Request
         webTestClient.post()
-            .uri("/api/catalogs")
+            .uri("/api/catalog")
             .contentType(MediaType.APPLICATION_JSON)
             .bodyValue(invalidRequest)
             .exchange()
@@ -723,7 +723,7 @@ class CatalogControllerHttpTest extends BaseControllerHttpTest
         String fakeId = "00000000-0000-0000-0000-000000000000";
 
         webTestClient.get()
-            .uri("/api/catalogs/" + fakeId)
+            .uri("/api/catalog/" + fakeId)
             .exchange()
             .expectStatus().isNotFound()
             .expectHeader().contentType(MediaType.APPLICATION_JSON)

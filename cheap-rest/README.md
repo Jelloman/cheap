@@ -71,7 +71,7 @@ mysql -u root -e "CREATE USER 'cheap_user'@'localhost';"
 
 #### Create Catalog
 ```
-POST /api/catalogs
+POST /api/catalog
 ```
 
 **Request Body:**
@@ -128,7 +128,7 @@ POST /api/catalogs
 
 #### List Catalogs
 ```
-GET /api/catalogs?page=0&size=20
+GET /api/catalog?page=0&size=20
 ```
 
 **Response:** `200 OK`
@@ -147,7 +147,7 @@ GET /api/catalogs?page=0&size=20
 
 #### Get Catalog Definition
 ```
-GET /api/catalogs/{catalogId}
+GET /api/catalog/{catalogId}
 ```
 
 **Response:** `200 OK` - Returns full CatalogDef JSON
@@ -156,7 +156,7 @@ GET /api/catalogs/{catalogId}
 
 #### Create AspectDef
 ```
-POST /api/catalogs/{catalogId}/aspect-defs
+POST /api/catalog/{catalogId}/aspect-defs
 ```
 
 **Request Body:**
@@ -198,12 +198,12 @@ POST /api/catalogs/{catalogId}/aspect-defs
 
 #### List AspectDefs
 ```
-GET /api/catalogs/{catalogId}/aspect-defs?page=0&size=20
+GET /api/catalog/{catalogId}/aspect-defs?page=0&size=20
 ```
 
 #### Get AspectDef
 ```
-GET /api/catalogs/{catalogId}/aspect-defs/{aspectDefIdOrName}
+GET /api/catalog/{catalogId}/aspect-defs/{aspectDefIdOrName}
 ```
 
 Supports both UUID and name lookup.
@@ -212,7 +212,7 @@ Supports both UUID and name lookup.
 
 #### Upsert Aspects
 ```
-POST /api/catalogs/{catalogId}/aspects/{aspectDefName}
+POST /api/catalog/{catalogId}/aspects/{aspectDefName}
 ```
 
 **Request Body:**
@@ -258,7 +258,7 @@ POST /api/catalogs/{catalogId}/aspects/{aspectDefName}
 
 #### Query Aspects
 ```
-POST /api/catalogs/{catalogId}/aspects/query
+POST /api/catalog/{catalogId}/aspects/query
 ```
 
 **Request Body:**
@@ -294,7 +294,7 @@ POST /api/catalogs/{catalogId}/aspects/query
 
 #### Get Hierarchy Contents
 ```
-GET /api/catalogs/{catalogId}/hierarchies/{hierarchyName}?page=0&size=20
+GET /api/catalog/{catalogId}/hierarchies/{hierarchyName}?page=0&size=20
 ```
 
 Response format varies by hierarchy type (ENTITY_LIST, ENTITY_SET, ENTITY_DIR, ENTITY_TREE, ASPECT_MAP).
@@ -432,7 +432,7 @@ The API returns standard HTTP status codes with detailed error messages:
   "status": 404,
   "error": "Not Found",
   "message": "Catalog with ID 550e8400-e29b-41d4-a716-446655440000 not found",
-  "path": "/api/catalogs/550e8400-e29b-41d4-a716-446655440000"
+  "path": "/api/catalog/550e8400-e29b-41d4-a716-446655440000"
 }
 ```
 

@@ -60,7 +60,7 @@ class CatalogServiceTest extends BaseServiceTest
             catalogDef,
             CatalogSpecies.SINK,
             null,
-            URI.create("http://example.com/catalog")
+            URI.create("http://example.com/api/catalog")
         );
 
         // Verify
@@ -71,7 +71,7 @@ class CatalogServiceTest extends BaseServiceTest
         assertNotNull(loadedCatalog);
         assertEquals(catalogId, loadedCatalog.globalId());
         assertEquals(CatalogSpecies.SINK, loadedCatalog.species());
-        assertEquals(URI.create("http://example.com/catalog"), loadedCatalog.uri());
+        assertEquals(URI.create("http://example.com/api/catalog/"+loadedCatalog.globalId()), loadedCatalog.uri());
     }
 
     @Test
@@ -86,7 +86,7 @@ class CatalogServiceTest extends BaseServiceTest
             upstreamDef,
             CatalogSpecies.SOURCE,
             null,
-            null
+            URI.create("http://example.com/api/catalog")
         );
 
         // Create derived catalog
@@ -98,7 +98,7 @@ class CatalogServiceTest extends BaseServiceTest
             catalogDef,
             CatalogSpecies.MIRROR,
             upstreamId,
-            null
+            URI.create("http://example.com/api/catalog")
         );
 
         // Verify
@@ -116,9 +116,9 @@ class CatalogServiceTest extends BaseServiceTest
             Collections.emptyList()
         );
 
-        UUID id1 = catalogService.createCatalog(catalogDef, CatalogSpecies.SINK, null, null);
-        UUID id2 = catalogService.createCatalog(catalogDef, CatalogSpecies.SINK, null, null);
-        UUID id3 = catalogService.createCatalog(catalogDef, CatalogSpecies.SINK, null, null);
+        UUID id1 = catalogService.createCatalog(catalogDef, CatalogSpecies.SINK, null, URI.create("http://example.com/api/catalog"));
+        UUID id2 = catalogService.createCatalog(catalogDef, CatalogSpecies.SINK, null, URI.create("http://example.com/api/catalog"));
+        UUID id3 = catalogService.createCatalog(catalogDef, CatalogSpecies.SINK, null, URI.create("http://example.com/api/catalog"));
 
         // Test listing
         List<UUID> catalogIds = catalogService.listCatalogIds(0, 10);
@@ -139,7 +139,7 @@ class CatalogServiceTest extends BaseServiceTest
         );
 
         for (int i = 0; i < 5; i++) {
-            catalogService.createCatalog(catalogDef, CatalogSpecies.SINK, null, null);
+            catalogService.createCatalog(catalogDef, CatalogSpecies.SINK, null, URI.create("http://example.com/api/catalog"));
         }
 
         // Test first page
@@ -167,13 +167,13 @@ class CatalogServiceTest extends BaseServiceTest
             Collections.emptyList()
         );
 
-        catalogService.createCatalog(catalogDef, CatalogSpecies.SINK, null, null);
+        catalogService.createCatalog(catalogDef, CatalogSpecies.SINK, null, URI.create("http://example.com/api/catalog"));
         assertEquals(1, catalogService.countCatalogs());
 
-        catalogService.createCatalog(catalogDef, CatalogSpecies.SINK, null, null);
+        catalogService.createCatalog(catalogDef, CatalogSpecies.SINK, null, URI.create("http://example.com/api/catalog"));
         assertEquals(2, catalogService.countCatalogs());
 
-        catalogService.createCatalog(catalogDef, CatalogSpecies.SINK, null, null);
+        catalogService.createCatalog(catalogDef, CatalogSpecies.SINK, null, URI.create("http://example.com/api/catalog"));
         assertEquals(3, catalogService.countCatalogs());
     }
 
@@ -189,7 +189,7 @@ class CatalogServiceTest extends BaseServiceTest
             catalogDef,
             CatalogSpecies.SINK,
             null,
-            URI.create("http://example.com/test")
+            URI.create("http://example.com/api/catalog")
         );
 
         // Get catalog
@@ -197,7 +197,7 @@ class CatalogServiceTest extends BaseServiceTest
         assertNotNull(catalog);
         assertEquals(catalogId, catalog.globalId());
         assertEquals(CatalogSpecies.SINK, catalog.species());
-        assertEquals(URI.create("http://example.com/test"), catalog.uri());
+        assertEquals(URI.create("http://example.com/api/catalog/"+catalogId), catalog.uri());
     }
 
     @Test
@@ -227,7 +227,7 @@ class CatalogServiceTest extends BaseServiceTest
             Collections.singletonList(personAspect)
         );
 
-        UUID catalogId = catalogService.createCatalog(originalDef, CatalogSpecies.SINK, null, null);
+        UUID catalogId = catalogService.createCatalog(originalDef, CatalogSpecies.SINK, null, URI.create("http://example.com/api/catalog"));
 
         // Get catalog def
         CatalogDef retrievedDef = catalogService.getCatalogDef(catalogId);

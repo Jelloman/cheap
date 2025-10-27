@@ -23,7 +23,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import net.netbeing.cheap.model.CatalogDef;
 import net.netbeing.cheap.json.dto.CatalogListResponse;
 import net.netbeing.cheap.json.dto.CreateCatalogRequest;
 import net.netbeing.cheap.json.dto.CreateCatalogResponse;
@@ -31,10 +30,9 @@ import net.netbeing.cheap.json.dto.GetCatalogDefResponse;
 import net.netbeing.cheap.rest.service.ReactiveCatalogService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -45,6 +43,8 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Mono;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.UUID;
 
 /**
@@ -52,7 +52,7 @@ import java.util.UUID;
  * Uses reactive types (Mono) to provide non-blocking HTTP handling.
  */
 @RestController
-@RequestMapping("/api/catalogs")
+@RequestMapping("/api/catalog")
 @Tag(name = "Catalogs", description = "Catalog management endpoints for creating and querying catalogs")
 public class CatalogController
 {
@@ -89,15 +89,19 @@ public class CatalogController
     })
     public Mono<CreateCatalogResponse> createCatalog(
             @Parameter(description = "Catalog creation request with catalogDef, species, and optional URI/upstream")
-            @RequestBody CreateCatalogRequest request)
+            @RequestBody CreateCatalogRequest request, ServerHttpRequest httpRequest) throws URISyntaxException
     {
         logger.info("Received request to create catalog with species: {}", request.species());
+
+        URI fullUri = httpRequest.getURI();
+        URI endpointURL = new URI(fullUri.getScheme(), fullUri.getAuthority(), fullUri.getPath(), null, null);
+        logger.debug("Endpoint URL {}", endpointURL);
 
         return catalogService.createCatalog(
                 request.catalogDef(),
                 request.species(),
                 request.upstream(),
-                request.uri()
+                endpointURL
             )
             .map(catalogId -> new CreateCatalogResponse(
                 catalogId,

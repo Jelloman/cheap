@@ -335,7 +335,7 @@ These endpoints should be implemented first as they enable creating test data fo
 
 ### 3.1 Endpoint 1: Create Catalog
 
-**URL:** `POST /api/catalogs`
+**URL:** `POST /api/catalog`
 
 **Request Body:**
 ```json
@@ -419,7 +419,7 @@ These endpoints should be implemented first as they enable creating test data fo
 
 ### 3.2 Endpoint 2: Create AspectDef in Catalog
 
-**URL:** `POST /api/catalogs/{catalogId}/aspect-defs`
+**URL:** `POST /api/catalog/{catalogId}/aspect-defs`
 
 **Path Parameters:**
 - `catalogId` (UUID) - The catalog's global ID
@@ -504,7 +504,7 @@ These endpoints should be implemented first as they enable creating test data fo
 
 ### 3.3 Endpoint 3: Upsert Aspects
 
-**URL:** `POST /api/catalogs/{catalogId}/aspects/{aspectDefName}`
+**URL:** `POST /api/catalog/{catalogId}/aspects/{aspectDefName}`
 
 **Path Parameters:**
 - `catalogId` (UUID) - The catalog's global ID
@@ -603,7 +603,7 @@ These endpoints should be implemented first as they enable creating test data fo
 
 ### 3.4 Endpoint 4: List Catalog IDs
 
-**URL:** `GET /api/catalogs`
+**URL:** `GET /api/catalog`
 
 **Query Parameters:**
 - `page` (optional, default: 0) - Page number (zero-indexed)
@@ -625,7 +625,7 @@ These endpoints should be implemented first as they enable creating test data fo
 
 ### 3.5 Endpoint 5: Get Catalog Definition
 
-**URL:** `GET /api/catalogs/{catalogId}`
+**URL:** `GET /api/catalog/{catalogId}`
 
 **Path Parameters:**
 - `catalogId` (UUID) - The catalog's global ID
@@ -637,7 +637,7 @@ These endpoints should be implemented first as they enable creating test data fo
 
 ### 3.6 Endpoint 6: List AspectDefs in Catalog
 
-**URL:** `GET /api/catalogs/{catalogId}/aspect-defs`
+**URL:** `GET /api/catalog/{catalogId}/aspect-defs`
 
 **Path Parameters:**
 - `catalogId` (UUID) - The catalog's global ID
@@ -666,7 +666,7 @@ These endpoints should be implemented first as they enable creating test data fo
 
 ### 3.7 Endpoint 7: Get Single AspectDef
 
-**URL:** `GET /api/catalogs/{catalogId}/aspect-defs/{aspectDefId}`
+**URL:** `GET /api/catalog/{catalogId}/aspect-defs/{aspectDefId}`
 
 **Path Parameters:**
 - `catalogId` (UUID) - The catalog's global ID
@@ -684,7 +684,7 @@ These endpoints should be implemented first as they enable creating test data fo
 
 ### 3.8 Endpoint 8: Get Hierarchy Contents
 
-**URL:** `GET /api/catalogs/{catalogId}/hierarchies/{hierarchyName}`
+**URL:** `GET /api/catalog/{catalogId}/hierarchies/{hierarchyName}`
 
 **Path Parameters:**
 - `catalogId` (UUID) - The catalog's global ID
@@ -786,7 +786,7 @@ Note: Trees are not paginated - full tree structure returned
 
 ### 3.9 Endpoint 9: Query Aspects
 
-**URL:** `POST /api/catalogs/{catalogId}/aspects/query`
+**URL:** `POST /api/catalog/{catalogId}/aspects/query`
 
 **Path Parameters:**
 - `catalogId` (UUID) - The catalog's global ID
@@ -858,7 +858,7 @@ Create `GlobalExceptionHandler` with `@ControllerAdvice` to handle:
   "status": 404,
   "error": "Not Found",
   "message": "Catalog with ID 550e8400-e29b-41d4-a716-446655440000 not found",
-  "path": "/api/catalogs/550e8400-e29b-41d4-a716-446655440000"
+  "path": "/api/catalog/550e8400-e29b-41d4-a716-446655440000"
 }
 ```
 
@@ -869,7 +869,7 @@ Create `GlobalExceptionHandler` with `@ControllerAdvice` to handle:
   "status": 400,
   "error": "Bad Request",
   "message": "Validation failed",
-  "path": "/api/catalogs",
+  "path": "/api/catalog",
   "errors": [
     {
       "field": "catalogDef.aspectDefs[0].name",
@@ -989,9 +989,9 @@ Provide docker-compose.yml with:
    - Validation logic for all write operations
 
 3. **Phase 3:** Implement write operations controllers
-   - POST /api/catalogs (Endpoint 1)
-   - POST /api/catalogs/{catalogId}/aspect-defs (Endpoint 2)
-   - POST /api/catalogs/{catalogId}/aspects/{aspectDefName} (Endpoint 3)
+   - POST /api/catalog (Endpoint 1)
+   - POST /api/catalog/{catalogId}/aspect-defs (Endpoint 2)
+   - POST /api/catalog/{catalogId}/aspects/{aspectDefName} (Endpoint 3)
    - Error handling and validation
    - Integration tests for write operations
 
@@ -1004,12 +1004,12 @@ Provide docker-compose.yml with:
    - AspectService query methods
 
 5. **Phase 5:** Implement read operations controllers
-   - GET /api/catalogs (Endpoint 4)
-   - GET /api/catalogs/{catalogId} (Endpoint 5)
-   - GET /api/catalogs/{catalogId}/aspect-defs (Endpoint 6)
-   - GET /api/catalogs/{catalogId}/aspect-defs/{aspectDefId} (Endpoint 7)
-   - GET /api/catalogs/{catalogId}/hierarchies/{hierarchyName} (Endpoint 8)
-   - POST /api/catalogs/{catalogId}/aspects/query (Endpoint 9)
+   - GET /api/catalog (Endpoint 4)
+   - GET /api/catalog/{catalogId} (Endpoint 5)
+   - GET /api/catalog/{catalogId}/aspect-defs (Endpoint 6)
+   - GET /api/catalog/{catalogId}/aspect-defs/{aspectDefId} (Endpoint 7)
+   - GET /api/catalog/{catalogId}/hierarchies/{hierarchyName} (Endpoint 8)
+   - POST /api/catalog/{catalogId}/aspects/query (Endpoint 9)
    - Integration tests for read operations
 
 ### Priority 3: Polish and Deployment
@@ -1169,9 +1169,9 @@ Include Spring Boot Actuator:
 The cheap-rest module will be considered complete when:
 
 ### Write Operations (Priority 1)
-1. ✅ Create Catalog endpoint (POST /api/catalogs) is implemented and functional
-2. ✅ Create AspectDef endpoint (POST /api/catalogs/{catalogId}/aspect-defs) is implemented and functional
-3. ✅ Upsert Aspects endpoint (POST /api/catalogs/{catalogId}/aspects/{aspectDefName}) is implemented and functional
+1. ✅ Create Catalog endpoint (POST /api/catalog) is implemented and functional
+2. ✅ Create AspectDef endpoint (POST /api/catalog/{catalogId}/aspect-defs) is implemented and functional
+3. ✅ Upsert Aspects endpoint (POST /api/catalog/{catalogId}/aspects/{aspectDefName}) is implemented and functional
 4. ✅ All write operations use proper transaction management with rollback on failure
 5. ✅ Request validation works correctly with meaningful error messages
 6. ✅ Write operations create proper database records that can be queried

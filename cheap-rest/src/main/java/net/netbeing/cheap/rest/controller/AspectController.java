@@ -16,7 +16,6 @@
 
 package net.netbeing.cheap.rest.controller;
 
-import net.netbeing.cheap.model.Aspect;
 import net.netbeing.cheap.json.dto.AspectQueryRequest;
 import net.netbeing.cheap.json.dto.AspectQueryResponse;
 import net.netbeing.cheap.json.dto.UpsertAspectsRequest;
@@ -46,7 +45,7 @@ import java.util.UUID;
  * Uses reactive types (Mono) to provide non-blocking HTTP handling.
  */
 @RestController
-@RequestMapping("/api/catalogs/{catalogId}/aspects")
+@RequestMapping("/api/catalog/{catalogId}/aspects")
 public class AspectController
 {
     private static final Logger logger = LoggerFactory.getLogger(AspectController.class);

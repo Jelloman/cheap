@@ -58,9 +58,9 @@ public class ReactiveCatalogService
      * @return Mono emitting the UUID of the newly created catalog
      */
     public Mono<UUID> createCatalog(@NotNull CatalogDef catalogDef, @NotNull CatalogSpecies species,
-                                    UUID upstream, URI uri)
+                                    UUID upstream, URI baseCatalogURL)
     {
-        return Mono.fromCallable(() -> catalogService.createCatalog(catalogDef, species, upstream, uri))
+        return Mono.fromCallable(() -> catalogService.createCatalog(catalogDef, species, upstream, baseCatalogURL))
             .subscribeOn(jdbcScheduler);
     }
 

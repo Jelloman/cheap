@@ -21,6 +21,7 @@ import net.netbeing.cheap.rest.exception.ResourceConflictException;
 import net.netbeing.cheap.rest.exception.ResourceNotFoundException;
 import org.junit.jupiter.api.Test;
 
+import java.net.URI;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -39,7 +40,7 @@ class AspectDefServiceTest extends BaseServiceTest
             Collections.emptyList(),
             Collections.emptyList()
         );
-        return catalogService.createCatalog(catalogDef, CatalogSpecies.SINK, null, null);
+        return catalogService.createCatalog(catalogDef, CatalogSpecies.SINK, null, URI.create("http://example.com/api/catalog"));
     }
 
     @Test

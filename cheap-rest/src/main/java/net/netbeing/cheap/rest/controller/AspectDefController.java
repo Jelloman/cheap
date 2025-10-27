@@ -41,7 +41,7 @@ import java.util.UUID;
  * Uses reactive types (Mono) to provide non-blocking HTTP handling.
  */
 @RestController
-@RequestMapping("/api/catalogs/{catalogId}/aspect-defs")
+@RequestMapping("/api/catalog/{catalogId}/aspect-defs")
 public class AspectDefController
 {
     private static final Logger logger = LoggerFactory.getLogger(AspectDefController.class);

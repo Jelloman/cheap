@@ -20,6 +20,7 @@ import net.netbeing.cheap.model.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.net.URI;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -53,7 +54,7 @@ class AspectServiceTest extends BaseServiceTest
             Collections.singletonList(personAspect)
         );
 
-        catalogId = catalogService.createCatalog(catalogDef, CatalogSpecies.SINK, null, null);
+        catalogId = catalogService.createCatalog(catalogDef, CatalogSpecies.SINK, null, URI.create("http://example.com/api/catalog"));
         aspectDefName = "com.example.PersonAspect";
     }
 

@@ -18,6 +18,7 @@ package net.netbeing.cheap.rest.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.server.adapter.ForwardedHeaderTransformer;
 import reactor.core.scheduler.Scheduler;
 import reactor.core.scheduler.Schedulers;
 
@@ -44,5 +45,11 @@ public class ReactiveConfig
         // Create a bounded elastic scheduler with thread pool for JDBC operations
         // This prevents blocking the reactive event loop
         return Schedulers.boundedElastic();
+    }
+
+    @Bean
+    public ForwardedHeaderTransformer forwardedHeaderTransformer()
+    {
+        return new ForwardedHeaderTransformer();
     }
 }

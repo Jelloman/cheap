@@ -89,7 +89,7 @@ public class CheapRestClientImpl implements CheapRestClient
         CreateCatalogRequest request = new CreateCatalogRequest(catalogDef, species, upstream, uri);
 
         return webClient.post()
-            .uri("/api/catalogs")
+            .uri("/api/catalog")
             .bodyValue(request)
             .retrieve()
             .bodyToMono(CreateCatalogResponse.class)
@@ -102,7 +102,7 @@ public class CheapRestClientImpl implements CheapRestClient
     {
         return webClient.get()
             .uri(uriBuilder -> uriBuilder
-                .path("/api/catalogs")
+                .path("/api/catalog")
                 .queryParam("page", page)
                 .queryParam("size", size)
                 .build())
@@ -116,7 +116,7 @@ public class CheapRestClientImpl implements CheapRestClient
     public @NotNull CatalogDef getCatalog(@NotNull UUID catalogId)
     {
         return webClient.get()
-            .uri("/api/catalogs/{catalogId}", catalogId)
+            .uri("/api/catalog/{catalogId}", catalogId)
             .retrieve()
             .bodyToMono(CatalogDef.class)
             .onErrorMap(this::mapException)
@@ -131,7 +131,7 @@ public class CheapRestClientImpl implements CheapRestClient
         @NotNull AspectDef aspectDef)
     {
         return webClient.post()
-            .uri("/api/catalogs/{catalogId}/aspect-defs", catalogId)
+            .uri("/api/catalog/{catalogId}/aspect-defs", catalogId)
             .bodyValue(aspectDef)
             .retrieve()
             .bodyToMono(CreateAspectDefResponse.class)
@@ -144,7 +144,7 @@ public class CheapRestClientImpl implements CheapRestClient
     {
         return webClient.get()
             .uri(uriBuilder -> uriBuilder
-                .path("/api/catalogs/{catalogId}/aspect-defs")
+                .path("/api/catalog/{catalogId}/aspect-defs")
                 .queryParam("page", page)
                 .queryParam("size", size)
                 .build(catalogId))
@@ -158,7 +158,7 @@ public class CheapRestClientImpl implements CheapRestClient
     public @NotNull AspectDef getAspectDef(@NotNull UUID catalogId, @NotNull UUID aspectDefId)
     {
         return webClient.get()
-            .uri("/api/catalogs/{catalogId}/aspect-defs/{aspectDefId}", catalogId, aspectDefId)
+            .uri("/api/catalog/{catalogId}/aspect-defs/{aspectDefId}", catalogId, aspectDefId)
             .retrieve()
             .bodyToMono(AspectDef.class)
             .onErrorMap(this::mapException)
@@ -169,7 +169,7 @@ public class CheapRestClientImpl implements CheapRestClient
     public @NotNull AspectDef getAspectDefByName(@NotNull UUID catalogId, @NotNull String aspectDefName)
     {
         return webClient.get()
-            .uri("/api/catalogs/{catalogId}/aspect-defs/{aspectDefName}", catalogId, aspectDefName)
+            .uri("/api/catalog/{catalogId}/aspect-defs/{aspectDefName}", catalogId, aspectDefName)
             .retrieve()
             .bodyToMono(AspectDef.class)
             .onErrorMap(this::mapException)
@@ -194,7 +194,7 @@ public class CheapRestClientImpl implements CheapRestClient
         );
 
         return webClient.post()
-            .uri("/api/catalogs/{catalogId}/aspects/{aspectDefName}", catalogId, aspectDefName)
+            .uri("/api/catalog/{catalogId}/aspects/{aspectDefName}", catalogId, aspectDefName)
             .bodyValue(request)
             .retrieve()
             .bodyToMono(UpsertAspectsResponse.class)
@@ -211,7 +211,7 @@ public class CheapRestClientImpl implements CheapRestClient
         AspectQueryRequest request = new AspectQueryRequest(entityIds, aspectDefNames);
 
         return webClient.post()
-            .uri("/api/catalogs/{catalogId}/aspects/query", catalogId)
+            .uri("/api/catalog/{catalogId}/aspects/query", catalogId)
             .bodyValue(request)
             .retrieve()
             .bodyToMono(AspectQueryResponse.class)
@@ -230,7 +230,7 @@ public class CheapRestClientImpl implements CheapRestClient
     {
         return webClient.get()
             .uri(uriBuilder -> uriBuilder
-                .path("/api/catalogs/{catalogId}/hierarchies/{hierarchyName}")
+                .path("/api/catalog/{catalogId}/hierarchies/{hierarchyName}")
                 .queryParam("page", page)
                 .queryParam("size", size)
                 .build(catalogId, hierarchyName))
@@ -246,7 +246,7 @@ public class CheapRestClientImpl implements CheapRestClient
         @NotNull String hierarchyName)
     {
         return webClient.get()
-            .uri("/api/catalogs/{catalogId}/hierarchies/{hierarchyName}", catalogId, hierarchyName)
+            .uri("/api/catalog/{catalogId}/hierarchies/{hierarchyName}", catalogId, hierarchyName)
             .retrieve()
             .bodyToMono(EntityDirectoryResponse.class)
             .onErrorMap(this::mapException)
@@ -259,7 +259,7 @@ public class CheapRestClientImpl implements CheapRestClient
         @NotNull String hierarchyName)
     {
         return webClient.get()
-            .uri("/api/catalogs/{catalogId}/hierarchies/{hierarchyName}", catalogId, hierarchyName)
+            .uri("/api/catalog/{catalogId}/hierarchies/{hierarchyName}", catalogId, hierarchyName)
             .retrieve()
             .bodyToMono(EntityTreeResponse.class)
             .onErrorMap(this::mapException)
@@ -275,7 +275,7 @@ public class CheapRestClientImpl implements CheapRestClient
     {
         return webClient.get()
             .uri(uriBuilder -> uriBuilder
-                .path("/api/catalogs/{catalogId}/hierarchies/{hierarchyName}")
+                .path("/api/catalog/{catalogId}/hierarchies/{hierarchyName}")
                 .queryParam("page", page)
                 .queryParam("size", size)
                 .build(catalogId, hierarchyName))

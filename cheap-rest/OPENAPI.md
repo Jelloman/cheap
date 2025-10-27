@@ -42,7 +42,7 @@ http://localhost:8080/v3/api-docs
 **Tag**: Catalogs
 **Description**: Catalog management endpoints for creating and querying catalogs
 
-##### POST /api/catalogs
+##### POST /api/catalog
 - **Summary**: Create a new catalog
 - **Description**: Creates a new catalog with the specified definition, species, and optional upstream catalog
 - **Request Body**: CreateCatalogRequest (catalogDef, species, upstream, uri)
@@ -51,7 +51,7 @@ http://localhost:8080/v3/api-docs
   - 400: Invalid catalog definition or validation failed
   - 500: Internal server error
 
-##### GET /api/catalogs
+##### GET /api/catalog
 - **Summary**: List all catalogs
 - **Description**: Returns a paginated list of all catalog IDs with metadata
 - **Query Parameters**:
@@ -62,7 +62,7 @@ http://localhost:8080/v3/api-docs
   - 400: Invalid page size (exceeds maximum)
   - 500: Internal server error
 
-##### GET /api/catalogs/{catalogId}
+##### GET /api/catalog/{catalogId}
 - **Summary**: Get catalog definition by ID
 - **Description**: Retrieves the complete catalog definition including all hierarchy and aspect definitions
 - **Path Parameters**:
@@ -113,7 +113,7 @@ Controllers use the following OpenAPI annotations:
 ### Create a Catalog
 
 ```bash
-curl -X POST http://localhost:8080/api/catalogs \
+curl -X POST http://localhost:8080/api/catalog \
   -H "Content-Type: application/json" \
   -d '{
     "catalogDef": {

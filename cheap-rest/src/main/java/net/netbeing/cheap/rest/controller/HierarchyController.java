@@ -36,7 +36,7 @@ import java.util.UUID;
  * Uses reactive types (Mono) to provide non-blocking HTTP handling.
  */
 @RestController
-@RequestMapping("/api/catalogs/{catalogId}/hierarchies")
+@RequestMapping("/api/catalog/{catalogId}/hierarchies")
 public class HierarchyController
 {
     private static final Logger logger = LoggerFactory.getLogger(HierarchyController.class);

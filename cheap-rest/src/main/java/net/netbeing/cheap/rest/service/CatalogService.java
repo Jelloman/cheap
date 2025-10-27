@@ -96,7 +96,7 @@ public class CatalogService
      */
     @Transactional
     public UUID createCatalog(@NotNull CatalogDef catalogDef, @NotNull CatalogSpecies species,
-                              UUID upstream, URI uri)
+                              UUID upstream, URI baseCatalogURL)
     {
         logger.info("Creating catalog with species: {}", species);
 
@@ -108,7 +108,8 @@ public class CatalogService
 
         // Create a new catalog with a new UUID
         UUID catalogId = UUID.randomUUID();
-        Catalog catalog = factory.createCatalog(catalogId, species, uri, upstream, 0L);
+        URI catalogURI = URI.create(baseCatalogURL.toString() + "/" + catalogId);
+        Catalog catalog = factory.createCatalog(catalogId, species, catalogURI, upstream, 0L);
 
         // Add all hierarchies from the CatalogDef
         for (HierarchyDef hierarchyDef : catalogDef.hierarchyDefs()) {

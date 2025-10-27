@@ -44,7 +44,7 @@ class HierarchyServiceTest extends BaseServiceTest
 
         CatalogDef catalogDef = factory.createCatalogDef(hierarchies, Collections.emptyList());
 
-        catalogId = catalogService.createCatalog(catalogDef, CatalogSpecies.SINK, null, null);
+        catalogId = catalogService.createCatalog(catalogDef, CatalogSpecies.SINK, null, java.net.URI.create("http://example.com/api/catalog"));
     }
 
     @Test
