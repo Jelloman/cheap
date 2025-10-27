@@ -870,6 +870,18 @@ public class CheapFactory
      *
      * @param name         the name of this aspect definition
      * @param aspectDefId  the global ID of this aspect definition
+     * @return a new mutable AspectDef instance
+     */
+    public @NotNull MutableAspectDef createMutableAspectDef(@NotNull String name, @NotNull UUID aspectDefId)
+    {
+        return new MutableAspectDefImpl(name, aspectDefId);
+    }
+
+    /**
+     * Creates a new mutable aspect definition with property definitions.
+     *
+     * @param name         the name of this aspect definition
+     * @param aspectDefId  the global ID of this aspect definition
      * @param propertyDefs the map of property names to property definitions
      * @return a new mutable AspectDef instance
      */

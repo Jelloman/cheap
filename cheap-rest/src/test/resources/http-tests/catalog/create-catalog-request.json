@@ -43,6 +43,5 @@
     }
   },
   "species": "SINK",
-  "upstream": null,
-  "uri": "http://example.com/test-catalog"
+  "upstream": null
 }

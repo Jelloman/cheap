@@ -95,7 +95,7 @@ class CatalogControllerHttpTest extends BaseControllerHttpTest
         assertThat(responseNode.has("totalPages")).isTrue();
 
         // Verify pagination values
-        assertThat(responseNode.get("page").asInt()).isEqualTo(0);
+        assertThat(responseNode.get("page").asInt()).isZero();
         assertThat(responseNode.get("size").asInt()).isEqualTo(20);
         assertThat(responseNode.get("totalElements").asLong()).isGreaterThanOrEqualTo(1);
     }
@@ -163,7 +163,7 @@ class CatalogControllerHttpTest extends BaseControllerHttpTest
     }
 
     @Test
-    void testGetNonExistentCatalog() throws Exception
+    void testGetNonExistentCatalog()
     {
         // Try to get a catalog that doesn't exist
         String fakeId = "00000000-0000-0000-0000-000000000000";

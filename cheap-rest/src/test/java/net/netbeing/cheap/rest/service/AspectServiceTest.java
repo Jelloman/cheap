@@ -38,9 +38,7 @@ class AspectServiceTest extends BaseServiceTest
     {
         // Create a catalog with an AspectDef
         MutableAspectDef personAspect = factory.createMutableAspectDef(
-            "com.example.PersonAspect",
-            UUID.randomUUID(),
-            new HashMap<>()
+            "com.example.PersonAspect"
         );
         personAspect.add(factory.createPropertyDef(
             "name", PropertyType.String, true, true, false, false, false

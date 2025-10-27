@@ -58,7 +58,7 @@ public abstract class BaseServiceTest
         tempDbFile = Files.createTempFile("cheap-test-", ".db");
 
         SQLiteDataSource ds = new SQLiteDataSource();
-        ds.setUrl("jdbc:sqlite:" + tempDbFile.toAbsolutePath().toString());
+        ds.setUrl("jdbc:sqlite:" + tempDbFile.toAbsolutePath());
         this.dataSource = ds;
 
         // Get a connection for schema initialization
