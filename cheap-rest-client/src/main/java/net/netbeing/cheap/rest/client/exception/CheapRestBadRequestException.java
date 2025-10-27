@@ -19,6 +19,7 @@ package net.netbeing.cheap.rest.client.exception;
 /**
  * Exception thrown when a request is invalid (HTTP 400).
  */
+@SuppressWarnings("unused")
 public class CheapRestBadRequestException extends CheapRestClientException
 {
     public CheapRestBadRequestException(String message)

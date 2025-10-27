@@ -17,8 +17,6 @@
 package net.netbeing.cheap.rest.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import net.netbeing.cheap.db.CheapDao;
-import net.netbeing.cheap.impl.basic.CheapFactory;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,16 +43,10 @@ public abstract class BaseControllerHttpTest
     @Autowired
     protected WebTestClient webTestClient;
 
-    @Autowired
-    protected CheapDao dao;
-
-    @Autowired
-    protected CheapFactory factory;
-
     protected ObjectMapper objectMapper = new ObjectMapper();
 
     @BeforeEach
-    void setUp() throws SQLException
+    void setUp()
     {
         // Database schema is automatically initialized by Spring SQL init
     }
@@ -75,15 +67,5 @@ public abstract class BaseControllerHttpTest
     {
         Path path = Paths.get("src/test/resources/http-tests", relativePath);
         return Files.readString(path);
-    }
-
-    /**
-     * Normalizes JSON by removing whitespace differences for comparison.
-     * Parses and re-serializes to ensure consistent formatting.
-     */
-    protected String normalizeJson(String json) throws IOException
-    {
-        Object obj = objectMapper.readValue(json, Object.class);
-        return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(obj);
     }
 }

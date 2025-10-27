@@ -19,6 +19,7 @@ package net.netbeing.cheap.rest.client.exception;
 /**
  * Exception thrown when a requested resource is not found (HTTP 404).
  */
+@SuppressWarnings("unused")
 public class CheapRestNotFoundException extends CheapRestClientException
 {
     public CheapRestNotFoundException(String message)

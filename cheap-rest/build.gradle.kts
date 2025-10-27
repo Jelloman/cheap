@@ -71,6 +71,7 @@ dependencies {
     testImplementation(libs.embedded.postgres)
     testImplementation(libs.mariaDB4j)
     testImplementation(libs.junit.platform.reporting)
+    testImplementation(libs.awaitility)
 
     testRuntimeOnly(libs.junit.platform.launcher)
     testRuntimeOnly(libs.junit.platform.engine)

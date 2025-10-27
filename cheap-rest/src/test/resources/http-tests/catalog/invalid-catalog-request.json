@@ -9,6 +9,5 @@
     "aspectDefs": {}
   },
   "species": "SINK",
-  "upstream": null,
-  "uri": null
+  "upstream": null
 }

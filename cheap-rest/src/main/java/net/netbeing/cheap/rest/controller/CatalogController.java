@@ -105,7 +105,7 @@ public class CatalogController
             )
             .map(catalogId -> new CreateCatalogResponse(
                 catalogId,
-                request.uri(),
+                URI.create(endpointURL + "/" + catalogId),
                 "Catalog created successfully"
             ));
     }

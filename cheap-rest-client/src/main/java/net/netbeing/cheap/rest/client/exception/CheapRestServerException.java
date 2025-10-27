@@ -19,6 +19,7 @@ package net.netbeing.cheap.rest.client.exception;
 /**
  * Exception thrown when the server encounters an error (HTTP 5xx).
  */
+@SuppressWarnings("unused")
 public class CheapRestServerException extends CheapRestClientException
 {
     public CheapRestServerException(String message)

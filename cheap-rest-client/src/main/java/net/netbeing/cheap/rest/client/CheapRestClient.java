@@ -26,6 +26,7 @@ import java.util.*;
  * REST client for interacting with the Cheap REST API.
  * Provides methods for managing catalogs, aspect definitions, aspects, and hierarchies.
  */
+@SuppressWarnings("unused")
 public interface CheapRestClient
 {
     // ========== Catalog Operations ==========
@@ -36,15 +37,12 @@ public interface CheapRestClient
      * @param catalogDef the catalog definition
      * @param species the catalog species
      * @param upstream optional upstream catalog ID
-     * @param uri optional catalog URI
-     * @return the create catalog response
+     * @return the created catalog response
      */
-    @NotNull
     CreateCatalogResponse createCatalog(
         @NotNull CatalogDef catalogDef,
         @NotNull CatalogSpecies species,
-        UUID upstream,
-        java.net.URI uri
+        UUID upstream
     );
 
     /**
@@ -54,7 +52,6 @@ public interface CheapRestClient
      * @param size page size
      * @return the catalog list response
      */
-    @NotNull
     CatalogListResponse listCatalogs(int page, int size);
 
     /**
@@ -63,7 +60,6 @@ public interface CheapRestClient
      * @param catalogId the catalog ID
      * @return the catalog definition
      */
-    @NotNull
     CatalogDef getCatalog(@NotNull UUID catalogId);
 
     // ========== AspectDef Operations ==========
@@ -73,9 +69,8 @@ public interface CheapRestClient
      *
      * @param catalogId the catalog ID
      * @param aspectDef the aspect definition
-     * @return the create aspect def response
+     * @return the created aspect def response
      */
-    @NotNull
     CreateAspectDefResponse createAspectDef(
         @NotNull UUID catalogId,
         @NotNull AspectDef aspectDef
@@ -89,7 +84,6 @@ public interface CheapRestClient
      * @param size page size
      * @return the aspect def list response
      */
-    @NotNull
     AspectDefListResponse listAspectDefs(@NotNull UUID catalogId, int page, int size);
 
     /**
@@ -99,7 +93,6 @@ public interface CheapRestClient
      * @param aspectDefId the aspect def ID
      * @return the aspect definition
      */
-    @NotNull
     AspectDef getAspectDef(@NotNull UUID catalogId, @NotNull UUID aspectDefId);
 
     /**
@@ -109,7 +102,6 @@ public interface CheapRestClient
      * @param aspectDefName the aspect def name
      * @return the aspect definition
      */
-    @NotNull
     AspectDef getAspectDefByName(@NotNull UUID catalogId, @NotNull String aspectDefName);
 
     // ========== Aspect Operations ==========
@@ -122,7 +114,6 @@ public interface CheapRestClient
      * @param aspects map of entity ID to property values
      * @return the upsert aspects response
      */
-    @NotNull
     UpsertAspectsResponse upsertAspects(
         @NotNull UUID catalogId,
         @NotNull String aspectDefName,
@@ -137,7 +128,6 @@ public interface CheapRestClient
      * @param aspectDefNames set of aspect definition names to query
      * @return the aspect query response
      */
-    @NotNull
     AspectQueryResponse queryAspects(
         @NotNull UUID catalogId,
         @NotNull Set<UUID> entityIds,
@@ -155,7 +145,6 @@ public interface CheapRestClient
      * @param size page size
      * @return the entity list response
      */
-    @NotNull
     EntityListResponse getEntityList(
         @NotNull UUID catalogId,
         @NotNull String hierarchyName,
@@ -170,7 +159,6 @@ public interface CheapRestClient
      * @param hierarchyName the hierarchy name
      * @return the entity directory response
      */
-    @NotNull
     EntityDirectoryResponse getEntityDirectory(
         @NotNull UUID catalogId,
         @NotNull String hierarchyName
@@ -183,7 +171,6 @@ public interface CheapRestClient
      * @param hierarchyName the hierarchy name
      * @return the entity tree response
      */
-    @NotNull
     EntityTreeResponse getEntityTree(
         @NotNull UUID catalogId,
         @NotNull String hierarchyName
@@ -198,7 +185,6 @@ public interface CheapRestClient
      * @param size page size
      * @return the aspect map response
      */
-    @NotNull
     AspectMapResponse getAspectMap(
         @NotNull UUID catalogId,
         @NotNull String hierarchyName,

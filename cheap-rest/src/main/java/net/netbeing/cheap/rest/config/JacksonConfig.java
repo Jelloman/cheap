@@ -20,6 +20,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import net.netbeing.cheap.impl.basic.CheapFactory;
 import net.netbeing.cheap.json.jackson.deserialize.CheapJacksonDeserializer;
+import net.netbeing.cheap.json.jackson.serialize.CheapJacksonSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
@@ -55,7 +56,7 @@ public class JacksonConfig implements WebFluxConfigurer
     /**
      * Configures the ObjectMapper used by Spring for JSON conversion.
      *
-     * Enables pretty printing and registers Cheap-specific deserializers.
+     * Enables pretty printing and registers Cheap-specific serializers and deserializers.
      *
      * @return configured ObjectMapper
      */
@@ -64,15 +65,18 @@ public class JacksonConfig implements WebFluxConfigurer
     public ObjectMapper objectMapper()
     {
         if (configuredMapper == null) {
-            logger.info("Configuring Jackson ObjectMapper with Cheap deserializers");
+            logger.info("Configuring Jackson ObjectMapper with Cheap serializers and deserializers");
 
             configuredMapper = new ObjectMapper();
             configuredMapper.enable(SerializationFeature.INDENT_OUTPUT);
 
+            // Register Cheap custom serializers module
+            configuredMapper.registerModule(CheapJacksonSerializer.createCheapModule());
+
             // Register Cheap custom deserializers module
             configuredMapper.registerModule(CheapJacksonDeserializer.createCheapModule(cheapFactory));
 
-            logger.info("Jackson ObjectMapper configured successfully with Cheap deserializers");
+            logger.info("Jackson ObjectMapper configured successfully with Cheap serializers and deserializers");
         }
         return configuredMapper;
     }

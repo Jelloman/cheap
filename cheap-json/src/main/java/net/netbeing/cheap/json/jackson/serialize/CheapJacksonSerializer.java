@@ -299,16 +299,13 @@ public class CheapJacksonSerializer
     }
 
     /**
-     * Creates and configures an ObjectMapper with custom serializers for Cheap types.
+     * Creates a Jackson module with custom serializers for Cheap types.
+     * This module can be registered with any ObjectMapper.
+     *
+     * @return a SimpleModule configured with Cheap serializers
      */
-    private static ObjectMapper createMapper(boolean prettyPrint)
+    public static SimpleModule createCheapModule()
     {
-        ObjectMapper mapper = new ObjectMapper();
-        
-        if (prettyPrint) {
-            mapper.enable(SerializationFeature.INDENT_OUTPUT);
-        }
-        
         SimpleModule module = new SimpleModule("CheapModule");
 
         // Register custom serializers for each Cheap type
@@ -321,8 +318,22 @@ public class CheapJacksonSerializer
         module.addSerializer(Aspect.class, new AspectSerializer());
         module.addSerializer(Property.class, new PropertySerializer());
 
-        mapper.registerModule(module);
-        
+        return module;
+    }
+
+    /**
+     * Creates and configures an ObjectMapper with custom serializers for Cheap types.
+     */
+    private static ObjectMapper createMapper(boolean prettyPrint)
+    {
+        ObjectMapper mapper = new ObjectMapper();
+
+        if (prettyPrint) {
+            mapper.enable(SerializationFeature.INDENT_OUTPUT);
+        }
+
+        mapper.registerModule(createCheapModule());
+
         return mapper;
     }
 }

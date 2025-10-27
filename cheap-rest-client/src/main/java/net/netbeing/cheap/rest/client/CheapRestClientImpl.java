@@ -21,9 +21,13 @@ import lombok.extern.slf4j.Slf4j;
 import net.netbeing.cheap.impl.basic.CheapFactory;
 import net.netbeing.cheap.json.dto.*;
 import net.netbeing.cheap.json.jackson.deserialize.CheapJacksonDeserializer;
-import net.netbeing.cheap.json.jackson.serialize.CheapJacksonSerializer;
-import net.netbeing.cheap.model.*;
-import net.netbeing.cheap.rest.client.exception.*;
+import net.netbeing.cheap.model.AspectDef;
+import net.netbeing.cheap.model.CatalogDef;
+import net.netbeing.cheap.model.CatalogSpecies;
+import net.netbeing.cheap.rest.client.exception.CheapRestBadRequestException;
+import net.netbeing.cheap.rest.client.exception.CheapRestClientException;
+import net.netbeing.cheap.rest.client.exception.CheapRestNotFoundException;
+import net.netbeing.cheap.rest.client.exception.CheapRestServerException;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.http.codec.json.Jackson2JsonDecoder;
 import org.springframework.http.codec.json.Jackson2JsonEncoder;
@@ -31,11 +35,14 @@ import org.springframework.web.reactive.function.client.ExchangeStrategies;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
-import java.util.*;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 
 /**
  * Implementation of CheapRestClient using Spring WebClient.
  */
+@SuppressWarnings("unused")
 @Slf4j
 public class CheapRestClientImpl implements CheapRestClient
 {
@@ -80,13 +87,12 @@ public class CheapRestClientImpl implements CheapRestClient
     // ========== Catalog Operations ==========
 
     @Override
-    public @NotNull CreateCatalogResponse createCatalog(
+    public CreateCatalogResponse createCatalog(
         @NotNull CatalogDef catalogDef,
         @NotNull CatalogSpecies species,
-        UUID upstream,
-        java.net.URI uri)
+        UUID upstream)
     {
-        CreateCatalogRequest request = new CreateCatalogRequest(catalogDef, species, upstream, uri);
+        CreateCatalogRequest request = new CreateCatalogRequest(catalogDef, species, upstream);
 
         return webClient.post()
             .uri("/api/catalog")
@@ -98,7 +104,7 @@ public class CheapRestClientImpl implements CheapRestClient
     }
 
     @Override
-    public @NotNull CatalogListResponse listCatalogs(int page, int size)
+    public CatalogListResponse listCatalogs(int page, int size)
     {
         return webClient.get()
             .uri(uriBuilder -> uriBuilder
@@ -113,7 +119,7 @@ public class CheapRestClientImpl implements CheapRestClient
     }
 
     @Override
-    public @NotNull CatalogDef getCatalog(@NotNull UUID catalogId)
+    public CatalogDef getCatalog(@NotNull UUID catalogId)
     {
         return webClient.get()
             .uri("/api/catalog/{catalogId}", catalogId)
@@ -126,7 +132,7 @@ public class CheapRestClientImpl implements CheapRestClient
     // ========== AspectDef Operations ==========
 
     @Override
-    public @NotNull CreateAspectDefResponse createAspectDef(
+    public CreateAspectDefResponse createAspectDef(
         @NotNull UUID catalogId,
         @NotNull AspectDef aspectDef)
     {
@@ -140,7 +146,7 @@ public class CheapRestClientImpl implements CheapRestClient
     }
 
     @Override
-    public @NotNull AspectDefListResponse listAspectDefs(@NotNull UUID catalogId, int page, int size)
+    public AspectDefListResponse listAspectDefs(@NotNull UUID catalogId, int page, int size)
     {
         return webClient.get()
             .uri(uriBuilder -> uriBuilder
@@ -155,7 +161,7 @@ public class CheapRestClientImpl implements CheapRestClient
     }
 
     @Override
-    public @NotNull AspectDef getAspectDef(@NotNull UUID catalogId, @NotNull UUID aspectDefId)
+    public AspectDef getAspectDef(@NotNull UUID catalogId, @NotNull UUID aspectDefId)
     {
         return webClient.get()
             .uri("/api/catalog/{catalogId}/aspect-defs/{aspectDefId}", catalogId, aspectDefId)
@@ -166,7 +172,7 @@ public class CheapRestClientImpl implements CheapRestClient
     }
 
     @Override
-    public @NotNull AspectDef getAspectDefByName(@NotNull UUID catalogId, @NotNull String aspectDefName)
+    public AspectDef getAspectDefByName(@NotNull UUID catalogId, @NotNull String aspectDefName)
     {
         return webClient.get()
             .uri("/api/catalog/{catalogId}/aspect-defs/{aspectDefName}", catalogId, aspectDefName)
@@ -179,7 +185,7 @@ public class CheapRestClientImpl implements CheapRestClient
     // ========== Aspect Operations ==========
 
     @Override
-    public @NotNull UpsertAspectsResponse upsertAspects(
+    public UpsertAspectsResponse upsertAspects(
         @NotNull UUID catalogId,
         @NotNull String aspectDefName,
         @NotNull Map<UUID, Map<String, Object>> aspects)
@@ -203,7 +209,7 @@ public class CheapRestClientImpl implements CheapRestClient
     }
 
     @Override
-    public @NotNull AspectQueryResponse queryAspects(
+    public AspectQueryResponse queryAspects(
         @NotNull UUID catalogId,
         @NotNull Set<UUID> entityIds,
         @NotNull Set<String> aspectDefNames)
@@ -222,7 +228,7 @@ public class CheapRestClientImpl implements CheapRestClient
     // ========== Hierarchy Operations ==========
 
     @Override
-    public @NotNull EntityListResponse getEntityList(
+    public EntityListResponse getEntityList(
         @NotNull UUID catalogId,
         @NotNull String hierarchyName,
         int page,
@@ -241,7 +247,7 @@ public class CheapRestClientImpl implements CheapRestClient
     }
 
     @Override
-    public @NotNull EntityDirectoryResponse getEntityDirectory(
+    public EntityDirectoryResponse getEntityDirectory(
         @NotNull UUID catalogId,
         @NotNull String hierarchyName)
     {
@@ -254,7 +260,7 @@ public class CheapRestClientImpl implements CheapRestClient
     }
 
     @Override
-    public @NotNull EntityTreeResponse getEntityTree(
+    public EntityTreeResponse getEntityTree(
         @NotNull UUID catalogId,
         @NotNull String hierarchyName)
     {
@@ -267,7 +273,7 @@ public class CheapRestClientImpl implements CheapRestClient
     }
 
     @Override
-    public @NotNull AspectMapResponse getAspectMap(
+    public AspectMapResponse getAspectMap(
         @NotNull UUID catalogId,
         @NotNull String hierarchyName,
         int page,
@@ -291,22 +297,10 @@ public class CheapRestClientImpl implements CheapRestClient
     {
         if (throwable instanceof WebClientResponseException ex) {
             return switch (ex.getStatusCode().value()) {
-                case 400 -> new CheapRestBadRequestException(
-                    "Bad request: " + ex.getMessage(),
-                    ex
-                );
-                case 404 -> new CheapRestNotFoundException(
-                    "Resource not found: " + ex.getMessage(),
-                    ex
-                );
-                case 500, 503 -> new CheapRestServerException(
-                    "Server error: " + ex.getMessage(),
-                    ex
-                );
-                default -> new CheapRestClientException(
-                    "HTTP error " + ex.getStatusCode() + ": " + ex.getMessage(),
-                    ex
-                );
+                case 400 -> new CheapRestBadRequestException("Bad request: " + ex.getMessage(), ex);
+                case 404 -> new CheapRestNotFoundException("Resource not found: " + ex.getMessage(), ex);
+                case 500, 503 -> new CheapRestServerException("Server error: " + ex.getMessage(), ex);
+                default -> new CheapRestClientException("HTTP error " + ex.getStatusCode() + ": " + ex.getMessage(), ex);
             };
         }
 

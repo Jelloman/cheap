@@ -134,22 +134,14 @@ class CatalogControllerHttpTest extends BaseControllerHttpTest
             .getResponseBody();
 
         // Load expected response and compare structure
-        String expectedJson = loadJson("catalog/get-catalog-response.json");
+        JsonNode responseNode = objectMapper.readTree(responseJson);
+        String aspectDefId = responseNode.get("aspectDefs").get(0).get("globalId").asText();
 
-        JsonNode actualNode = objectMapper.readTree(responseJson);
+        String expectedJson = loadJson("catalog/get-catalog-response.json").replace("$ASPECT_DEF_ID", aspectDefId);
+
         JsonNode expectedNode = objectMapper.readTree(expectedJson);
 
-        // Verify structure matches (compare hierarchyDefs and aspectDefs arrays)
-        assertThat(actualNode.has("hierarchyDefs")).isTrue();
-        assertThat(actualNode.has("aspectDefs")).isTrue();
-
-        // Verify at least one hierarchy def
-        assertThat(actualNode.get("hierarchyDefs").isArray()).isTrue();
-        assertThat(actualNode.get("hierarchyDefs").size()).isGreaterThanOrEqualTo(1);
-
-        // Verify at least one aspect def
-        assertThat(actualNode.get("aspectDefs").isArray()).isTrue();
-        assertThat(actualNode.get("aspectDefs").size()).isGreaterThanOrEqualTo(1);
+        assertThat(responseNode).isEqualTo(expectedNode);
     }
 
     @Test

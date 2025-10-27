@@ -84,7 +84,7 @@ class AspectControllerHttpTest extends BaseControllerHttpTest
         // Verify success
         assertThat(responseNode.get("aspectDefName").asText()).isEqualTo("person");
         assertThat(responseNode.get("successCount").asInt()).isEqualTo(2);
-        assertThat(responseNode.get("failureCount").asInt()).isEqualTo(0);
+        assertThat(responseNode.get("failureCount").asInt()).isZero();
 
         // Verify results array
         JsonNode results = responseNode.get("results");
@@ -126,7 +126,7 @@ class AspectControllerHttpTest extends BaseControllerHttpTest
         // Parse and verify response
         JsonNode responseNode = objectMapper.readTree(responseJson);
 
-        // Verify that it was an update, not a create
+        // Verify that it was an update, not a creation
         JsonNode results = responseNode.get("results");
         JsonNode firstResult = results.get(0);
         assertThat(firstResult.get("success").asBoolean()).isTrue();
@@ -175,11 +175,8 @@ class AspectControllerHttpTest extends BaseControllerHttpTest
         assertThat(entity1.has("person")).isTrue();
 
         JsonNode personAspect = entity1.get("person");
-        assertThat(personAspect.has("properties")).isTrue();
-
-        JsonNode properties = personAspect.get("properties");
-        assertThat(properties.has("firstName")).isTrue();
-        assertThat(properties.get("firstName").asText()).isEqualTo("Alice");
+        assertThat(personAspect.has("firstName")).isTrue();
+        assertThat(personAspect.get("firstName").asText()).isEqualTo("Alice");
     }
 
     @Test
@@ -206,14 +203,23 @@ class AspectControllerHttpTest extends BaseControllerHttpTest
 
         // Results should be empty
         JsonNode results = responseNode.get("results");
-        assertThat(results.size()).isEqualTo(0);
+        assertThat(results.size()).isZero();
     }
 
     @Test
-    void testUpsertAspectsBatchSizeExceeded() throws Exception
+    void testUpsertAspectsBatchSizeExceeded()
     {
-        // Load request with too many aspects
-        String requestJson = loadJson("aspect/upsert-aspects-large-batch.json");
+        // Create a request with more than 1000 aspects (exceeds max-batch-size)
+        StringBuilder jsonBuilder = new StringBuilder("{\"aspects\":[");
+        for (int i = 0; i < 1001; i++) {
+            if (i > 0) jsonBuilder.append(",");
+            jsonBuilder.append(String.format(
+                "{\"entityId\":\"660e8400-e29b-41d4-a716-%012d\",\"properties\":{\"firstName\":\"Person%d\",\"lastName\":\"Test\",\"age\":30}}",
+                i, i
+            ));
+        }
+        jsonBuilder.append("]}");
+        String requestJson = jsonBuilder.toString();
 
         // Should fail with 400 Bad Request
         webTestClient.post()
@@ -221,7 +227,9 @@ class AspectControllerHttpTest extends BaseControllerHttpTest
             .contentType(MediaType.APPLICATION_JSON)
             .bodyValue(requestJson)
             .exchange()
-            .expectStatus().isBadRequest();
+            .expectStatus().isBadRequest()
+            .expectBody()
+            .jsonPath("$.message").value(org.hamcrest.Matchers.containsString("exceeds maximum"));
     }
 
     @Test

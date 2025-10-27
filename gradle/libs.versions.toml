@@ -24,6 +24,7 @@ junit-platform-reporting = "1.14.0"
 spring-boot = "3.5.6"
 json-smart = "2.5.2"
 tomcat-embed-core = "11.0.13"
+awaitility = "4.2.2"
 
 [libraries]
 slf4j = { module = "org.slf4j:slf4j-api", version.ref = "slf4j" }
@@ -59,5 +60,6 @@ spring-boot-starter-validation = { module = "org.springframework.boot:spring-boo
 spring-boot-starter-actuator = { module = "org.springframework.boot:spring-boot-starter-actuator", version.ref = "spring-boot" }
 json-smart = { module = "net.minidev:json-smart", version.ref = "json-smart" }
 tomcat-embed-core = { module = "org.apache.tomcat.embed:tomcat-embed-core", version.ref = "tomcat-embed-core" }
+awaitility = { module = "org.awaitility:awaitility", version.ref = "awaitility" }
 
 

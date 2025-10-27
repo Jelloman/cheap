@@ -24,7 +24,10 @@ import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.springframework.http.MediaType;
 import org.springframework.test.annotation.DirtiesContext;
 
+import java.time.Duration;
+
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 
 /**
  * HTTP integration tests for AspectDefController.
@@ -114,14 +117,14 @@ class AspectDefControllerHttpTest extends BaseControllerHttpTest
         JsonNode responseNode = objectMapper.readTree(responseJson);
 
         assertThat(responseNode.has("catalogId")).isTrue();
-        assertThat(responseNode.has("aspectDefs")).isTrue();
+        assertThat(responseNode.has("content")).isTrue();
         assertThat(responseNode.has("page")).isTrue();
         assertThat(responseNode.has("size")).isTrue();
         assertThat(responseNode.has("totalElements")).isTrue();
         assertThat(responseNode.has("totalPages")).isTrue();
 
         // Verify pagination values
-        assertThat(responseNode.get("page").asInt()).isEqualTo(0);
+        assertThat(responseNode.get("page").asInt()).isZero();
         assertThat(responseNode.get("size").asInt()).isEqualTo(20);
         assertThat(responseNode.get("totalElements").asLong()).isGreaterThanOrEqualTo(2); // person from catalog + ProductAspect
     }
@@ -144,14 +147,19 @@ class AspectDefControllerHttpTest extends BaseControllerHttpTest
         // Extract AspectDef ID
         String aspectDefId = objectMapper.readTree(createResponse).get("aspectDefId").asText();
 
-        // Get the AspectDef by ID
-        String responseJson = webTestClient.get()
-            .uri("/api/catalog/" + catalogId + "/aspect-defs/" + aspectDefId)
-            .exchange()
-            .expectStatus().isOk()
-            .expectBody(String.class)
-            .returnResult()
-            .getResponseBody();
+        // Wait for the AspectDef to be available (async completion)
+        String responseJson = await()
+            .atMost(Duration.ofSeconds(5))
+            .pollInterval(Duration.ofMillis(50))
+            .until(
+                () -> webTestClient.get()
+                    .uri("/api/catalog/" + catalogId + "/aspect-defs/" + aspectDefId)
+                    .exchange()
+                    .expectBody(String.class)
+                    .returnResult()
+                    .getResponseBody(),
+                response -> response != null && !response.isEmpty()
+            );
 
         // Verify response structure
         JsonNode responseNode = objectMapper.readTree(responseJson);
@@ -176,14 +184,19 @@ class AspectDefControllerHttpTest extends BaseControllerHttpTest
             .exchange()
             .expectStatus().isCreated();
 
-        // Get the AspectDef by name
-        String responseJson = webTestClient.get()
-            .uri("/api/catalog/" + catalogId + "/aspect-defs/com.example.ProductAspect")
-            .exchange()
-            .expectStatus().isOk()
-            .expectBody(String.class)
-            .returnResult()
-            .getResponseBody();
+        // Wait for the AspectDef to be available (async completion)
+        String responseJson = await()
+            .atMost(Duration.ofSeconds(5))
+            .pollInterval(Duration.ofMillis(50))
+            .until(
+                () -> webTestClient.get()
+                    .uri("/api/catalog/" + catalogId + "/aspect-defs/com.example.ProductAspect")
+                    .exchange()
+                    .expectBody(String.class)
+                    .returnResult()
+                    .getResponseBody(),
+                response -> response != null && !response.isEmpty()
+            );
 
         // Verify response structure
         JsonNode responseNode = objectMapper.readTree(responseJson);
@@ -196,7 +209,7 @@ class AspectDefControllerHttpTest extends BaseControllerHttpTest
     }
 
     @Test
-    void testGetNonExistentAspectDef() throws Exception
+    void testGetNonExistentAspectDef()
     {
         // Try to get an AspectDef that doesn't exist
         String fakeId = "00000000-0000-0000-0000-000000000000";

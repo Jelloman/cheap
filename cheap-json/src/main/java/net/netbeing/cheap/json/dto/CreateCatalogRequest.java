@@ -20,7 +20,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import net.netbeing.cheap.model.CatalogDef;
 import net.netbeing.cheap.model.CatalogSpecies;
 
-import java.net.URI;
 import java.util.UUID;
 
 /**
@@ -29,8 +28,7 @@ import java.util.UUID;
 public record CreateCatalogRequest(
     @JsonProperty("catalogDef") CatalogDef catalogDef,
     @JsonProperty("species") CatalogSpecies species,
-    @JsonProperty("upstream") UUID upstream,
-    @JsonProperty("uri") URI uri
+    @JsonProperty("upstream") UUID upstream
 )
 {
 }

@@ -45,7 +45,7 @@ http://localhost:8080/v3/api-docs
 ##### POST /api/catalog
 - **Summary**: Create a new catalog
 - **Description**: Creates a new catalog with the specified definition, species, and optional upstream catalog
-- **Request Body**: CreateCatalogRequest (catalogDef, species, upstream, uri)
+- **Request Body**: CreateCatalogRequest (catalogDef, species, upstream)
 - **Responses**:
   - 201: Catalog created successfully (CreateCatalogResponse)
   - 400: Invalid catalog definition or validation failed
