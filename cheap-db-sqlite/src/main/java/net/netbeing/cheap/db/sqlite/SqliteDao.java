@@ -981,21 +981,16 @@ public class SqliteDao extends AbstractCheapDao
 
                 while (rs.next()) {
                     String propertyName = rs.getString("property_name");
-                    int valueIndex = rs.getInt("value_index");
                     String valueText = rs.getString("value_text");
                     byte[] valueBinary = rs.getBytes("value_binary");
 
-                    logger.debug("loadAspect - prop name={} index={} entity={}", propertyName, valueIndex, entity.globalId());
-
                     PropertyDef propDef = aspectDef.propertyDef(propertyName);
                     if (propDef == null) {
-                        logger.debug("loadAspect - skip unknown prop {}", propertyName);
                         continue; // Skip unknown properties
                     }
 
                     // Check if we've moved to a new property
                     if (!propertyName.equals(currentPropertyName)) {
-                        logger.debug("loadAspect - prop names diff old {}, new {}", currentPropertyName, propertyName);
                         // Save the previous property if it exists
                         if (currentPropertyName != null) {
                             saveLoadedProperty(aspect, currentPropDef, multivaluedValues);
@@ -1011,7 +1006,6 @@ public class SqliteDao extends AbstractCheapDao
                     // Extract and add the value
                     Object value = extractPropertyValue(propDef.type(), valueText, valueBinary);
                     multivaluedValues.add(value);
-                    logger.debug("loadAspect - multivalues size {}", multivaluedValues.size());
                 }
 
                 // Save the last property

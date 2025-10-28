@@ -26,12 +26,15 @@ import org.junit.jupiter.api.BeforeEach;
 import org.sqlite.SQLiteDataSource;
 
 import javax.sql.DataSource;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.SQLException;
 
 /**
  * Base class for service tests that provides common SQLite database setup.
- * Uses an in-memory SQLite database with shared cache for testing.
+ * Uses a temporary file-based SQLite database for testing to avoid shared cache issues.
  */
 public abstract class BaseServiceTest
 {
@@ -39,7 +42,8 @@ public abstract class BaseServiceTest
     protected Connection connection;
     protected CheapDao dao;
     protected CheapFactory factory;
-    
+    protected Path tempDbFile;
+
     // Services - to be initialized by subclasses
     protected CatalogService catalogService;
     protected AspectDefService aspectDefService;
@@ -47,14 +51,17 @@ public abstract class BaseServiceTest
     protected HierarchyService hierarchyService;
 
     @BeforeEach
-    void setUpBase() throws SQLException
+    void setUpBase() throws SQLException, IOException
     {
-        // Create an in-memory SQLite database with shared cache
+        // Create a temporary file-based SQLite database
+        // This avoids shared cache issues while ensuring all connections see the same database
+        tempDbFile = Files.createTempFile("cheap-test-", ".db");
+
         SQLiteDataSource ds = new SQLiteDataSource();
-        ds.setUrl("jdbc:sqlite:file::memory:?cache=shared");
+        ds.setUrl("jdbc:sqlite:" + tempDbFile.toAbsolutePath());
         this.dataSource = ds;
-        
-        // Keep connection open to prevent in-memory database deletion
+
+        // Get a connection for schema initialization
         this.connection = ds.getConnection();
 
         // Initialize factory and DAO
@@ -74,12 +81,14 @@ public abstract class BaseServiceTest
     }
 
     @AfterEach
-    void tearDownBase() throws SQLException
+    void tearDownBase() throws SQLException, IOException
     {
-        // Close the connection (which will delete the in-memory database)
+        // Close the connection
         if (this.connection != null && !this.connection.isClosed()) {
             this.connection.close();
         }
+
+        // Clean up references
         this.connection = null;
         this.dataSource = null;
         this.dao = null;
@@ -88,6 +97,12 @@ public abstract class BaseServiceTest
         this.aspectDefService = null;
         this.aspectService = null;
         this.hierarchyService = null;
+
+        // Delete the temporary database file
+        if (tempDbFile != null && Files.exists(tempDbFile)) {
+            Files.delete(tempDbFile);
+        }
+        this.tempDbFile = null;
     }
 
     private void initializeSchema() throws SQLException

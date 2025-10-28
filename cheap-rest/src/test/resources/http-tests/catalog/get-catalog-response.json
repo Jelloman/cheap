@@ -1,0 +1,30 @@
+{
+  "hierarchyDefs": [
+    {
+      "name": "people",
+      "type": "ES"
+    }
+  ],
+  "aspectDefs": [
+    {
+      "name": "person",
+      "globalId": "$ASPECT_DEF_ID",
+      "propertyDefs": [
+        {
+          "name": "firstName",
+          "type": "String",
+          "isNullable": false
+        },
+        {
+          "name": "lastName",
+          "type": "String",
+          "isNullable": false
+        },
+        {
+          "name": "age",
+          "type": "Integer"
+        }
+      ]
+    }
+  ]
+}

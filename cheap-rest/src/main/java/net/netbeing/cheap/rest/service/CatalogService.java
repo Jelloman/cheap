@@ -33,6 +33,7 @@ import net.netbeing.cheap.util.CheapException;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -62,6 +63,7 @@ public class CatalogService
     private final DataSource dataSource;
 
     @Resource
+    @Lazy
     private CatalogService service;
 
     public CatalogService(CheapDao dao, CheapFactory factory, DataSource dataSource)
@@ -94,7 +96,7 @@ public class CatalogService
      */
     @Transactional
     public UUID createCatalog(@NotNull CatalogDef catalogDef, @NotNull CatalogSpecies species,
-                              UUID upstream, URI uri)
+                              UUID upstream, URI baseCatalogURL)
     {
         logger.info("Creating catalog with species: {}", species);
 
@@ -106,7 +108,8 @@ public class CatalogService
 
         // Create a new catalog with a new UUID
         UUID catalogId = UUID.randomUUID();
-        Catalog catalog = factory.createCatalog(catalogId, species, uri, upstream, 0L);
+        URI catalogURI = URI.create(baseCatalogURL.toString() + "/" + catalogId);
+        Catalog catalog = factory.createCatalog(catalogId, species, catalogURI, upstream, 0L);
 
         // Add all hierarchies from the CatalogDef
         for (HierarchyDef hierarchyDef : catalogDef.hierarchyDefs()) {

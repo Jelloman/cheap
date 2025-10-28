@@ -24,7 +24,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.web.context.request.WebRequest;
+import org.springframework.web.server.ServerWebExchange;
 
 import java.sql.SQLException;
 import java.time.Instant;
@@ -43,23 +43,26 @@ public class GlobalExceptionHandler
     private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<Map<String, Object>> handleResourceNotFound(ResourceNotFoundException ex, WebRequest request)
+    public ResponseEntity<Map<String, Object>> handleResourceNotFound(ResourceNotFoundException ex,
+                                                                       ServerWebExchange exchange)
     {
         logger.debug("Resource not found: {}", ex.getMessage());
-        return buildErrorResponse(HttpStatus.NOT_FOUND, ex.getMessage(), request.getDescription(false)
-            .replace("uri=", ""), null);
+        return buildErrorResponse(HttpStatus.NOT_FOUND, ex.getMessage(),
+            exchange.getRequest().getPath().value(), null);
     }
 
     @ExceptionHandler(ResourceConflictException.class)
-    public ResponseEntity<Map<String, Object>> handleResourceConflict(ResourceConflictException ex, WebRequest request)
+    public ResponseEntity<Map<String, Object>> handleResourceConflict(ResourceConflictException ex,
+                                                                       ServerWebExchange exchange)
     {
         logger.debug("Resource conflict: {}", ex.getMessage());
-        return buildErrorResponse(HttpStatus.CONFLICT, ex.getMessage(), request.getDescription(false)
-            .replace("uri=", ""), null);
+        return buildErrorResponse(HttpStatus.CONFLICT, ex.getMessage(),
+            exchange.getRequest().getPath().value(), null);
     }
 
     @ExceptionHandler(ValidationException.class)
-    public ResponseEntity<Map<String, Object>> handleValidation(ValidationException ex, WebRequest request)
+    public ResponseEntity<Map<String, Object>> handleValidation(ValidationException ex,
+                                                                 ServerWebExchange exchange)
     {
         logger.debug("Validation failed: {}", ex.getMessage());
 
@@ -71,30 +74,31 @@ public class GlobalExceptionHandler
             errors.add(errorMap);
         }
 
-        return buildErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), request.getDescription(false)
-            .replace("uri=", ""), errors.isEmpty() ? null : errors);
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage(),
+            exchange.getRequest().getPath().value(), errors.isEmpty() ? null : errors);
     }
 
     @ExceptionHandler(UnprocessableEntityException.class)
     public ResponseEntity<Map<String, Object>> handleUnprocessableEntity(UnprocessableEntityException ex,
-                                                                         WebRequest request)
+                                                                         ServerWebExchange exchange)
     {
         logger.debug("Unprocessable entity: {}", ex.getMessage());
-        return buildErrorResponse(HttpStatus.UNPROCESSABLE_ENTITY, ex.getMessage(), request.getDescription(false)
-            .replace("uri=", ""), null);
+        return buildErrorResponse(HttpStatus.UNPROCESSABLE_ENTITY, ex.getMessage(),
+            exchange.getRequest().getPath().value(), null);
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<Map<String, Object>> handleIllegalArgument(IllegalArgumentException ex, WebRequest request)
+    public ResponseEntity<Map<String, Object>> handleIllegalArgument(IllegalArgumentException ex,
+                                                                      ServerWebExchange exchange)
     {
         logger.debug("Illegal argument: {}", ex.getMessage());
-        return buildErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), request.getDescription(false)
-            .replace("uri=", ""), null);
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage(),
+            exchange.getRequest().getPath().value(), null);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, Object>> handleMethodArgumentNotValid(MethodArgumentNotValidException ex,
-                                                                            WebRequest request)
+                                                                            ServerWebExchange exchange)
     {
         logger.debug("Method argument validation failed");
 
@@ -106,35 +110,33 @@ public class GlobalExceptionHandler
             errors.add(errorMap);
         });
 
-        return buildErrorResponse(HttpStatus.BAD_REQUEST, "Validation failed", request.getDescription(false)
-            .replace("uri=", ""), errors);
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, "Validation failed",
+            exchange.getRequest().getPath().value(), errors);
     }
 
     @ExceptionHandler(SQLException.class)
-    public ResponseEntity<Map<String, Object>> handleSQLException(SQLException ex, WebRequest request)
+    public ResponseEntity<Map<String, Object>> handleSQLException(SQLException ex, ServerWebExchange exchange)
     {
         logger.error("SQL exception occurred", ex);
         return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Database error occurred",
-            request.getDescription(false)
-            .replace("uri=", ""), null);
+            exchange.getRequest().getPath().value(), null);
     }
 
     @ExceptionHandler(DataAccessException.class)
-    public ResponseEntity<Map<String, Object>> handleDataAccessException(DataAccessException ex, WebRequest request)
+    public ResponseEntity<Map<String, Object>> handleDataAccessException(DataAccessException ex,
+                                                                          ServerWebExchange exchange)
     {
         logger.error("Data access exception occurred", ex);
         return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Database error occurred",
-            request.getDescription(false)
-            .replace("uri=", ""), null);
+            exchange.getRequest().getPath().value(), null);
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<Map<String, Object>> handleGenericException(Exception ex, WebRequest request)
+    public ResponseEntity<Map<String, Object>> handleGenericException(Exception ex, ServerWebExchange exchange)
     {
         logger.error("Unexpected exception occurred", ex);
         return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected error occurred",
-            request.getDescription(false)
-            .replace("uri=", ""), null);
+            exchange.getRequest().getPath().value(), null);
     }
 
     private ResponseEntity<Map<String, Object>> buildErrorResponse(HttpStatus status, String message, String path,

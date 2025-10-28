@@ -16,7 +16,14 @@
 
 package net.netbeing.cheap.rest.service;
 
-import net.netbeing.cheap.model.*;
+import net.netbeing.cheap.model.AspectDef;
+import net.netbeing.cheap.model.Catalog;
+import net.netbeing.cheap.model.CatalogDef;
+import net.netbeing.cheap.model.CatalogSpecies;
+import net.netbeing.cheap.model.HierarchyDef;
+import net.netbeing.cheap.model.HierarchyType;
+import net.netbeing.cheap.model.MutableAspectDef;
+import net.netbeing.cheap.model.PropertyType;
 import net.netbeing.cheap.rest.exception.ResourceNotFoundException;
 import net.netbeing.cheap.rest.exception.ValidationException;
 import org.junit.jupiter.api.Test;
@@ -37,31 +44,19 @@ class CatalogServiceTest extends BaseServiceTest
     void testCreateCatalog()
     {
         // Create a simple AspectDef
-        MutableAspectDef personAspect = factory.createMutableAspectDef(
-            "com.example.PersonAspect",
-            UUID.randomUUID(),
-            new java.util.HashMap<>()
-        );
-        personAspect.add(factory.createPropertyDef(
-            "name", PropertyType.String, true, true, false, false, false
-        ));
+        MutableAspectDef personAspect = factory.createMutableAspectDef("com.example.PersonAspect");
+        personAspect.add(factory.createPropertyDef("name", PropertyType.String, true, true, false, false, false));
 
         // Create a HierarchyDef
         HierarchyDef peopleHierarchy = factory.createHierarchyDef("people", HierarchyType.ENTITY_SET);
 
         // Create CatalogDef
-        CatalogDef catalogDef = factory.createCatalogDef(
-            Collections.singletonList(peopleHierarchy),
-            Collections.singletonList(personAspect)
-        );
+        CatalogDef catalogDef = factory.createCatalogDef(Collections.singletonList(peopleHierarchy),
+            Collections.singletonList(personAspect));
 
         // Create catalog
-        UUID catalogId = catalogService.createCatalog(
-            catalogDef,
-            CatalogSpecies.SINK,
-            null,
-            URI.create("http://example.com/catalog")
-        );
+        UUID catalogId = catalogService.createCatalog(catalogDef, CatalogSpecies.SINK, null, URI.create("http" +
+            "://example.com/api/catalog"));
 
         // Verify
         assertNotNull(catalogId);
@@ -71,35 +66,21 @@ class CatalogServiceTest extends BaseServiceTest
         assertNotNull(loadedCatalog);
         assertEquals(catalogId, loadedCatalog.globalId());
         assertEquals(CatalogSpecies.SINK, loadedCatalog.species());
-        assertEquals(URI.create("http://example.com/catalog"), loadedCatalog.uri());
+        assertEquals(URI.create("http://example.com/api/catalog/" + loadedCatalog.globalId()), loadedCatalog.uri());
     }
 
     @Test
     void testCreateCatalogWithUpstream()
     {
         // Create upstream catalog first
-        CatalogDef upstreamDef = factory.createCatalogDef(
-            Collections.emptyList(),
-            Collections.emptyList()
-        );
-        UUID upstreamId = catalogService.createCatalog(
-            upstreamDef,
-            CatalogSpecies.SOURCE,
-            null,
-            null
-        );
+        CatalogDef upstreamDef = factory.createCatalogDef(Collections.emptyList(), Collections.emptyList());
+        UUID upstreamId = catalogService.createCatalog(upstreamDef, CatalogSpecies.SOURCE, null, URI.create("http" +
+            "://example.com/api/catalog"));
 
         // Create derived catalog
-        CatalogDef catalogDef = factory.createCatalogDef(
-            Collections.emptyList(),
-            Collections.emptyList()
-        );
-        UUID catalogId = catalogService.createCatalog(
-            catalogDef,
-            CatalogSpecies.MIRROR,
-            upstreamId,
-            null
-        );
+        CatalogDef catalogDef = factory.createCatalogDef(Collections.emptyList(), Collections.emptyList());
+        UUID catalogId = catalogService.createCatalog(catalogDef, CatalogSpecies.MIRROR, upstreamId, URI.create("http" +
+            "://example.com/api/catalog"));
 
         // Verify
         assertNotNull(catalogId);
@@ -111,14 +92,14 @@ class CatalogServiceTest extends BaseServiceTest
     void testListCatalogIds()
     {
         // Create multiple catalogs
-        CatalogDef catalogDef = factory.createCatalogDef(
-            Collections.emptyList(),
-            Collections.emptyList()
-        );
+        CatalogDef catalogDef = factory.createCatalogDef(Collections.emptyList(), Collections.emptyList());
 
-        UUID id1 = catalogService.createCatalog(catalogDef, CatalogSpecies.SINK, null, null);
-        UUID id2 = catalogService.createCatalog(catalogDef, CatalogSpecies.SINK, null, null);
-        UUID id3 = catalogService.createCatalog(catalogDef, CatalogSpecies.SINK, null, null);
+        UUID id1 = catalogService.createCatalog(catalogDef, CatalogSpecies.SINK, null, URI.create("http://example" +
+            ".com/api/catalog"));
+        UUID id2 = catalogService.createCatalog(catalogDef, CatalogSpecies.SINK, null, URI.create("http://example" +
+            ".com/api/catalog"));
+        UUID id3 = catalogService.createCatalog(catalogDef, CatalogSpecies.SINK, null, URI.create("http://example" +
+            ".com/api/catalog"));
 
         // Test listing
         List<UUID> catalogIds = catalogService.listCatalogIds(0, 10);
@@ -133,13 +114,11 @@ class CatalogServiceTest extends BaseServiceTest
     void testListCatalogIdsPagination()
     {
         // Create multiple catalogs
-        CatalogDef catalogDef = factory.createCatalogDef(
-            Collections.emptyList(),
-            Collections.emptyList()
-        );
+        CatalogDef catalogDef = factory.createCatalogDef(Collections.emptyList(), Collections.emptyList());
 
         for (int i = 0; i < 5; i++) {
-            catalogService.createCatalog(catalogDef, CatalogSpecies.SINK, null, null);
+            catalogService.createCatalog(catalogDef, CatalogSpecies.SINK, null, URI.create("http://example" +
+                ".com/api/catalog"));
         }
 
         // Test first page
@@ -162,18 +141,18 @@ class CatalogServiceTest extends BaseServiceTest
         assertEquals(0, catalogService.countCatalogs());
 
         // Create catalogs
-        CatalogDef catalogDef = factory.createCatalogDef(
-            Collections.emptyList(),
-            Collections.emptyList()
-        );
+        CatalogDef catalogDef = factory.createCatalogDef(Collections.emptyList(), Collections.emptyList());
 
-        catalogService.createCatalog(catalogDef, CatalogSpecies.SINK, null, null);
+        catalogService.createCatalog(catalogDef, CatalogSpecies.SINK, null, URI.create("http://example" +
+            ".com/api/catalog"));
         assertEquals(1, catalogService.countCatalogs());
 
-        catalogService.createCatalog(catalogDef, CatalogSpecies.SINK, null, null);
+        catalogService.createCatalog(catalogDef, CatalogSpecies.SINK, null, URI.create("http://example" +
+            ".com/api/catalog"));
         assertEquals(2, catalogService.countCatalogs());
 
-        catalogService.createCatalog(catalogDef, CatalogSpecies.SINK, null, null);
+        catalogService.createCatalog(catalogDef, CatalogSpecies.SINK, null, URI.create("http://example" +
+            ".com/api/catalog"));
         assertEquals(3, catalogService.countCatalogs());
     }
 
@@ -181,23 +160,16 @@ class CatalogServiceTest extends BaseServiceTest
     void testGetCatalog()
     {
         // Create catalog
-        CatalogDef catalogDef = factory.createCatalogDef(
-            Collections.emptyList(),
-            Collections.emptyList()
-        );
-        UUID catalogId = catalogService.createCatalog(
-            catalogDef,
-            CatalogSpecies.SINK,
-            null,
-            URI.create("http://example.com/test")
-        );
+        CatalogDef catalogDef = factory.createCatalogDef(Collections.emptyList(), Collections.emptyList());
+        UUID catalogId = catalogService.createCatalog(catalogDef, CatalogSpecies.SINK, null, URI.create("http" +
+            "://example.com/api/catalog"));
 
         // Get catalog
         Catalog catalog = catalogService.getCatalog(catalogId);
         assertNotNull(catalog);
         assertEquals(catalogId, catalog.globalId());
         assertEquals(CatalogSpecies.SINK, catalog.species());
-        assertEquals(URI.create("http://example.com/test"), catalog.uri());
+        assertEquals(URI.create("http://example.com/api/catalog/" + catalogId), catalog.uri());
     }
 
     @Test
@@ -211,23 +183,16 @@ class CatalogServiceTest extends BaseServiceTest
     void testGetCatalogDef()
     {
         // Create catalog with AspectDef and HierarchyDef
-        MutableAspectDef personAspect = factory.createMutableAspectDef(
-            "com.example.PersonAspect",
-            UUID.randomUUID(),
-            new java.util.HashMap<>()
-        );
-        personAspect.add(factory.createPropertyDef(
-            "name", PropertyType.String, true, true, false, false, false
-        ));
+        MutableAspectDef personAspect = factory.createMutableAspectDef("com.example.PersonAspect");
+        personAspect.add(factory.createPropertyDef("name", PropertyType.String, true, true, false, false, false));
 
         HierarchyDef peopleHierarchy = factory.createHierarchyDef("people", HierarchyType.ENTITY_SET);
 
-        CatalogDef originalDef = factory.createCatalogDef(
-            Collections.singletonList(peopleHierarchy),
-            Collections.singletonList(personAspect)
-        );
+        CatalogDef originalDef = factory.createCatalogDef(Collections.singletonList(peopleHierarchy),
+            Collections.singletonList(personAspect));
 
-        UUID catalogId = catalogService.createCatalog(originalDef, CatalogSpecies.SINK, null, null);
+        UUID catalogId = catalogService.createCatalog(originalDef, CatalogSpecies.SINK, null, URI.create("http" +
+            "://example.com/api/catalog"));
 
         // Get catalog def
         CatalogDef retrievedDef = catalogService.getCatalogDef(catalogId);

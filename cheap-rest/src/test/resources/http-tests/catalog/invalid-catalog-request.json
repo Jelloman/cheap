@@ -1,0 +1,13 @@
+{
+  "catalogDef": {
+    "hierarchyDefs": [
+      {
+        "name": "",
+        "type": "ES"
+      }
+    ],
+    "aspectDefs": {}
+  },
+  "species": "SINK",
+  "upstream": null
+}

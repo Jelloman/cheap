@@ -16,12 +16,12 @@
 
 package net.netbeing.cheap.rest.controller;
 
-import net.netbeing.cheap.model.Aspect;
-import net.netbeing.cheap.rest.dto.AspectQueryRequest;
-import net.netbeing.cheap.rest.dto.AspectQueryResponse;
-import net.netbeing.cheap.rest.dto.UpsertAspectsRequest;
-import net.netbeing.cheap.rest.dto.UpsertAspectsResponse;
+import net.netbeing.cheap.json.dto.AspectQueryRequest;
+import net.netbeing.cheap.json.dto.AspectQueryResponse;
+import net.netbeing.cheap.json.dto.UpsertAspectsRequest;
+import net.netbeing.cheap.json.dto.UpsertAspectsResponse;
 import net.netbeing.cheap.rest.service.AspectService;
+import net.netbeing.cheap.rest.service.ReactiveAspectService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -32,6 +32,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import reactor.core.publisher.Mono;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -41,38 +42,39 @@ import java.util.UUID;
 
 /**
  * REST controller for Aspect operations.
+ * Uses reactive types (Mono) to provide non-blocking HTTP handling.
  */
 @RestController
-@RequestMapping("/api/catalogs/{catalogId}/aspects")
+@RequestMapping("/api/catalog/{catalogId}/aspects")
 public class AspectController
 {
     private static final Logger logger = LoggerFactory.getLogger(AspectController.class);
 
-    private final AspectService aspectService;
+    private final ReactiveAspectService aspectService;
     
     @Value("${cheap.aspect-upsert.max-batch-size:1000}")
     private int maxBatchSize;
 
-    public AspectController(AspectService aspectService)
+    public AspectController(ReactiveAspectService aspectService)
     {
         this.aspectService = aspectService;
     }
 
     /**
-     * Upserts aspects for multiple entities.
+     * Upserts aspects for multiple entities reactively.
      *
      * @param catalogId the catalog ID
      * @param aspectDefName the AspectDef name
      * @param request the upsert request
-     * @return the upsert results
+     * @return Mono emitting the upsert results
      */
     @PostMapping("/{aspectDefName}")
-    public ResponseEntity<UpsertAspectsResponse> upsertAspects(
+    public Mono<ResponseEntity<UpsertAspectsResponse>> upsertAspects(
         @PathVariable UUID catalogId,
         @PathVariable String aspectDefName,
         @RequestBody UpsertAspectsRequest request)
     {
-        logger.info("Received request to upsert {} aspects of type {} in catalog {}", 
+        logger.info("Received request to upsert {} aspects of type {} in catalog {}",
             request.aspects().size(), aspectDefName, catalogId);
 
         // Validate batch size
@@ -88,72 +90,63 @@ public class AspectController
             aspectsByEntity.put(aspectData.entityId(), aspectData.properties());
         }
 
-        // Call service
-        Map<UUID, AspectService.UpsertResult> results = aspectService.upsertAspects(
-            catalogId,
-            aspectDefName,
-            aspectsByEntity
-        );
+        // Call service and convert results
+        return aspectService.upsertAspects(catalogId, aspectDefName, aspectsByEntity)
+            .map(results -> {
+                // Convert results to response format
+                List<UpsertAspectsResponse.AspectResult> resultList = new ArrayList<>();
+                int successCount = 0;
+                int failureCount = 0;
 
-        // Convert results to response format
-        List<UpsertAspectsResponse.AspectResult> resultList = new ArrayList<>();
-        int successCount = 0;
-        int failureCount = 0;
+                for (AspectService.UpsertResult result : results.values()) {
+                    resultList.add(new UpsertAspectsResponse.AspectResult(
+                        result.entityId(),
+                        result.success(),
+                        result.created(),
+                        result.message()
+                    ));
 
-        for (AspectService.UpsertResult result : results.values()) {
-            resultList.add(new UpsertAspectsResponse.AspectResult(
-                result.entityId(),
-                result.success(),
-                result.created(),
-                result.message()
-            ));
+                    if (result.success()) {
+                        successCount++;
+                    } else {
+                        failureCount++;
+                    }
+                }
 
-            if (result.success()) {
-                successCount++;
-            } else {
-                failureCount++;
-            }
-        }
+                UpsertAspectsResponse response = new UpsertAspectsResponse(
+                    catalogId,
+                    aspectDefName,
+                    resultList,
+                    successCount,
+                    failureCount
+                );
 
-        UpsertAspectsResponse response = new UpsertAspectsResponse(
-            catalogId,
-            aspectDefName,
-            resultList,
-            successCount,
-            failureCount
-        );
-
-        // Return 200 if all succeeded, 207 if partial success
-        HttpStatus status = failureCount > 0 ? HttpStatus.MULTI_STATUS : HttpStatus.OK;
-        return ResponseEntity.status(status).body(response);
+                // Return 200 if all succeeded, 207 if partial success
+                HttpStatus status = failureCount > 0 ? HttpStatus.MULTI_STATUS : HttpStatus.OK;
+                return ResponseEntity.status(status).body(response);
+            });
     }
 
     /**
-     * Queries aspects for multiple entities and AspectDefs.
+     * Queries aspects for multiple entities and AspectDefs reactively.
      *
      * @param catalogId the catalog ID
      * @param request the query request containing entity IDs and AspectDef names
-     * @return map of entity IDs to maps of AspectDef names to aspects
+     * @return Mono emitting map of entity IDs to maps of AspectDef names to aspects
      */
     @PostMapping("/query")
-    public ResponseEntity<AspectQueryResponse> queryAspects(
+    public Mono<AspectQueryResponse> queryAspects(
         @PathVariable UUID catalogId,
         @RequestBody AspectQueryRequest request)
     {
         logger.info("Received request to query {} entities for {} AspectDefs in catalog {}",
             request.entityIds().size(), request.aspectDefNames().size(), catalogId);
 
-        Map<UUID, Map<String, Aspect>> results = aspectService.queryAspects(
-            catalogId,
-            request.entityIds(),
-            request.aspectDefNames()
-        );
-
-        AspectQueryResponse response = new AspectQueryResponse(
-            catalogId,
-            results
-        );
-
-        return ResponseEntity.ok(response);
+        return aspectService.queryAspects(
+                catalogId,
+                request.entityIds(),
+                request.aspectDefNames()
+            )
+            .map(results -> new AspectQueryResponse(catalogId, results));
     }
 }

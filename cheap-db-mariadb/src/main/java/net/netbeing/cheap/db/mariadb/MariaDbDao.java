@@ -1043,11 +1043,8 @@ public class MariaDbDao extends AbstractCheapDao
 
                 while (rs.next()) {
                     String propertyName = rs.getString("property_name");
-                    int valueIndex = rs.getInt("value_index");
                     String valueText = rs.getString("value_text");
                     byte[] valueBinary = rs.getBytes("value_binary");
-
-                    logger.debug("loadAspect - prop name={} index={} entity={}", propertyName, valueIndex, entity.globalId());
 
                     PropertyDef propDef = aspectDef.propertyDef(propertyName);
                     if (propDef == null) {

@@ -1,11 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="EntryPointsManager">
-    <list size="1">
-      <item index="0" class="java.lang.String" itemvalue="org.springframework.transaction.annotation.Transactional" />
+    <list size="6">
+      <item index="0" class="java.lang.String" itemvalue="org.springframework.context.annotation.Bean" />
+      <item index="1" class="java.lang.String" itemvalue="org.springframework.context.annotation.Configuration" />
+      <item index="2" class="java.lang.String" itemvalue="org.springframework.transaction.annotation.Transactional" />
+      <item index="3" class="java.lang.String" itemvalue="org.springframework.web.bind.annotation.GetMapping" />
+      <item index="4" class="java.lang.String" itemvalue="org.springframework.web.bind.annotation.PostMapping" />
+      <item index="5" class="java.lang.String" itemvalue="org.springframework.web.bind.annotation.RestController" />
     </list>
     <writeAnnotations>
       <writeAnnotation name="jakarta.annotation.Resource" />
+      <writeAnnotation name="org.springframework.beans.factory.annotation.Value" />
     </writeAnnotations>
   </component>
   <component name="ExternalStorageConfigurationManager" enabled="true" />

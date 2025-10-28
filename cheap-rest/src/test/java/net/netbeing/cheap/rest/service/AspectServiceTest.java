@@ -20,6 +20,7 @@ import net.netbeing.cheap.model.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.net.URI;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -37,9 +38,7 @@ class AspectServiceTest extends BaseServiceTest
     {
         // Create a catalog with an AspectDef
         MutableAspectDef personAspect = factory.createMutableAspectDef(
-            "com.example.PersonAspect",
-            UUID.randomUUID(),
-            new HashMap<>()
+            "com.example.PersonAspect"
         );
         personAspect.add(factory.createPropertyDef(
             "name", PropertyType.String, true, true, false, false, false
@@ -53,7 +52,7 @@ class AspectServiceTest extends BaseServiceTest
             Collections.singletonList(personAspect)
         );
 
-        catalogId = catalogService.createCatalog(catalogDef, CatalogSpecies.SINK, null, null);
+        catalogId = catalogService.createCatalog(catalogDef, CatalogSpecies.SINK, null, URI.create("http://example.com/api/catalog"));
         aspectDefName = "com.example.PersonAspect";
     }
 

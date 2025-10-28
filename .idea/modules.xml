@@ -13,6 +13,7 @@
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/cheap-db-sqlite/cheap.cheap-db-sqlite.test.iml" filepath="$PROJECT_DIR$/.idea/modules/cheap-db-sqlite/cheap.cheap-db-sqlite.test.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/cheap-json/cheap.cheap-json.main.iml" filepath="$PROJECT_DIR$/.idea/modules/cheap-json/cheap.cheap-json.main.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/cheap-json/cheap.cheap-json.test.iml" filepath="$PROJECT_DIR$/.idea/modules/cheap-json/cheap.cheap-json.test.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/cheap-rest-client/cheap.cheap-rest-client.main.iml" filepath="$PROJECT_DIR$/.idea/modules/cheap-rest-client/cheap.cheap-rest-client.main.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/cheap-rest/cheap.cheap-rest.main.iml" filepath="$PROJECT_DIR$/.idea/modules/cheap-rest/cheap.cheap-rest.main.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/cheap-rest/cheap.cheap-rest.test.iml" filepath="$PROJECT_DIR$/.idea/modules/cheap-rest/cheap.cheap-rest.test.iml" />
     </modules>

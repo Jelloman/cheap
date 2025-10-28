@@ -45,13 +45,13 @@ dependencies {
     implementation(project(":cheap-db-mariadb"))
 
     // Spring Boot starters
-    implementation(libs.spring.boot.starter.web)
+    implementation(libs.spring.boot.starter.webflux)
     implementation(libs.spring.boot.starter.jdbc)
     implementation(libs.spring.boot.starter.validation)
     implementation(libs.spring.boot.starter.actuator)
 
     // OpenAPI/Swagger documentation
-    implementation(libs.openapi.starter.ui)
+    implementation(libs.openapi.starter.webflux.ui)
 
     // Logging
     implementation(libs.slf4j)
@@ -71,6 +71,7 @@ dependencies {
     testImplementation(libs.embedded.postgres)
     testImplementation(libs.mariaDB4j)
     testImplementation(libs.junit.platform.reporting)
+    testImplementation(libs.awaitility)
 
     testRuntimeOnly(libs.junit.platform.launcher)
     testRuntimeOnly(libs.junit.platform.engine)
@@ -82,9 +83,7 @@ dependencies {
         implementation(libs.commons.lang3) {
             because("CVE-2025-48924")
         }
-        implementation(libs.tomcat.embed.core) {
-            because("CVE-2025-41242")
-        }
+        // Note: Tomcat constraint removed - WebFlux uses Netty, not Tomcat
         testImplementation(libs.junit.platform.commons) {
             because("JUnit Platform version alignment")
         }
