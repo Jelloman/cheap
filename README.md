@@ -1,3 +1,7 @@
+UNDER CONSTRUCTION
+==================
+This is a work in progress, not yet ready for prime time. 
+
 Cheap
 =====
 
@@ -7,7 +11,7 @@ usage of a wide variety of data sources and sinks, and also automated schema tra
 Cheap is NOT a database. All Cheap data is held in catalogs, and all Cheap Catalogs are caches or working copies
 of external data (or other Catalogs).
 
-The best analogy for understanding Cheap is **git**. Cheap is a git-like mechanism for structured data and objects. 
+The best analogy for understanding Cheap is **git**. Cheap is a git-like mechanism for structured data and objects.
 
 | Tier          | RDBMS equivalent | Filesystem equivalent                 |
 |---------------|------------------|---------------------------------------|
@@ -16,6 +20,51 @@ The best analogy for understanding Cheap is **git**. Cheap is a git-like mechani
 | E - Entity    | Primary Key      | File, file element                    |
 | A - Aspect    | Row              | File or element attributes or content |
 | P - Property  | Column           | Single attribute or content atom      |
+
+Quick Start
+-----------
+
+### Using Cheap as a Library
+
+```java
+// Add dependency: net.netbeing:cheap-core:0.1
+
+import net.netbeing.cheap.impl.basic.CheapFactory;
+import net.netbeing.cheap.model.*;
+
+CheapFactory factory = new CheapFactory();
+Catalog catalog = factory.createCatalog(UUID.randomUUID(), CatalogSpecies.SINK, null, null, false);
+
+// Define your data structure
+AspectDef personDef = factory.createImmutableAspectDef("Person", UUID.randomUUID(), Map.of(
+    "name", factory.createPropertyDef("name", PropertyType.String),
+    "age", factory.createPropertyDef("age", PropertyType.Integer)
+));
+
+// Add data
+Entity person = factory.createEntity(UUID.randomUUID());
+Aspect aspect = factory.createAspect(personDef, person, Map.of("name", "Alice", "age", 30));
+```
+
+See [cheap-core README](cheap-core/README.md) for complete documentation.
+
+### Using the REST API
+
+Run the service:
+```bash
+./gradlew :cheap-rest:bootRun --args='--spring.profiles.active=sqlite'
+```
+
+Access Swagger UI at http://localhost:8080/swagger-ui.html
+
+See [cheap-rest README](cheap-rest/README.md) for API documentation and [cheap-rest-client README](cheap-rest-client/README.md) for the Java client.
+
+### Persisting Data
+
+Choose a database backend:
+- [PostgreSQL](cheap-db-postgres/README.md) - Recommended for production
+- [SQLite](cheap-db-sqlite/README.md) - Best for development and testing
+- [MariaDB](cheap-db-mariadb/README.md) - Alternative production option
 
 Purpose
 -------
@@ -41,17 +90,18 @@ Cheap is a work in progress. I'll add a roadmap soon, for now here are the broad
 
 Modules
 -------
-| Module            | Description                                                                                               |
-|-------------------|-----------------------------------------------------------------------------------------------------------|
-| cheap-core        | Core Cheap interfaces and basic implementations. Includes filesystem functionality. Minimal dependencies. |
-| cheap-db-mariadb  | Database connectors and catalog implementation for MariaDB.                                               |
-| cheap-db-postgres | Database connectors and catalog implementation for PostgreSQL.                                            |
-| cheap-db-sqlite   | Database connectors and catalog implementation for Sqlite.                                                |
-| cheap-json        | JSON serialization and deserialization of Cheap elements.                                                 |
-| cheap-rest        | Service to provide access to a set of catalogs through standard REST APIs.                                |
-| cheap-net*        | Networking library, including interop with wire protocols like protobuf, flatbuffers and Cap'n Proto/Web. |
+| Module            | Description                                                                      | Documentation                          |
+|-------------------|----------------------------------------------------------------------------------|----------------------------------------|
+| cheap-core        | Core Cheap interfaces and basic implementations. Minimal dependencies.            | [README](cheap-core/README.md)         |
+| cheap-db-postgres | PostgreSQL database persistence for Cheap catalogs. Recommended for production.   | [README](cheap-db-postgres/README.md)  |
+| cheap-db-sqlite   | SQLite database persistence. Ideal for development, testing, and single-user apps.| [README](cheap-db-sqlite/README.md)    |
+| cheap-db-mariadb  | MariaDB database persistence for Cheap catalogs.                                  | [README](cheap-db-mariadb/README.md)   |
+| cheap-json        | JSON serialization and deserialization using Jackson.                             | [README](cheap-json/README.md)         |
+| cheap-rest        | Spring Boot REST API service with multiple database backend support.              | [README](cheap-rest/README.md)         |
+| cheap-rest-client | Java client library for accessing the Cheap REST API.                             | [README](cheap-rest-client/README.md)  |
 
-\* planned
+### Planned Modules
+- **cheap-net** - Networking library with support for protobuf, flatbuffers, and Cap'n Proto
 
 DESIGN
 ======
