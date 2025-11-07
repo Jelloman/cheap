@@ -90,7 +90,7 @@ public class CatalogService
      * @param catalogDef the catalog definition
      * @param species the catalog species
      * @param upstream the upstream catalog ID (may be null for SOURCE/SINK)
-     * @param uri optional URI for the catalog
+     * @param baseCatalogURL optional URI for the catalog
      * @return the UUID of the newly created catalog
      * @throws ValidationException if validation fails
      */
