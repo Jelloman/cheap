@@ -1,14 +1,19 @@
 package net.netbeing.cheap.integrationtests.dao;
 
+import io.zonky.test.db.postgres.embedded.EmbeddedPostgres;
 import net.netbeing.cheap.db.AspectTableMapping;
 import net.netbeing.cheap.db.postgres.PostgresAdapter;
+import net.netbeing.cheap.db.postgres.PostgresCheapSchema;
 import net.netbeing.cheap.db.postgres.PostgresDao;
 import net.netbeing.cheap.impl.basic.CheapFactory;
-import net.netbeing.cheap.integrationtests.base.PostgresRestIntegrationTest;
 import net.netbeing.cheap.model.*;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
@@ -21,9 +26,13 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Integration tests for PostgreSQL DAO with AspectTableMapping.
  * Tests two custom tables with different AspectTableMapping patterns.
+ * Plain JUnit test without Spring Boot.
  */
-class PostgresDaoAspectTableMappingTest extends PostgresRestIntegrationTest
+class PostgresDaoAspectTableMappingTest
 {
+    private static EmbeddedPostgres embeddedPostgres;
+    private static DataSource dataSource;
+
     private PostgresDao postgresDao;
     private PostgresAdapter adapter;
     private CheapFactory factory;
@@ -34,11 +43,37 @@ class PostgresDaoAspectTableMappingTest extends PostgresRestIntegrationTest
     private AspectTableMapping personTableMapping;
     private AspectTableMapping settingsTableMapping;
 
-    @BeforeEach
-    @Override
-    public void setUp()
+    @BeforeAll
+    public static void setUpDatabase() throws Exception
     {
-        super.setUp();
+        // Start embedded PostgreSQL
+        embeddedPostgres = EmbeddedPostgres.builder()
+            .setPort(5433)
+            .start();
+
+        dataSource = embeddedPostgres.getPostgresDatabase();
+
+        // Initialize schema
+        PostgresCheapSchema schema = new PostgresCheapSchema();
+        schema.executeMainSchemaDdl(dataSource);
+        schema.executeAuditSchemaDdl(dataSource);
+    }
+
+    @AfterAll
+    public static void tearDownDatabase() throws Exception
+    {
+        if (embeddedPostgres != null)
+        {
+            embeddedPostgres.close();
+        }
+    }
+
+    @BeforeEach
+    public void setUp() throws Exception
+    {
+        // Clean database before each test
+        PostgresCheapSchema schema = new PostgresCheapSchema();
+        schema.executeTruncateSchemaDdl(dataSource);
 
         factory = new CheapFactory();
         adapter = new PostgresAdapter(dataSource, factory);
@@ -305,12 +340,10 @@ class PostgresDaoAspectTableMappingTest extends PostgresRestIntegrationTest
         assertNull(loadedCatalog);
     }
 
-    @Override
-    protected void cleanupDatabase() throws Exception
+    @AfterEach
+    public void cleanupCustomTables() throws Exception
     {
-        super.cleanupDatabase();
-
-        // Also clean up custom tables
+        // Clean up custom tables
         try (Connection conn = dataSource.getConnection();
              Statement stmt = conn.createStatement())
         {
@@ -321,5 +354,13 @@ class PostgresDaoAspectTableMappingTest extends PostgresRestIntegrationTest
         {
             // Ignore errors during cleanup
         }
+    }
+
+    /**
+     * Generate a fixed test UUID based on a seed value.
+     */
+    private UUID testUuid(int seed)
+    {
+        return UUID.fromString(String.format("00000000-0000-0000-0000-%012d", seed));
     }
 }

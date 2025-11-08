@@ -1,12 +1,15 @@
 package net.netbeing.cheap.integrationtests.dao;
 
 import net.netbeing.cheap.db.AspectTableMapping;
-import net.netbeing.cheap.integrationtests.base.MariaDbRestIntegrationTest;
+import net.netbeing.cheap.integrationtests.util.DatabaseRunnerExtension;
+import net.netbeing.cheap.integrationtests.util.MariaDbIntegrationTestDb;
 import net.netbeing.cheap.impl.basic.CheapFactory;
 import net.netbeing.cheap.model.*;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -20,9 +23,13 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Integration tests for MariaDB DAO with AspectTableMapping.
  * Tests two custom tables with different AspectTableMapping patterns.
+ * Plain JUnit test without Spring Boot.
  */
-class MariaDbDaoAspectTableMappingTest extends MariaDbRestIntegrationTest
+@ExtendWith(DatabaseRunnerExtension.class)
+class MariaDbDaoAspectTableMappingTest
 {
+    private static MariaDbIntegrationTestDb testDb;
+
     private CheapFactory factory;
 
     private AspectDef employeeAspectDef;
@@ -34,26 +41,16 @@ class MariaDbDaoAspectTableMappingTest extends MariaDbRestIntegrationTest
     @BeforeAll
     public static void setUpTestDb() throws Exception
     {
-        // Create test database (will be initialized in parent setUp)
-    }
-
-    @Override
-    protected String getDatabaseName()
-    {
-        return "mariadb_aspect_mapping_test";
-    }
-
-    @Override
-    protected boolean useForeignKeys()
-    {
-        return true;
+        // Create test database
+        testDb = new MariaDbIntegrationTestDb("mariadb_aspect_mapping_test", true);
+        testDb.initializeCheapSchema();
     }
 
     @BeforeEach
-    @Override
-    public void setUp()
+    public void setUp() throws Exception
     {
-        super.setUp();
+        // Clean database before each test
+        testDb.truncateAllTables();
 
         factory = new CheapFactory();
 
@@ -382,12 +379,10 @@ class MariaDbDaoAspectTableMappingTest extends MariaDbRestIntegrationTest
         assertEquals(1, loadedHierarchy.size());
     }
 
-    @Override
-    protected void cleanupDatabase() throws Exception
+    @AfterEach
+    public void cleanupCustomTables() throws Exception
     {
-        super.cleanupDatabase();
-
-        // Also clean up custom tables
+        // Clean up custom tables
         try (Connection conn = testDb.dataSource.getConnection();
              Statement stmt = conn.createStatement())
         {
@@ -398,5 +393,13 @@ class MariaDbDaoAspectTableMappingTest extends MariaDbRestIntegrationTest
         {
             // Ignore errors during cleanup
         }
+    }
+
+    /**
+     * Generate a fixed test UUID based on a seed value.
+     */
+    private UUID testUuid(int seed)
+    {
+        return UUID.fromString(String.format("00000000-0000-0000-0000-%012d", seed));
     }
 }

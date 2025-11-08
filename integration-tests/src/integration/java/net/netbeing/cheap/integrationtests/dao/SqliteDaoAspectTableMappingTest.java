@@ -2,13 +2,21 @@ package net.netbeing.cheap.integrationtests.dao;
 
 import net.netbeing.cheap.db.AspectTableMapping;
 import net.netbeing.cheap.db.sqlite.SqliteAdapter;
+import net.netbeing.cheap.db.sqlite.SqliteCheapSchema;
 import net.netbeing.cheap.db.sqlite.SqliteDao;
 import net.netbeing.cheap.impl.basic.CheapFactory;
-import net.netbeing.cheap.integrationtests.base.SqliteRestIntegrationTest;
 import net.netbeing.cheap.model.*;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.sqlite.SQLiteDataSource;
 
+import javax.sql.DataSource;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
@@ -21,9 +29,13 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Integration tests for SQLite DAO with AspectTableMapping.
  * Tests two custom tables with different AspectTableMapping patterns.
+ * Plain JUnit test without Spring Boot.
  */
-class SqliteDaoAspectTableMappingTest extends SqliteRestIntegrationTest
+class SqliteDaoAspectTableMappingTest
 {
+    private static Path tempDbPath;
+    private static SQLiteDataSource dataSource;
+
     private SqliteDao sqliteDao;
     private SqliteAdapter adapter;
     private CheapFactory factory;
@@ -34,11 +46,46 @@ class SqliteDaoAspectTableMappingTest extends SqliteRestIntegrationTest
     private AspectTableMapping productTableMapping;
     private AspectTableMapping categoryTableMapping;
 
-    @BeforeEach
-    @Override
-    public void setUp()
+    @BeforeAll
+    public static void setUpDatabase() throws Exception
     {
-        super.setUp();
+        // Create temporary database file
+        tempDbPath = Files.createTempFile("cheap-integration-test-", ".db");
+
+        // Set up data source
+        dataSource = new SQLiteDataSource();
+        dataSource.setUrl("jdbc:sqlite:" + tempDbPath.toAbsolutePath());
+
+        // Initialize schema
+        SqliteCheapSchema schema = new SqliteCheapSchema();
+        schema.executeMainSchemaDdl(dataSource);
+        schema.executeAuditSchemaDdl(dataSource);
+    }
+
+    @AfterAll
+    public static void tearDownDatabase() throws Exception
+    {
+        // Delete temporary database file
+        if (tempDbPath != null && Files.exists(tempDbPath))
+        {
+            try
+            {
+                Files.delete(tempDbPath);
+            }
+            catch (IOException e)
+            {
+                // Log but don't fail
+                System.err.println("Warning: Failed to delete temporary database file: " + tempDbPath);
+            }
+        }
+    }
+
+    @BeforeEach
+    public void setUp() throws Exception
+    {
+        // Clean database before each test
+        SqliteCheapSchema schema = new SqliteCheapSchema();
+        schema.executeTruncateSchemaDdl(dataSource);
 
         factory = new CheapFactory();
         adapter = new SqliteAdapter(dataSource, factory);
@@ -317,12 +364,10 @@ class SqliteDaoAspectTableMappingTest extends SqliteRestIntegrationTest
         assertNull(loadedCatalog);
     }
 
-    @Override
-    protected void cleanupDatabase() throws Exception
+    @AfterEach
+    public void cleanupCustomTables() throws Exception
     {
-        super.cleanupDatabase();
-
-        // Also clean up custom tables
+        // Clean up custom tables
         try (Connection conn = dataSource.getConnection();
              Statement stmt = conn.createStatement())
         {
@@ -333,5 +378,13 @@ class SqliteDaoAspectTableMappingTest extends SqliteRestIntegrationTest
         {
             // Ignore errors during cleanup
         }
+    }
+
+    /**
+     * Generate a fixed test UUID based on a seed value.
+     */
+    private UUID testUuid(int seed)
+    {
+        return UUID.fromString(String.format("00000000-0000-0000-0000-%012d", seed));
     }
 }
