@@ -6,19 +6,19 @@
 SET FOREIGN_KEY_CHECKS = 0;
 
 -- Truncate all tables in reverse dependency order
-TRUNCATE TABLE hierarchy_aspect_map;
-TRUNCATE TABLE hierarchy_entity_tree_node;
-TRUNCATE TABLE hierarchy_entity_directory;
-TRUNCATE TABLE hierarchy_entity_set;
-TRUNCATE TABLE hierarchy_entity_list;
-TRUNCATE TABLE property_value;
-TRUNCATE TABLE aspect;
-TRUNCATE TABLE hierarchy;
-TRUNCATE TABLE catalog_aspect_def;
-TRUNCATE TABLE catalog;
-TRUNCATE TABLE entity;
-TRUNCATE TABLE property_def;
-TRUNCATE TABLE aspect_def;
+TRUNCATE TABLE hierarchy_aspect_map WAIT 50;
+TRUNCATE TABLE hierarchy_entity_tree_node WAIT 50;
+TRUNCATE TABLE hierarchy_entity_directory WAIT 50;
+TRUNCATE TABLE hierarchy_entity_set WAIT 50;
+TRUNCATE TABLE hierarchy_entity_list WAIT 50;
+TRUNCATE TABLE property_value WAIT 50;
+TRUNCATE TABLE aspect WAIT 50;
+TRUNCATE TABLE hierarchy WAIT 50;
+TRUNCATE TABLE catalog_aspect_def WAIT 50;
+TRUNCATE TABLE catalog WAIT 50;
+TRUNCATE TABLE entity WAIT 50;
+TRUNCATE TABLE property_def WAIT 50;
+TRUNCATE TABLE aspect_def WAIT 50;
 
 -- Re-enable foreign key checks
 SET FOREIGN_KEY_CHECKS = 1;
