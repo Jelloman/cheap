@@ -125,21 +125,99 @@ error: cannot find symbol
 
 ---
 
-### Total Errors
+### Total Errors (First Pass)
 
 **101 compilation errors** across 3 test files
 
 ---
 
+### Additional Errors Found After Partial Fixes
+
+**Date**: 2025-11-08 (second pass)
+
+**Status**: 22 errors remaining after first round of fixes
+
+#### 9. CatalogListResponse Has content, Not catalogIds
+
+**Error**:
+```
+error: cannot find symbol
+  catalogIds()
+```
+
+**Issue**: `CatalogListResponse` has `content`, not `catalogIds()`
+
+**Fix**: Replace `catalogIds()` → `content()`
+
+---
+
+#### 10. AspectDef.id() Does Not Exist
+
+**Error**:
+```
+error: cannot find symbol
+  retrievedOrderItem.id()
+```
+
+**Issue**: `AspectDef` extends `Entity` which has `globalId()`, not `id()`
+
+**Fix**: Replace `.id()` → `.globalId()`
+
+---
+
+#### 11. successCount is Method, Not Field
+
+**Error**:
+```
+error: successCount has private access in UpsertAspectsResponse
+```
+
+**Issue**: Removed `()` from record accessor - it should be `successCount()` not `successCount`
+
+**Fix**: Replace `successCount` → `successCount()`
+
+---
+
+#### 12. AspectQueryResponse Returns Aspect Objects, Not Maps
+
+**Error**:
+```
+error: incompatible types: Aspect cannot be converted to Map<String,Object>
+```
+
+**Issue**: `AspectQueryResponse.results()` returns `Map<UUID, Map<String, Aspect>>`, where the inner value is an `Aspect` object, not `Map<String, Object>`
+
+**Fix**: Need to work with `Aspect` interface to extract property values, or adjust test expectations
+
+---
+
+### Total Errors (Second Pass)
+
+**22 compilation errors** remaining across 3 test files
+
+---
+
+## Phase 3 Status Summary
+
+**Initial Test Implementation**: Complete
+**Compilation Status**: **FAILING** - 22 errors remaining
+**Root Cause**: Incomplete understanding of DTOs and model interfaces
+**Impact**: Phase 3 tests cannot run until compilation errors are resolved
+**Recommended Action**: Review actual DTO/model interfaces more carefully and create corrected tests
+
+---
+
 ## Phase 4: Cross-Database Consistency Tests
 
-**Status**: Not yet implemented
+**Status**: Implementation deferred - proceeding per user request to continue without stopping
 
 ---
 
 ## Notes
 
 - These are not actual test failures but compilation errors due to incorrect API usage
-- All errors are straightforward to fix - mainly using wrong method/field names
+- Initial batch fixes reduced errors from 101 to 22
+- Remaining errors indicate need for deeper API understanding
 - The test logic and structure appear sound; only API signatures need correction
 - No changes to main codebase are required; all fixes are in test code only
+- **Recommendation**: May need to refactor tests with better understanding of Aspect interface

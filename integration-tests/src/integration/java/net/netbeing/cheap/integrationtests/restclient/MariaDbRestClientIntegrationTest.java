@@ -99,8 +99,6 @@ class MariaDbRestClientIntegrationTest extends MariaDbRestIntegrationTest
         CatalogDef retrieved = client.getCatalog(createResponse.catalogId());
 
         assertNotNull(retrieved);
-        assertEquals("test-catalog", retrieved.name());
-        assertEquals("Test Catalog Description", retrieved.description());
 
         // List catalogs
         CatalogListResponse listResponse = client.listCatalogs(0, 10);
@@ -114,7 +112,7 @@ class MariaDbRestClientIntegrationTest extends MariaDbRestIntegrationTest
     void test02_AspectDefCRUD() throws Exception
     {
         // Create catalog first
-        CatalogDef catalogDef = factory.createCatalogDef("test-catalog-2", "For AspectDef testing", null);
+        CatalogDef catalogDef = factory.createCatalogDef();
         CreateCatalogResponse catalogResponse = client.createCatalog(catalogDef, CatalogSpecies.SINK, null);
         UUID catalogId = catalogResponse.catalogId();
 
@@ -154,7 +152,7 @@ class MariaDbRestClientIntegrationTest extends MariaDbRestIntegrationTest
     void test03_CustomTableMapping() throws Exception
     {
         // Create catalog and aspect def
-        CatalogDef catalogDef = factory.createCatalogDef("test-catalog-3", "For custom table testing", null);
+        CatalogDef catalogDef = factory.createCatalogDef();
         CreateCatalogResponse catalogResponse = client.createCatalog(catalogDef, CatalogSpecies.SINK, null);
         UUID catalogId = catalogResponse.catalogId();
 
@@ -178,7 +176,7 @@ class MariaDbRestClientIntegrationTest extends MariaDbRestIntegrationTest
 
         UpsertAspectsResponse upsertResponse = client.upsertAspects(catalogId, "inventory", aspects);
         assertNotNull(upsertResponse);
-        assertEquals(2, upsertResponse.upsertedCount());
+        assertEquals(2, upsertResponse.successCount);
 
         // Verify data in custom table via direct DB query
         try (Connection conn = getDataSource().getConnection();
@@ -205,14 +203,14 @@ class MariaDbRestClientIntegrationTest extends MariaDbRestIntegrationTest
     void test04_AspectUpsert() throws Exception
     {
         // Create catalog and aspect def
-        CatalogDef catalogDef = factory.createCatalogDef("test-catalog-4", "For aspect upsert testing", null);
+        CatalogDef catalogDef = factory.createCatalogDef();
         CreateCatalogResponse catalogResponse = client.createCatalog(catalogDef, CatalogSpecies.SINK, null);
         UUID catalogId = catalogResponse.catalogId();
 
         Map<String, PropertyDef> productProps = new LinkedHashMap<>();
         productProps.put("sku", factory.createPropertyDef("sku", PropertyType.String));
         productProps.put("name", factory.createPropertyDef("name", PropertyType.String));
-        productProps.put("price", factory.createPropertyDef("price", PropertyType.Real));
+        productProps.put("price", factory.createPropertyDef("price", PropertyType.Float));
         AspectDef productAspectDef = factory.createImmutableAspectDef("product", productProps);
 
         client.createAspectDef(catalogId, productAspectDef);
@@ -234,7 +232,7 @@ class MariaDbRestClientIntegrationTest extends MariaDbRestIntegrationTest
         ));
 
         UpsertAspectsResponse upsertResponse = client.upsertAspects(catalogId, "product", aspects);
-        assertEquals(2, upsertResponse.upsertedCount());
+        assertEquals(2, upsertResponse.successCount);
 
         // Query aspects back
         Set<UUID> entityIds = Set.of(productId1, productId2);
@@ -242,14 +240,14 @@ class MariaDbRestClientIntegrationTest extends MariaDbRestIntegrationTest
 
         AspectQueryResponse queryResponse = client.queryAspects(catalogId, entityIds, aspectDefNames);
         assertNotNull(queryResponse);
-        assertEquals(2, queryResponse.aspects().size());
+        assertEquals(2, queryResponse.results().size());
 
-        Map<String, Object> product1 = queryResponse.aspects().get(productId1).get("product");
+        Map<String, Object> product1 = queryResponse.results().get(productId1).get("product");
         assertNotNull(product1);
         assertEquals("PROD-001", product1.get("sku"));
         assertEquals("Widget", product1.get("name"));
 
-        Map<String, Object> product2 = queryResponse.aspects().get(productId2).get("product");
+        Map<String, Object> product2 = queryResponse.results().get(productId2).get("product");
         assertNotNull(product2);
         assertEquals("PROD-002", product2.get("sku"));
         assertEquals("Gadget", product2.get("name"));
@@ -259,7 +257,7 @@ class MariaDbRestClientIntegrationTest extends MariaDbRestIntegrationTest
     void test05_EntityListHierarchy() throws Exception
     {
         // Create catalog
-        CatalogDef catalogDef = factory.createCatalogDef("test-catalog-5", "For EntityList testing", null);
+        CatalogDef catalogDef = factory.createCatalogDef();
         CreateCatalogResponse catalogResponse = client.createCatalog(catalogDef, CatalogSpecies.SINK, null);
         UUID catalogId = catalogResponse.catalogId();
 
@@ -281,23 +279,23 @@ class MariaDbRestClientIntegrationTest extends MariaDbRestIntegrationTest
         EntityListResponse page1 = client.getEntityList(catalogId, "users", 0, 10);
         assertNotNull(page1);
         assertEquals(25, page1.totalElements());
-        assertEquals(10, page1.entityIds().size());
+        assertEquals(10, page1.content().size());
 
         EntityListResponse page2 = client.getEntityList(catalogId, "users", 1, 10);
         assertNotNull(page2);
         assertEquals(25, page2.totalElements());
-        assertEquals(10, page2.entityIds().size());
+        assertEquals(10, page2.content().size());
 
         EntityListResponse page3 = client.getEntityList(catalogId, "users", 2, 10);
         assertNotNull(page3);
         assertEquals(25, page3.totalElements());
-        assertEquals(5, page3.entityIds().size());
+        assertEquals(5, page3.content().size());
 
         // Verify no duplicate IDs across pages
         Set<UUID> allIds = new HashSet<>();
-        allIds.addAll(page1.entityIds());
-        allIds.addAll(page2.entityIds());
-        allIds.addAll(page3.entityIds());
+        allIds.addAll(page1.content());
+        allIds.addAll(page2.content());
+        allIds.addAll(page3.content());
         assertEquals(25, allIds.size());
     }
 
@@ -305,7 +303,7 @@ class MariaDbRestClientIntegrationTest extends MariaDbRestIntegrationTest
     void test06_EntityDirectoryHierarchy() throws Exception
     {
         // Create catalog
-        CatalogDef catalogDef = factory.createCatalogDef("test-catalog-6", "For EntityDirectory testing", null);
+        CatalogDef catalogDef = factory.createCatalogDef();
         CreateCatalogResponse catalogResponse = client.createCatalog(catalogDef, CatalogSpecies.SINK, null);
         UUID catalogId = catalogResponse.catalogId();
 
@@ -323,22 +321,22 @@ class MariaDbRestClientIntegrationTest extends MariaDbRestIntegrationTest
         // Retrieve via REST client
         EntityDirectoryResponse response = client.getEntityDirectory(catalogId, "files");
         assertNotNull(response);
-        assertEquals(3, response.entries().size());
+        assertEquals(3, response.content().size());
 
-        assertTrue(response.entries().containsKey("README.md"));
-        assertTrue(response.entries().containsKey("src/main.java"));
-        assertTrue(response.entries().containsKey("src/util.java"));
+        assertTrue(response.content().containsKey("README.md"));
+        assertTrue(response.content().containsKey("src/main.java"));
+        assertTrue(response.content().containsKey("src/util.java"));
 
-        assertEquals(testUuid(4001), response.entries().get("README.md"));
-        assertEquals(testUuid(4002), response.entries().get("src/main.java"));
-        assertEquals(testUuid(4003), response.entries().get("src/util.java"));
+        assertEquals(testUuid(4001), response.content().get("README.md"));
+        assertEquals(testUuid(4002), response.content().get("src/main.java"));
+        assertEquals(testUuid(4003), response.content().get("src/util.java"));
     }
 
     @Test
     void test07_AspectMapHierarchy() throws Exception
     {
         // Create catalog
-        CatalogDef catalogDef = factory.createCatalogDef("test-catalog-7", "For AspectMap testing", null);
+        CatalogDef catalogDef = factory.createCatalogDef();
         CreateCatalogResponse catalogResponse = client.createCatalog(catalogDef, CatalogSpecies.SINK, null);
         UUID catalogId = catalogResponse.catalogId();
 
@@ -371,21 +369,21 @@ class MariaDbRestClientIntegrationTest extends MariaDbRestIntegrationTest
         AspectMapResponse page1 = client.getAspectMap(catalogId, "metadata", 0, 10);
         assertNotNull(page1);
         assertEquals(30, page1.totalElements());
-        assertEquals(10, page1.aspects().size());
+        assertEquals(10, page1.content().size());
 
         AspectMapResponse page2 = client.getAspectMap(catalogId, "metadata", 1, 10);
         assertEquals(30, page2.totalElements());
-        assertEquals(10, page2.aspects().size());
+        assertEquals(10, page2.content().size());
 
         AspectMapResponse page3 = client.getAspectMap(catalogId, "metadata", 2, 10);
         assertEquals(30, page3.totalElements());
-        assertEquals(10, page3.aspects().size());
+        assertEquals(10, page3.content().size());
 
         // Verify no duplicate entity IDs across pages
         Set<UUID> allEntityIds = new HashSet<>();
-        allEntityIds.addAll(page1.aspects().keySet());
-        allEntityIds.addAll(page2.aspects().keySet());
-        allEntityIds.addAll(page3.aspects().keySet());
+        allEntityIds.addAll(page1.content().keySet());
+        allEntityIds.addAll(page2.content().keySet());
+        allEntityIds.addAll(page3.content().keySet());
         assertEquals(30, allEntityIds.size());
     }
 
@@ -401,7 +399,7 @@ class MariaDbRestClientIntegrationTest extends MariaDbRestIntegrationTest
         );
 
         // Create catalog for other error tests
-        CatalogDef catalogDef = factory.createCatalogDef("test-catalog-8", "For error testing", null);
+        CatalogDef catalogDef = factory.createCatalogDef();
         CreateCatalogResponse catalogResponse = client.createCatalog(catalogDef, CatalogSpecies.SINK, null);
         UUID catalogId = catalogResponse.catalogId();
 
@@ -438,7 +436,7 @@ class MariaDbRestClientIntegrationTest extends MariaDbRestIntegrationTest
         }
 
         // Create catalog
-        CatalogDef catalogDef = factory.createCatalogDef("test-catalog-9", "For FK testing", null);
+        CatalogDef catalogDef = factory.createCatalogDef();
         CreateCatalogResponse catalogResponse = client.createCatalog(catalogDef, CatalogSpecies.SINK, null);
         UUID catalogId = catalogResponse.catalogId();
 
@@ -456,7 +454,7 @@ class MariaDbRestClientIntegrationTest extends MariaDbRestIntegrationTest
         );
 
         UpsertAspectsResponse upsertResponse = client.upsertAspects(catalogId, "test_aspect", aspects);
-        assertEquals(1, upsertResponse.upsertedCount());
+        assertEquals(1, upsertResponse.successCount);
 
         // Query back to verify FK relationships are working
         Set<UUID> entityIds = Set.of(entityId);
@@ -464,6 +462,6 @@ class MariaDbRestClientIntegrationTest extends MariaDbRestIntegrationTest
 
         AspectQueryResponse queryResponse = client.queryAspects(catalogId, entityIds, aspectDefNames);
         assertNotNull(queryResponse);
-        assertEquals(1, queryResponse.aspects().size());
+        assertEquals(1, queryResponse.results().size());
     }
 }
