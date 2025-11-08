@@ -16,12 +16,12 @@
 
 package net.netbeing.cheap.db.mariadb;
 
+import ch.vorburger.exec.ManagedProcessException;
 import net.netbeing.cheap.db.AspectTableMapping;
 import net.netbeing.cheap.model.*;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
@@ -47,126 +47,111 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class MariaDbDaoTest
 {
-    @Nested
-    class WithoutForeignKeys extends MariaDbDaoTestBase
+    abstract static class MariaDbDaoTestBase
     {
-        WithoutForeignKeys() { super(false); }
-    }
+        static final String DB_NAME = "MariaDbDaoTestBase";
 
-    @Nested
-    class WithForeignKeys extends MariaDbDaoTestBase
-    {
-        WithForeignKeys() { super(true); }
-    }
-
-    static abstract class MariaDbDaoTestBase
-    {
-        static final String DB_NAME = "cheap";
-        MariaDbTestDb db;
-        final boolean useForeignKeys;
-
-        MariaDbDaoTestBase(boolean useForeignKeys)
+        private static AspectTableMapping getAspectTableMapping(AspectDef aspectDef)
         {
-            this.useForeignKeys = useForeignKeys;
+            String tableName = "test_all_types";
+
+            // Create and register an AspectTableMapping
+            Map<String, String> columnMapping = new LinkedHashMap<>();
+            columnMapping.put("int_prop", "int_prop");
+            columnMapping.put("float_prop", "float_prop");
+            columnMapping.put("bool_prop", "bool_prop");
+            columnMapping.put("string_prop", "string_prop");
+            columnMapping.put("text_prop", "text_prop");
+            columnMapping.put("bigint_prop", "bigint_prop");
+            columnMapping.put("bigdec_prop", "bigdec_prop");
+            columnMapping.put("date_prop", "date_prop");
+            columnMapping.put("uri_prop", "uri_prop");
+            columnMapping.put("uuid_prop", "uuid_prop");
+            columnMapping.put("clob_prop", "clob_prop");
+            columnMapping.put("blob_prop", "blob_prop");
+
+            return new AspectTableMapping(aspectDef, tableName, columnMapping);
         }
 
-        @BeforeAll
-        static void setUpAll() throws Exception
-        {
-            // Initialization happens in @BeforeEach per instance
-        }
-
-        @BeforeEach
-        void setUpEach() throws Exception
-        {
-            if (db == null) {
-                db = new MariaDbTestDb(DB_NAME + (useForeignKeys ? "_with_fk" : "_no_fk"), useForeignKeys);
-                db.initializeCheapSchema();
-            }
-        }
-
-        @AfterAll
-        static void tearDownAll() throws Exception
-        {
-            // Cleanup happens in each nested class
-        }
+        protected abstract MariaDbTestDb getDb();
 
         @AfterEach
         void reset() throws Exception
         {
-            db.truncateAllTables();
+            getDb().truncateAllTables();
         }
 
-            @Test
-            void testSaveAndLoadSimpleCatalog() throws SQLException
-            {
-                // Create a simple catalog
-                UUID catalogId = UUID.randomUUID();
-                Catalog originalCatalog = db.factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
+        @Test
+        void testSaveAndLoadSimpleCatalog() throws SQLException
+        {
+            // Create a simple catalog
+            UUID catalogId = UUID.randomUUID();
+            Catalog originalCatalog = getDb().factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
 
-                // Save the catalog
-                db.mariaDbDao.saveCatalog(originalCatalog);
+            // Save the catalog
+            getDb().mariaDbDao.saveCatalog(originalCatalog);
 
-                // Load the catalog
-                Catalog loadedCatalog = db.mariaDbDao.loadCatalog(catalogId);
+            // Load the catalog
+            Catalog loadedCatalog = getDb().mariaDbDao.loadCatalog(catalogId);
 
-                // Verify basic properties
-                assertNotNull(loadedCatalog);
-                assertEquals(originalCatalog.globalId(), loadedCatalog.globalId());
-                assertEquals(originalCatalog.species(), loadedCatalog.species());
-                assertEquals(originalCatalog.upstream(), loadedCatalog.upstream());
-            }
+            // Verify basic properties
+            assertNotNull(loadedCatalog);
+            assertEquals(originalCatalog.globalId(), loadedCatalog.globalId());
+            assertEquals(originalCatalog.species(), loadedCatalog.species());
+            assertEquals(originalCatalog.upstream(), loadedCatalog.upstream());
+        }
 
-            @Test
-            void testSaveAndLoadCatalogWithUri() throws SQLException
-            {
-                // Create catalog with URI
-                UUID catalogId = UUID.randomUUID();
-                Catalog originalCatalog = db.factory.createCatalog(catalogId, CatalogSpecies.SOURCE, null, null, 0L);
+        @Test
+        void testSaveAndLoadCatalogWithUri() throws SQLException
+        {
+            // Create catalog with URI
+            UUID catalogId = UUID.randomUUID();
+            Catalog originalCatalog = getDb().factory.createCatalog(catalogId, CatalogSpecies.SOURCE, null, null, 0L);
 
-                db.mariaDbDao.saveCatalog(originalCatalog);
-                Catalog loadedCatalog = db.mariaDbDao.loadCatalog(catalogId);
+            getDb().mariaDbDao.saveCatalog(originalCatalog);
+            Catalog loadedCatalog = getDb().mariaDbDao.loadCatalog(catalogId);
 
-                assertNotNull(loadedCatalog);
-                assertEquals(originalCatalog.globalId(), loadedCatalog.globalId());
-            }
+            assertNotNull(loadedCatalog);
+            assertEquals(originalCatalog.globalId(), loadedCatalog.globalId());
+        }
 
-            @Test
-            void testSaveAndLoadCatalogWithUpstream() throws SQLException
-            {
-                // Create upstream catalog first
-                UUID upstreamId = UUID.randomUUID();
-                Catalog upstreamCatalog = db.factory.createCatalog(upstreamId, CatalogSpecies.SOURCE, null, null, 0L);
-                db.mariaDbDao.saveCatalog(upstreamCatalog);
+        @Test
+        void testSaveAndLoadCatalogWithUpstream() throws SQLException
+        {
+            // Create upstream catalog first
+            UUID upstreamId = UUID.randomUUID();
+            Catalog upstreamCatalog = getDb().factory.createCatalog(upstreamId, CatalogSpecies.SOURCE, null, null, 0L);
+            getDb().mariaDbDao.saveCatalog(upstreamCatalog);
 
-                // Create derived catalog
-                UUID catalogId = UUID.randomUUID();
-                Catalog originalCatalog = db.factory.createCatalog(catalogId, CatalogSpecies.MIRROR, null, upstreamId, 0L);
+            // Create derived catalog
+            UUID catalogId = UUID.randomUUID();
+            Catalog originalCatalog = getDb().factory.createCatalog(catalogId, CatalogSpecies.MIRROR, null,
+                upstreamId, 0L);
 
-                db.mariaDbDao.saveCatalog(originalCatalog);
-                Catalog loadedCatalog = db.mariaDbDao.loadCatalog(catalogId);
+            getDb().mariaDbDao.saveCatalog(originalCatalog);
+            Catalog loadedCatalog = getDb().mariaDbDao.loadCatalog(catalogId);
 
-                assertNotNull(loadedCatalog);
-                assertEquals(originalCatalog.globalId(), loadedCatalog.globalId());
-                assertEquals(originalCatalog.upstream(), loadedCatalog.upstream());
-                assertEquals(upstreamId, loadedCatalog.upstream());
-            }
+            assertNotNull(loadedCatalog);
+            assertEquals(originalCatalog.globalId(), loadedCatalog.globalId());
+            assertEquals(originalCatalog.upstream(), loadedCatalog.upstream());
+            assertEquals(upstreamId, loadedCatalog.upstream());
+        }
 
-            @Test
-            void testSaveAndLoadCatalogWithAspectDefs() throws SQLException
-            {
+        @Test
+        void testSaveAndLoadCatalogWithAspectDefs() throws SQLException
+        {
             // Create AspectDef
-            AspectDef personAspectDef = db.factory.createMutableAspectDef("person");
+            AspectDef personAspectDef = getDb().factory.createMutableAspectDef("person");
 
             // Create catalog
             UUID catalogId = UUID.randomUUID();
-            Catalog originalCatalog = db.factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
+            Catalog originalCatalog = getDb().factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
 
             // Extend catalog with aspect def
             originalCatalog.extend(personAspectDef);
 
-            db.mariaDbDao.saveCatalog(originalCatalog);
-            Catalog loadedCatalog = db.mariaDbDao.loadCatalog(catalogId);
+            getDb().mariaDbDao.saveCatalog(originalCatalog);
+            Catalog loadedCatalog = getDb().mariaDbDao.loadCatalog(catalogId);
 
             assertNotNull(loadedCatalog);
             assertEquals(originalCatalog.globalId(), loadedCatalog.globalId());
@@ -187,15 +172,15 @@ class MariaDbDaoTest
         {
             // Create catalog
             UUID catalogId = UUID.randomUUID();
-            Catalog originalCatalog = db.factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
+            Catalog originalCatalog = getDb().factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
 
             // Create hierarchy
-            EntitySetHierarchy hierarchy = db.factory.createEntitySetHierarchy(originalCatalog, "entities");
+            EntitySetHierarchy hierarchy = getDb().factory.createEntitySetHierarchy(originalCatalog, "entities");
 
             // Add some entities
-            Entity entity1 = db.factory.createEntity(UUID.randomUUID());
-            Entity entity2 = db.factory.createEntity(UUID.randomUUID());
-            Entity entity3 = db.factory.createEntity(UUID.randomUUID());
+            Entity entity1 = getDb().factory.createEntity(UUID.randomUUID());
+            Entity entity2 = getDb().factory.createEntity(UUID.randomUUID());
+            Entity entity3 = getDb().factory.createEntity(UUID.randomUUID());
 
             hierarchy.add(entity1);
             hierarchy.add(entity2);
@@ -205,8 +190,8 @@ class MariaDbDaoTest
             originalCatalog.addHierarchy(hierarchy);
 
             // Save and load
-            db.mariaDbDao.saveCatalog(originalCatalog);
-            Catalog loadedCatalog = db.mariaDbDao.loadCatalog(catalogId);
+            getDb().mariaDbDao.saveCatalog(originalCatalog);
+            Catalog loadedCatalog = getDb().mariaDbDao.loadCatalog(catalogId);
 
             assertNotNull(loadedCatalog);
 
@@ -230,14 +215,15 @@ class MariaDbDaoTest
         {
             // Create catalog
             UUID catalogId = UUID.randomUUID();
-            Catalog originalCatalog = db.factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
+            Catalog originalCatalog = getDb().factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
 
             // Create hierarchy
-            EntityDirectoryHierarchy hierarchy = db.factory.createEntityDirectoryHierarchy(originalCatalog, "directory");
+            EntityDirectoryHierarchy hierarchy = getDb().factory.createEntityDirectoryHierarchy(originalCatalog,
+                "directory");
 
             // Add some entities with keys
-            Entity entity1 = db.factory.createEntity(UUID.randomUUID());
-            Entity entity2 = db.factory.createEntity(UUID.randomUUID());
+            Entity entity1 = getDb().factory.createEntity(UUID.randomUUID());
+            Entity entity2 = getDb().factory.createEntity(UUID.randomUUID());
 
             hierarchy.put("key1", entity1);
             hierarchy.put("key2", entity2);
@@ -246,8 +232,8 @@ class MariaDbDaoTest
             originalCatalog.addHierarchy(hierarchy);
 
             // Save and load
-            db.mariaDbDao.saveCatalog(originalCatalog);
-            Catalog loadedCatalog = db.mariaDbDao.loadCatalog(catalogId);
+            getDb().mariaDbDao.saveCatalog(originalCatalog);
+            Catalog loadedCatalog = getDb().mariaDbDao.loadCatalog(catalogId);
 
             assertNotNull(loadedCatalog);
 
@@ -266,29 +252,29 @@ class MariaDbDaoTest
         void testSaveAndLoadCatalogWithAspectMapHierarchy() throws SQLException
         {
             // Create AspectDef with properties
-            AspectDef personAspectDef = db.factory.createMutableAspectDef("person");
+            AspectDef personAspectDef = getDb().factory.createMutableAspectDef("person");
 
             // Create catalog
             UUID catalogId = UUID.randomUUID();
-            Catalog originalCatalog = db.factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
+            Catalog originalCatalog = getDb().factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
 
             // Create aspect map hierarchy
-            AspectMapHierarchy hierarchy = db.factory.createAspectMapHierarchy(originalCatalog, personAspectDef);
+            AspectMapHierarchy hierarchy = getDb().factory.createAspectMapHierarchy(originalCatalog, personAspectDef);
 
             // Create entities and aspects
-            Entity person1 = db.factory.createEntity(UUID.randomUUID());
-            Entity person2 = db.factory.createEntity(UUID.randomUUID());
+            Entity person1 = getDb().factory.createEntity(UUID.randomUUID());
+            Entity person2 = getDb().factory.createEntity(UUID.randomUUID());
 
-            Aspect aspect1 = db.factory.createPropertyMapAspect(person1, personAspectDef);
-            Aspect aspect2 = db.factory.createPropertyMapAspect(person2, personAspectDef);
+            Aspect aspect1 = getDb().factory.createPropertyMapAspect(person1, personAspectDef);
+            Aspect aspect2 = getDb().factory.createPropertyMapAspect(person2, personAspectDef);
 
             // Add aspects to hierarchy
             hierarchy.put(person1, aspect1);
             hierarchy.put(person2, aspect2);
 
             // Save and load
-            db.mariaDbDao.saveCatalog(originalCatalog);
-            Catalog loadedCatalog = db.mariaDbDao.loadCatalog(catalogId);
+            getDb().mariaDbDao.saveCatalog(originalCatalog);
+            Catalog loadedCatalog = getDb().mariaDbDao.loadCatalog(catalogId);
 
             assertNotNull(loadedCatalog);
 
@@ -321,19 +307,19 @@ class MariaDbDaoTest
         {
             // Create and save catalog
             UUID catalogId = UUID.randomUUID();
-            Catalog catalog = db.factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
-            db.mariaDbDao.saveCatalog(catalog);
+            Catalog catalog = getDb().factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
+            getDb().mariaDbDao.saveCatalog(catalog);
 
             // Verify it exists
-            assertTrue(db.mariaDbDao.catalogExists(catalogId));
+            assertTrue(getDb().mariaDbDao.catalogExists(catalogId));
 
             // Delete it
-            boolean deleted = db.mariaDbDao.deleteCatalog(catalogId);
+            boolean deleted = getDb().mariaDbDao.deleteCatalog(catalogId);
             assertTrue(deleted);
 
             // Verify it no longer exists
-            assertFalse(db.mariaDbDao.catalogExists(catalogId));
-            assertNull(db.mariaDbDao.loadCatalog(catalogId));
+            assertFalse(getDb().mariaDbDao.catalogExists(catalogId));
+            assertNull(getDb().mariaDbDao.loadCatalog(catalogId));
         }
 
         @Test
@@ -342,7 +328,7 @@ class MariaDbDaoTest
             UUID nonExistentId = UUID.randomUUID();
 
             // Delete non-existent catalog
-            boolean deleted = db.mariaDbDao.deleteCatalog(nonExistentId);
+            boolean deleted = getDb().mariaDbDao.deleteCatalog(nonExistentId);
             assertFalse(deleted);
         }
 
@@ -352,21 +338,21 @@ class MariaDbDaoTest
             UUID catalogId = UUID.randomUUID();
 
             // Should not exist initially
-            assertFalse(db.mariaDbDao.catalogExists(catalogId));
+            assertFalse(getDb().mariaDbDao.catalogExists(catalogId));
 
             // Create and save catalog
-            Catalog catalog = db.factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
-            db.mariaDbDao.saveCatalog(catalog);
+            Catalog catalog = getDb().factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
+            getDb().mariaDbDao.saveCatalog(catalog);
 
             // Should exist now
-            assertTrue(db.mariaDbDao.catalogExists(catalogId));
+            assertTrue(getDb().mariaDbDao.catalogExists(catalogId));
         }
 
         @Test
         void testLoadNonExistentCatalog() throws SQLException
         {
             UUID nonExistentId = UUID.randomUUID();
-            Catalog catalog = db.mariaDbDao.loadCatalog(nonExistentId);
+            Catalog catalog = getDb().mariaDbDao.loadCatalog(nonExistentId);
             assertNull(catalog);
         }
 
@@ -374,20 +360,19 @@ class MariaDbDaoTest
         @Test
         void testSaveNullCatalogThrowsException()
         {
-            assertThrows(IllegalArgumentException.class, () -> {
-                db.mariaDbDao.saveCatalog(null);
-            });
+            MariaDbTestDb db = getDb();
+            assertThrows(IllegalArgumentException.class, () -> db.mariaDbDao.saveCatalog(null));
         }
 
         @Test
         void testTransactionRollbackOnError() throws SQLException
         {
             UUID catalogId = UUID.randomUUID();
-            Catalog catalog = db.factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
+            Catalog catalog = getDb().factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
 
             // Save should succeed
-            assertDoesNotThrow(() -> db.mariaDbDao.saveCatalog(catalog));
-            assertTrue(db.mariaDbDao.catalogExists(catalogId));
+            assertDoesNotThrow(() -> getDb().mariaDbDao.saveCatalog(catalog));
+            assertTrue(getDb().mariaDbDao.catalogExists(catalogId));
         }
 
         @Test
@@ -395,31 +380,32 @@ class MariaDbDaoTest
         {
             // Create a complex catalog with multiple hierarchy types
             UUID catalogId = UUID.randomUUID();
-            Catalog originalCatalog = db.factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
+            Catalog originalCatalog = getDb().factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
 
             // Create multiple aspect definitions
-            AspectDef personAspect = db.factory.createMutableAspectDef("person");
-            AspectDef addressAspect = db.factory.createMutableAspectDef("address");
+            AspectDef personAspect = getDb().factory.createMutableAspectDef("person");
+            AspectDef addressAspect = getDb().factory.createMutableAspectDef("address");
 
             // Create entity set hierarchy
-            EntitySetHierarchy entitySet = db.factory.createEntitySetHierarchy(originalCatalog, "entities");
-            Entity entity1 = db.factory.createEntity(UUID.randomUUID());
-            Entity entity2 = db.factory.createEntity(UUID.randomUUID());
+            EntitySetHierarchy entitySet = getDb().factory.createEntitySetHierarchy(originalCatalog, "entities");
+            Entity entity1 = getDb().factory.createEntity(UUID.randomUUID());
+            Entity entity2 = getDb().factory.createEntity(UUID.randomUUID());
             entitySet.add(entity1);
             entitySet.add(entity2);
 
             // Create directory hierarchy
-            EntityDirectoryHierarchy directory = db.factory.createEntityDirectoryHierarchy(originalCatalog, "directory");
+            EntityDirectoryHierarchy directory = getDb().factory.createEntityDirectoryHierarchy(originalCatalog,
+                "directory");
             directory.put("first", entity1);
             directory.put("second", entity2);
 
             // Create aspect map hierarchies
-            AspectMapHierarchy personMap = db.factory.createAspectMapHierarchy(originalCatalog, personAspect);
-            AspectMapHierarchy addressMap = db.factory.createAspectMapHierarchy(originalCatalog, addressAspect);
+            AspectMapHierarchy personMap = getDb().factory.createAspectMapHierarchy(originalCatalog, personAspect);
+            AspectMapHierarchy addressMap = getDb().factory.createAspectMapHierarchy(originalCatalog, addressAspect);
 
-            Aspect person1Aspect = db.factory.createPropertyMapAspect(entity1, personAspect);
-            Aspect person2Aspect = db.factory.createPropertyMapAspect(entity2, personAspect);
-            Aspect address1Aspect = db.factory.createPropertyMapAspect(entity1, addressAspect);
+            Aspect person1Aspect = getDb().factory.createPropertyMapAspect(entity1, personAspect);
+            Aspect person2Aspect = getDb().factory.createPropertyMapAspect(entity2, personAspect);
+            Aspect address1Aspect = getDb().factory.createPropertyMapAspect(entity1, addressAspect);
 
             personMap.put(entity1, person1Aspect);
             personMap.put(entity2, person2Aspect);
@@ -430,8 +416,8 @@ class MariaDbDaoTest
             originalCatalog.addHierarchy(directory);
 
             // Save and load
-            db.mariaDbDao.saveCatalog(originalCatalog);
-            Catalog loadedCatalog = db.mariaDbDao.loadCatalog(catalogId);
+            getDb().mariaDbDao.saveCatalog(originalCatalog);
+            Catalog loadedCatalog = getDb().mariaDbDao.loadCatalog(catalogId);
 
             // Verify complex catalog structure
             assertNotNull(loadedCatalog);
@@ -467,35 +453,36 @@ class MariaDbDaoTest
         void testSaveAndLoadMultivaluedStringProperties() throws SQLException
         {
             // Create AspectDef with multivalued String property
-            PropertyDef tagsProp = db.factory.createPropertyDef("tags", PropertyType.String,
+            PropertyDef tagsProp = getDb().factory.createPropertyDef("tags", PropertyType.String,
                 true, true, true, true, true);
 
             Map<String, PropertyDef> propDefs = Map.of("tags", tagsProp);
-            AspectDef productDef = db.factory.createImmutableAspectDef("product", propDefs);
+            AspectDef productDef = getDb().factory.createImmutableAspectDef("product", propDefs);
 
             // Create catalog with AspectMapHierarchy
             UUID catalogId = UUID.randomUUID();
-            Catalog catalog = db.factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
+            Catalog catalog = getDb().factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
             catalog.extend(productDef);
             AspectMapHierarchy hierarchy = (AspectMapHierarchy) catalog.hierarchy("product");
 
             // Create entity with multivalued property
             UUID entityId = UUID.randomUUID();
-            Entity entity = db.factory.createEntity(entityId);
-            Aspect aspect = db.factory.createPropertyMapAspect(entity, productDef);
+            Entity entity = getDb().factory.createEntity(entityId);
+            Aspect aspect = getDb().factory.createPropertyMapAspect(entity, productDef);
 
             List<String> tags = List.of("electronics", "gadget", "popular");
-            aspect.put(db.factory.createProperty(tagsProp, tags));
+            aspect.put(getDb().factory.createProperty(tagsProp, tags));
 
             hierarchy.put(entity, aspect);
 
             // Save catalog
-            db.mariaDbDao.saveCatalog(catalog);
+            getDb().mariaDbDao.saveCatalog(catalog);
 
             // Verify database rows - should have 3 rows for the multivalued property
-            try (Connection conn = db.dataSource.getConnection();
+            try (Connection conn = getDb().dataSource.getConnection();
                  PreparedStatement stmt = conn.prepareStatement(
-                     "SELECT value_text, value_index FROM property_value WHERE entity_id = ? AND property_name = ? ORDER BY value_index")) {
+                     "SELECT value_text, value_index FROM property_value WHERE entity_id = ? AND property_name = ? " +
+                         "ORDER BY value_index")) {
                 stmt.setString(1, entityId.toString());
                 stmt.setString(2, "tags");
                 try (var rs = stmt.executeQuery()) {
@@ -516,9 +503,9 @@ class MariaDbDaoTest
             }
 
             // Load catalog and verify multivalued property
-            Catalog loadedCatalog = db.mariaDbDao.loadCatalog(catalogId);
+            Catalog loadedCatalog = getDb().mariaDbDao.loadCatalog(catalogId);
             AspectMapHierarchy loadedHierarchy = (AspectMapHierarchy) loadedCatalog.hierarchy("product");
-            Entity loadedEntity = db.factory.getOrRegisterNewEntity(entityId);
+            Entity loadedEntity = getDb().factory.getOrRegisterNewEntity(entityId);
             Aspect loadedAspect = loadedHierarchy.get(loadedEntity);
 
             assertNotNull(loadedAspect);
@@ -537,35 +524,35 @@ class MariaDbDaoTest
         void testSaveAndLoadMultivaluedIntegerProperties() throws SQLException
         {
             // Create AspectDef with multivalued Integer property
-            PropertyDef scoresProp = db.factory.createPropertyDef("scores", PropertyType.Integer,
+            PropertyDef scoresProp = getDb().factory.createPropertyDef("scores", PropertyType.Integer,
                 true, true, true, true, true);
 
             Map<String, PropertyDef> propDefs = Map.of("scores", scoresProp);
-            AspectDef testDef = db.factory.createImmutableAspectDef("test_results", propDefs);
+            AspectDef testDef = getDb().factory.createImmutableAspectDef("test_results", propDefs);
 
             // Create catalog
             UUID catalogId = UUID.randomUUID();
-            Catalog catalog = db.factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
+            Catalog catalog = getDb().factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
             catalog.extend(testDef);
             AspectMapHierarchy hierarchy = (AspectMapHierarchy) catalog.hierarchy("test_results");
 
             // Create entity with multivalued Integer property
             UUID entityId = UUID.randomUUID();
-            Entity entity = db.factory.createEntity(entityId);
-            Aspect aspect = db.factory.createPropertyMapAspect(entity, testDef);
+            Entity entity = getDb().factory.createEntity(entityId);
+            Aspect aspect = getDb().factory.createPropertyMapAspect(entity, testDef);
 
             List<Long> scores = List.of(100L, 95L, 87L, 92L);
-            aspect.put(db.factory.createProperty(scoresProp, scores));
+            aspect.put(getDb().factory.createProperty(scoresProp, scores));
 
             hierarchy.put(entity, aspect);
 
             // Save and load
-            db.mariaDbDao.saveCatalog(catalog);
-            Catalog loadedCatalog = db.mariaDbDao.loadCatalog(catalogId);
+            getDb().mariaDbDao.saveCatalog(catalog);
+            Catalog loadedCatalog = getDb().mariaDbDao.loadCatalog(catalogId);
 
             // Verify loaded data
             AspectMapHierarchy loadedHierarchy = (AspectMapHierarchy) loadedCatalog.hierarchy("test_results");
-            Entity loadedEntity = db.factory.getOrRegisterNewEntity(entityId);
+            Entity loadedEntity = getDb().factory.getOrRegisterNewEntity(entityId);
             Aspect loadedAspect = loadedHierarchy.get(loadedEntity);
 
             @SuppressWarnings("unchecked")
@@ -581,33 +568,33 @@ class MariaDbDaoTest
         void testSaveAndLoadEmptyMultivaluedProperty() throws SQLException
         {
             // Create AspectDef with multivalued property
-            PropertyDef tagsProp = db.factory.createPropertyDef("tags", PropertyType.String,
+            PropertyDef tagsProp = getDb().factory.createPropertyDef("tags", PropertyType.String,
                 true, true, true, true, true);
 
             Map<String, PropertyDef> propDefs = Map.of("tags", tagsProp);
-            AspectDef productDef = db.factory.createImmutableAspectDef("product", propDefs);
+            AspectDef productDef = getDb().factory.createImmutableAspectDef("product", propDefs);
 
             // Create catalog
             UUID catalogId = UUID.randomUUID();
-            Catalog catalog = db.factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
+            Catalog catalog = getDb().factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
             catalog.extend(productDef);
             AspectMapHierarchy hierarchy = (AspectMapHierarchy) catalog.hierarchy("product");
 
             // Create entity with empty list
             UUID entityId = UUID.randomUUID();
-            Entity entity = db.factory.createEntity(entityId);
-            Aspect aspect = db.factory.createPropertyMapAspect(entity, productDef);
+            Entity entity = getDb().factory.createEntity(entityId);
+            Aspect aspect = getDb().factory.createPropertyMapAspect(entity, productDef);
 
             List<String> emptyTags = List.of();
-            aspect.put(db.factory.createProperty(tagsProp, emptyTags));
+            aspect.put(getDb().factory.createProperty(tagsProp, emptyTags));
 
             hierarchy.put(entity, aspect);
 
             // Save catalog
-            db.mariaDbDao.saveCatalog(catalog);
+            getDb().mariaDbDao.saveCatalog(catalog);
 
             // Verify no rows in database for empty list
-            try (Connection conn = db.dataSource.getConnection();
+            try (Connection conn = getDb().dataSource.getConnection();
                  PreparedStatement stmt = conn.prepareStatement(
                      "SELECT COUNT(*) FROM property_value WHERE entity_id = ? AND property_name = ?")) {
                 stmt.setString(1, entityId.toString());
@@ -619,9 +606,9 @@ class MariaDbDaoTest
             }
 
             // Load catalog and verify empty list is restored
-            Catalog loadedCatalog = db.mariaDbDao.loadCatalog(catalogId);
+            Catalog loadedCatalog = getDb().mariaDbDao.loadCatalog(catalogId);
             AspectMapHierarchy loadedHierarchy = (AspectMapHierarchy) loadedCatalog.hierarchy("product");
-            Entity loadedEntity = db.factory.getOrRegisterNewEntity(entityId);
+            Entity loadedEntity = getDb().factory.getOrRegisterNewEntity(entityId);
             Aspect loadedAspect = loadedHierarchy.get(loadedEntity);
 
             Object loadedValue = loadedAspect.readObj("tags");
@@ -636,32 +623,32 @@ class MariaDbDaoTest
         void testSaveAndLoadNullMultivaluedProperty() throws SQLException
         {
             // Create AspectDef with nullable multivalued property
-            PropertyDef tagsProp = db.factory.createPropertyDef("tags", PropertyType.String,
+            PropertyDef tagsProp = getDb().factory.createPropertyDef("tags", PropertyType.String,
                 true, true, true, true, true);
 
             Map<String, PropertyDef> propDefs = Map.of("tags", tagsProp);
-            AspectDef productDef = db.factory.createImmutableAspectDef("product", propDefs);
+            AspectDef productDef = getDb().factory.createImmutableAspectDef("product", propDefs);
 
             // Create catalog
             UUID catalogId = UUID.randomUUID();
-            Catalog catalog = db.factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
+            Catalog catalog = getDb().factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
             catalog.extend(productDef);
             AspectMapHierarchy hierarchy = (AspectMapHierarchy) catalog.hierarchy("product");
 
             // Create entity with null value
             UUID entityId = UUID.randomUUID();
-            Entity entity = db.factory.createEntity(entityId);
-            Aspect aspect = db.factory.createPropertyMapAspect(entity, productDef);
+            Entity entity = getDb().factory.createEntity(entityId);
+            Aspect aspect = getDb().factory.createPropertyMapAspect(entity, productDef);
 
-            aspect.put(db.factory.createProperty(tagsProp, null));
+            aspect.put(getDb().factory.createProperty(tagsProp, null));
 
             hierarchy.put(entity, aspect);
 
             // Save and load
-            db.mariaDbDao.saveCatalog(catalog);
+            getDb().mariaDbDao.saveCatalog(catalog);
 
             // Verify no rows in database (null multivalued is treated same as empty list)
-            try (Connection conn = db.dataSource.getConnection();
+            try (Connection conn = getDb().dataSource.getConnection();
                  PreparedStatement stmt = conn.prepareStatement(
                      "SELECT COUNT(*) FROM property_value WHERE entity_id = ? AND property_name = ?")) {
                 stmt.setString(1, entityId.toString());
@@ -672,9 +659,9 @@ class MariaDbDaoTest
                 }
             }
 
-            Catalog loadedCatalog = db.mariaDbDao.loadCatalog(catalogId);
+            Catalog loadedCatalog = getDb().mariaDbDao.loadCatalog(catalogId);
             AspectMapHierarchy loadedHierarchy = (AspectMapHierarchy) loadedCatalog.hierarchy("product");
-            Entity loadedEntity = db.factory.getOrRegisterNewEntity(entityId);
+            Entity loadedEntity = getDb().factory.getOrRegisterNewEntity(entityId);
             Aspect loadedAspect = loadedHierarchy.get(loadedEntity);
 
             // With the simplified schema, null and empty list are indistinguishable for multivalued properties
@@ -690,11 +677,11 @@ class MariaDbDaoTest
         void testSaveAndLoadMixedSingleAndMultivaluedProperties() throws SQLException
         {
             // Create AspectDef with both single-valued and multivalued properties
-            PropertyDef titleProp = db.factory.createPropertyDef("title", PropertyType.String,
+            PropertyDef titleProp = getDb().factory.createPropertyDef("title", PropertyType.String,
                 null, false, true, true, false, false, false);
-            PropertyDef tagsProp = db.factory.createPropertyDef("tags", PropertyType.String,
+            PropertyDef tagsProp = getDb().factory.createPropertyDef("tags", PropertyType.String,
                 true, true, true, true, true);
-            PropertyDef pricesProp = db.factory.createPropertyDef("prices", PropertyType.Float,
+            PropertyDef pricesProp = getDb().factory.createPropertyDef("prices", PropertyType.Float,
                 true, true, true, true, true);
 
             Map<String, PropertyDef> propDefs = new LinkedHashMap<>();
@@ -702,32 +689,33 @@ class MariaDbDaoTest
             propDefs.put("tags", tagsProp);
             propDefs.put("prices", pricesProp);
 
-            AspectDef productDef = db.factory.createImmutableAspectDef("product", propDefs);
+            AspectDef productDef = getDb().factory.createImmutableAspectDef("product", propDefs);
 
             // Create catalog
             UUID catalogId = UUID.randomUUID();
-            Catalog catalog = db.factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
+            Catalog catalog = getDb().factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
             catalog.extend(productDef);
             AspectMapHierarchy hierarchy = (AspectMapHierarchy) catalog.hierarchy("product");
 
             // Create entity with mixed properties
             UUID entityId = UUID.randomUUID();
-            Entity entity = db.factory.createEntity(entityId);
-            Aspect aspect = db.factory.createPropertyMapAspect(entity, productDef);
+            Entity entity = getDb().factory.createEntity(entityId);
+            Aspect aspect = getDb().factory.createPropertyMapAspect(entity, productDef);
 
-            aspect.put(db.factory.createProperty(titleProp, "Smart Watch"));
-            aspect.put(db.factory.createProperty(tagsProp, List.of("electronics", "gadget")));
-            aspect.put(db.factory.createProperty(pricesProp, List.of(199.99, 249.99, 299.99)));
+            aspect.put(getDb().factory.createProperty(titleProp, "Smart Watch"));
+            aspect.put(getDb().factory.createProperty(tagsProp, List.of("electronics", "gadget")));
+            aspect.put(getDb().factory.createProperty(pricesProp, List.of(199.99, 249.99, 299.99)));
 
             hierarchy.put(entity, aspect);
 
             // Save and load
-            db.mariaDbDao.saveCatalog(catalog);
+            getDb().mariaDbDao.saveCatalog(catalog);
 
             // Verify database rows
-            try (Connection conn = db.dataSource.getConnection();
+            try (Connection conn = getDb().dataSource.getConnection();
                  PreparedStatement stmt = conn.prepareStatement(
-                     "SELECT property_name, COUNT(*) as row_count FROM property_value WHERE entity_id = ? GROUP BY property_name ORDER BY property_name")) {
+                     "SELECT property_name, COUNT(*) as row_count FROM property_value WHERE entity_id = ? GROUP BY " +
+                         "property_name ORDER BY property_name")) {
                 stmt.setString(1, entityId.toString());
                 try (var rs = stmt.executeQuery()) {
                     assertTrue(rs.next());
@@ -746,9 +734,9 @@ class MariaDbDaoTest
                 }
             }
 
-            Catalog loadedCatalog = db.mariaDbDao.loadCatalog(catalogId);
+            Catalog loadedCatalog = getDb().mariaDbDao.loadCatalog(catalogId);
             AspectMapHierarchy loadedHierarchy = (AspectMapHierarchy) loadedCatalog.hierarchy("product");
-            Entity loadedEntity = db.factory.getOrRegisterNewEntity(entityId);
+            Entity loadedEntity = getDb().factory.getOrRegisterNewEntity(entityId);
             Aspect loadedAspect = loadedHierarchy.get(loadedEntity);
 
             // Verify single-valued property
@@ -774,44 +762,44 @@ class MariaDbDaoTest
         void testSaveAndLoadMultivaluedBooleanAndUUIDProperties() throws SQLException
         {
             // Create AspectDef with multivalued Boolean and UUID properties
-            PropertyDef flagsProp = db.factory.createPropertyDef("flags", PropertyType.Boolean,
+            PropertyDef flagsProp = getDb().factory.createPropertyDef("flags", PropertyType.Boolean,
                 true, true, true, true, true);
-            PropertyDef idsProp = db.factory.createPropertyDef("ids", PropertyType.UUID,
+            PropertyDef idsProp = getDb().factory.createPropertyDef("ids", PropertyType.UUID,
                 true, true, true, true, true);
 
             Map<String, PropertyDef> propDefs = new LinkedHashMap<>();
             propDefs.put("flags", flagsProp);
             propDefs.put("ids", idsProp);
 
-            AspectDef testDef = db.factory.createImmutableAspectDef("test_data", propDefs);
+            AspectDef testDef = getDb().factory.createImmutableAspectDef("test_data", propDefs);
 
             // Create catalog
             UUID catalogId = UUID.randomUUID();
-            Catalog catalog = db.factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
+            Catalog catalog = getDb().factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
             catalog.extend(testDef);
             AspectMapHierarchy hierarchy = (AspectMapHierarchy) catalog.hierarchy("test_data");
 
             // Create entity with multivalued Boolean and UUID properties
             UUID entityId = UUID.randomUUID();
-            Entity entity = db.factory.createEntity(entityId);
-            Aspect aspect = db.factory.createPropertyMapAspect(entity, testDef);
+            Entity entity = getDb().factory.createEntity(entityId);
+            Aspect aspect = getDb().factory.createPropertyMapAspect(entity, testDef);
 
             UUID id1 = UUID.fromString("550e8400-e29b-41d4-a716-446655440000");
             UUID id2 = UUID.fromString("6ba7b810-9dad-11d1-80b4-00c04fd430c8");
             UUID id3 = UUID.fromString("7c9e6679-7425-40de-944b-e07fc1f90ae7");
 
-            aspect.put(db.factory.createProperty(flagsProp, List.of(true, false, true, true)));
-            aspect.put(db.factory.createProperty(idsProp, List.of(id1, id2, id3)));
+            aspect.put(getDb().factory.createProperty(flagsProp, List.of(true, false, true, true)));
+            aspect.put(getDb().factory.createProperty(idsProp, List.of(id1, id2, id3)));
 
             hierarchy.put(entity, aspect);
 
             // Save and load
-            db.mariaDbDao.saveCatalog(catalog);
-            Catalog loadedCatalog = db.mariaDbDao.loadCatalog(catalogId);
+            getDb().mariaDbDao.saveCatalog(catalog);
+            Catalog loadedCatalog = getDb().mariaDbDao.loadCatalog(catalogId);
 
             // Verify loaded data
             AspectMapHierarchy loadedHierarchy = (AspectMapHierarchy) loadedCatalog.hierarchy("test_data");
-            Entity loadedEntity = db.factory.getOrRegisterNewEntity(entityId);
+            Entity loadedEntity = getDb().factory.getOrRegisterNewEntity(entityId);
             Aspect loadedAspect = loadedHierarchy.get(loadedEntity);
 
             // Verify Boolean list
@@ -836,40 +824,40 @@ class MariaDbDaoTest
         void testUpdateMultivaluedPropertyWithDifferentLength() throws SQLException
         {
             // Create AspectDef with multivalued property
-            PropertyDef tagsProp = db.factory.createPropertyDef("tags", PropertyType.String,
+            PropertyDef tagsProp = getDb().factory.createPropertyDef("tags", PropertyType.String,
                 true, true, true, true, true);
 
             Map<String, PropertyDef> propDefs = Map.of("tags", tagsProp);
-            AspectDef productDef = db.factory.createImmutableAspectDef("product", propDefs);
+            AspectDef productDef = getDb().factory.createImmutableAspectDef("product", propDefs);
 
             // Create catalog
             UUID catalogId = UUID.randomUUID();
-            Catalog catalog = db.factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
+            Catalog catalog = getDb().factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
             catalog.extend(productDef);
             AspectMapHierarchy hierarchy = (AspectMapHierarchy) catalog.hierarchy("product");
 
             // Create entity with initial list of 3 items
             UUID entityId = UUID.randomUUID();
-            Entity entity = db.factory.createEntity(entityId);
-            Aspect aspect = db.factory.createPropertyMapAspect(entity, productDef);
+            Entity entity = getDb().factory.createEntity(entityId);
+            Aspect aspect = getDb().factory.createPropertyMapAspect(entity, productDef);
 
-            aspect.put(db.factory.createProperty(tagsProp, List.of("tag1", "tag2", "tag3")));
+            aspect.put(getDb().factory.createProperty(tagsProp, List.of("tag1", "tag2", "tag3")));
             hierarchy.put(entity, aspect);
 
             // Save catalog
-            db.mariaDbDao.saveCatalog(catalog);
+            getDb().mariaDbDao.saveCatalog(catalog);
 
             // Update with list of 5 items
-            Aspect updatedAspect = db.factory.createPropertyMapAspect(entity, productDef);
-            updatedAspect.put(db.factory.createProperty(tagsProp,
+            Aspect updatedAspect = getDb().factory.createPropertyMapAspect(entity, productDef);
+            updatedAspect.put(getDb().factory.createProperty(tagsProp,
                 List.of("new1", "new2", "new3", "new4", "new5")));
             hierarchy.put(entity, updatedAspect);
 
             // Save again
-            db.mariaDbDao.saveCatalog(catalog);
+            getDb().mariaDbDao.saveCatalog(catalog);
 
             // Verify database has 5 rows (old rows should be deleted)
-            try (Connection conn = db.dataSource.getConnection();
+            try (Connection conn = getDb().dataSource.getConnection();
                  PreparedStatement stmt = conn.prepareStatement(
                      "SELECT COUNT(*) FROM property_value WHERE entity_id = ? AND property_name = ?")) {
                 stmt.setString(1, entityId.toString());
@@ -881,9 +869,9 @@ class MariaDbDaoTest
             }
 
             // Load and verify new values
-            Catalog loadedCatalog = db.mariaDbDao.loadCatalog(catalogId);
+            Catalog loadedCatalog = getDb().mariaDbDao.loadCatalog(catalogId);
             AspectMapHierarchy loadedHierarchy = (AspectMapHierarchy) loadedCatalog.hierarchy("product");
-            Entity loadedEntity = db.factory.getOrRegisterNewEntity(entityId);
+            Entity loadedEntity = getDb().factory.getOrRegisterNewEntity(entityId);
             Aspect loadedAspect = loadedHierarchy.get(loadedEntity);
 
             @SuppressWarnings("unchecked")
@@ -909,14 +897,14 @@ class MariaDbDaoTest
 
             for (String sqlFile : sqlFiles) {
                 String sql = loadResourceFile(sqlFile);
-                try (Connection conn = db.dataSource.getConnection();
+                try (Connection conn = getDb().dataSource.getConnection();
                      Statement stmt = conn.createStatement()) {
                     stmt.execute(sql);
                 }
             }
 
             // Load AspectDefs from test tables
-            MariaDbCatalog mariaDbCatalog = new MariaDbCatalog(db.adapter);
+            MariaDbCatalog mariaDbCatalog = new MariaDbCatalog(getDb().adapter);
             AspectDef noKeyAspectDef = mariaDbCatalog.loadTableDef("test_aspect_mapping_no_key");
             AspectDef catIdAspectDef = mariaDbCatalog.loadTableDef("test_aspect_mapping_with_cat_id");
             AspectDef entityIdAspectDef = mariaDbCatalog.loadTableDef("test_aspect_mapping_with_entity_id");
@@ -945,57 +933,57 @@ class MariaDbDaoTest
                 bothIdsAspectDef, "test_aspect_mapping_with_both_ids", columnMapping, true, true);
 
             // Register all mappings
-            db.mariaDbDao.addAspectTableMapping(noKeyMapping);
-            db.mariaDbDao.addAspectTableMapping(catIdMapping);
-            db.mariaDbDao.addAspectTableMapping(entityIdMapping);
-            db.mariaDbDao.addAspectTableMapping(bothIdsMapping);
+            getDb().mariaDbDao.addAspectTableMapping(noKeyMapping);
+            getDb().mariaDbDao.addAspectTableMapping(catIdMapping);
+            getDb().mariaDbDao.addAspectTableMapping(entityIdMapping);
+            getDb().mariaDbDao.addAspectTableMapping(bothIdsMapping);
 
             // Create catalog
             UUID catalogId = UUID.randomUUID();
-            Catalog catalog = db.factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
+            Catalog catalog = getDb().factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
 
             // Create hierarchies for each pattern
-            AspectMapHierarchy noKeyHierarchy = db.factory.createAspectMapHierarchy(catalog, noKeyAspectDef);
-            AspectMapHierarchy catIdHierarchy = db.factory.createAspectMapHierarchy(catalog, catIdAspectDef);
-            AspectMapHierarchy entityIdHierarchy = db.factory.createAspectMapHierarchy(catalog, entityIdAspectDef);
-            AspectMapHierarchy bothIdsHierarchy = db.factory.createAspectMapHierarchy(catalog, bothIdsAspectDef);
+            AspectMapHierarchy noKeyHierarchy = getDb().factory.createAspectMapHierarchy(catalog, noKeyAspectDef);
+            AspectMapHierarchy catIdHierarchy = getDb().factory.createAspectMapHierarchy(catalog, catIdAspectDef);
+            AspectMapHierarchy entityIdHierarchy = getDb().factory.createAspectMapHierarchy(catalog, entityIdAspectDef);
+            AspectMapHierarchy bothIdsHierarchy = getDb().factory.createAspectMapHierarchy(catalog, bothIdsAspectDef);
 
             // Add test data to each hierarchy
             // Pattern 1: No IDs - entities will be generated
-            Entity noKey1 = db.factory.createEntity();
-            Aspect noKeyAsp1 = db.factory.createPropertyMapAspect(noKey1, noKeyAspectDef);
-            noKeyAsp1.put(db.factory.createProperty(noKeyAspectDef.propertyDef("string_col"), "nokey1"));
-            noKeyAsp1.put(db.factory.createProperty(noKeyAspectDef.propertyDef("integer_col"), 100L));
+            Entity noKey1 = getDb().factory.createEntity();
+            Aspect noKeyAsp1 = getDb().factory.createPropertyMapAspect(noKey1, noKeyAspectDef);
+            noKeyAsp1.put(getDb().factory.createProperty(noKeyAspectDef.propertyDef("string_col"), "nokey1"));
+            noKeyAsp1.put(getDb().factory.createProperty(noKeyAspectDef.propertyDef("integer_col"), 100L));
             noKeyHierarchy.put(noKey1, noKeyAsp1);
 
             // Pattern 2: Catalog ID only - entities will be generated
-            Entity catId1 = db.factory.createEntity();
-            Aspect catIdAsp1 = db.factory.createPropertyMapAspect(catId1, catIdAspectDef);
-            catIdAsp1.put(db.factory.createProperty(catIdAspectDef.propertyDef("string_col"), "catid1"));
-            catIdAsp1.put(db.factory.createProperty(catIdAspectDef.propertyDef("integer_col"), 200L));
+            Entity catId1 = getDb().factory.createEntity();
+            Aspect catIdAsp1 = getDb().factory.createPropertyMapAspect(catId1, catIdAspectDef);
+            catIdAsp1.put(getDb().factory.createProperty(catIdAspectDef.propertyDef("string_col"), "catid1"));
+            catIdAsp1.put(getDb().factory.createProperty(catIdAspectDef.propertyDef("integer_col"), 200L));
             catIdHierarchy.put(catId1, catIdAsp1);
 
             // Pattern 3: Entity ID only - entity IDs preserved
             UUID entity3Id = UUID.randomUUID();
-            Entity entityId1 = db.factory.createEntity(entity3Id);
-            Aspect entityIdAsp1 = db.factory.createPropertyMapAspect(entityId1, entityIdAspectDef);
-            entityIdAsp1.put(db.factory.createProperty(entityIdAspectDef.propertyDef("string_col"), "entityid1"));
-            entityIdAsp1.put(db.factory.createProperty(entityIdAspectDef.propertyDef("integer_col"), 300L));
+            Entity entityId1 = getDb().factory.createEntity(entity3Id);
+            Aspect entityIdAsp1 = getDb().factory.createPropertyMapAspect(entityId1, entityIdAspectDef);
+            entityIdAsp1.put(getDb().factory.createProperty(entityIdAspectDef.propertyDef("string_col"), "entityid1"));
+            entityIdAsp1.put(getDb().factory.createProperty(entityIdAspectDef.propertyDef("integer_col"), 300L));
             entityIdHierarchy.put(entityId1, entityIdAsp1);
 
             // Pattern 4: Both IDs - entity IDs preserved, catalog-scoped
             UUID entity4Id = UUID.randomUUID();
-            Entity bothIds1 = db.factory.createEntity(entity4Id);
-            Aspect bothIdsAsp1 = db.factory.createPropertyMapAspect(bothIds1, bothIdsAspectDef);
-            bothIdsAsp1.put(db.factory.createProperty(bothIdsAspectDef.propertyDef("string_col"), "bothids1"));
-            bothIdsAsp1.put(db.factory.createProperty(bothIdsAspectDef.propertyDef("integer_col"), 400L));
+            Entity bothIds1 = getDb().factory.createEntity(entity4Id);
+            Aspect bothIdsAsp1 = getDb().factory.createPropertyMapAspect(bothIds1, bothIdsAspectDef);
+            bothIdsAsp1.put(getDb().factory.createProperty(bothIdsAspectDef.propertyDef("string_col"), "bothids1"));
+            bothIdsAsp1.put(getDb().factory.createProperty(bothIdsAspectDef.propertyDef("integer_col"), 400L));
             bothIdsHierarchy.put(bothIds1, bothIdsAsp1);
 
             // Save catalog
-            db.mariaDbDao.saveCatalog(catalog);
+            getDb().mariaDbDao.saveCatalog(catalog);
 
             // Verify Pattern 1: No IDs - data saved, no ID columns
-            try (Connection conn = db.dataSource.getConnection();
+            try (Connection conn = getDb().dataSource.getConnection();
                  Statement stmt = conn.createStatement();
                  var rs = stmt.executeQuery("SELECT string_col, integer_col FROM test_aspect_mapping_no_key")) {
                 assertTrue(rs.next());
@@ -1005,9 +993,10 @@ class MariaDbDaoTest
             }
 
             // Verify Pattern 2: Catalog ID - data saved with catalog_id
-            try (Connection conn = db.dataSource.getConnection();
+            try (Connection conn = getDb().dataSource.getConnection();
                  Statement stmt = conn.createStatement();
-                 var rs = stmt.executeQuery("SELECT catalog_id, string_col, integer_col FROM test_aspect_mapping_with_cat_id")) {
+                 var rs = stmt.executeQuery("SELECT catalog_id, string_col, integer_col FROM " +
+                     "test_aspect_mapping_with_cat_id")) {
                 assertTrue(rs.next());
                 assertEquals(catalogId.toString(), rs.getString("catalog_id"));
                 assertEquals("catid1", rs.getString("string_col"));
@@ -1016,9 +1005,10 @@ class MariaDbDaoTest
             }
 
             // Verify Pattern 3: Entity ID - data saved with entity_id preserved
-            try (Connection conn = db.dataSource.getConnection();
+            try (Connection conn = getDb().dataSource.getConnection();
                  Statement stmt = conn.createStatement();
-                 var rs = stmt.executeQuery("SELECT entity_id, string_col, integer_col FROM test_aspect_mapping_with_entity_id")) {
+                 var rs = stmt.executeQuery("SELECT entity_id, string_col, integer_col FROM " +
+                     "test_aspect_mapping_with_entity_id")) {
                 assertTrue(rs.next());
                 assertEquals(entity3Id.toString(), rs.getString("entity_id"));
                 assertEquals("entityid1", rs.getString("string_col"));
@@ -1027,9 +1017,10 @@ class MariaDbDaoTest
             }
 
             // Verify Pattern 4: Both IDs - data saved with both IDs
-            try (Connection conn = db.dataSource.getConnection();
+            try (Connection conn = getDb().dataSource.getConnection();
                  Statement stmt = conn.createStatement();
-                 var rs = stmt.executeQuery("SELECT catalog_id, entity_id, string_col, integer_col FROM test_aspect_mapping_with_both_ids")) {
+                 var rs = stmt.executeQuery("SELECT catalog_id, entity_id, string_col, integer_col FROM " +
+                     "test_aspect_mapping_with_both_ids")) {
                 assertTrue(rs.next());
                 assertEquals(catalogId.toString(), rs.getString("catalog_id"));
                 assertEquals(entity4Id.toString(), rs.getString("entity_id"));
@@ -1039,11 +1030,12 @@ class MariaDbDaoTest
             }
 
             // Load catalog back and verify
-            Catalog loadedCatalog = db.mariaDbDao.loadCatalog(catalogId);
+            Catalog loadedCatalog = getDb().mariaDbDao.loadCatalog(catalogId);
             assertNotNull(loadedCatalog);
 
             // Pattern 1: Entity IDs will be different (generated on load)
-            AspectMapHierarchy loadedNoKeyHierarchy = (AspectMapHierarchy) loadedCatalog.hierarchy(noKeyAspectDef.name());
+            AspectMapHierarchy loadedNoKeyHierarchy =
+                (AspectMapHierarchy) loadedCatalog.hierarchy(noKeyAspectDef.name());
             assertEquals(1, loadedNoKeyHierarchy.size());
             Entity loadedNoKeyEntity = loadedNoKeyHierarchy.keySet().iterator().next();
             Aspect loadedNoKeyAsp = loadedNoKeyHierarchy.get(loadedNoKeyEntity);
@@ -1051,7 +1043,8 @@ class MariaDbDaoTest
             assertEquals(100L, loadedNoKeyAsp.readObj("integer_col"));
 
             // Pattern 2: Entity IDs will be different (generated on load), but filtered by catalog
-            AspectMapHierarchy loadedCatIdHierarchy = (AspectMapHierarchy) loadedCatalog.hierarchy(catIdAspectDef.name());
+            AspectMapHierarchy loadedCatIdHierarchy =
+                (AspectMapHierarchy) loadedCatalog.hierarchy(catIdAspectDef.name());
             assertEquals(1, loadedCatIdHierarchy.size());
             Entity loadedCatIdEntity = loadedCatIdHierarchy.keySet().iterator().next();
             Aspect loadedCatIdAsp = loadedCatIdHierarchy.get(loadedCatIdEntity);
@@ -1059,18 +1052,20 @@ class MariaDbDaoTest
             assertEquals(200L, loadedCatIdAsp.readObj("integer_col"));
 
             // Pattern 3: Entity IDs preserved
-            AspectMapHierarchy loadedEntityIdHierarchy = (AspectMapHierarchy) loadedCatalog.hierarchy(entityIdAspectDef.name());
+            AspectMapHierarchy loadedEntityIdHierarchy =
+                (AspectMapHierarchy) loadedCatalog.hierarchy(entityIdAspectDef.name());
             assertEquals(1, loadedEntityIdHierarchy.size());
-            Entity loadedEntity3 = db.factory.getOrRegisterNewEntity(entity3Id);
+            Entity loadedEntity3 = getDb().factory.getOrRegisterNewEntity(entity3Id);
             Aspect loadedEntityIdAsp = loadedEntityIdHierarchy.get(loadedEntity3);
             assertNotNull(loadedEntityIdAsp);
             assertEquals("entityid1", loadedEntityIdAsp.readObj("string_col"));
             assertEquals(300L, loadedEntityIdAsp.readObj("integer_col"));
 
             // Pattern 4: Entity IDs preserved, catalog-scoped
-            AspectMapHierarchy loadedBothIdsHierarchy = (AspectMapHierarchy) loadedCatalog.hierarchy(bothIdsAspectDef.name());
+            AspectMapHierarchy loadedBothIdsHierarchy =
+                (AspectMapHierarchy) loadedCatalog.hierarchy(bothIdsAspectDef.name());
             assertEquals(1, loadedBothIdsHierarchy.size());
-            Entity loadedEntity4 = db.factory.getOrRegisterNewEntity(entity4Id);
+            Entity loadedEntity4 = getDb().factory.getOrRegisterNewEntity(entity4Id);
             Aspect loadedBothIdsAsp = loadedBothIdsHierarchy.get(loadedEntity4);
             assertNotNull(loadedBothIdsAsp);
             assertEquals("bothids1", loadedBothIdsAsp.readObj("string_col"));
@@ -1083,18 +1078,30 @@ class MariaDbDaoTest
             // Create an AspectDef with one Property of each type
             String aspectDefName = "all_types_aspect";
 
-            PropertyDef intProp = db.factory.createPropertyDef("int_prop", PropertyType.Integer, null, false, true, true, true, false, false);
-            PropertyDef floatProp = db.factory.createPropertyDef("float_prop", PropertyType.Float, null, false, true, true, true, false, false);
-            PropertyDef boolProp = db.factory.createPropertyDef("bool_prop", PropertyType.Boolean, null, false, true, true, true, false, false);
-            PropertyDef stringProp = db.factory.createPropertyDef("string_prop", PropertyType.String, null, false, true, true, true, false, false);
-            PropertyDef textProp = db.factory.createPropertyDef("text_prop", PropertyType.Text, null, false, true, true, true, false, false);
-            PropertyDef bigIntProp = db.factory.createPropertyDef("bigint_prop", PropertyType.BigInteger, null, false, true, true, true, false, false);
-            PropertyDef bigDecProp = db.factory.createPropertyDef("bigdec_prop", PropertyType.BigDecimal, null, false, true, true, true, false, false);
-            PropertyDef dateProp = db.factory.createPropertyDef("date_prop", PropertyType.DateTime, null, false, true, true, true, false, false);
-            PropertyDef uriProp = db.factory.createPropertyDef("uri_prop", PropertyType.URI, null, false, true, true, true, false, false);
-            PropertyDef uuidProp = db.factory.createPropertyDef("uuid_prop", PropertyType.UUID, null, false, true, true, true, false, false);
-            PropertyDef clobProp = db.factory.createPropertyDef("clob_prop", PropertyType.CLOB, null, false, true, true, true, false, false);
-            PropertyDef blobProp = db.factory.createPropertyDef("blob_prop", PropertyType.BLOB, null, false, true, true, true, false, false);
+            PropertyDef intProp = getDb().factory.createPropertyDef("int_prop", PropertyType.Integer, null, false,
+                true, true, true, false, false);
+            PropertyDef floatProp = getDb().factory.createPropertyDef("float_prop", PropertyType.Float, null, false,
+                true, true, true, false, false);
+            PropertyDef boolProp = getDb().factory.createPropertyDef("bool_prop", PropertyType.Boolean, null, false,
+                true, true, true, false, false);
+            PropertyDef stringProp = getDb().factory.createPropertyDef("string_prop", PropertyType.String, null,
+                false, true, true, true, false, false);
+            PropertyDef textProp = getDb().factory.createPropertyDef("text_prop", PropertyType.Text, null, false,
+                true, true, true, false, false);
+            PropertyDef bigIntProp = getDb().factory.createPropertyDef("bigint_prop", PropertyType.BigInteger, null,
+                false, true, true, true, false, false);
+            PropertyDef bigDecProp = getDb().factory.createPropertyDef("bigdec_prop", PropertyType.BigDecimal, null,
+                false, true, true, true, false, false);
+            PropertyDef dateProp = getDb().factory.createPropertyDef("date_prop", PropertyType.DateTime, null, false,
+                true, true, true, false, false);
+            PropertyDef uriProp = getDb().factory.createPropertyDef("uri_prop", PropertyType.URI, null, false, true,
+                true, true, false, false);
+            PropertyDef uuidProp = getDb().factory.createPropertyDef("uuid_prop", PropertyType.UUID, null, false,
+                true, true, true, false, false);
+            PropertyDef clobProp = getDb().factory.createPropertyDef("clob_prop", PropertyType.CLOB, null, false,
+                true, true, true, false, false);
+            PropertyDef blobProp = getDb().factory.createPropertyDef("blob_prop", PropertyType.BLOB, null, false,
+                true, true, true, false, false);
 
             Map<String, PropertyDef> propDefs = new LinkedHashMap<>();
             propDefs.put("int_prop", intProp);
@@ -1110,15 +1117,15 @@ class MariaDbDaoTest
             propDefs.put("clob_prop", clobProp);
             propDefs.put("blob_prop", blobProp);
 
-            AspectDef aspectDef = db.factory.createImmutableAspectDef(aspectDefName, propDefs);
+            AspectDef aspectDef = getDb().factory.createImmutableAspectDef(aspectDefName, propDefs);
 
             // Create the table using createAspectTable()
             AspectTableMapping mapping = getAspectTableMapping(aspectDef);
-            db.mariaDbDao.createTable(mapping);
+            getDb().mariaDbDao.createTable(mapping);
 
             // Create catalog with AspectMapHierarchy
             UUID catalogId = UUID.randomUUID();
-            Catalog catalog = db.factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
+            Catalog catalog = getDb().factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
 
             // extend() automatically creates an AspectMapHierarchy with the AspectDef's name
             catalog.extend(aspectDef);
@@ -1128,47 +1135,49 @@ class MariaDbDaoTest
             UUID entityId1 = UUID.randomUUID();
             UUID entityId2 = UUID.randomUUID();
 
-            Entity entity1 = db.factory.createEntity(entityId1);
-            Entity entity2 = db.factory.createEntity(entityId2);
+            Entity entity1 = getDb().factory.createEntity(entityId1);
+            Entity entity2 = getDb().factory.createEntity(entityId2);
 
             // Create first aspect with test values
-            Aspect aspect1 = db.factory.createPropertyMapAspect(entity1, aspectDef);
-            aspect1.put(db.factory.createProperty(intProp, 42L));
-            aspect1.put(db.factory.createProperty(floatProp, 3.14159));
-            aspect1.put(db.factory.createProperty(boolProp, true));
-            aspect1.put(db.factory.createProperty(stringProp, "Hello World"));
-            aspect1.put(db.factory.createProperty(textProp, "This is a long text field with lots of content"));
-            aspect1.put(db.factory.createProperty(bigIntProp, new BigInteger("12345678901234567890")));
-            aspect1.put(db.factory.createProperty(bigDecProp, new BigDecimal("123.456789012345678901234567890")));
-            aspect1.put(db.factory.createProperty(dateProp, ZonedDateTime.parse("2025-01-15T10:30:00Z")));
-            aspect1.put(db.factory.createProperty(uriProp, new URI("https://example.com/path")));
-            aspect1.put(db.factory.createProperty(uuidProp, UUID.fromString("550e8400-e29b-41d4-a716-446655440000")));
-            aspect1.put(db.factory.createProperty(clobProp, "CLOB content here"));
-            aspect1.put(db.factory.createProperty(blobProp, new byte[]{1, 2, 3, 4, 5}));
+            Aspect aspect1 = getDb().factory.createPropertyMapAspect(entity1, aspectDef);
+            aspect1.put(getDb().factory.createProperty(intProp, 42L));
+            aspect1.put(getDb().factory.createProperty(floatProp, 3.14159));
+            aspect1.put(getDb().factory.createProperty(boolProp, true));
+            aspect1.put(getDb().factory.createProperty(stringProp, "Hello World"));
+            aspect1.put(getDb().factory.createProperty(textProp, "This is a long text field with lots of content"));
+            aspect1.put(getDb().factory.createProperty(bigIntProp, new BigInteger("12345678901234567890")));
+            aspect1.put(getDb().factory.createProperty(bigDecProp, new BigDecimal("123.456789012345678901234567890")));
+            aspect1.put(getDb().factory.createProperty(dateProp, ZonedDateTime.parse("2025-01-15T10:30:00Z")));
+            aspect1.put(getDb().factory.createProperty(uriProp, new URI("https://example.com/path")));
+            aspect1.put(getDb().factory.createProperty(uuidProp, UUID.fromString("550e8400-e29b-41d4-a716" +
+                "-446655440000")));
+            aspect1.put(getDb().factory.createProperty(clobProp, "CLOB content here"));
+            aspect1.put(getDb().factory.createProperty(blobProp, new byte[]{1, 2, 3, 4, 5}));
 
             // Create second aspect with different test values
-            Aspect aspect2 = db.factory.createPropertyMapAspect(entity2, aspectDef);
-            aspect2.put(db.factory.createProperty(intProp, 99L));
-            aspect2.put(db.factory.createProperty(floatProp, 2.71828));
-            aspect2.put(db.factory.createProperty(boolProp, false));
-            aspect2.put(db.factory.createProperty(stringProp, "Goodbye World"));
-            aspect2.put(db.factory.createProperty(textProp, "Another long text field"));
-            aspect2.put(db.factory.createProperty(bigIntProp, new BigInteger("98765432109876543210")));
-            aspect2.put(db.factory.createProperty(bigDecProp, new BigDecimal("987.654321098765432109876543210")));
-            aspect2.put(db.factory.createProperty(dateProp, ZonedDateTime.parse("2025-12-31T23:59:59Z")));
-            aspect2.put(db.factory.createProperty(uriProp, new URI("https://example.org/another")));
-            aspect2.put(db.factory.createProperty(uuidProp, UUID.fromString("6ba7b810-9dad-11d1-80b4-00c04fd430c8")));
-            aspect2.put(db.factory.createProperty(clobProp, "Different CLOB content"));
-            aspect2.put(db.factory.createProperty(blobProp, new byte[]{10, 20, 30, 40, 50}));
+            Aspect aspect2 = getDb().factory.createPropertyMapAspect(entity2, aspectDef);
+            aspect2.put(getDb().factory.createProperty(intProp, 99L));
+            aspect2.put(getDb().factory.createProperty(floatProp, 2.71828));
+            aspect2.put(getDb().factory.createProperty(boolProp, false));
+            aspect2.put(getDb().factory.createProperty(stringProp, "Goodbye World"));
+            aspect2.put(getDb().factory.createProperty(textProp, "Another long text field"));
+            aspect2.put(getDb().factory.createProperty(bigIntProp, new BigInteger("98765432109876543210")));
+            aspect2.put(getDb().factory.createProperty(bigDecProp, new BigDecimal("987.654321098765432109876543210")));
+            aspect2.put(getDb().factory.createProperty(dateProp, ZonedDateTime.parse("2025-12-31T23:59:59Z")));
+            aspect2.put(getDb().factory.createProperty(uriProp, new URI("https://example.org/another")));
+            aspect2.put(getDb().factory.createProperty(uuidProp, UUID.fromString("6ba7b810-9dad-11d1-80b4" +
+                "-00c04fd430c8")));
+            aspect2.put(getDb().factory.createProperty(clobProp, "Different CLOB content"));
+            aspect2.put(getDb().factory.createProperty(blobProp, new byte[]{10, 20, 30, 40, 50}));
 
             hierarchy.put(entity1, aspect1);
             hierarchy.put(entity2, aspect2);
 
             // Save catalog (should use mapped table for the hierarchy)
-            db.mariaDbDao.saveCatalog(catalog);
+            getDb().mariaDbDao.saveCatalog(catalog);
 
             // Load the catalog back
-            Catalog loadedCatalog = db.mariaDbDao.loadCatalog(catalogId);
+            Catalog loadedCatalog = getDb().mariaDbDao.loadCatalog(catalogId);
             assertNotNull(loadedCatalog);
 
             // Get the loaded hierarchy
@@ -1176,7 +1185,7 @@ class MariaDbDaoTest
             assertNotNull(loadedHierarchy);
 
             // Verify first aspect was correctly reconstituted
-            Entity loadedEntity1 = db.factory.getOrRegisterNewEntity(entityId1);
+            Entity loadedEntity1 = getDb().factory.getOrRegisterNewEntity(entityId1);
             Aspect loadedAspect1 = loadedHierarchy.get(loadedEntity1);
             assertNotNull(loadedAspect1);
             assertEquals(42L, loadedAspect1.readObj("int_prop"));
@@ -1184,15 +1193,18 @@ class MariaDbDaoTest
             assertEquals(true, loadedAspect1.readObj("bool_prop"));
             assertEquals("Hello World", loadedAspect1.readObj("string_prop"));
             assertEquals("This is a long text field with lots of content", loadedAspect1.readObj("text_prop"));
-            assertEquals(new BigInteger("12345678901234567890"), new BigInteger(loadedAspect1.readObj("bigint_prop").toString()));
-            assertEquals(new BigDecimal("123.456789012345678901234567890"), new BigDecimal(loadedAspect1.readObj("bigdec_prop").toString()));
+            assertEquals(new BigInteger("12345678901234567890"), new BigInteger(loadedAspect1.readObj("bigint_prop")
+                .toString()));
+            assertEquals(new BigDecimal("123.456789012345678901234567890"), new BigDecimal(loadedAspect1.readObj(
+                "bigdec_prop")
+                .toString()));
             assertEquals("https://example.com/path", loadedAspect1.readObj("uri_prop").toString());
             assertEquals(UUID.fromString("550e8400-e29b-41d4-a716-446655440000"), loadedAspect1.readObj("uuid_prop"));
             assertEquals("CLOB content here", loadedAspect1.readObj("clob_prop"));
             assertArrayEquals(new byte[]{1, 2, 3, 4, 5}, (byte[]) loadedAspect1.readObj("blob_prop"));
 
             // Verify second aspect was correctly reconstituted
-            Entity loadedEntity2 = db.factory.getOrRegisterNewEntity(entityId2);
+            Entity loadedEntity2 = getDb().factory.getOrRegisterNewEntity(entityId2);
             Aspect loadedAspect2 = loadedHierarchy.get(loadedEntity2);
             assertNotNull(loadedAspect2);
             assertEquals(99L, loadedAspect2.readObj("int_prop"));
@@ -1200,59 +1212,44 @@ class MariaDbDaoTest
             assertEquals(false, loadedAspect2.readObj("bool_prop"));
             assertEquals("Goodbye World", loadedAspect2.readObj("string_prop"));
             assertEquals("Another long text field", loadedAspect2.readObj("text_prop"));
-            assertEquals(new BigInteger("98765432109876543210"), new BigInteger(loadedAspect2.readObj("bigint_prop").toString()));
-            assertEquals(new BigDecimal("987.654321098765432109876543210"), new BigDecimal(loadedAspect2.readObj("bigdec_prop").toString()));
+            assertEquals(new BigInteger("98765432109876543210"), new BigInteger(loadedAspect2.readObj("bigint_prop")
+                .toString()));
+            assertEquals(new BigDecimal("987.654321098765432109876543210"), new BigDecimal(loadedAspect2.readObj(
+                "bigdec_prop")
+                .toString()));
             assertEquals("https://example.org/another", loadedAspect2.readObj("uri_prop").toString());
             assertEquals(UUID.fromString("6ba7b810-9dad-11d1-80b4-00c04fd430c8"), loadedAspect2.readObj("uuid_prop"));
             assertEquals("Different CLOB content", loadedAspect2.readObj("clob_prop"));
             assertArrayEquals(new byte[]{10, 20, 30, 40, 50}, (byte[]) loadedAspect2.readObj("blob_prop"));
         }
 
-        private static AspectTableMapping getAspectTableMapping(AspectDef aspectDef)
-        {
-            String tableName = "test_all_types";
-
-            // Create and register an AspectTableMapping
-            Map<String, String> columnMapping = new LinkedHashMap<>();
-            columnMapping.put("int_prop", "int_prop");
-            columnMapping.put("float_prop", "float_prop");
-            columnMapping.put("bool_prop", "bool_prop");
-            columnMapping.put("string_prop", "string_prop");
-            columnMapping.put("text_prop", "text_prop");
-            columnMapping.put("bigint_prop", "bigint_prop");
-            columnMapping.put("bigdec_prop", "bigdec_prop");
-            columnMapping.put("date_prop", "date_prop");
-            columnMapping.put("uri_prop", "uri_prop");
-            columnMapping.put("uuid_prop", "uuid_prop");
-            columnMapping.put("clob_prop", "clob_prop");
-            columnMapping.put("blob_prop", "blob_prop");
-
-            return new AspectTableMapping(aspectDef, tableName, columnMapping);
-        }
-
         @Test
         void testPropertyInsertionOrderIsPreserved() throws Exception
         {
-            db.truncateAllTables();
+            getDb().truncateAllTables();
 
             // Create an AspectDef with properties in a specific order
             Map<String, PropertyDef> propDefs = new LinkedHashMap<>();
-            propDefs.put("zebra", db.factory.createPropertyDef("zebra", PropertyType.String, null, false, true, true, true, false, false));
-            propDefs.put("alpha", db.factory.createPropertyDef("alpha", PropertyType.Integer, null, false, true, true, true, false, false));
-            propDefs.put("middle", db.factory.createPropertyDef("middle", PropertyType.Boolean, null, false, true, true, true, false, false));
-            propDefs.put("beta", db.factory.createPropertyDef("beta", PropertyType.Float, null, false, true, true, true, false, false));
+            propDefs.put("zebra", getDb().factory.createPropertyDef("zebra", PropertyType.String, null, false, true,
+                true, true, false, false));
+            propDefs.put("alpha", getDb().factory.createPropertyDef("alpha", PropertyType.Integer, null, false, true,
+                true, true, false, false));
+            propDefs.put("middle", getDb().factory.createPropertyDef("middle", PropertyType.Boolean, null, false,
+                true, true, true, false, false));
+            propDefs.put("beta", getDb().factory.createPropertyDef("beta", PropertyType.Float, null, false, true,
+                true, true, false, false));
 
-            AspectDef originalDef = db.factory.createImmutableAspectDef("ordered_aspect", propDefs);
+            AspectDef originalDef = getDb().factory.createImmutableAspectDef("ordered_aspect", propDefs);
 
             // Create catalog and save the AspectDef
             UUID catalogId = UUID.randomUUID();
-            Catalog catalog = db.factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
+            Catalog catalog = getDb().factory.createCatalog(catalogId, CatalogSpecies.SINK, null, null, 0L);
             catalog.extend(originalDef);
 
-            db.mariaDbDao.saveCatalog(catalog);
+            getDb().mariaDbDao.saveCatalog(catalog);
 
             // Load the catalog back
-            Catalog loadedCatalog = db.mariaDbDao.loadCatalog(catalogId);
+            Catalog loadedCatalog = getDb().mariaDbDao.loadCatalog(catalogId);
             assertNotNull(loadedCatalog);
 
             // Get the loaded AspectDef
@@ -1266,11 +1263,13 @@ class MariaDbDaoTest
             assertNotNull(loadedDef, "AspectDef 'ordered_aspect' should be found in loaded catalog");
 
             // Verify that the property order is preserved
-            List<String> originalPropNames = originalDef.propertyDefs().stream()
+            List<String> originalPropNames = originalDef.propertyDefs()
+                .stream()
                 .map(PropertyDef::name)
                 .toList();
 
-            List<String> loadedPropNames = loadedDef.propertyDefs().stream()
+            List<String> loadedPropNames = loadedDef.propertyDefs()
+                .stream()
                 .map(PropertyDef::name)
                 .toList();
 
@@ -1290,5 +1289,57 @@ class MariaDbDaoTest
             Path path = Paths.get(getClass().getResource(resourcePath).toURI());
             return Files.readString(path);
         }
+    }
+
+    @Nested
+    class WithoutForeignKeys extends MariaDbDaoTestBase
+    {
+        static MariaDbTestDb db;
+
+        @BeforeAll
+        static void setUpAll() throws Exception
+        {
+            db = new MariaDbTestDb(DB_NAME + "_with_fk", false);
+            db.initializeCheapSchema();
+        }
+
+        @AfterAll
+        static void tearDownAll() throws ManagedProcessException
+        {
+            db.tearDown();
+        }
+
+        @Override
+        protected MariaDbTestDb getDb()
+        {
+            return db;
+        }
+
+    }
+
+    @Nested
+    class WithForeignKeys extends MariaDbDaoTestBase
+    {
+        static MariaDbTestDb db;
+
+        @BeforeAll
+        static void setUpAll() throws Exception
+        {
+            db = new MariaDbTestDb(DB_NAME + "_with_fk", true);
+            db.initializeCheapSchema();
+        }
+
+        @AfterAll
+        static void tearDownAll() throws ManagedProcessException
+        {
+            db.tearDown();
+        }
+
+        @Override
+        protected MariaDbTestDb getDb()
+        {
+            return db;
+        }
+
     }
 }

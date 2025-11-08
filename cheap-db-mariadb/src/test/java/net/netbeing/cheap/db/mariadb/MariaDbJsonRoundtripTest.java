@@ -16,14 +16,15 @@
 
 package net.netbeing.cheap.db.mariadb;
 
+import ch.vorburger.exec.ManagedProcessException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import net.netbeing.cheap.json.jackson.deserialize.CheapJacksonDeserializer;
 import net.netbeing.cheap.json.jackson.serialize.CheapJacksonSerializer;
 import net.netbeing.cheap.model.Catalog;
 import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
@@ -38,58 +39,26 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 class MariaDbJsonRoundtripTest
 {
-    @Nested
-    class WithoutForeignKeys extends MariaDbJsonRoundtripTestBase
+    abstract static class MariaDbJsonRoundtripTestBase
     {
-        WithoutForeignKeys() { super(false); }
-    }
+        static final String DB_NAME = "MariaDbJsonRoundtripTest";
 
-    @Nested
-    class WithForeignKeys extends MariaDbJsonRoundtripTestBase
-    {
-        WithForeignKeys() { super(true); }
-    }
+        protected abstract MariaDbTestDb getDb();
 
-    static abstract class MariaDbJsonRoundtripTestBase
-    {
-        static final String DB_NAME = "cheap";
-        MariaDbTestDb db;
-        final boolean useForeignKeys;
-
-        MariaDbJsonRoundtripTestBase(boolean useForeignKeys)
+        @AfterEach
+        void reset() throws Exception
         {
-            this.useForeignKeys = useForeignKeys;
-        }
-
-        @BeforeAll
-        static void setUpAll() throws Exception
-        {
-            // Initialization happens in @BeforeEach per instance
-        }
-
-        @BeforeEach
-        void setUpEach() throws Exception
-        {
-            if (db == null) {
-                db = new MariaDbTestDb(DB_NAME + (useForeignKeys ? "_with_fk" : "_no_fk"), useForeignKeys);
-                db.initializeCheapSchema();
-            }
-        }
-
-        @AfterAll
-        static void tearDownAll() throws Exception
-        {
-            // Cleanup happens in each nested class
+            getDb().truncateAllTables();
         }
 
         @Test
         void testFullCatalogJsonRoundtrip() throws Exception
         {
             // Clean up all tables before test
-            db.truncateAllTables();
+            getDb().truncateAllTables();
 
             ObjectMapper objectMapper = new ObjectMapper();
-            CheapJacksonDeserializer deserializer = new CheapJacksonDeserializer(db.factory);
+            CheapJacksonDeserializer deserializer = new CheapJacksonDeserializer(getDb().factory);
 
             // Load the original JSON
             String originalJson = loadResourceFile("/jackson/full-catalog.json");
@@ -100,10 +69,10 @@ class MariaDbJsonRoundtripTest
             assertNotNull(catalog);
 
             // Save to database
-            db.mariaDbDao.saveCatalog(catalog);
+            getDb().mariaDbDao.saveCatalog(catalog);
 
             // Load back from database
-            Catalog loadedCatalog = db.mariaDbDao.loadCatalog(catalog.globalId());
+            Catalog loadedCatalog = getDb().mariaDbDao.loadCatalog(catalog.globalId());
             assertNotNull(loadedCatalog);
 
             // Serialize loaded catalog to JSON
@@ -122,4 +91,58 @@ class MariaDbJsonRoundtripTest
             return Files.readString(path);
         }
     }
+
+    @Nested
+    class WithoutForeignKeys extends MariaDbJsonRoundtripTestBase
+    {
+        static MariaDbTestDb db;
+
+        @BeforeAll
+        static void setUpAll() throws Exception
+        {
+            db = new MariaDbTestDb(DB_NAME + "_with_fk", false);
+            db.initializeCheapSchema();
+        }
+
+        @Override
+        protected MariaDbTestDb getDb()
+        {
+            return db;
+        }
+
+        @AfterAll
+        static void tearDownAll() throws ManagedProcessException
+        {
+            db.tearDown();
+        }
+
+    }
+
+    @Nested
+    class WithForeignKeys extends MariaDbJsonRoundtripTestBase
+    {
+        static MariaDbTestDb db;
+
+        @BeforeAll
+        static void setUpAll() throws Exception
+        {
+            db = new MariaDbTestDb(DB_NAME + "_with_fk", true);
+            db.initializeCheapSchema();
+        }
+
+        @Override
+        protected MariaDbTestDb getDb()
+        {
+            return db;
+        }
+
+        @AfterAll
+        static void tearDownAll() throws ManagedProcessException
+        {
+            db.tearDown();
+        }
+
+    }
+
+
 }

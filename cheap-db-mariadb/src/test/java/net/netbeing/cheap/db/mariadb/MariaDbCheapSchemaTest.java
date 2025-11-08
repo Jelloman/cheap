@@ -16,10 +16,10 @@
 
 package net.netbeing.cheap.db.mariadb;
 
+import ch.vorburger.exec.ManagedProcessException;
 import net.netbeing.cheap.db.CheapTestFactory;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
@@ -33,7 +33,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class MariaDbCheapSchemaTest
 {
-    static final String DB_NAME = "cheap";
+    static final String DB_NAME = "MariaDbCheapSchemaTest";
     static volatile MariaDbTestDb dbWithoutFk;
     static volatile MariaDbTestDb dbWithFk;
 
@@ -49,14 +49,10 @@ class MariaDbCheapSchemaTest
     }
 
     @AfterAll
-    static void tearDown() throws Exception
+    static void tearDown() throws ManagedProcessException
     {
-        if (dbWithoutFk != null) {
-            dbWithoutFk.tearDown();
-        }
-        if (dbWithFk != null) {
-            dbWithFk.tearDown();
-        }
+        dbWithFk.tearDown();
+        dbWithoutFk.tearDown();
     }
 
     private MariaDbTestDb getDb(boolean useForeignKeys)

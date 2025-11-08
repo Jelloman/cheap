@@ -16,6 +16,7 @@
 
 package net.netbeing.cheap.db.mariadb;
 
+import ch.vorburger.exec.ManagedProcessException;
 import net.netbeing.cheap.model.Aspect;
 import net.netbeing.cheap.model.AspectDef;
 import net.netbeing.cheap.model.AspectMapHierarchy;
@@ -44,35 +45,15 @@ class MariaDbCatalogTest
     {
         static final int EXPECTED_TABLE_COUNT = 1;
 
-        static final String DB_NAME = "cheap";
-        final boolean useForeignKeys;
-        MariaDbTestDb db;
+        static final String DB_NAME = "MariaDbCatalogTest";
         private MariaDbCatalog catalog;
 
-        MariaDbCatalogTestBase(boolean useForeignKeys)
-        {
-            this.useForeignKeys = useForeignKeys;
-        }
-
-        @BeforeAll
-        static void setUpAll() throws Exception
-        {
-            // Initialization happens in @BeforeEach per instance
-        }
-
-        @AfterAll
-        static void tearDownAll() throws Exception
-        {
-            // Cleanup happens in each nested class
-        }
+        protected abstract MariaDbTestDb getDb();
 
         @BeforeEach
         void setUpEach() throws Exception
         {
-            if (db == null) {
-                db = new MariaDbTestDb(DB_NAME + (useForeignKeys ? "_with_fk" : "_no_fk"), useForeignKeys);
-            }
-            catalog = new MariaDbCatalog(db.adapter);
+            catalog = new MariaDbCatalog(getDb().adapter);
             initializeTestData();
         }
 
@@ -85,7 +66,7 @@ class MariaDbCatalogTest
 
         private void initializeTestData() throws SQLException
         {
-            try (Connection connection = db.dataSource.getConnection();
+            try (Connection connection = getDb().dataSource.getConnection();
                  Statement statement = connection.createStatement()) {
 
                 statement.execute("SET SESSION time_zone = '+0:00'");
@@ -125,7 +106,7 @@ class MariaDbCatalogTest
 
         private void clearTestData() throws SQLException
         {
-            try (Connection connection = db.dataSource.getConnection();
+            try (Connection connection = getDb().dataSource.getConnection();
                  Statement statement = connection.createStatement()) {
 
                 // Create test_table
@@ -147,7 +128,7 @@ class MariaDbCatalogTest
         @Test
         void testLoadDbStaticMethod()
         {
-            MariaDbCatalog staticCatalog = new MariaDbCatalog(db.adapter);
+            MariaDbCatalog staticCatalog = new MariaDbCatalog(getDb().adapter);
 
             assertNotNull(staticCatalog, "Catalog should not be null");
 
@@ -354,19 +335,51 @@ class MariaDbCatalogTest
     @Nested
     class WithoutForeignKeys extends MariaDbCatalogTestBase
     {
-        WithoutForeignKeys()
+        static MariaDbTestDb db;
+
+        @BeforeAll
+        static void setUpAll() throws Exception
         {
-            super(false);
+            db = new MariaDbTestDb(DB_NAME + "_no_fk", false);
         }
+
+        @Override
+        protected MariaDbTestDb getDb()
+        {
+            return db;
+        }
+
+        @AfterAll
+        static void tearDownAll() throws ManagedProcessException
+        {
+            db.tearDown();
+        }
+
     }
 
     @Nested
     class WithForeignKeys extends MariaDbCatalogTestBase
     {
-        WithForeignKeys()
+        static MariaDbTestDb db;
+
+        @BeforeAll
+        static void setUpAll() throws Exception
         {
-            super(true);
+            db = new MariaDbTestDb(DB_NAME + "_with_fk", true);
         }
+
+        @Override
+        protected MariaDbTestDb getDb()
+        {
+            return db;
+        }
+
+        @AfterAll
+        static void tearDownAll() throws ManagedProcessException
+        {
+            db.tearDown();
+        }
+
     }
 }
 
