@@ -18,7 +18,7 @@ import java.sql.Statement;
  * then creates a separate database for each test class.
  */
 @ActiveProfiles("mariadb-test")
-@ExtendWith(net.netbeing.cheap.db.mariadb.DatabaseRunnerExtension.class)
+@ExtendWith(net.netbeing.cheap.integrationtests.util.DatabaseRunnerExtension.class)
 public abstract class MariaDbRestIntegrationTest extends BaseRestIntegrationTest
 {
     protected static MariaDbIntegrationTestDb testDb;

@@ -103,54 +103,13 @@ public abstract class BaseRestIntegrationTest
     }
 
     /**
-     * Create a test catalog with the given parameters.
+     * Get the REST client for tests to use.
      *
-     * @param name Catalog name
-     * @param species Catalog species
-     * @return Created catalog
+     * @return REST client
      */
-    protected Catalog createTestCatalog(String name, CatalogSpecies species)
+    protected CheapRestClient getClient()
     {
-        CatalogDef catalogDef = new CatalogDef();
-        catalogDef.setName(name);
-        catalogDef.setDescription("Test catalog: " + name);
-
-        return client.createCatalog(catalogDef, species, null);
-    }
-
-    /**
-     * Create a test catalog with SINK species.
-     *
-     * @param name Catalog name
-     * @return Created catalog
-     */
-    protected Catalog createTestCatalog(String name)
-    {
-        return createTestCatalog(name, CatalogSpecies.SINK);
-    }
-
-    /**
-     * Create an aspect definition in the specified catalog.
-     *
-     * @param catalogId Catalog ID
-     * @param aspectDef Aspect definition to create
-     * @return Created aspect definition
-     */
-    protected AspectDef createTestAspectDef(UUID catalogId, AspectDef aspectDef)
-    {
-        return client.createAspectDef(catalogId, aspectDef);
-    }
-
-    /**
-     * Upsert aspects for the specified catalog and aspect definition.
-     *
-     * @param catalogId Catalog ID
-     * @param aspectDefName Aspect definition name
-     * @param aspects Map of entity ID to property values
-     */
-    protected void upsertAspects(UUID catalogId, String aspectDefName, Map<UUID, Map<String, Object>> aspects)
-    {
-        client.upsertAspects(catalogId, aspectDefName, aspects);
+        return client;
     }
 
     /**

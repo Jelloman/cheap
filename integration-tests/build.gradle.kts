@@ -36,6 +36,21 @@ dependencies {
     integrationImplementation(project(":cheap-rest"))
     integrationImplementation(project(":cheap-rest-client"))
 
+    // Spring Boot dependencies
+    integrationImplementation(libs.spring.boot.starter.test)
+    integrationImplementation(libs.spring.boot.starter.web)
+    integrationImplementation(libs.spring.boot.starter.webflux)
+
+    // Jackson for JSON processing
+    integrationImplementation(libs.jackson.databind)
+
+    // Database drivers and embedded databases
+    integrationImplementation(libs.postgresql)
+    integrationImplementation(libs.sqlite.jdbc)
+    integrationImplementation(libs.mariaDB)
+    integrationImplementation(libs.embedded.postgres)
+    integrationImplementation(libs.mariaDB4j)
+
     // Test dependencies for integration tests
     integrationImplementation(libs.junit.jupiter)
     integrationRuntimeOnly(libs.junit.platform.launcher)
@@ -71,4 +86,9 @@ gradle.projectsEvaluated {
     tasks.withType<JavaCompile> {
         options.compilerArgs.addAll(listOf("-Xlint:unchecked"))
     }
+}
+
+// Configure duplicate handling for resource processing
+tasks.withType<ProcessResources> {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
