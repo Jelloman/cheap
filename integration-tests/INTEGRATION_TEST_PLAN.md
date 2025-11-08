@@ -24,6 +24,17 @@
 - `test/resources/integration-tests/` directory for shared JSON test data
 - Sample catalog definitions, aspect definitions, entity data
 
+### 1.4 Phase 1 Verification
+After completing Phase 1 implementation:
+```bash
+# Build the integration-tests module
+./gradlew :integration-tests:build
+
+# Verify placeholder test runs
+./gradlew integration-tests
+```
+Expected: Build succeeds, placeholder test passes, infrastructure is ready.
+
 ## 2. Database-Specific Integration Tests (Direct DAO Testing)
 
 ### 2.1 PostgreSQL DAO with AspectTableMapping Tests
@@ -52,6 +63,19 @@
 - **Table 1**: "employee" table (entity_id, employee_id, name, department)
 - **Table 2**: "metadata" table (key, value) - no catalog_id or entity_id (lookup table pattern)
 - **Tests**: Same pattern as PostgreSQL test above, plus test foreign key constraints if enabled
+
+### 2.4 Phase 2 Verification
+After completing Phase 2 implementation:
+```bash
+# Build and run all integration tests
+./gradlew integration-tests
+
+# Run specific database tests
+./gradlew :integration-tests:integrationTest --tests "*PostgresDao*"
+./gradlew :integration-tests:integrationTest --tests "*SqliteDao*"
+./gradlew :integration-tests:integrationTest --tests "*MariaDbDao*"
+```
+Expected: All DAO tests pass, custom tables created and verified, AspectTableMapping works for all 3 databases.
 
 ## 3. End-to-End REST Integration Tests (Service + Client)
 
@@ -85,6 +109,17 @@
 - **Custom Table**: "inventory" table with foreign keys enabled
 - **Test Suite**: Same as PostgreSQL tests plus verify foreign key constraints work
 
+### 3.4 Phase 3 Verification
+After completing Phase 3 implementation:
+```bash
+# Build and run all integration tests
+./gradlew integration-tests
+
+# Run specific REST client tests
+./gradlew :integration-tests:integrationTest --tests "*RestClient*"
+```
+Expected: All REST client integration tests pass, cheap-rest service starts successfully for all 3 databases, REST API endpoints work correctly.
+
 ## 4. Cross-Database Consistency Tests
 
 ### 4.1 Multi-Database Validation Test
@@ -97,6 +132,17 @@
   3. Query data back and verify JSON responses are identical
   4. Test pagination consistency across databases
   5. Test sorting/ordering consistency
+
+### 4.2 Phase 4 Verification
+After completing Phase 4 implementation:
+```bash
+# Build and run all integration tests
+./gradlew integration-tests
+
+# Run consistency tests
+./gradlew :integration-tests:integrationTest --tests "*Consistency*"
+```
+Expected: Cross-database consistency tests pass, identical operations produce identical results across all 3 databases.
 
 ## 5. Complex Scenario Tests
 
@@ -121,6 +167,18 @@
   2. Concurrent hierarchy retrievals while updates happening
   3. Verify data consistency after concurrent operations
 
+### 5.3 Phase 5 Verification
+After completing Phase 5 implementation:
+```bash
+# Build and run all integration tests
+./gradlew integration-tests
+
+# Run workflow tests
+./gradlew :integration-tests:integrationTest --tests "*Workflow*"
+./gradlew :integration-tests:integrationTest --tests "*Concurrent*"
+```
+Expected: Complex scenario tests pass, full workflow completes successfully, concurrent operations maintain data consistency.
+
 ## 6. Performance Baseline Tests
 
 ### 6.1 Performance Comparison Test
@@ -131,6 +189,17 @@
   2. Time to query 1000 aspects
   3. Time to retrieve large EntityList hierarchy
   4. Document results for future optimization work
+
+### 6.2 Phase 6 Verification
+After completing Phase 6 implementation:
+```bash
+# Build and run all integration tests
+./gradlew integration-tests
+
+# Run performance tests
+./gradlew :integration-tests:integrationTest --tests "*Performance*"
+```
+Expected: Performance baseline tests run successfully, measurements documented for all 3 databases.
 
 ## 7. Docker-Based Integration Tests
 
@@ -296,6 +365,23 @@ Define these tasks in `integration-tests/build.gradle.kts`:
 - Provides fluent API for container configuration
 - Handles cleanup on test failure
 - Logs container output for debugging
+
+### 7.8 Phase 7 Verification
+After completing Phase 7 implementation:
+```bash
+# Build Docker images
+./gradlew buildCheapRestImage
+
+# Start Docker test environment
+./gradlew startDockerTestEnvironment
+
+# Run Docker integration tests
+./gradlew dockerIntegrationTest
+
+# Stop Docker test environment
+./gradlew stopDockerTestEnvironment
+```
+Expected: Docker containers start successfully, Docker-based integration tests pass, all 3 database backends work in Docker environment.
 
 ## 8. Test Execution Strategy
 
