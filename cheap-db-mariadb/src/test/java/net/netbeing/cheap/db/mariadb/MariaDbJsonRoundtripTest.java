@@ -27,6 +27,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -37,6 +38,7 @@ import java.nio.file.Paths;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+@ExtendWith({DatabaseRunnerExtension.class})
 class MariaDbJsonRoundtripTest
 {
     abstract static class MariaDbJsonRoundtripTestBase
@@ -100,7 +102,7 @@ class MariaDbJsonRoundtripTest
         @BeforeAll
         static void setUpAll() throws Exception
         {
-            db = new MariaDbTestDb(DB_NAME + "_with_fk", false);
+            db = new MariaDbTestDb(DB_NAME + "_no_fk", false);
             db.initializeCheapSchema();
         }
 
@@ -109,13 +111,6 @@ class MariaDbJsonRoundtripTest
         {
             return db;
         }
-
-        @AfterAll
-        static void tearDownAll() throws ManagedProcessException
-        {
-            db.tearDown();
-        }
-
     }
 
     @Nested
@@ -135,14 +130,5 @@ class MariaDbJsonRoundtripTest
         {
             return db;
         }
-
-        @AfterAll
-        static void tearDownAll() throws ManagedProcessException
-        {
-            db.tearDown();
-        }
-
     }
-
-
 }

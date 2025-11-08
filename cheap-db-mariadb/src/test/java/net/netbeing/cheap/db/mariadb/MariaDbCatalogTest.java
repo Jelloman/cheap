@@ -30,6 +30,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -39,6 +40,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 
+@ExtendWith({DatabaseRunnerExtension.class})
 class MariaDbCatalogTest
 {
     abstract static class MariaDbCatalogTestBase
@@ -348,13 +350,6 @@ class MariaDbCatalogTest
         {
             return db;
         }
-
-        @AfterAll
-        static void tearDownAll() throws ManagedProcessException
-        {
-            db.tearDown();
-        }
-
     }
 
     @Nested
@@ -373,13 +368,6 @@ class MariaDbCatalogTest
         {
             return db;
         }
-
-        @AfterAll
-        static void tearDownAll() throws ManagedProcessException
-        {
-            db.tearDown();
-        }
-
     }
 }
 

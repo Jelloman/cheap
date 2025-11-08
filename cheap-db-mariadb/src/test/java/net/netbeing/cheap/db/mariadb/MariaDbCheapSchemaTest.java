@@ -20,6 +20,7 @@ import ch.vorburger.exec.ManagedProcessException;
 import net.netbeing.cheap.db.CheapTestFactory;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
@@ -31,6 +32,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@ExtendWith({DatabaseRunnerExtension.class})
 class MariaDbCheapSchemaTest
 {
     static final String DB_NAME = "MariaDbCheapSchemaTest";
@@ -46,13 +48,6 @@ class MariaDbCheapSchemaTest
         if (dbWithFk == null) {
             dbWithFk = new MariaDbTestDb(DB_NAME + "_with_fk", true);
         }
-    }
-
-    @AfterAll
-    static void tearDown() throws ManagedProcessException
-    {
-        dbWithFk.tearDown();
-        dbWithoutFk.tearDown();
     }
 
     private MariaDbTestDb getDb(boolean useForeignKeys)

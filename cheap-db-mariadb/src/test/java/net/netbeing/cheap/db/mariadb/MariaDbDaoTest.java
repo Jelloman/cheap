@@ -24,6 +24,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -45,6 +46,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@ExtendWith({DatabaseRunnerExtension.class})
 class MariaDbDaoTest
 {
     abstract static class MariaDbDaoTestBase
@@ -1299,14 +1301,8 @@ class MariaDbDaoTest
         @BeforeAll
         static void setUpAll() throws Exception
         {
-            db = new MariaDbTestDb(DB_NAME + "_with_fk", false);
+            db = new MariaDbTestDb(DB_NAME + "_no_fk", false);
             db.initializeCheapSchema();
-        }
-
-        @AfterAll
-        static void tearDownAll() throws ManagedProcessException
-        {
-            db.tearDown();
         }
 
         @Override
@@ -1314,7 +1310,6 @@ class MariaDbDaoTest
         {
             return db;
         }
-
     }
 
     @Nested
@@ -1329,17 +1324,10 @@ class MariaDbDaoTest
             db.initializeCheapSchema();
         }
 
-        @AfterAll
-        static void tearDownAll() throws ManagedProcessException
-        {
-            db.tearDown();
-        }
-
         @Override
         protected MariaDbTestDb getDb()
         {
             return db;
         }
-
     }
 }
