@@ -38,9 +38,7 @@ CREATE TABLE property_def (
     is_nullable BOOLEAN NOT NULL DEFAULT true,
     is_removable BOOLEAN NOT NULL DEFAULT false,
     is_multivalued BOOLEAN NOT NULL DEFAULT false,
-    PRIMARY KEY (aspect_def_id, name(255)),
-    CONSTRAINT fk_property_def_aspect_def FOREIGN KEY (aspect_def_id)
-        REFERENCES aspect_def(aspect_def_id) ON DELETE CASCADE
+    PRIMARY KEY (aspect_def_id, name(255))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Catalog: Extends Entity, represents catalog instances
@@ -56,11 +54,7 @@ CREATE TABLE catalog (
 CREATE TABLE catalog_aspect_def (
     catalog_id CHAR(36) NOT NULL,
     aspect_def_id CHAR(36) NOT NULL,
-    PRIMARY KEY (catalog_id, aspect_def_id),
-    CONSTRAINT fk_catalog_aspect_def_catalog FOREIGN KEY (catalog_id)
-        REFERENCES catalog(catalog_id) ON DELETE CASCADE,
-    CONSTRAINT fk_catalog_aspect_def_aspect_def FOREIGN KEY (aspect_def_id)
-        REFERENCES aspect_def(aspect_def_id) ON DELETE CASCADE
+    PRIMARY KEY (catalog_id, aspect_def_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Hierarchy: Hierarchy instances within catalogs
@@ -71,9 +65,7 @@ CREATE TABLE hierarchy (
     name TEXT NOT NULL,
     hierarchy_type VARCHAR(2) NOT NULL CHECK (hierarchy_type IN ('EL', 'ES', 'ED', 'ET', 'AM')),
     version_number BIGINT NOT NULL DEFAULT 0, -- Integer version (manual)
-    PRIMARY KEY (catalog_id, name(255)),
-    CONSTRAINT fk_hierarchy_catalog FOREIGN KEY (catalog_id)
-        REFERENCES catalog(catalog_id) ON DELETE CASCADE
+    PRIMARY KEY (catalog_id, name(255))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Aspect: Aspect instances attached to entities
@@ -83,13 +75,7 @@ CREATE TABLE aspect (
     aspect_def_id CHAR(36) NOT NULL,
     catalog_id CHAR(36) NOT NULL,
     hierarchy_name TEXT NOT NULL,
-    PRIMARY KEY (entity_id, aspect_def_id, catalog_id),
-    CONSTRAINT fk_aspect_entity FOREIGN KEY (entity_id)
-        REFERENCES entity(entity_id) ON DELETE CASCADE,
-    CONSTRAINT fk_aspect_aspect_def FOREIGN KEY (aspect_def_id)
-        REFERENCES aspect_def(aspect_def_id) ON DELETE CASCADE,
-    CONSTRAINT fk_aspect_catalog FOREIGN KEY (catalog_id)
-        REFERENCES catalog(catalog_id) ON DELETE CASCADE
+    PRIMARY KEY (entity_id, aspect_def_id, catalog_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ========== PROPERTY VALUE STORAGE ==========
@@ -112,9 +98,7 @@ CREATE TABLE property_value (
     value_text TEXT,
     value_binary LONGBLOB,
 
-    PRIMARY KEY (entity_id, aspect_def_id, catalog_id, property_name(255), value_index),
-    CONSTRAINT fk_property_value_aspect FOREIGN KEY (entity_id, aspect_def_id, catalog_id)
-        REFERENCES aspect(entity_id, aspect_def_id, catalog_id) ON DELETE CASCADE
+    PRIMARY KEY (entity_id, aspect_def_id, catalog_id, property_name(255), value_index)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ========== HIERARCHY CONTENT TABLES ==========
@@ -125,9 +109,7 @@ CREATE TABLE hierarchy_entity_list (
     hierarchy_name TEXT NOT NULL,
     entity_id CHAR(36) NOT NULL,
     list_order INTEGER NOT NULL,
-    PRIMARY KEY (catalog_id, hierarchy_name(255), list_order),
-    CONSTRAINT fk_hierarchy_entity_list_entity FOREIGN KEY (entity_id)
-        REFERENCES entity(entity_id) ON DELETE CASCADE
+    PRIMARY KEY (catalog_id, hierarchy_name(255), list_order)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Entity Set Hierarchy: Unique entities (possibly ordered)
@@ -136,9 +118,7 @@ CREATE TABLE hierarchy_entity_set (
     hierarchy_name TEXT NOT NULL,
     entity_id CHAR(36) NOT NULL,
     set_order INTEGER,
-    PRIMARY KEY (catalog_id, hierarchy_name(255), entity_id),
-    CONSTRAINT fk_hierarchy_entity_set_entity FOREIGN KEY (entity_id)
-        REFERENCES entity(entity_id) ON DELETE CASCADE
+    PRIMARY KEY (catalog_id, hierarchy_name(255), entity_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Entity Directory Hierarchy: String-to-entity mapping
@@ -148,9 +128,7 @@ CREATE TABLE hierarchy_entity_directory (
     entity_key TEXT NOT NULL,
     entity_id CHAR(36) NOT NULL,
     dir_order INTEGER NOT NULL,
-    PRIMARY KEY (catalog_id, hierarchy_name(255), entity_key(255)),
-    CONSTRAINT fk_hierarchy_entity_directory_entity FOREIGN KEY (entity_id)
-        REFERENCES entity(entity_id) ON DELETE CASCADE
+    PRIMARY KEY (catalog_id, hierarchy_name(255), entity_key(255))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Entity Tree Hierarchy: Tree structure with named nodes
@@ -163,10 +141,6 @@ CREATE TABLE hierarchy_entity_tree_node (
     entity_id CHAR(36),
     node_path TEXT, -- Computed path for efficient queries
     tree_order INTEGER NOT NULL,
-    CONSTRAINT fk_hierarchy_entity_tree_parent FOREIGN KEY (parent_node_id)
-        REFERENCES hierarchy_entity_tree_node(node_id) ON DELETE CASCADE,
-    CONSTRAINT fk_hierarchy_entity_tree_entity FOREIGN KEY (entity_id)
-        REFERENCES entity(entity_id) ON DELETE CASCADE,
     UNIQUE KEY unique_tree_node (catalog_id, hierarchy_name(255), parent_node_id, node_key(255))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -177,65 +151,46 @@ CREATE TABLE hierarchy_aspect_map (
     entity_id CHAR(36) NOT NULL,
     aspect_def_id CHAR(36) NOT NULL,
     map_order INTEGER NOT NULL,
-    PRIMARY KEY (catalog_id, hierarchy_name(255), entity_id),
-    CONSTRAINT fk_hierarchy_aspect_map_aspect_def FOREIGN KEY (aspect_def_id)
-        REFERENCES aspect_def(aspect_def_id),
-    CONSTRAINT fk_hierarchy_aspect_map_aspect FOREIGN KEY (entity_id, aspect_def_id, catalog_id)
-        REFERENCES aspect(entity_id, aspect_def_id, catalog_id) ON DELETE CASCADE
+    PRIMARY KEY (catalog_id, hierarchy_name(255), entity_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ========== INDEXES FOR PERFORMANCE ==========
+-- Note: Indexes on foreign key columns are defined in mariadb-cheap-foreign-keys.sql
 
 -- AspectDef indexes
 CREATE INDEX idx_aspect_def_name ON aspect_def(name(255));
 
--- PropertyDef indexes
-CREATE INDEX idx_property_def_aspect_def_id ON property_def(aspect_def_id);
+-- PropertyDef indexes (non-FK)
 CREATE INDEX idx_property_def_name ON property_def(name(255));
 
--- Catalog indexes
+-- Catalog indexes (non-FK)
 CREATE INDEX idx_catalog_species ON catalog(species);
-CREATE INDEX idx_catalog_upstream ON catalog(upstream_catalog_id);
 
--- Hierarchy indexes
-CREATE INDEX idx_hierarchy_catalog_id ON hierarchy(catalog_id);
+-- Hierarchy indexes (non-FK)
 CREATE INDEX idx_hierarchy_name ON hierarchy(name(255));
 CREATE INDEX idx_hierarchy_type ON hierarchy(hierarchy_type);
 
--- Aspect indexes
-CREATE INDEX idx_aspect_entity_id ON aspect(entity_id);
-CREATE INDEX idx_aspect_def_id ON aspect(aspect_def_id);
-CREATE INDEX idx_aspect_catalog_id ON aspect(catalog_id);
+-- Aspect indexes (non-FK)
 CREATE INDEX idx_aspect_hierarchy_name ON aspect(hierarchy_name(255));
 
--- Property value indexes
-CREATE INDEX idx_property_value_entity_id ON property_value(entity_id);
-CREATE INDEX idx_property_value_aspect_def_id ON property_value(aspect_def_id);
-CREATE INDEX idx_property_value_catalog_id ON property_value(catalog_id);
+-- Property value indexes (non-FK)
 CREATE INDEX idx_property_value_name ON property_value(property_name(255));
 
--- Hierarchy content indexes
+-- Hierarchy content indexes (non-FK)
 CREATE INDEX idx_hierarchy_entity_list_catalog_id ON hierarchy_entity_list(catalog_id);
 CREATE INDEX idx_hierarchy_entity_list_name ON hierarchy_entity_list(hierarchy_name(255));
-CREATE INDEX idx_hierarchy_entity_list_entity_id ON hierarchy_entity_list(entity_id);
 CREATE INDEX idx_hierarchy_entity_list_order ON hierarchy_entity_list(list_order);
 
 CREATE INDEX idx_hierarchy_entity_set_catalog_id ON hierarchy_entity_set(catalog_id);
 CREATE INDEX idx_hierarchy_entity_set_name ON hierarchy_entity_set(hierarchy_name(255));
-CREATE INDEX idx_hierarchy_entity_set_entity_id ON hierarchy_entity_set(entity_id);
 
 CREATE INDEX idx_hierarchy_entity_directory_catalog_id ON hierarchy_entity_directory(catalog_id);
 CREATE INDEX idx_hierarchy_entity_directory_name ON hierarchy_entity_directory(hierarchy_name(255));
-CREATE INDEX idx_hierarchy_entity_directory_entity_id ON hierarchy_entity_directory(entity_id);
 CREATE INDEX idx_hierarchy_entity_directory_key ON hierarchy_entity_directory(entity_key(255));
 
 CREATE INDEX idx_hierarchy_entity_tree_catalog_id ON hierarchy_entity_tree_node(catalog_id);
 CREATE INDEX idx_hierarchy_entity_tree_name ON hierarchy_entity_tree_node(hierarchy_name(255));
-CREATE INDEX idx_hierarchy_entity_tree_parent_id ON hierarchy_entity_tree_node(parent_node_id);
-CREATE INDEX idx_hierarchy_entity_tree_entity_id ON hierarchy_entity_tree_node(entity_id);
 CREATE INDEX idx_hierarchy_entity_tree_path ON hierarchy_entity_tree_node(node_path(255));
 
 CREATE INDEX idx_hierarchy_aspect_map_catalog_id ON hierarchy_aspect_map(catalog_id);
 CREATE INDEX idx_hierarchy_aspect_map_name ON hierarchy_aspect_map(hierarchy_name(255));
-CREATE INDEX idx_hierarchy_aspect_map_entity_id ON hierarchy_aspect_map(entity_id);
-CREATE INDEX idx_hierarchy_aspect_map_aspect_def_id ON hierarchy_aspect_map(aspect_def_id);

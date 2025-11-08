@@ -16,10 +16,13 @@
 
 package net.netbeing.cheap.db.mariadb;
 
+import ch.vorburger.exec.ManagedProcessException;
 import net.netbeing.cheap.db.CheapTestFactory;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -29,32 +32,43 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@ExtendWith({DatabaseRunnerExtension.class})
 class MariaDbCheapSchemaTest
 {
-    static final String DB_NAME = "cheap";
-    static volatile MariaDbTestDb db;
+    static final String DB_NAME = "MariaDbCheapSchemaTest";
+    static volatile MariaDbTestDb dbWithoutFk;
+    static volatile MariaDbTestDb dbWithFk;
 
     @BeforeAll
     static void setUp() throws Exception
     {
-        if (db == null) {
-            db = new MariaDbTestDb(DB_NAME);
+        if (dbWithoutFk == null) {
+            dbWithoutFk = new MariaDbTestDb(DB_NAME + "_no_fk", false);
+        }
+        if (dbWithFk == null) {
+            dbWithFk = new MariaDbTestDb(DB_NAME + "_with_fk", true);
         }
     }
 
-    @AfterAll
-    static void tearDown() throws Exception
+    private MariaDbTestDb getDb(boolean useForeignKeys)
     {
-        db.tearDown();
+        return useForeignKeys ? dbWithFk : dbWithoutFk;
     }
 
-    @Test
-    void testAllSchemaExecution() throws SQLException
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void testAllSchemaExecution(boolean useForeignKeys) throws SQLException
     {
+        MariaDbTestDb db = getDb(useForeignKeys);
         MariaDbCheapSchema schema = new MariaDbCheapSchema();
 
         // Execute the main schema DDL using MariaDbCheapSchema
         schema.executeMainSchemaDdl(db.dataSource);
+
+        if (useForeignKeys) {
+            // Execute the foreign keys DDL
+            schema.executeForeignKeysDdl(db.dataSource);
+        }
 
         try (Connection connection = db.dataSource.getConnection()) {
 
@@ -125,13 +139,20 @@ class MariaDbCheapSchemaTest
         }
     }
 
-    @Test
-    void testTruncateAllTables() throws SQLException
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void testTruncateAllTables(boolean useForeignKeys) throws SQLException
     {
+        MariaDbTestDb db = getDb(useForeignKeys);
         MariaDbCheapSchema schema = new MariaDbCheapSchema();
 
         // Execute the main schema DDL
         schema.executeMainSchemaDdl(db.dataSource);
+
+        if (useForeignKeys) {
+            // Execute the foreign keys DDL
+            schema.executeForeignKeysDdl(db.dataSource);
+        }
 
         try (Connection conn = db.dataSource.getConnection()) {
             // Populate all tables with at least 1 row

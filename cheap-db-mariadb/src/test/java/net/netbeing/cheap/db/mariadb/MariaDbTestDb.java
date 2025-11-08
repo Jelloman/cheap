@@ -17,9 +17,6 @@
 package net.netbeing.cheap.db.mariadb;
 
 import ch.vorburger.exec.ManagedProcessException;
-import ch.vorburger.mariadb4j.DB;
-import ch.vorburger.mariadb4j.DBConfiguration;
-import ch.vorburger.mariadb4j.DBConfigurationBuilder;
 import net.netbeing.cheap.impl.basic.CheapFactory;
 import org.mariadb.jdbc.MariaDbDataSource;
 
@@ -30,32 +27,23 @@ import java.util.TimeZone;
 class MariaDbTestDb
 {
     final DataSource dataSource;
-    final DB mariaDB;
     final MariaDbDao mariaDbDao;
     final CheapFactory factory;
-    final DBConfiguration dbConfig;
     final String dbName;
     final MariaDbAdapter adapter;
+    final boolean useForeignKeys;
 
-    MariaDbTestDb(String dbName) throws ManagedProcessException, SQLException
+    MariaDbTestDb(String dbName, boolean useForeignKeys) throws ManagedProcessException, SQLException
     {
         this.dbName = dbName;
-
-        // Create embedded MariaDB instance
-        dbConfig = DBConfigurationBuilder.newBuilder()
-            .setPort(0)
-            .addArg("--innodb-lock-wait-timeout=300")  // Increase from default 50s to 300s
-            .build();
-
-        mariaDB = DB.newEmbeddedDB(dbConfig);
-        mariaDB.start();
+        this.useForeignKeys = useForeignKeys;
 
         // Create database
-        mariaDB.createDB(dbName);
+        DatabaseRunnerExtension.getMariaDB().createDB(dbName);
 
         // Create data source
         MariaDbDataSource ds = new MariaDbDataSource();
-        String url = dbConfig.getURL(dbName);
+        String url = DatabaseRunnerExtension.getDbConfig().getURL(dbName);
         url = url + (url.indexOf('?') >= 0 ? "&" : "?") + "allowMultiQueries=true";
         ds.setUrl(url);
         ds.setUser("root");
@@ -69,17 +57,14 @@ class MariaDbTestDb
         mariaDbDao = new MariaDbDao(adapter);
     }
 
-    void tearDown() throws ManagedProcessException
-    {
-        // Stop embedded MariaDB
-        mariaDB.stop();
-    }
-
     void initializeCheapSchema() throws SQLException
     {
         // Use MariaDbCheapSchema to execute DDL
         MariaDbCheapSchema schema = new MariaDbCheapSchema();
         schema.executeMainSchemaDdl(dataSource);
+        if (useForeignKeys) {
+            schema.executeForeignKeysDdl(dataSource);
+        }
         schema.executeAuditSchemaDdl(dataSource);
     }
 
