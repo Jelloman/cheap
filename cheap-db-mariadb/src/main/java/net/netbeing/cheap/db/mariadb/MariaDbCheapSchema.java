@@ -85,6 +85,7 @@ public class MariaDbCheapSchema
     /**
      * Executes the main Cheap schema DDL script to create all core tables and indexes.
      * This creates the foundation database structure for the Cheap data model.
+     * Note: This does NOT create foreign key constraints. Use executeForeignKeysDdl() for that.
      *
      * @param dataSource the data source to execute the DDL against
      * @throws SQLException if database operation fails
@@ -92,6 +93,20 @@ public class MariaDbCheapSchema
     public void executeMainSchemaDdl(@NotNull DataSource dataSource) throws SQLException
     {
         String ddlContent = loadDdlResource("/db/schemas/mariadb/mariadb-cheap.sql");
+        executeDdl(dataSource, ddlContent);
+    }
+
+    /**
+     * Executes the foreign keys DDL script to add foreign key constraints and related indexes.
+     * This should be run after the main schema DDL. Foreign key constraints are optional but
+     * provide referential integrity at the cost of some performance.
+     *
+     * @param dataSource the data source to execute the DDL against
+     * @throws SQLException if database operation fails
+     */
+    public void executeForeignKeysDdl(@NotNull DataSource dataSource) throws SQLException
+    {
+        String ddlContent = loadDdlResource("/db/schemas/mariadb/mariadb-cheap-foreign-keys.sql");
         executeDdl(dataSource, ddlContent);
     }
 

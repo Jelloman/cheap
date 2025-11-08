@@ -22,6 +22,9 @@ import net.netbeing.cheap.json.jackson.deserialize.CheapJacksonDeserializer;
 import net.netbeing.cheap.json.jackson.serialize.CheapJacksonSerializer;
 import net.netbeing.cheap.model.Catalog;
 import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -35,64 +38,88 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 class MariaDbJsonRoundtripTest
 {
-    static final String DB_NAME = "cheap";
-    static volatile MariaDbTestDb db;
-
-    static void setupDatabase() throws Exception
+    @Nested
+    class WithoutForeignKeys extends MariaDbJsonRoundtripTestBase
     {
-        if (db == null) {
-            db = new MariaDbTestDb(DB_NAME);
-            db.initializeCheapSchema();
+        WithoutForeignKeys() { super(false); }
+    }
+
+    @Nested
+    class WithForeignKeys extends MariaDbJsonRoundtripTestBase
+    {
+        WithForeignKeys() { super(true); }
+    }
+
+    static abstract class MariaDbJsonRoundtripTestBase
+    {
+        static final String DB_NAME = "cheap";
+        MariaDbTestDb db;
+        final boolean useForeignKeys;
+
+        MariaDbJsonRoundtripTestBase(boolean useForeignKeys)
+        {
+            this.useForeignKeys = useForeignKeys;
         }
-    }
 
-    @AfterAll
-    static void tearDown() throws Exception
-    {
-        if (db != null) {
-            db.tearDown();
+        @BeforeAll
+        static void setUpAll() throws Exception
+        {
+            // Initialization happens in @BeforeEach per instance
         }
-    }
 
-    @Test
-    void testFullCatalogJsonRoundtrip() throws Exception
-    {
-        setupDatabase();
+        @BeforeEach
+        void setUpEach() throws Exception
+        {
+            if (db == null) {
+                db = new MariaDbTestDb(DB_NAME + (useForeignKeys ? "_with_fk" : "_no_fk"), useForeignKeys);
+                db.initializeCheapSchema();
+            }
+        }
 
-        // Clean up all tables before test
-        db.truncateAllTables();
+        @AfterAll
+        static void tearDownAll() throws Exception
+        {
+            // Cleanup happens in each nested class
+        }
 
-        ObjectMapper objectMapper = new ObjectMapper();
-        CheapJacksonDeserializer deserializer = new CheapJacksonDeserializer(db.factory);
+        @Test
+        void testFullCatalogJsonRoundtrip() throws Exception
+        {
+            // Clean up all tables before test
+            db.truncateAllTables();
 
-        // Load the original JSON
-        String originalJson = loadResourceFile("/jackson/full-catalog.json");
-        JsonNode originalJsonNode = objectMapper.readTree(originalJson);
+            ObjectMapper objectMapper = new ObjectMapper();
+            CheapJacksonDeserializer deserializer = new CheapJacksonDeserializer(db.factory);
 
-        // Deserialize to Catalog
-        Catalog catalog = deserializer.fromJson(originalJson);
-        assertNotNull(catalog);
+            // Load the original JSON
+            String originalJson = loadResourceFile("/jackson/full-catalog.json");
+            JsonNode originalJsonNode = objectMapper.readTree(originalJson);
 
-        // Save to database
-        db.mariaDbDao.saveCatalog(catalog);
+            // Deserialize to Catalog
+            Catalog catalog = deserializer.fromJson(originalJson);
+            assertNotNull(catalog);
 
-        // Load back from database
-        Catalog loadedCatalog = db.mariaDbDao.loadCatalog(catalog.globalId());
-        assertNotNull(loadedCatalog);
+            // Save to database
+            db.mariaDbDao.saveCatalog(catalog);
 
-        // Serialize loaded catalog to JSON
-        String serializedJson = CheapJacksonSerializer.toJson(loadedCatalog);
-        JsonNode serializedJsonNode = objectMapper.readTree(serializedJson);
+            // Load back from database
+            Catalog loadedCatalog = db.mariaDbDao.loadCatalog(catalog.globalId());
+            assertNotNull(loadedCatalog);
 
-        // Compare the two JSON nodes
-        assertEquals(originalJsonNode, serializedJsonNode,
-            "Serialized JSON should match original JSON after database round-trip");
-    }
+            // Serialize loaded catalog to JSON
+            String serializedJson = CheapJacksonSerializer.toJson(loadedCatalog);
+            JsonNode serializedJsonNode = objectMapper.readTree(serializedJson);
 
-    @SuppressWarnings({"DataFlowIssue", "SameParameterValue"})
-    private String loadResourceFile(String resourcePath) throws IOException, URISyntaxException
-    {
-        Path path = Paths.get(getClass().getResource(resourcePath).toURI());
-        return Files.readString(path);
+            // Compare the two JSON nodes
+            assertEquals(originalJsonNode, serializedJsonNode,
+                "Serialized JSON should match original JSON after database round-trip");
+        }
+
+        @SuppressWarnings({"DataFlowIssue", "SameParameterValue"})
+        private String loadResourceFile(String resourcePath) throws IOException, URISyntaxException
+        {
+            Path path = Paths.get(getClass().getResource(resourcePath).toURI());
+            return Files.readString(path);
+        }
     }
 }

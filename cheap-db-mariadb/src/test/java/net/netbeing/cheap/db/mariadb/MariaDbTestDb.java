@@ -36,10 +36,17 @@ class MariaDbTestDb
     final DBConfiguration dbConfig;
     final String dbName;
     final MariaDbAdapter adapter;
+    final boolean useForeignKeys;
 
     MariaDbTestDb(String dbName) throws ManagedProcessException, SQLException
     {
+        this(dbName, false);
+    }
+
+    MariaDbTestDb(String dbName, boolean useForeignKeys) throws ManagedProcessException, SQLException
+    {
         this.dbName = dbName;
+        this.useForeignKeys = useForeignKeys;
 
         // Create embedded MariaDB instance
         dbConfig = DBConfigurationBuilder.newBuilder()
@@ -80,6 +87,9 @@ class MariaDbTestDb
         // Use MariaDbCheapSchema to execute DDL
         MariaDbCheapSchema schema = new MariaDbCheapSchema();
         schema.executeMainSchemaDdl(dataSource);
+        if (useForeignKeys) {
+            schema.executeForeignKeysDdl(dataSource);
+        }
         schema.executeAuditSchemaDdl(dataSource);
     }
 
