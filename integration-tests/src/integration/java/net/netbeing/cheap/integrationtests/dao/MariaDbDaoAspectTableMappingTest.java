@@ -82,9 +82,10 @@ class MariaDbDaoAspectTableMappingTest
         );
 
         // Create AspectTableMapping for metadata (Pattern 1: No IDs - lookup table)
+        // Note: Using `meta_key` and `meta_value` to avoid SQL reserved keywords
         Map<String, String> metadataColumnMapping = Map.of(
-            "key", "key",
-            "value", "value"
+            "key", "meta_key",
+            "value", "meta_value"
         );
         metadataTableMapping = new AspectTableMapping(
             metadataAspectDef,
@@ -179,15 +180,15 @@ class MariaDbDaoAspectTableMappingTest
         // Verify metadata in custom table (no entity_id or catalog_id columns)
         try (Connection conn = testDb.dataSource.getConnection();
              Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery("SELECT `key`, value FROM metadata ORDER BY `key`"))
+             ResultSet rs = stmt.executeQuery("SELECT meta_key, meta_value FROM metadata ORDER BY meta_key"))
         {
             assertTrue(rs.next());
-            assertEquals("environment", rs.getString("key"));
-            assertEquals("production", rs.getString("value"));
+            assertEquals("environment", rs.getString("meta_key"));
+            assertEquals("production", rs.getString("meta_value"));
 
             assertTrue(rs.next());
-            assertEquals("version", rs.getString("key"));
-            assertEquals("1.0.0", rs.getString("value"));
+            assertEquals("version", rs.getString("meta_key"));
+            assertEquals("1.0.0", rs.getString("meta_value"));
 
             assertFalse(rs.next());
         }

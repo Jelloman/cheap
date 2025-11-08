@@ -9,7 +9,9 @@
       "Bash(mkdir:*)",
       "Bash(xargs:*)",
       "Bash(python -m json.tool:*)",
-      "Bash(/dev/null)"
+      "Bash(/dev/null)",
+      "Bash(git add:*)",
+      "Bash(git reset:*)"
     ],
     "deny": [],
     "ask": []
