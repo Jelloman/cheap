@@ -1,5 +1,22 @@
 # Integration Tests Plan for cheap-rest with All Database Backends
 
+## Development Workflow Guidelines
+
+### Git Commit Strategy
+**IMPORTANT**: During all phases of implementation, commit work to git in reasonably-sized chunks. Do NOT push commits.
+
+- **Commit frequently**: After completing each test class, test method group, or logical unit of work
+- **Use descriptive commit messages**: Clearly indicate what was implemented or fixed
+- **Reasonably-sized commits**: Each commit should represent a coherent piece of work (e.g., one complete test class, configuration file, or utility class)
+- **Do NOT push**: Keep all commits local until the entire phase or feature is complete and reviewed
+- **Example commit pattern**:
+  - "Add PostgresRestClientIntegrationTest with catalog lifecycle tests"
+  - "Implement AspectDef CRUD tests in PostgresRestClientIntegrationTest"
+  - "Add error handling tests to PostgresRestClientIntegrationTest"
+  - "Complete PostgresRestClientIntegrationTest with all 8 test scenarios"
+
+This approach ensures work is saved incrementally and provides clear rollback points if needed.
+
 ## 1. Test Infrastructure & Utilities
 
 ### 1.1 Base Test Classes
@@ -32,8 +49,13 @@ After completing Phase 1 implementation:
 
 # Verify placeholder test runs
 ./gradlew integration-tests
+
+# Commit work (do NOT push)
+git add .
+git commit -m "Complete Phase 1: Test infrastructure and utilities"
 ```
 Expected: Build succeeds, placeholder test passes, infrastructure is ready.
+**Remember**: Commit individual components as you complete them, not just at the end of the phase.
 
 ## 2. Database-Specific Integration Tests (Direct DAO Testing)
 
@@ -74,8 +96,13 @@ After completing Phase 2 implementation:
 ./gradlew :integration-tests:integrationTest --tests "*PostgresDao*"
 ./gradlew :integration-tests:integrationTest --tests "*SqliteDao*"
 ./gradlew :integration-tests:integrationTest --tests "*MariaDbDao*"
+
+# Commit work (do NOT push)
+git add .
+git commit -m "Complete Phase 2: Database-specific DAO AspectTableMapping tests"
 ```
 Expected: All DAO tests pass, custom tables created and verified, AspectTableMapping works for all 3 databases.
+**Remember**: Commit each test class as you complete it (e.g., commit PostgresDaoAspectTableMappingTest, then SqliteDaoAspectTableMappingTest, etc.).
 
 ## 3. End-to-End REST Integration Tests (Service + Client)
 
@@ -117,8 +144,13 @@ After completing Phase 3 implementation:
 
 # Run specific REST client tests
 ./gradlew :integration-tests:integrationTest --tests "*RestClient*"
+
+# Commit work (do NOT push)
+git add .
+git commit -m "Complete Phase 3: End-to-end REST client integration tests"
 ```
 Expected: All REST client integration tests pass, cheap-rest service starts successfully for all 3 databases, REST API endpoints work correctly.
+**Remember**: Commit each REST client test class as you complete it (PostgresRestClientIntegrationTest, then SqliteRestClientIntegrationTest, then MariaDbRestClientIntegrationTest).
 
 ## 4. Cross-Database Consistency Tests
 
@@ -141,8 +173,13 @@ After completing Phase 4 implementation:
 
 # Run consistency tests
 ./gradlew :integration-tests:integrationTest --tests "*Consistency*"
+
+# Commit work (do NOT push)
+git add .
+git commit -m "Complete Phase 4: Cross-database consistency tests"
 ```
 Expected: Cross-database consistency tests pass, identical operations produce identical results across all 3 databases.
+**Remember**: Commit as you complete each test scenario within the consistency test class.
 
 ## 5. Complex Scenario Tests
 
@@ -176,8 +213,13 @@ After completing Phase 5 implementation:
 # Run workflow tests
 ./gradlew :integration-tests:integrationTest --tests "*Workflow*"
 ./gradlew :integration-tests:integrationTest --tests "*Concurrent*"
+
+# Commit work (do NOT push)
+git add .
+git commit -m "Complete Phase 5: Complex scenario and workflow tests"
 ```
 Expected: Complex scenario tests pass, full workflow completes successfully, concurrent operations maintain data consistency.
+**Remember**: Commit FullWorkflowIntegrationTest and ConcurrentOperationsIntegrationTest separately as each is completed.
 
 ## 6. Performance Baseline Tests
 
@@ -198,8 +240,13 @@ After completing Phase 6 implementation:
 
 # Run performance tests
 ./gradlew :integration-tests:integrationTest --tests "*Performance*"
+
+# Commit work (do NOT push)
+git add .
+git commit -m "Complete Phase 6: Performance baseline tests"
 ```
 Expected: Performance baseline tests run successfully, measurements documented for all 3 databases.
+**Remember**: Commit the performance test class and any documentation of results.
 
 ## 7. Docker-Based Integration Tests
 
@@ -380,8 +427,13 @@ After completing Phase 7 implementation:
 
 # Stop Docker test environment
 ./gradlew stopDockerTestEnvironment
+
+# Commit work (do NOT push)
+git add .
+git commit -m "Complete Phase 7: Docker-based integration tests"
 ```
 Expected: Docker containers start successfully, Docker-based integration tests pass, all 3 database backends work in Docker environment.
+**Remember**: Commit incrementally - Dockerfile, docker-compose.yml, Gradle Docker tasks, each Docker test class, and utilities separately.
 
 ## 8. Test Execution Strategy
 
