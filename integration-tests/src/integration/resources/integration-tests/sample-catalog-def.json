@@ -1,0 +1,8 @@
+{
+  "name": "test-catalog",
+  "description": "Sample catalog for integration testing",
+  "properties": {
+    "environment": "test",
+    "version": "1.0"
+  }
+}

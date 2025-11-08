@@ -1,0 +1,26 @@
+{
+  "name": "address",
+  "description": "Address aspect with location information",
+  "properties": {
+    "street": {
+      "type": "String",
+      "description": "Street address"
+    },
+    "city": {
+      "type": "String",
+      "description": "City name"
+    },
+    "state": {
+      "type": "String",
+      "description": "State or province"
+    },
+    "postalCode": {
+      "type": "String",
+      "description": "Postal or ZIP code"
+    },
+    "country": {
+      "type": "String",
+      "description": "Country name"
+    }
+  }
+}

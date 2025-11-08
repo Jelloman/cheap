@@ -1,0 +1,23 @@
+{
+  "00000000-0000-0000-0000-000000000001": {
+    "firstName": "John",
+    "lastName": "Doe",
+    "age": 30,
+    "email": "john.doe@example.com",
+    "active": true
+  },
+  "00000000-0000-0000-0000-000000000002": {
+    "firstName": "Jane",
+    "lastName": "Smith",
+    "age": 28,
+    "email": "jane.smith@example.com",
+    "active": true
+  },
+  "00000000-0000-0000-0000-000000000003": {
+    "firstName": "Bob",
+    "lastName": "Johnson",
+    "age": 45,
+    "email": "bob.johnson@example.com",
+    "active": false
+  }
+}

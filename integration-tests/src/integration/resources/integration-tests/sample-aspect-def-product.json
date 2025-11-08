@@ -1,0 +1,26 @@
+{
+  "name": "product",
+  "description": "Product aspect with inventory information",
+  "properties": {
+    "sku": {
+      "type": "String",
+      "description": "Stock keeping unit"
+    },
+    "name": {
+      "type": "String",
+      "description": "Product name"
+    },
+    "price": {
+      "type": "Float",
+      "description": "Product price"
+    },
+    "quantity": {
+      "type": "Integer",
+      "description": "Quantity in stock"
+    },
+    "inStock": {
+      "type": "Boolean",
+      "description": "Whether product is in stock"
+    }
+  }
+}
