@@ -1,0 +1,28 @@
+spring:
+  datasource:
+    # URL will be dynamically set by test base class
+    url: jdbc:mariadb://localhost:3306/test
+    username: root
+    password: ""
+    driver-class-name: org.mariadb.jdbc.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      connection-timeout: 20000
+      idle-timeout: 300000
+      max-lifetime: 1200000
+
+cheap:
+  database:
+    type: mariadb
+  pagination:
+    default-page-size: 20
+    max-page-size: 100
+  aspect-upsert:
+    max-batch-size: 10
+
+logging:
+  level:
+    net.netbeing.cheap: DEBUG
+    org.springframework: INFO
+    ch.vorburger.mariadb4j: INFO
