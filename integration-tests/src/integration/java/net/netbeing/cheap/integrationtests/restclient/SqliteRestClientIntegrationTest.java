@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.*;
 
@@ -24,20 +25,15 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class SqliteRestClientIntegrationTest extends SqliteRestIntegrationTest
 {
-    @Autowired
-    private CheapDao cheapDao;
+    private final CheapDao cheapDao;
+    private final CheapFactory factory;
+    private final AspectDef orderItemAspectDef;
 
     @Autowired
-    private CheapFactory factory;
-
-    private AspectTableMapping orderItemTableMapping;
-    private AspectDef orderItemAspectDef;
-
-    @BeforeEach
-    @Override
-    public void setUp()
+    public SqliteRestClientIntegrationTest(CheapDao cheapDao, CheapFactory factory)
     {
-        super.setUp();
+        this.cheapDao = cheapDao;
+        this.factory = factory;
 
         // Create AspectDef for order_item custom table
         Map<String, PropertyDef> orderItemProps = new LinkedHashMap<>();
@@ -45,6 +41,15 @@ class SqliteRestClientIntegrationTest extends SqliteRestIntegrationTest
         orderItemProps.put("quantity", factory.createPropertyDef("quantity", PropertyType.Integer));
         orderItemProps.put("price", factory.createPropertyDef("price", PropertyType.Float));
         orderItemAspectDef = factory.createImmutableAspectDef("order_item", orderItemProps);
+    }
+
+
+    @BeforeEach
+    @Override
+    public void setUp() throws SQLException
+    {
+        AspectTableMapping orderItemTableMapping;
+        super.setUp();
 
         // Create AspectTableMapping for order_item
         Map<String, String> columnMapping = Map.of(
@@ -64,27 +69,15 @@ class SqliteRestClientIntegrationTest extends SqliteRestIntegrationTest
         if (cheapDao instanceof SqliteDao sqliteDao)
         {
             sqliteDao.addAspectTableMapping(orderItemTableMapping);
-            try
-            {
-                sqliteDao.createTable(orderItemTableMapping);
-            }
-            catch (Exception e)
-            {
-                // Table might already exist from previous test
-                // This is OK - it will be truncated by cleanup
-            }
+            sqliteDao.createTable(orderItemTableMapping);
         }
     }
 
     @Test
-    void test01_CatalogLifecycle() throws Exception
+    void catalogLifecycle()
     {
         // Create catalog
-        CatalogDef catalogDef = factory.createCatalogDef(
-            "test-catalog",
-            "Test Catalog Description",
-            null
-        );
+        CatalogDef catalogDef = factory.createCatalogDef();
 
         CreateCatalogResponse createResponse = client.createCatalog(
             catalogDef,
@@ -105,11 +98,11 @@ class SqliteRestClientIntegrationTest extends SqliteRestIntegrationTest
 
         assertNotNull(listResponse);
         assertTrue(listResponse.totalElements() >= 1);
-        assertTrue(listResponse.catalogIds().contains(createResponse.catalogId()));
+        assertTrue(listResponse.content().contains(createResponse.catalogId()));
     }
 
     @Test
-    void test02_AspectDefCRUD() throws Exception
+    void aspectDefCRUD()
     {
         // Create catalog first
         CatalogDef catalogDef = factory.createCatalogDef();
@@ -145,11 +138,11 @@ class SqliteRestClientIntegrationTest extends SqliteRestIntegrationTest
         AspectDef retrievedOrderItem = client.getAspectDefByName(catalogId, "order_item");
         assertNotNull(retrievedOrderItem);
         assertEquals("order_item", retrievedOrderItem.name());
-        assertEquals(orderItemResponse.aspectDefId(), retrievedOrderItem.id());
+        assertEquals(orderItemResponse.aspectDefId(), retrievedOrderItem.globalId());
     }
 
     @Test
-    void test03_CustomTableMapping() throws Exception
+    void customTableMapping() throws SQLException
     {
         // Create catalog and aspect def
         CatalogDef catalogDef = factory.createCatalogDef();
@@ -176,7 +169,7 @@ class SqliteRestClientIntegrationTest extends SqliteRestIntegrationTest
 
         UpsertAspectsResponse upsertResponse = client.upsertAspects(catalogId, "order_item", aspects);
         assertNotNull(upsertResponse);
-        assertEquals(2, upsertResponse.successCount);
+        assertEquals(2, upsertResponse.successCount());
 
         // Verify data in custom table via direct DB query
         try (Connection conn = getDataSource().getConnection();
@@ -200,7 +193,7 @@ class SqliteRestClientIntegrationTest extends SqliteRestIntegrationTest
     }
 
     @Test
-    void test04_AspectUpsert() throws Exception
+    void aspectUpsert()
     {
         // Create catalog and aspect def
         CatalogDef catalogDef = factory.createCatalogDef();
@@ -232,7 +225,7 @@ class SqliteRestClientIntegrationTest extends SqliteRestIntegrationTest
         ));
 
         UpsertAspectsResponse upsertResponse = client.upsertAspects(catalogId, "product", aspects);
-        assertEquals(2, upsertResponse.successCount);
+        assertEquals(2, upsertResponse.successCount());
 
         // Query aspects back
         Set<UUID> entityIds = Set.of(productId1, productId2);
@@ -242,19 +235,19 @@ class SqliteRestClientIntegrationTest extends SqliteRestIntegrationTest
         assertNotNull(queryResponse);
         assertEquals(2, queryResponse.results().size());
 
-        Map<String, Object> product1 = queryResponse.results().get(productId1).get("product");
+        Aspect product1 = queryResponse.results().get(productId1).get("product");
         assertNotNull(product1);
-        assertEquals("PROD-001", product1.get("sku"));
-        assertEquals("Widget", product1.get("name"));
+        assertEquals("PROD-001", product1.get("sku").read());
+        assertEquals("Widget", product1.get("name").read());
 
-        Map<String, Object> product2 = queryResponse.results().get(productId2).get("product");
+        Aspect product2 = queryResponse.results().get(productId2).get("product");
         assertNotNull(product2);
-        assertEquals("PROD-002", product2.get("sku"));
-        assertEquals("Gadget", product2.get("name"));
+        assertEquals("PROD-002", product2.get("sku").read());
+        assertEquals("Gadget", product2.get("name").read());
     }
 
     @Test
-    void test05_EntityListHierarchy() throws Exception
+    void entityListHierarchy() throws SQLException
     {
         // Create catalog
         CatalogDef catalogDef = factory.createCatalogDef();
@@ -300,7 +293,7 @@ class SqliteRestClientIntegrationTest extends SqliteRestIntegrationTest
     }
 
     @Test
-    void test06_EntityDirectoryHierarchy() throws Exception
+    void entityDirectoryHierarchy() throws SQLException
     {
         // Create catalog
         CatalogDef catalogDef = factory.createCatalogDef();
@@ -333,7 +326,7 @@ class SqliteRestClientIntegrationTest extends SqliteRestIntegrationTest
     }
 
     @Test
-    void test07_AspectMapHierarchy() throws Exception
+    void aspectMapHierarchy() throws SQLException
     {
         // Create catalog
         CatalogDef catalogDef = factory.createCatalogDef();
@@ -388,7 +381,7 @@ class SqliteRestClientIntegrationTest extends SqliteRestIntegrationTest
     }
 
     @Test
-    void test08_ErrorHandling() throws Exception
+    void errorHandling()
     {
         // Test 404 - catalog not found
         UUID nonExistentCatalogId = UUID.randomUUID();

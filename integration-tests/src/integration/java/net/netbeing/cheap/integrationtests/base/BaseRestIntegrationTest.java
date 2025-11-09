@@ -14,6 +14,7 @@ import org.springframework.boot.test.web.server.LocalServerPort;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.sql.SQLException;
 import java.util.Map;
 import java.util.UUID;
 
@@ -41,7 +42,7 @@ public abstract class BaseRestIntegrationTest
      * Subclasses can override to add additional setup.
      */
     @BeforeEach
-    public void setUp()
+    public void setUp() throws SQLException
     {
         client = createRestClient();
     }

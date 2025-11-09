@@ -48,6 +48,7 @@ public class DatabaseRunnerExtension implements BeforeAllCallback, AutoCloseable
     private static final AtomicBoolean STARTED = new AtomicBoolean(false);
 
     @Override
+    @SuppressWarnings("java:S2696") // sonar warning about instance methods writing to statics; we want that
     public void beforeAll(final ExtensionContext context) throws Exception
     {
         // Even though we are using an AtomicBoolean, we also use a lock to guarantee

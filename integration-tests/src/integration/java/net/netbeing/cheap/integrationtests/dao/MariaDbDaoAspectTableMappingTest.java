@@ -1,5 +1,6 @@
 package net.netbeing.cheap.integrationtests.dao;
 
+import ch.vorburger.exec.ManagedProcessException;
 import net.netbeing.cheap.db.AspectTableMapping;
 import net.netbeing.cheap.integrationtests.util.DatabaseRunnerExtension;
 import net.netbeing.cheap.integrationtests.util.MariaDbIntegrationTestDb;
@@ -13,6 +14,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -35,11 +37,8 @@ class MariaDbDaoAspectTableMappingTest
     private AspectDef employeeAspectDef;
     private AspectDef metadataAspectDef;
 
-    private AspectTableMapping employeeTableMapping;
-    private AspectTableMapping metadataTableMapping;
-
     @BeforeAll
-    public static void setUpTestDb() throws Exception
+    public static void setUpTestDb() throws ManagedProcessException, SQLException
     {
         // Create test database
         testDb = new MariaDbIntegrationTestDb("mariadb_aspect_mapping_test", true);
@@ -47,8 +46,10 @@ class MariaDbDaoAspectTableMappingTest
     }
 
     @BeforeEach
-    public void setUp() throws Exception
+    public void setUp() throws SQLException
     {
+        AspectTableMapping metadataTableMapping;
+        AspectTableMapping employeeTableMapping;
         // Clean database before each test
         testDb.truncateAllTables();
 
@@ -100,19 +101,12 @@ class MariaDbDaoAspectTableMappingTest
         testDb.mariaDbDao.addAspectTableMapping(metadataTableMapping);
 
         // Create the custom tables
-        try
-        {
-            testDb.mariaDbDao.createTable(employeeTableMapping);
-            testDb.mariaDbDao.createTable(metadataTableMapping);
-        }
-        catch (Exception e)
-        {
-            throw new RuntimeException("Failed to create custom tables", e);
-        }
+        testDb.mariaDbDao.createTable(employeeTableMapping);
+        testDb.mariaDbDao.createTable(metadataTableMapping);
     }
 
     @Test
-    void testSaveAndLoadCatalogWithCustomTables() throws Exception
+    void testSaveAndLoadCatalogWithCustomTables() throws SQLException
     {
         // Create catalog
         UUID catalogId = testUuid(1000);
@@ -242,7 +236,7 @@ class MariaDbDaoAspectTableMappingTest
     }
 
     @Test
-    void testUpdateAspectsInCustomTables() throws Exception
+    void testUpdateAspectsInCustomTables() throws SQLException
     {
         // Create and save initial catalog
         UUID catalogId = testUuid(2000);
@@ -282,7 +276,7 @@ class MariaDbDaoAspectTableMappingTest
     }
 
     @Test
-    void testDeleteCatalogCleansUpCustomTables() throws Exception
+    void testDeleteCatalogCleansUpCustomTables() throws SQLException
     {
         // Create and save catalog with data
         UUID catalogId = testUuid(3000);
@@ -350,7 +344,7 @@ class MariaDbDaoAspectTableMappingTest
     }
 
     @Test
-    void testForeignKeyConstraintsWithCustomTables() throws Exception
+    void testForeignKeyConstraintsWithCustomTables() throws SQLException
     {
         // This test verifies that foreign key constraints work with AspectTableMapping
         // when useForeignKeys() returns true
@@ -381,7 +375,7 @@ class MariaDbDaoAspectTableMappingTest
     }
 
     @AfterEach
-    public void cleanupCustomTables() throws Exception
+    public void cleanupCustomTables() throws SQLException
     {
         // Clean up custom tables
         try (Connection conn = testDb.dataSource.getConnection();
@@ -389,10 +383,6 @@ class MariaDbDaoAspectTableMappingTest
         {
             stmt.execute("DROP TABLE IF EXISTS employee");
             stmt.execute("DROP TABLE IF EXISTS metadata");
-        }
-        catch (Exception e)
-        {
-            // Ignore errors during cleanup
         }
     }
 

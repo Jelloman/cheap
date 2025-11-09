@@ -19,6 +19,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -37,17 +38,13 @@ class SqliteDaoAspectTableMappingTest
     private static SQLiteDataSource dataSource;
 
     private SqliteDao sqliteDao;
-    private SqliteAdapter adapter;
     private CheapFactory factory;
 
     private AspectDef productAspectDef;
     private AspectDef categoryAspectDef;
 
-    private AspectTableMapping productTableMapping;
-    private AspectTableMapping categoryTableMapping;
-
     @BeforeAll
-    public static void setUpDatabase() throws Exception
+    public static void setUpDatabase() throws IOException, SQLException
     {
         // Create temporary database file
         tempDbPath = Files.createTempFile("cheap-integration-test-", ".db");
@@ -63,26 +60,21 @@ class SqliteDaoAspectTableMappingTest
     }
 
     @AfterAll
-    public static void tearDownDatabase() throws Exception
+    public static void tearDownDatabase() throws IOException
     {
         // Delete temporary database file
         if (tempDbPath != null && Files.exists(tempDbPath))
         {
-            try
-            {
-                Files.delete(tempDbPath);
-            }
-            catch (IOException e)
-            {
-                // Log but don't fail
-                System.err.println("Warning: Failed to delete temporary database file: " + tempDbPath);
-            }
+            Files.delete(tempDbPath);
         }
     }
 
     @BeforeEach
-    public void setUp() throws Exception
+    public void setUp() throws SQLException
     {
+        AspectTableMapping categoryTableMapping;
+        AspectTableMapping productTableMapping;
+        SqliteAdapter adapter;
         // Clean database before each test
         SqliteCheapSchema schema = new SqliteCheapSchema();
         schema.executeTruncateSchemaDdl(dataSource);
@@ -136,19 +128,12 @@ class SqliteDaoAspectTableMappingTest
         sqliteDao.addAspectTableMapping(categoryTableMapping);
 
         // Create the custom tables
-        try
-        {
-            sqliteDao.createTable(productTableMapping);
-            sqliteDao.createTable(categoryTableMapping);
-        }
-        catch (Exception e)
-        {
-            throw new RuntimeException("Failed to create custom tables", e);
-        }
+        sqliteDao.createTable(productTableMapping);
+        sqliteDao.createTable(categoryTableMapping);
     }
 
     @Test
-    void testSaveAndLoadCatalogWithCustomTables() throws Exception
+    void testSaveAndLoadCatalogWithCustomTables() throws SQLException
     {
         // Create catalog
         UUID catalogId = testUuid(1000);
@@ -255,7 +240,7 @@ class SqliteDaoAspectTableMappingTest
     }
 
     @Test
-    void testUpdateAspectsInCustomTables() throws Exception
+    void testUpdateAspectsInCustomTables() throws SQLException
     {
         // Create and save initial catalog
         UUID catalogId = testUuid(2000);
@@ -297,7 +282,7 @@ class SqliteDaoAspectTableMappingTest
     }
 
     @Test
-    void testDeleteCatalogCleansUpCustomTables() throws Exception
+    void testDeleteCatalogCleansUpCustomTables() throws SQLException
     {
         // Create and save catalog with data
         UUID catalogId = testUuid(3000);
@@ -365,7 +350,7 @@ class SqliteDaoAspectTableMappingTest
     }
 
     @AfterEach
-    public void cleanupCustomTables() throws Exception
+    public void cleanupCustomTables() throws SQLException
     {
         // Clean up custom tables
         try (Connection conn = dataSource.getConnection();
@@ -373,10 +358,6 @@ class SqliteDaoAspectTableMappingTest
         {
             stmt.execute("DROP TABLE IF EXISTS product");
             stmt.execute("DROP TABLE IF EXISTS category");
-        }
-        catch (Exception e)
-        {
-            // Ignore errors during cleanup
         }
     }
 

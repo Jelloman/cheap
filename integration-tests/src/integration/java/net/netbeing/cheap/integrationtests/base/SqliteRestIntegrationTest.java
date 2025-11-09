@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.sql.Statement;
 
 /**
@@ -60,7 +61,7 @@ public abstract class SqliteRestIntegrationTest extends BaseRestIntegrationTest
 
     @BeforeEach
     @Override
-    public void setUp()
+    public void setUp() throws SQLException
     {
         super.setUp();
         try

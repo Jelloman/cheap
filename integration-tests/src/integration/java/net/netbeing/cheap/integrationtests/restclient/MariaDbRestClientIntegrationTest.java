@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.*;
 
@@ -24,27 +25,29 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class MariaDbRestClientIntegrationTest extends MariaDbRestIntegrationTest
 {
-    @Autowired
-    private CheapDao cheapDao;
+    private final CheapDao cheapDao;
+    private final CheapFactory factory;
+    private final AspectDef inventoryAspectDef;
 
     @Autowired
-    private CheapFactory factory;
-
-    private AspectTableMapping inventoryTableMapping;
-    private AspectDef inventoryAspectDef;
-
-    @BeforeEach
-    @Override
-    public void setUp()
+    public MariaDbRestClientIntegrationTest(CheapDao cheapDao, CheapFactory factory)
     {
-        super.setUp();
-
+        this.cheapDao = cheapDao;
+        this.factory = factory;
         // Create AspectDef for inventory custom table
         Map<String, PropertyDef> inventoryProps = new LinkedHashMap<>();
         inventoryProps.put("item_code", factory.createPropertyDef("item_code", PropertyType.String));
         inventoryProps.put("warehouse", factory.createPropertyDef("warehouse", PropertyType.String));
         inventoryProps.put("stock_qty", factory.createPropertyDef("stock_qty", PropertyType.Integer));
         inventoryAspectDef = factory.createImmutableAspectDef("inventory", inventoryProps);
+    }
+
+    @BeforeEach
+    @Override
+    public void setUp() throws SQLException
+    {
+        AspectTableMapping inventoryTableMapping;
+        super.setUp();
 
         // Create AspectTableMapping for inventory
         Map<String, String> columnMapping = Map.of(
@@ -64,27 +67,15 @@ class MariaDbRestClientIntegrationTest extends MariaDbRestIntegrationTest
         if (cheapDao instanceof MariaDbDao mariaDbDao)
         {
             mariaDbDao.addAspectTableMapping(inventoryTableMapping);
-            try
-            {
-                mariaDbDao.createTable(inventoryTableMapping);
-            }
-            catch (Exception e)
-            {
-                // Table might already exist from previous test
-                // This is OK - it will be truncated by cleanup
-            }
+            mariaDbDao.createTable(inventoryTableMapping);
         }
     }
 
     @Test
-    void test01_CatalogLifecycle() throws Exception
+    void catalogLifecycle()
     {
         // Create catalog
-        CatalogDef catalogDef = factory.createCatalogDef(
-            "test-catalog",
-            "Test Catalog Description",
-            null
-        );
+        CatalogDef catalogDef = factory.createCatalogDef();
 
         CreateCatalogResponse createResponse = client.createCatalog(
             catalogDef,
@@ -105,11 +96,11 @@ class MariaDbRestClientIntegrationTest extends MariaDbRestIntegrationTest
 
         assertNotNull(listResponse);
         assertTrue(listResponse.totalElements() >= 1);
-        assertTrue(listResponse.catalogIds().contains(createResponse.catalogId()));
+        assertTrue(listResponse.content().contains(createResponse.catalogId()));
     }
 
     @Test
-    void test02_AspectDefCRUD() throws Exception
+    void aspectDefCRUD()
     {
         // Create catalog first
         CatalogDef catalogDef = factory.createCatalogDef();
@@ -145,11 +136,11 @@ class MariaDbRestClientIntegrationTest extends MariaDbRestIntegrationTest
         AspectDef retrievedInventory = client.getAspectDefByName(catalogId, "inventory");
         assertNotNull(retrievedInventory);
         assertEquals("inventory", retrievedInventory.name());
-        assertEquals(inventoryResponse.aspectDefId(), retrievedInventory.id());
+        assertEquals(inventoryResponse.aspectDefId(), retrievedInventory.globalId());
     }
 
     @Test
-    void test03_CustomTableMapping() throws Exception
+    void customTableMapping() throws SQLException
     {
         // Create catalog and aspect def
         CatalogDef catalogDef = factory.createCatalogDef();
@@ -176,7 +167,7 @@ class MariaDbRestClientIntegrationTest extends MariaDbRestIntegrationTest
 
         UpsertAspectsResponse upsertResponse = client.upsertAspects(catalogId, "inventory", aspects);
         assertNotNull(upsertResponse);
-        assertEquals(2, upsertResponse.successCount);
+        assertEquals(2, upsertResponse.successCount());
 
         // Verify data in custom table via direct DB query
         try (Connection conn = getDataSource().getConnection();
@@ -200,7 +191,7 @@ class MariaDbRestClientIntegrationTest extends MariaDbRestIntegrationTest
     }
 
     @Test
-    void test04_AspectUpsert() throws Exception
+    void aspectUpsert()
     {
         // Create catalog and aspect def
         CatalogDef catalogDef = factory.createCatalogDef();
@@ -232,7 +223,7 @@ class MariaDbRestClientIntegrationTest extends MariaDbRestIntegrationTest
         ));
 
         UpsertAspectsResponse upsertResponse = client.upsertAspects(catalogId, "product", aspects);
-        assertEquals(2, upsertResponse.successCount);
+        assertEquals(2, upsertResponse.successCount());
 
         // Query aspects back
         Set<UUID> entityIds = Set.of(productId1, productId2);
@@ -242,19 +233,19 @@ class MariaDbRestClientIntegrationTest extends MariaDbRestIntegrationTest
         assertNotNull(queryResponse);
         assertEquals(2, queryResponse.results().size());
 
-        Map<String, Object> product1 = queryResponse.results().get(productId1).get("product");
+        Aspect product1 = queryResponse.results().get(productId1).get("product");
         assertNotNull(product1);
-        assertEquals("PROD-001", product1.get("sku"));
-        assertEquals("Widget", product1.get("name"));
+        assertEquals("PROD-001", product1.get("sku").read());
+        assertEquals("Widget", product1.get("name").read());
 
-        Map<String, Object> product2 = queryResponse.results().get(productId2).get("product");
+        Aspect product2 = queryResponse.results().get(productId2).get("product");
         assertNotNull(product2);
-        assertEquals("PROD-002", product2.get("sku"));
-        assertEquals("Gadget", product2.get("name"));
+        assertEquals("PROD-002", product2.get("sku").read());
+        assertEquals("Gadget", product2.get("name").read());
     }
 
     @Test
-    void test05_EntityListHierarchy() throws Exception
+    void entityListHierarchy() throws SQLException
     {
         // Create catalog
         CatalogDef catalogDef = factory.createCatalogDef();
@@ -300,7 +291,7 @@ class MariaDbRestClientIntegrationTest extends MariaDbRestIntegrationTest
     }
 
     @Test
-    void test06_EntityDirectoryHierarchy() throws Exception
+    void entityDirectoryHierarchy() throws SQLException
     {
         // Create catalog
         CatalogDef catalogDef = factory.createCatalogDef();
@@ -333,7 +324,7 @@ class MariaDbRestClientIntegrationTest extends MariaDbRestIntegrationTest
     }
 
     @Test
-    void test07_AspectMapHierarchy() throws Exception
+    void aspectMapHierarchy() throws SQLException
     {
         // Create catalog
         CatalogDef catalogDef = factory.createCatalogDef();
@@ -388,7 +379,7 @@ class MariaDbRestClientIntegrationTest extends MariaDbRestIntegrationTest
     }
 
     @Test
-    void test08_ErrorHandling() throws Exception
+    void errorHandling()
     {
         // Test 404 - catalog not found
         UUID nonExistentCatalogId = UUID.randomUUID();
@@ -427,7 +418,7 @@ class MariaDbRestClientIntegrationTest extends MariaDbRestIntegrationTest
     }
 
     @Test
-    void test09_ForeignKeyConstraints() throws Exception
+    void foreignKeyConstraints()
     {
         // Only run if foreign keys are enabled
         if (!useForeignKeys())
@@ -454,7 +445,7 @@ class MariaDbRestClientIntegrationTest extends MariaDbRestIntegrationTest
         );
 
         UpsertAspectsResponse upsertResponse = client.upsertAspects(catalogId, "test_aspect", aspects);
-        assertEquals(1, upsertResponse.successCount);
+        assertEquals(1, upsertResponse.successCount());
 
         // Query back to verify FK relationships are working
         Set<UUID> entityIds = Set.of(entityId);

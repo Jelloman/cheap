@@ -14,8 +14,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import javax.sql.DataSource;
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -34,17 +36,14 @@ class PostgresDaoAspectTableMappingTest
     private static DataSource dataSource;
 
     private PostgresDao postgresDao;
-    private PostgresAdapter adapter;
     private CheapFactory factory;
 
     private AspectDef personAspectDef;
     private AspectDef settingsAspectDef;
 
-    private AspectTableMapping personTableMapping;
-    private AspectTableMapping settingsTableMapping;
 
     @BeforeAll
-    public static void setUpDatabase() throws Exception
+    public static void setUpDatabase() throws IOException, SQLException
     {
         // Start embedded PostgreSQL
         embeddedPostgres = EmbeddedPostgres.builder()
@@ -60,7 +59,7 @@ class PostgresDaoAspectTableMappingTest
     }
 
     @AfterAll
-    public static void tearDownDatabase() throws Exception
+    public static void tearDownDatabase() throws IOException
     {
         if (embeddedPostgres != null)
         {
@@ -69,8 +68,11 @@ class PostgresDaoAspectTableMappingTest
     }
 
     @BeforeEach
-    public void setUp() throws Exception
+    public void setUp() throws SQLException
     {
+        AspectTableMapping settingsTableMapping;
+        AspectTableMapping personTableMapping;
+        PostgresAdapter adapter;
         // Clean database before each test
         PostgresCheapSchema schema = new PostgresCheapSchema();
         schema.executeTruncateSchemaDdl(dataSource);
@@ -122,19 +124,12 @@ class PostgresDaoAspectTableMappingTest
         postgresDao.addAspectTableMapping(settingsTableMapping);
 
         // Create the custom tables
-        try
-        {
-            postgresDao.createTable(personTableMapping);
-            postgresDao.createTable(settingsTableMapping);
-        }
-        catch (Exception e)
-        {
-            throw new RuntimeException("Failed to create custom tables", e);
-        }
+        postgresDao.createTable(personTableMapping);
+        postgresDao.createTable(settingsTableMapping);
     }
 
     @Test
-    void testSaveAndLoadCatalogWithCustomTables() throws Exception
+    void testSaveAndLoadCatalogWithCustomTables() throws SQLException
     {
         // Create catalog
         UUID catalogId = testUuid(1000);
@@ -235,7 +230,7 @@ class PostgresDaoAspectTableMappingTest
     }
 
     @Test
-    void testUpdateAspectsInCustomTables() throws Exception
+    void testUpdateAspectsInCustomTables() throws SQLException
     {
         // Create and save initial catalog
         UUID catalogId = testUuid(2000);
@@ -273,7 +268,7 @@ class PostgresDaoAspectTableMappingTest
     }
 
     @Test
-    void testDeleteCatalogCleansUpCustomTables() throws Exception
+    void testDeleteCatalogCleansUpCustomTables() throws SQLException
     {
         // Create and save catalog with data
         UUID catalogId = testUuid(3000);
@@ -341,7 +336,7 @@ class PostgresDaoAspectTableMappingTest
     }
 
     @AfterEach
-    public void cleanupCustomTables() throws Exception
+    public void cleanupCustomTables() throws SQLException
     {
         // Clean up custom tables
         try (Connection conn = dataSource.getConnection();
@@ -349,10 +344,6 @@ class PostgresDaoAspectTableMappingTest
         {
             stmt.execute("DROP TABLE IF EXISTS person CASCADE");
             stmt.execute("DROP TABLE IF EXISTS settings CASCADE");
-        }
-        catch (Exception e)
-        {
-            // Ignore errors during cleanup
         }
     }
 

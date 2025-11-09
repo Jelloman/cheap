@@ -1,7 +1,6 @@
 package net.netbeing.cheap.integrationtests.util;
 
 import ch.vorburger.exec.ManagedProcessException;
-import net.netbeing.cheap.integrationtests.util.DatabaseRunnerExtension;
 import net.netbeing.cheap.db.mariadb.MariaDbAdapter;
 import net.netbeing.cheap.db.mariadb.MariaDbCheapSchema;
 import net.netbeing.cheap.db.mariadb.MariaDbDao;

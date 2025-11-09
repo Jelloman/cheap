@@ -9,6 +9,7 @@ import org.springframework.test.context.ActiveProfiles;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.sql.Statement;
 
 /**
@@ -48,7 +49,7 @@ public abstract class PostgresRestIntegrationTest extends BaseRestIntegrationTes
 
     @BeforeEach
     @Override
-    public void setUp()
+    public void setUp() throws SQLException
     {
         super.setUp();
         try
