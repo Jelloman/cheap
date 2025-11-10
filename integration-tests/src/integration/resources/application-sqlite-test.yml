@@ -1,7 +1,7 @@
 spring:
   datasource:
     # URL will be dynamically set by test base class
-    url: jdbc:sqlite::memory:
+    url: "jdbc:sqlite::memory:"
     driver-class-name: org.sqlite.JDBC
     hikari:
       maximum-pool-size: 5

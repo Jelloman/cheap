@@ -1,7 +1,7 @@
 spring:
   datasource:
     # URL will be dynamically set by test base class
-    url: jdbc:mariadb://localhost:3306/test
+    url: "jdbc:mariadb://localhost:3306/test"
     username: root
     password: ""
     driver-class-name: org.mariadb.jdbc.Driver
