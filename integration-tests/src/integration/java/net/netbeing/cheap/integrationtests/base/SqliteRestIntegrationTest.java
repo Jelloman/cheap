@@ -6,6 +6,8 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.sqlite.SQLiteDataSource;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 
 import javax.sql.DataSource;
 import java.io.IOException;
@@ -39,6 +41,13 @@ public abstract class SqliteRestIntegrationTest extends BaseRestIntegrationTest
         SqliteCheapSchema schema = new SqliteCheapSchema();
         schema.executeMainSchemaDdl(dataSource);
         schema.executeAuditSchemaDdl(dataSource);
+    }
+
+    @DynamicPropertySource
+    static void configureDatasource(DynamicPropertyRegistry registry)
+    {
+        // Configure Spring to use the test's temporary database
+        registry.add("spring.datasource.url", () -> "jdbc:sqlite:" + tempDbPath.toAbsolutePath());
     }
 
     @AfterAll
