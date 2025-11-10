@@ -38,7 +38,6 @@ dependencies {
 
     // Spring Boot dependencies
     integrationImplementation(libs.spring.boot.starter.test)
-    integrationImplementation(libs.spring.boot.starter.web)
     integrationImplementation(libs.spring.boot.starter.webflux)
 
     // Jackson for JSON processing
