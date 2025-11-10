@@ -1,14 +1,10 @@
 package net.netbeing.cheap.integrationtests.base;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import net.netbeing.cheap.model.AspectDef;
-import net.netbeing.cheap.model.Catalog;
-import net.netbeing.cheap.model.CatalogDef;
-import net.netbeing.cheap.model.CatalogSpecies;
 import net.netbeing.cheap.rest.CheapRestApplication;
 import net.netbeing.cheap.rest.client.CheapRestClient;
+import net.netbeing.cheap.rest.client.CheapRestClientImpl;
 import org.junit.jupiter.api.BeforeEach;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 
@@ -16,7 +12,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
-import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -36,9 +31,7 @@ public abstract class BaseRestIntegrationTest
     @LocalServerPort
     protected int port;
 
-    protected CheapRestClient client;
-
-    @Autowired
+    protected CheapRestClientImpl client;
     protected ObjectMapper objectMapper;
 
     /**
@@ -49,15 +42,16 @@ public abstract class BaseRestIntegrationTest
     public void setUp() throws SQLException
     {
         client = createRestClient();
+        objectMapper = client.getObjectMapper();
     }
 
     /**
      * Create a REST client instance.
      * Can be overridden by subclasses if needed.
      */
-    protected CheapRestClient createRestClient()
+    protected CheapRestClientImpl createRestClient()
     {
-        return new net.netbeing.cheap.rest.client.CheapRestClientImpl("http://localhost:" + port);
+        return new CheapRestClientImpl("http://localhost:" + port);
     }
 
     /**
@@ -133,5 +127,5 @@ public abstract class BaseRestIntegrationTest
      * Database-specific cleanup method.
      * Subclasses must implement to clean up their specific database.
      */
-    protected abstract void cleanupDatabase() throws Exception;
+    protected abstract void cleanupDatabase() throws SQLException;
 }

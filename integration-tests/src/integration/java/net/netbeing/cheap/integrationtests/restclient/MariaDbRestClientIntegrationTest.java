@@ -87,7 +87,7 @@ class MariaDbRestClientIntegrationTest extends MariaDbRestIntegrationTest
         assertNotNull(createResponse.catalogId());
 
         // Retrieve catalog
-        CatalogDef retrieved = client.getCatalog(createResponse.catalogId());
+        CatalogDef retrieved = client.getCatalogDef(createResponse.catalogId());
 
         assertNotNull(retrieved);
 
@@ -385,7 +385,7 @@ class MariaDbRestClientIntegrationTest extends MariaDbRestIntegrationTest
         UUID nonExistentCatalogId = UUID.randomUUID();
         assertThrows(
             Exception.class,
-            () -> client.getCatalog(nonExistentCatalogId),
+            () -> client.getCatalogDef(nonExistentCatalogId),
             "Should throw exception for non-existent catalog"
         );
 

@@ -11,7 +11,8 @@
       "Bash(python -m json.tool:*)",
       "Bash(/dev/null)",
       "Bash(git add:*)",
-      "Bash(git reset:*)"
+      "Bash(git reset:*)",
+      "Bash(org.springframework.http.server.reactive.ServerHttpRequest\"\n\nThe issue occurred because:\n1. Both servlet and reactive starters were present\n2. Spring Boot chose servlet (Tomcat) over reactive (Netty)\n3. GlobalExceptionHandler uses ServerWebExchange (reactive type)\n4. Servlet container tried to inject it but failed\n\nNow only spring-boot-starter-webflux remains, ensuring Netty is used.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")"
     ],
     "deny": [],
     "ask": []

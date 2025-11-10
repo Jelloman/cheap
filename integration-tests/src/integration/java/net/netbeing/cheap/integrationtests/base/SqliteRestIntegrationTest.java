@@ -16,22 +16,26 @@ import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Base class for integration tests using SQLite database.
  * Sets up and tears down a temporary SQLite database file for testing.
+ * WARNING: each subclass will reuse static resources in this class, so
+ * they cannot be run in parallel.
  */
 @ActiveProfiles("sqlite-test")
 public abstract class SqliteRestIntegrationTest extends BaseRestIntegrationTest
 {
     protected static Path tempDbPath;
     protected static SQLiteDataSource dataSource;
+    private static final AtomicInteger fileNumber = new AtomicInteger(0);
 
     @BeforeAll
-    public static void setUpSqlite() throws Exception
+    public static void setUpSqlite() throws IOException, SQLException
     {
         // Create temporary database file
-        tempDbPath = Files.createTempFile("cheap-integration-test-", ".db");
+        tempDbPath = Files.createTempFile("cheap-integration-test-" + fileNumber.getAndIncrement(), ".db");
 
         // Set up data source
         dataSource = new SQLiteDataSource();
@@ -51,20 +55,12 @@ public abstract class SqliteRestIntegrationTest extends BaseRestIntegrationTest
     }
 
     @AfterAll
-    public static void tearDownSqlite() throws Exception
+    public static void tearDownSqlite() throws IOException
     {
         // Delete temporary database file
         if (tempDbPath != null && Files.exists(tempDbPath))
         {
-            try
-            {
-                Files.delete(tempDbPath);
-            }
-            catch (IOException e)
-            {
-                // Log but don't fail - temp files will be cleaned up by OS
-                System.err.println("Warning: Failed to delete temporary database file: " + tempDbPath);
-            }
+            Files.delete(tempDbPath);
         }
     }
 
@@ -73,18 +69,11 @@ public abstract class SqliteRestIntegrationTest extends BaseRestIntegrationTest
     public void setUp() throws SQLException
     {
         super.setUp();
-        try
-        {
-            cleanupDatabase();
-        }
-        catch (Exception e)
-        {
-            throw new RuntimeException("Failed to clean up database before test", e);
-        }
+        cleanupDatabase();
     }
 
     @Override
-    protected void cleanupDatabase() throws Exception
+    protected void cleanupDatabase() throws SQLException
     {
         // Truncate all tables to ensure clean state between tests
         SqliteCheapSchema schema = new SqliteCheapSchema();
@@ -104,7 +93,7 @@ public abstract class SqliteRestIntegrationTest extends BaseRestIntegrationTest
      * Execute a SQL statement directly.
      * Useful for verification queries in tests.
      */
-    protected void executeSql(String sql) throws Exception
+    protected void executeSql(String sql) throws SQLException
     {
         try (Connection conn = dataSource.getConnection();
              Statement stmt = conn.createStatement())

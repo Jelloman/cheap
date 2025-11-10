@@ -8,6 +8,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.springframework.test.context.ActiveProfiles;
 
 import javax.sql.DataSource;
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -23,7 +24,7 @@ public abstract class PostgresRestIntegrationTest extends BaseRestIntegrationTes
     protected static DataSource dataSource;
 
     @BeforeAll
-    public static void setUpPostgres() throws Exception
+    public static void setUpPostgres() throws SQLException, IOException
     {
         // Start embedded PostgreSQL
         embeddedPostgres = EmbeddedPostgres.builder()
@@ -39,7 +40,7 @@ public abstract class PostgresRestIntegrationTest extends BaseRestIntegrationTes
     }
 
     @AfterAll
-    public static void tearDownPostgres() throws Exception
+    public static void tearDownPostgres() throws IOException
     {
         if (embeddedPostgres != null)
         {
@@ -52,18 +53,11 @@ public abstract class PostgresRestIntegrationTest extends BaseRestIntegrationTes
     public void setUp() throws SQLException
     {
         super.setUp();
-        try
-        {
-            cleanupDatabase();
-        }
-        catch (Exception e)
-        {
-            throw new RuntimeException("Failed to clean up database before test", e);
-        }
+        cleanupDatabase();
     }
 
     @Override
-    protected void cleanupDatabase() throws Exception
+    protected void cleanupDatabase() throws SQLException
     {
         // Truncate all tables to ensure clean state between tests
         PostgresCheapSchema schema = new PostgresCheapSchema();
@@ -83,7 +77,7 @@ public abstract class PostgresRestIntegrationTest extends BaseRestIntegrationTes
      * Execute a SQL statement directly.
      * Useful for verification queries in tests.
      */
-    protected void executeSql(String sql) throws Exception
+    protected void executeSql(String sql) throws SQLException
     {
         try (Connection conn = dataSource.getConnection();
              Statement stmt = conn.createStatement())

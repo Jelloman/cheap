@@ -2,7 +2,7 @@ package net.netbeing.cheap.integrationtests.dao;
 
 import ch.vorburger.exec.ManagedProcessException;
 import net.netbeing.cheap.db.AspectTableMapping;
-import net.netbeing.cheap.integrationtests.util.DatabaseRunnerExtension;
+import net.netbeing.cheap.integrationtests.util.MariaDbRunnerExtension;
 import net.netbeing.cheap.integrationtests.util.MariaDbIntegrationTestDb;
 import net.netbeing.cheap.impl.basic.CheapFactory;
 import net.netbeing.cheap.model.*;
@@ -27,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * Tests two custom tables with different AspectTableMapping patterns.
  * Plain JUnit test without Spring Boot.
  */
-@ExtendWith(DatabaseRunnerExtension.class)
+@ExtendWith(MariaDbRunnerExtension.class)
 class MariaDbDaoAspectTableMappingTest
 {
     private static MariaDbIntegrationTestDb testDb;
@@ -48,8 +48,6 @@ class MariaDbDaoAspectTableMappingTest
     @BeforeEach
     public void setUp() throws SQLException
     {
-        AspectTableMapping metadataTableMapping;
-        AspectTableMapping employeeTableMapping;
         // Clean database before each test
         testDb.truncateAllTables();
 
@@ -74,7 +72,7 @@ class MariaDbDaoAspectTableMappingTest
             "name", "name",
             "department", "department"
         );
-        employeeTableMapping = new AspectTableMapping(
+        AspectTableMapping employeeTableMapping = new AspectTableMapping(
             employeeAspectDef,
             "employee",
             employeeColumnMapping,
@@ -88,7 +86,7 @@ class MariaDbDaoAspectTableMappingTest
             "key", "meta_key",
             "value", "meta_value"
         );
-        metadataTableMapping = new AspectTableMapping(
+        AspectTableMapping metadataTableMapping = new AspectTableMapping(
             metadataAspectDef,
             "metadata",
             metadataColumnMapping,
@@ -103,6 +101,18 @@ class MariaDbDaoAspectTableMappingTest
         // Create the custom tables
         testDb.mariaDbDao.createTable(employeeTableMapping);
         testDb.mariaDbDao.createTable(metadataTableMapping);
+    }
+
+    @AfterEach
+    public void cleanupCustomTables() throws SQLException
+    {
+        // Clean up custom tables
+        try (Connection conn = testDb.dataSource.getConnection();
+             Statement stmt = conn.createStatement())
+        {
+            stmt.execute("DROP TABLE IF EXISTS employee");
+            stmt.execute("DROP TABLE IF EXISTS metadata");
+        }
     }
 
     @Test
@@ -372,18 +382,6 @@ class MariaDbDaoAspectTableMappingTest
         AspectMapHierarchy loadedHierarchy = (AspectMapHierarchy) loadedCatalog.hierarchy("employee");
         assertNotNull(loadedHierarchy);
         assertEquals(1, loadedHierarchy.size());
-    }
-
-    @AfterEach
-    public void cleanupCustomTables() throws SQLException
-    {
-        // Clean up custom tables
-        try (Connection conn = testDb.dataSource.getConnection();
-             Statement stmt = conn.createStatement())
-        {
-            stmt.execute("DROP TABLE IF EXISTS employee");
-            stmt.execute("DROP TABLE IF EXISTS metadata");
-        }
     }
 
     /**

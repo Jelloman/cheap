@@ -28,7 +28,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import static org.junit.jupiter.api.extension.ExtensionContext.Namespace.GLOBAL;
 
-public class DatabaseRunnerExtension implements BeforeAllCallback, AutoCloseable
+public class MariaDbRunnerExtension implements BeforeAllCallback, AutoCloseable
 {
     private static DB mariaDB;
     private static DBConfiguration dbConfig;

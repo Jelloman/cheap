@@ -60,7 +60,7 @@ public interface CheapRestClient
      * @param catalogId the catalog ID
      * @return the catalog definition
      */
-    CatalogDef getCatalog(@NotNull UUID catalogId);
+    CatalogDef getCatalogDef(@NotNull UUID catalogId);
 
     // ========== AspectDef Operations ==========
 

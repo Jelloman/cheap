@@ -1,5 +1,6 @@
 package net.netbeing.cheap.integrationtests.base;
 
+import net.netbeing.cheap.integrationtests.util.MariaDbRunnerExtension;
 import net.netbeing.cheap.integrationtests.util.MariaDbIntegrationTestDb;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
@@ -19,7 +20,7 @@ import java.sql.Statement;
  * then creates a separate database for each test class.
  */
 @ActiveProfiles("mariadb-test")
-@ExtendWith(net.netbeing.cheap.integrationtests.util.DatabaseRunnerExtension.class)
+@ExtendWith(MariaDbRunnerExtension.class)
 public abstract class MariaDbRestIntegrationTest extends BaseRestIntegrationTest
 {
     protected static MariaDbIntegrationTestDb testDb;
@@ -67,7 +68,6 @@ public abstract class MariaDbRestIntegrationTest extends BaseRestIntegrationTest
                 testDb = new MariaDbIntegrationTestDb(getDatabaseName(), useForeignKeys());
                 testDb.initializeCheapSchema();
             }
-            cleanupDatabase();
         }
         catch (Exception e)
         {
@@ -76,13 +76,13 @@ public abstract class MariaDbRestIntegrationTest extends BaseRestIntegrationTest
     }
 
     @AfterEach
-    public void tearDown()
+    public void tearDown() throws SQLException
     {
-        // Additional cleanup if needed
+        cleanupDatabase();
     }
 
     @Override
-    protected void cleanupDatabase() throws Exception
+    protected void cleanupDatabase() throws SQLException
     {
         if (testDb != null)
         {

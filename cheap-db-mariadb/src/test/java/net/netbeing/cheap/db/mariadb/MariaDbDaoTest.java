@@ -16,10 +16,8 @@
 
 package net.netbeing.cheap.db.mariadb;
 
-import ch.vorburger.exec.ManagedProcessException;
 import net.netbeing.cheap.db.AspectTableMapping;
 import net.netbeing.cheap.model.*;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Nested;

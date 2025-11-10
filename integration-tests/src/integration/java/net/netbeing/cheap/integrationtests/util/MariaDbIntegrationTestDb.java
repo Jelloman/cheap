@@ -30,11 +30,11 @@ public class MariaDbIntegrationTestDb
         this.useForeignKeys = useForeignKeys;
 
         // Create database in shared MariaDB4j instance
-        DatabaseRunnerExtension.getMariaDB().createDB(dbName);
+        MariaDbRunnerExtension.getMariaDB().createDB(dbName);
 
         // Create data source
         MariaDbDataSource ds = new MariaDbDataSource();
-        String url = DatabaseRunnerExtension.getDbConfig().getURL(dbName);
+        String url = MariaDbRunnerExtension.getDbConfig().getURL(dbName);
         url = url + (url.indexOf('?') >= 0 ? "&" : "?") + "allowMultiQueries=true";
         ds.setUrl(url);
         ds.setUser("root");

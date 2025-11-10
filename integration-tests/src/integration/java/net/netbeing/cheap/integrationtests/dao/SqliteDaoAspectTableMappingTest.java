@@ -47,7 +47,7 @@ class SqliteDaoAspectTableMappingTest
     public static void setUpDatabase() throws IOException, SQLException
     {
         // Create temporary database file
-        tempDbPath = Files.createTempFile("cheap-integration-test-", ".db");
+        tempDbPath = Files.createTempFile("cheap-integration-test-dao-aspect", ".db");
 
         // Set up data source
         dataSource = new SQLiteDataSource();
