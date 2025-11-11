@@ -1,20 +1,11 @@
 package net.netbeing.cheap.integrationtests.restclient;
 
-import net.netbeing.cheap.db.AspectTableMapping;
-import net.netbeing.cheap.db.CheapDao;
-import net.netbeing.cheap.db.postgres.PostgresDao;
 import net.netbeing.cheap.impl.basic.CheapFactory;
-import net.netbeing.cheap.integrationtests.base.PostgresRestIntegrationTest;
+import net.netbeing.cheap.integrationtests.base.PostgresClientIntegrationTest;
 import net.netbeing.cheap.json.dto.*;
 import net.netbeing.cheap.model.*;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -22,55 +13,23 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * End-to-end REST integration tests for PostgreSQL backend.
  * Tests the complete flow: REST client -> REST API -> Service -> DAO -> PostgreSQL.
+ * ALL tests interact ONLY through the REST client - NO direct database access.
  */
-class PostgresRestClientIntegrationTest extends PostgresRestIntegrationTest
+class PostgresRestClientIntegrationTest extends PostgresClientIntegrationTest
 {
-    private final CheapDao cheapDao;
-    private final CheapFactory factory;
-    private final AspectDef addressAspectDef;
+    private final CheapFactory factory = new CheapFactory();
 
-    @Autowired
-    public PostgresRestClientIntegrationTest(CheapDao cheapDao, CheapFactory factory)
+    /**
+     * Helper method to create the "address" AspectDef used by multiple tests.
+     * The AspectTableMapping for this is registered on the server at startup.
+     */
+    private AspectDef createAddressAspectDef()
     {
-        this.cheapDao = cheapDao;
-        this.factory = factory;
-
-        // Create AspectDef for address custom table
         Map<String, PropertyDef> addressProps = new LinkedHashMap<>();
         addressProps.put("street", factory.createPropertyDef("street", PropertyType.String));
         addressProps.put("city", factory.createPropertyDef("city", PropertyType.String));
         addressProps.put("zip", factory.createPropertyDef("zip", PropertyType.String));
-        addressAspectDef = factory.createImmutableAspectDef("address", addressProps);
-    }
-
-
-    @BeforeEach
-    @Override
-    public void setUp() throws SQLException
-    {
-        AspectTableMapping addressTableMapping;
-        super.setUp();
-
-        // Create AspectTableMapping for address
-        Map<String, String> columnMapping = Map.of(
-            "street", "street",
-            "city", "city",
-            "zip", "zip"
-        );
-        addressTableMapping = new AspectTableMapping(
-            addressAspectDef,
-            "address",
-            columnMapping,
-            false,  // hasCatalogId
-            true    // hasEntityId
-        );
-
-        // Register mapping with DAO and create table
-        if (cheapDao instanceof PostgresDao postgresDao)
-        {
-            postgresDao.addAspectTableMapping(addressTableMapping);
-            postgresDao.createTable(addressTableMapping);
-        }
+        return factory.createImmutableAspectDef("address", addressProps);
     }
 
     @Test
@@ -120,6 +79,7 @@ class PostgresRestClientIntegrationTest extends PostgresRestIntegrationTest
         assertNotNull(personResponse.aspectDefId());
 
         // Create address aspect def (for custom table)
+        AspectDef addressAspectDef = createAddressAspectDef();
         CreateAspectDefResponse addressResponse = client.createAspectDef(catalogId, addressAspectDef);
         assertNotNull(addressResponse);
         assertNotNull(addressResponse.aspectDefId());
@@ -142,13 +102,14 @@ class PostgresRestClientIntegrationTest extends PostgresRestIntegrationTest
     }
 
     @Test
-    void customTableMapping() throws SQLException
+    void customTableMapping()
     {
         // Create catalog and aspect def
         CatalogDef catalogDef = factory.createCatalogDef();
         CreateCatalogResponse catalogResponse = client.createCatalog(catalogDef, CatalogSpecies.SINK, null);
         UUID catalogId = catalogResponse.catalogId();
 
+        AspectDef addressAspectDef = createAddressAspectDef();
         client.createAspectDef(catalogId, addressAspectDef);
 
         // Upsert address aspects
@@ -171,25 +132,27 @@ class PostgresRestClientIntegrationTest extends PostgresRestIntegrationTest
         assertNotNull(upsertResponse);
         assertEquals(2, upsertResponse.successCount());
 
-        // Verify data in custom table via direct DB query
-        try (Connection conn = getDataSource().getConnection();
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery("SELECT entity_id, street, city, zip FROM address ORDER BY street"))
-        {
-            assertTrue(rs.next());
-            assertEquals(entityId1, rs.getObject("entity_id", UUID.class));
-            assertEquals("123 Main St", rs.getString("street"));
-            assertEquals("Springfield", rs.getString("city"));
-            assertEquals("12345", rs.getString("zip"));
+        // Verify data was stored correctly by querying back via REST client
+        Set<UUID> entityIds = Set.of(entityId1, entityId2);
+        Set<String> aspectDefNames = Set.of("address");
 
-            assertTrue(rs.next());
-            assertEquals(entityId2, rs.getObject("entity_id", UUID.class));
-            assertEquals("456 Oak Ave", rs.getString("street"));
-            assertEquals("Shelbyville", rs.getString("city"));
-            assertEquals("67890", rs.getString("zip"));
+        AspectQueryResponse queryResponse = client.queryAspects(catalogId, entityIds, aspectDefNames);
+        assertNotNull(queryResponse);
+        assertEquals(2, queryResponse.results().size());
 
-            assertFalse(rs.next());
-        }
+        // Verify first address
+        Aspect address1 = queryResponse.results().get(entityId1).get("address");
+        assertNotNull(address1);
+        assertEquals("123 Main St", address1.get("street").read());
+        assertEquals("Springfield", address1.get("city").read());
+        assertEquals("12345", address1.get("zip").read());
+
+        // Verify second address
+        Aspect address2 = queryResponse.results().get(entityId2).get("address");
+        assertNotNull(address2);
+        assertEquals("456 Oak Ave", address2.get("street").read());
+        assertEquals("Shelbyville", address2.get("city").read());
+        assertEquals("67890", address2.get("zip").read());
     }
 
     @Test
@@ -246,139 +209,38 @@ class PostgresRestClientIntegrationTest extends PostgresRestIntegrationTest
         assertEquals("Gadget", product2.get("name").read());
     }
 
-    @Test
-    void entityListHierarchy() throws SQLException
-    {
-        // Create catalog
-        CatalogDef catalogDef = factory.createCatalogDef();
-        CreateCatalogResponse catalogResponse = client.createCatalog(catalogDef, CatalogSpecies.SINK, null);
-        UUID catalogId = catalogResponse.catalogId();
+    // TODO: Re-enable once REST API endpoints for hierarchy creation are implemented
+    // @Test
+    // @Disabled("Requires REST API endpoints to create and populate EntityList hierarchies")
+    // void entityListHierarchy()
+    // {
+    //     // This test needs:
+    //     // 1. POST /catalogs/{id}/hierarchies/entity-list/{name} - create EntityList hierarchy
+    //     // 2. POST /catalogs/{id}/hierarchies/entity-list/{name}/entities - add entities
+    //     // OR: Pre-populated test data on server startup
+    // }
 
-        // Create catalog with EntityList hierarchy through DAO
-        Catalog catalog = cheapDao.loadCatalog(catalogId);
-        EntityListHierarchy entityList = factory.createEntityListHierarchy(catalog, "users");
+    // TODO: Re-enable once REST API endpoints for hierarchy creation are implemented
+    // @Test
+    // @Disabled("Requires REST API endpoints to create and populate EntityDirectory hierarchies")
+    // void entityDirectoryHierarchy()
+    // {
+    //     // This test needs:
+    //     // 1. POST /catalogs/{id}/hierarchies/entity-directory/{name} - create EntityDirectory hierarchy
+    //     // 2. POST /catalogs/{id}/hierarchies/entity-directory/{name}/entries - add directory entries
+    //     // OR: Pre-populated test data on server startup
+    // }
 
-        // Add entities
-        for (int i = 0; i < 25; i++)
-        {
-            UUID entityId = testUuid(3000 + i);
-            Entity entity = factory.createEntity(entityId);
-            entityList.add(entity);
-        }
-
-        cheapDao.saveCatalog(catalog);
-
-        // Retrieve via REST client with pagination
-        EntityListResponse page1 = client.getEntityList(catalogId, "users", 0, 10);
-        assertNotNull(page1);
-        assertEquals(25, page1.totalElements());
-        assertEquals(10, page1.content().size());
-
-        EntityListResponse page2 = client.getEntityList(catalogId, "users", 1, 10);
-        assertNotNull(page2);
-        assertEquals(25, page2.totalElements());
-        assertEquals(10, page2.content().size());
-
-        EntityListResponse page3 = client.getEntityList(catalogId, "users", 2, 10);
-        assertNotNull(page3);
-        assertEquals(25, page3.totalElements());
-        assertEquals(5, page3.content().size());
-
-        // Verify no duplicate IDs across pages
-        Set<UUID> allIds = new HashSet<>();
-        allIds.addAll(page1.content());
-        allIds.addAll(page2.content());
-        allIds.addAll(page3.content());
-        assertEquals(25, allIds.size());
-    }
-
-    @Test
-    void entityDirectoryHierarchy() throws SQLException
-    {
-        // Create catalog
-        CatalogDef catalogDef = factory.createCatalogDef();
-        CreateCatalogResponse catalogResponse = client.createCatalog(catalogDef, CatalogSpecies.SINK, null);
-        UUID catalogId = catalogResponse.catalogId();
-
-        // Create catalog with EntityDirectory hierarchy through DAO
-        Catalog catalog = cheapDao.loadCatalog(catalogId);
-        EntityDirectoryHierarchy directory = factory.createEntityDirectoryHierarchy(catalog, "files");
-
-        // Add entries
-        directory.put("README.md", factory.createEntity(testUuid(4001)));
-        directory.put("src/main.java", factory.createEntity(testUuid(4002)));
-        directory.put("src/util.java", factory.createEntity(testUuid(4003)));
-
-        cheapDao.saveCatalog(catalog);
-
-        // Retrieve via REST client
-        EntityDirectoryResponse response = client.getEntityDirectory(catalogId, "files");
-        assertNotNull(response);
-        assertEquals(3, response.content().size());
-
-        assertTrue(response.content().containsKey("README.md"));
-        assertTrue(response.content().containsKey("src/main.java"));
-        assertTrue(response.content().containsKey("src/util.java"));
-
-        assertEquals(testUuid(4001), response.content().get("README.md"));
-        assertEquals(testUuid(4002), response.content().get("src/main.java"));
-        assertEquals(testUuid(4003), response.content().get("src/util.java"));
-    }
-
-    @Test
-    void aspectMapHierarchy() throws SQLException
-    {
-        // Create catalog
-        CatalogDef catalogDef = factory.createCatalogDef();
-        CreateCatalogResponse catalogResponse = client.createCatalog(catalogDef, CatalogSpecies.SINK, null);
-        UUID catalogId = catalogResponse.catalogId();
-
-        // Create aspect def
-        Map<String, PropertyDef> metadataProps = new LinkedHashMap<>();
-        metadataProps.put("key", factory.createPropertyDef("key", PropertyType.String));
-        metadataProps.put("value", factory.createPropertyDef("value", PropertyType.String));
-        AspectDef metadataAspectDef = factory.createImmutableAspectDef("metadata", metadataProps);
-
-        client.createAspectDef(catalogId, metadataAspectDef);
-
-        // Create AspectMap hierarchy with aspects through DAO
-        Catalog catalog = cheapDao.loadCatalog(catalogId);
-        AspectMapHierarchy aspectMap = factory.createAspectMapHierarchy(catalog, metadataAspectDef);
-
-        // Add 30 aspects
-        for (int i = 0; i < 30; i++)
-        {
-            UUID entityId = testUuid(5000 + i);
-            Entity entity = factory.createEntity(entityId);
-            Aspect aspect = factory.createPropertyMapAspect(entity, metadataAspectDef);
-            aspect.put(factory.createProperty(metadataAspectDef.propertyDef("key"), "key-" + i));
-            aspect.put(factory.createProperty(metadataAspectDef.propertyDef("value"), "value-" + i));
-            aspectMap.put(entity, aspect);
-        }
-
-        cheapDao.saveCatalog(catalog);
-
-        // Retrieve via REST client with pagination
-        AspectMapResponse page1 = client.getAspectMap(catalogId, "metadata", 0, 10);
-        assertNotNull(page1);
-        assertEquals(30, page1.totalElements());
-        assertEquals(10, page1.content().size());
-
-        AspectMapResponse page2 = client.getAspectMap(catalogId, "metadata", 1, 10);
-        assertEquals(30, page2.totalElements());
-        assertEquals(10, page2.content().size());
-
-        AspectMapResponse page3 = client.getAspectMap(catalogId, "metadata", 2, 10);
-        assertEquals(30, page3.totalElements());
-        assertEquals(10, page3.content().size());
-
-        // Verify no duplicate entity IDs across pages
-        Set<UUID> allEntityIds = new HashSet<>();
-        allEntityIds.addAll(page1.content().keySet());
-        allEntityIds.addAll(page2.content().keySet());
-        allEntityIds.addAll(page3.content().keySet());
-        assertEquals(30, allEntityIds.size());
-    }
+    // TODO: Re-enable once REST API endpoints for hierarchy creation are implemented
+    // @Test
+    // @Disabled("Requires REST API endpoints to create and populate AspectMap hierarchies")
+    // void aspectMapHierarchy()
+    // {
+    //     // This test needs:
+    //     // 1. POST /catalogs/{id}/hierarchies/aspect-map/{aspectDefName} - create AspectMap hierarchy
+    //     // 2. PUT /catalogs/{id}/hierarchies/aspect-map/{aspectDefName}/aspects - upsert aspects into map
+    //     // OR: Pre-populated test data on server startup
+    // }
 
     @Test
     void errorHandling()
