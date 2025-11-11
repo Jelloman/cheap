@@ -43,77 +43,205 @@ This approach ensures work is saved incrementally and provides clear rollback po
 
 ## 2. Database-Specific Integration Tests (Direct DAO Testing)
 
+These phase 2 tests were removed, they are not in scope for integration testing.
+
 ### 2.1 PostgreSQL DAO with AspectTableMapping Tests
-**Class**: `PostgresDaoAspectTableMappingTest`
-- **Setup**: Use embedded-postgres, create two custom tables via AspectTableMapping
-- **Table 1**: "person" table (entity_id, name, age) - standard entity table
-- **Table 2**: "settings" table (catalog_id, entity_id, key, value) - composite PK
-- **Tests**:
-  - Register two AspectTableMappings with PostgresDao
-  - Create tables using `dao.createTable(mapping)`
-  - Save catalog with aspects mapped to custom tables
-  - Load catalog and verify aspects loaded from custom tables
-  - Update aspects and verify persistence
-  - Delete catalog and verify custom table data cleaned up
-
 ### 2.2 SQLite DAO with AspectTableMapping Tests
-**Class**: `SqliteDaoAspectTableMappingTest`
-- **Setup**: Use temp file SQLite database, create two custom tables via AspectTableMapping
-- **Table 1**: "product" table (entity_id, sku, name, price) - standard entity table
-- **Table 2**: "category" table (catalog_id, category_name, description) - catalog-scoped only
-- **Tests**: Same pattern as PostgreSQL test above
-
 ### 2.3 MariaDB DAO with AspectTableMapping Tests
-**Class**: `MariaDbDaoAspectTableMappingTest`
-- **Setup**: Use `DatabaseRunnerExtension` and `MariaDbTestDb`, create two custom tables
-- **Table 1**: "employee" table (entity_id, employee_id, name, department)
-- **Table 2**: "metadata" table (key, value) - no catalog_id or entity_id (lookup table pattern)
-- **Tests**: Same pattern as PostgreSQL test above, plus test foreign key constraints if enabled
 
 ## 3. End-to-End REST Integration Tests (Service + Client)
 
-### 3.1 PostgreSQL REST Integration Tests
+### Architecture Overview
+
+The Phase 3 tests follow a strict client-server separation architecture:
+
+**Client Side** (Test Process):
+- Separate Spring Boot Application containing ONLY cheap-rest-client dependencies
+- Tests run in this application context
+- NO cheap-rest or cheap-db-* dependencies
+- NO direct database access
+- Uses `@ContextConfiguration` to load client-only configuration
+
+**Server Side** (3 Separate Applications):
+- **PostgreSQL Server**: Spring Boot app with cheap-rest + cheap-db-postgres ONLY
+- **SQLite Server**: Spring Boot app with cheap-rest + cheap-db-sqlite ONLY
+- **MariaDB Server**: Spring Boot app with cheap-rest + cheap-db-mariadb ONLY
+- Each server runs on a different port
+- AspectTableMapping configured on server startup
+- Uses `@ContextConfiguration` to load database-specific server configurations
+
+**Key Principles**:
+1. Tests NEVER access CheapDao or any server-side beans
+2. Tests NEVER perform direct database operations
+3. Tests ONLY interact with cheap-rest-client
+4. All verification is done through REST API responses
+5. Each database server is completely isolated from the others
+
+### 3.1 Test Infrastructure
+
+#### 3.1.1 Client Configuration
+**Class**: `ClientTestConfig`
+- Spring Boot configuration for test client
+- Provides `CheapRestClient` beans configured for each server
+- NO database dependencies
+- NO cheap-rest dependencies
+
+#### 3.1.2 Server Configurations
+**PostgreSQL Server Config**: `PostgresServerTestConfig`
+- Loads cheap-rest with ONLY cheap-db-postgres
+- Configures embedded PostgreSQL
+- Registers AspectTableMapping for "address" table on startup
+- Starts on port 8081
+
+**SQLite Server Config**: `SqliteServerTestConfig`
+- Loads cheap-rest with ONLY cheap-db-sqlite
+- Configures SQLite database
+- Registers AspectTableMapping for "order_item" table on startup
+- Starts on port 8082
+
+**MariaDB Server Config**: `MariaDbServerTestConfig`
+- Loads cheap-rest with ONLY cheap-db-mariadb
+- Configures MariaDB test database
+- Registers AspectTableMapping for "inventory" table on startup
+- Starts on port 8083
+
+#### 3.1.3 Base Test Classes
+**Class**: `BaseClientIntegrationTest`
+- Abstract base for all client tests
+- Provides utility methods (testUuid, JSON parsing, etc.)
+- NO `@SpringBootTest` annotation (subclasses add their own)
+- NO database access methods
+- Provides helper methods for common client operations
+
+**Database-Specific Base Classes**:
+- `PostgresClientIntegrationTest`: Configures client for PostgreSQL server (port 8081)
+- `SqliteClientIntegrationTest`: Configures client for SQLite server (port 8082)
+- `MariaDbClientIntegrationTest`: Configures client for MariaDB server (port 8083)
+
+Each uses `@ContextConfiguration` to load:
+1. The appropriate server configuration (as a separate context)
+2. The client configuration (as the test context)
+
+### 3.2 PostgreSQL REST Integration Tests
 **Class**: `PostgresRestClientIntegrationTest`
 - **Setup**:
-  - `@SpringBootTest` with `RANDOM_PORT` and `@ActiveProfiles("postgres-test")`
-  - Initialize embedded PostgreSQL with schema
-  - Create `CheapRestClient` pointing to `http://localhost:{port}`
-  - Register AspectTableMapping for "address" table with PostgresDao
+  - Extends `PostgresClientIntegrationTest`
+  - Uses `@ContextConfiguration` to load PostgreSQL server + client configs
+  - Gets `CheapRestClient` bean via `@Autowired`
+  - NO CheapDao injection
+  - NO database setup code in tests
 
-- **Test Suite**:
-  1. **Catalog Lifecycle**: Create catalog via client, retrieve it, verify properties
-  2. **AspectDef CRUD**: Create multiple aspect defs (including one for mapped table), list them, get by name/ID
-  3. **Custom Table Mapping**: Verify "address" aspects stored in custom table via direct DB query
-  4. **Aspect Upsert**: Upsert aspects using client, query them back
-  5. **Entity List Hierarchy**: Create EntityList hierarchy, add entities, retrieve paginated
-  6. **Entity Directory Hierarchy**: Create EntityDirectory, add entities, retrieve full tree
-  7. **Aspect Map Hierarchy**: Create AspectMap, upsert aspects, retrieve with pagination
-  8. **Error Handling**: Test 404s, 400s with invalid data
+- **Test Suite** (ALL tests use ONLY CheapRestClient):
+  1. **Catalog Lifecycle**: Create catalog via client, retrieve it, verify properties via client responses
+  2. **AspectDef CRUD**: Create multiple aspect defs (including "address" for mapped table), list them, get by name/ID - all via client
+  3. **Custom Table Mapping**: Upsert "address" aspects via client, query them back via client to verify they were stored and retrieved correctly
+  4. **Aspect Upsert**: Upsert aspects using client, query them back via client
+  5. **Entity List Hierarchy**: Create EntityList via REST API (new endpoint needed), add entities via API, retrieve paginated via client
+  6. **Entity Directory Hierarchy**: Create EntityDirectory via REST API, add entries via API, retrieve via client
+  7. **Aspect Map Hierarchy**: Create AspectMap via REST API, upsert aspects via API, retrieve with pagination via client
+  8. **Error Handling**: Test 404s, 400s with invalid data via client, verify error responses
 
-### 3.2 SQLite REST Integration Tests
+**Note**: Tests that previously used DAO directly (entityListHierarchy, entityDirectoryHierarchy, aspectMapHierarchy) need REST API endpoints to create and populate hierarchies. Alternative: Pre-populate test data on server startup.
+
+### 3.3 SQLite REST Integration Tests
 **Class**: `SqliteRestClientIntegrationTest`
-- **Setup**: Similar to PostgreSQL but with SQLite temp file database
-- **Custom Table**: "order_item" table
-- **Test Suite**: Same as PostgreSQL tests (8 tests covering all major operations)
+- **Setup**:
+  - Extends `SqliteClientIntegrationTest`
+  - Uses `@ContextConfiguration` to load SQLite server + client configs
+  - Gets `CheapRestClient` bean via `@Autowired`
+  - NO direct database access
 
-### 3.3 MariaDB REST Integration Tests
+- **Custom Table**: "order_item" table (configured on server)
+- **Test Suite**: Same as PostgreSQL tests (8 tests, all using ONLY client)
+
+### 3.4 MariaDB REST Integration Tests
 **Class**: `MariaDbRestClientIntegrationTest`
-- **Setup**: Use `DatabaseRunnerExtension`, create separate database per test class
-- **Custom Table**: "inventory" table with foreign keys enabled
-- **Test Suite**: Same as PostgreSQL tests plus verify foreign key constraints work
+- **Setup**:
+  - Extends `MariaDbClientIntegrationTest`
+  - Uses `@ContextConfiguration` to load MariaDB server + client configs
+  - Gets `CheapRestClient` bean via `@Autowired`
+  - NO direct database access
+
+- **Custom Table**: "inventory" table (configured on server)
+- **Test Suite**: Same as PostgreSQL tests plus:
+  9. **Foreign Key Constraints**: Verify foreign key behavior through client operations only (check error responses when constraints violated)
+
+### 3.5 Phase 3 Implementation Steps
+
+1. **Create Client Configuration** (`ClientTestConfig.java`)
+   - Minimal Spring Boot configuration
+   - Bean factory methods for `CheapRestClient` instances
+
+2. **Create Server Configurations** (one per database)
+   - `PostgresServerTestConfig.java`
+   - `SqliteServerTestConfig.java`
+   - `MariaDbServerTestConfig.java`
+   - Each registers AspectTableMapping on startup
+
+3. **Create Base Test Classes**
+   - `BaseClientIntegrationTest.java` - Common utilities, no Spring annotations
+   - `PostgresClientIntegrationTest.java` - Loads Postgres server + client
+   - `SqliteClientIntegrationTest.java` - Loads SQLite server + client
+   - `MariaDbClientIntegrationTest.java` - Loads MariaDB server + client
+
+4. **Modify Existing Test Classes**
+   - Remove all `@Autowired CheapDao` injections
+   - Remove all `@Autowired CheapFactory` injections (move to server config)
+   - Remove all direct database access (`getDataSource()`, SQL queries)
+   - Remove all `cheapDao.loadCatalog()` / `cheapDao.saveCatalog()` calls
+   - Replace with client-only operations
+   - Update hierarchy tests to use REST API only (or pre-populated test data)
+
+5. **Add Missing REST Endpoints** (if needed)
+   - Hierarchy creation endpoints (POST /catalogs/{id}/hierarchies/entity-list/{name})
+   - Hierarchy population endpoints (POST /catalogs/{id}/hierarchies/entity-list/{name}/entities)
+   - Or: Add server-side test data initialization
+
+### 3.6 Phase 3 Verification
+After completing Phase 3 implementation:
+```bash
+# Build integration tests
+./gradlew :integration-tests:build
+
+# Run all REST client tests
+./gradlew :integration-tests:integrationTest --tests "*RestClient*"
+
+# Run database-specific tests
+./gradlew :integration-tests:integrationTest --tests "*PostgresRestClient*"
+./gradlew :integration-tests:integrationTest --tests "*SqliteRestClient*"
+./gradlew :integration-tests:integrationTest --tests "*MariaDbRestClient*"
+
+# Commit work (do NOT push)
+git add .
+git commit -m "Complete Phase 3: REST client integration tests with proper client-server separation"
+```
+
+Expected: All REST client tests pass, each database server runs in complete isolation, tests never access database directly.
 
 ## 4. Cross-Database Consistency Tests
 
 ### 4.1 Multi-Database Validation Test
 **Class**: `CrossDatabaseConsistencyTest`
 - **Purpose**: Verify same operations produce consistent results across all databases
-- **Approach**: Run same test scenario against all 3 databases, compare results
-- **Tests**:
-  1. Create identical catalog structure in all 3 databases
-  2. Perform identical upsert operations via REST client
-  3. Query data back and verify JSON responses are identical
-  4. Test pagination consistency across databases
-  5. Test sorting/ordering consistency
+- **Architecture**:
+  - Uses `@ContextConfiguration` to load ALL THREE server configurations + client configuration
+  - Gets three separate `CheapRestClient` beans (one for each server)
+  - NO direct database access
+  - ALL verification through REST API responses only
+
+- **Setup**:
+  - Extends `BaseClientIntegrationTest`
+  - Loads all three server configs (PostgreSQL on 8081, SQLite on 8082, MariaDB on 8083)
+  - Injects three separate `CheapRestClient` beans via `@Autowired` `@Qualifier`
+  - NO database beans injected
+
+- **Tests** (all using ONLY REST clients):
+  1. **Catalog Structure Consistency**: Create identical catalogs via each client, verify responses are structurally identical
+  2. **AspectDef Consistency**: Create identical aspect defs via each client, compare JSON responses
+  3. **Upsert Consistency**: Perform identical upsert operations via all three clients, verify success responses are identical
+  4. **Query Consistency**: Query same data from all three servers via clients, verify JSON responses are identical (ignoring database-specific fields if any)
+  5. **Pagination Consistency**: Test pagination with identical parameters across all databases via clients, verify page structures and content are identical
+  6. **Sorting/Ordering Consistency**: Test ordering with same parameters across all databases via clients, verify sort order is identical
 
 ### 4.2 Phase 4 Verification
 After completing Phase 4 implementation:
@@ -128,31 +256,55 @@ After completing Phase 4 implementation:
 git add .
 git commit -m "Complete Phase 4: Cross-database consistency tests"
 ```
-Expected: Cross-database consistency tests pass, identical operations produce identical results across all 3 databases.
+Expected: Cross-database consistency tests pass, identical operations produce identical results across all 3 databases, all verified through REST API only.
 **Remember**: Commit as you complete each test scenario within the consistency test class.
 
 ## 5. Complex Scenario Tests
 
 ### 5.1 Full Workflow Integration Test
 **Class**: `FullWorkflowIntegrationTest` (parameterized for all 3 databases)
-- **Scenario**: Simulate real-world usage pattern
-  1. Create catalog
-  2. Define multiple aspect types (person, address, phone)
-  3. Register AspectTableMapping for one aspect type
-  4. Create multiple hierarchies (EntityList, EntityDirectory, AspectMap)
-  5. Bulk upsert 100+ entities with aspects
-  6. Query aspects by entity IDs
-  7. Retrieve hierarchies with pagination
-  8. Update subset of entities
-  9. Delete catalog and verify cleanup
+- **Architecture**:
+  - Uses `@ParameterizedTest` to run against all three database servers
+  - Each test iteration gets a different `CheapRestClient` (one per database)
+  - NO direct database access
+  - ALL operations through REST API only
+
+- **Setup**:
+  - Extends `BaseClientIntegrationTest`
+  - Loads all three server configurations
+  - Uses `@MethodSource` to provide client instances for each database
+  - NO CheapDao or CheapFactory injection
+
+- **Scenario** (Simulate real-world usage pattern via REST API ONLY):
+  1. Create catalog via client
+  2. Define multiple aspect types (person, address, phone) via client
+  3. AspectTableMapping already registered on server (no test involvement)
+  4. Create multiple hierarchies via REST API (EntityList, EntityDirectory, AspectMap)
+  5. Bulk upsert 100+ entities with aspects via client
+  6. Query aspects by entity IDs via client
+  7. Retrieve hierarchies with pagination via client
+  8. Update subset of entities via client
+  9. Delete catalog via client (if DELETE endpoint exists) or verify data isolation
+
+**Note**: Step 4 requires REST endpoints for hierarchy creation, or test data can be pre-populated on server.
 
 ### 5.2 Concurrent Operations Test
 **Class**: `ConcurrentOperationsIntegrationTest`
-- **Purpose**: Test thread safety and transaction isolation
-- **Tests**:
-  1. Concurrent aspect upserts from multiple clients
-  2. Concurrent hierarchy retrievals while updates happening
-  3. Verify data consistency after concurrent operations
+- **Architecture**:
+  - Creates multiple `CheapRestClient` instances (all pointing to same server)
+  - Uses `ExecutorService` to run concurrent operations
+  - NO direct database access
+  - Verifies consistency through REST API queries only
+
+- **Setup**:
+  - Extends `PostgresClientIntegrationTest` (test against one database is sufficient)
+  - Creates 10+ `CheapRestClient` instances for concurrent operations
+  - NO database beans injected
+
+- **Tests** (all using ONLY REST clients):
+  1. **Concurrent Aspect Upserts**: Launch 10 threads, each upserting different aspects via separate client instances, verify all upserts succeed via client queries
+  2. **Concurrent Reads During Writes**: Launch reader threads retrieving hierarchies while writer threads update aspects, verify no errors and eventual consistency via client
+  3. **Data Consistency After Concurrent Ops**: Perform concurrent operations, then query final state via client and verify data integrity
 
 ### 5.3 Phase 5 Verification
 After completing Phase 5 implementation:
@@ -168,19 +320,36 @@ After completing Phase 5 implementation:
 git add .
 git commit -m "Complete Phase 5: Complex scenario and workflow tests"
 ```
-Expected: Complex scenario tests pass, full workflow completes successfully, concurrent operations maintain data consistency.
+Expected: Complex scenario tests pass, full workflow completes successfully, concurrent operations maintain data consistency, all verified through REST API only.
 **Remember**: Commit FullWorkflowIntegrationTest and ConcurrentOperationsIntegrationTest separately as each is completed.
 
 ## 6. Performance Baseline Tests
 
 ### 6.1 Performance Comparison Test
 **Class**: `DatabasePerformanceBaselineTest`
+- **Architecture**:
+  - Uses `@ParameterizedTest` to test all three database servers
+  - Each test iteration gets a different `CheapRestClient` (one per database)
+  - NO direct database access
+  - ALL operations through REST API only
+  - Measures end-to-end REST API performance (not just database performance)
+
+- **Setup**:
+  - Extends `BaseClientIntegrationTest`
+  - Loads all three server configurations
+  - Uses `@MethodSource` to provide client instances for each database
+  - NO database beans injected
+
 - **Purpose**: Establish performance baselines for each database (not strict assertions, just measurements)
-- **Measurements**:
-  1. Time to upsert 1000 aspects (custom table vs standard tables)
-  2. Time to query 1000 aspects
-  3. Time to retrieve large EntityList hierarchy
-  4. Document results for future optimization work
+
+- **Measurements** (all via REST client):
+  1. **Bulk Upsert Performance**: Time to upsert 1000 aspects via client (both custom table and standard tables)
+  2. **Query Performance**: Time to query 1000 aspects via client
+  3. **Hierarchy Retrieval Performance**: Time to retrieve large EntityList hierarchy via client
+  4. **Pagination Performance**: Time to paginate through 1000 entities via client
+  5. Document results for future optimization work
+
+- **Output**: Console and/or log file with timing results for each database
 
 ### 6.2 Phase 6 Verification
 After completing Phase 6 implementation:
@@ -195,7 +364,7 @@ After completing Phase 6 implementation:
 git add .
 git commit -m "Complete Phase 6: Performance baseline tests"
 ```
-Expected: Performance baseline tests run successfully, measurements documented for all 3 databases.
+Expected: Performance baseline tests run successfully, measurements documented for all 3 databases, all measurements taken via REST API.
 **Remember**: Commit the performance test class and any documentation of results.
 
 ## 7. Docker-Based Integration Tests
@@ -235,58 +404,88 @@ Expected: Performance baseline tests run successfully, measurements documented f
 
 #### 7.4.1 PostgreSQL Docker Integration Test
 **Class**: `PostgresDockerIntegrationTest`
+- **Architecture**:
+  - Client test runs in JVM process (NOT in Docker)
+  - Server (cheap-rest) runs in Docker container
+  - PostgreSQL runs in Docker container
+  - AspectTableMapping configured in cheap-rest Docker container (NOT in test)
+  - Test ONLY uses CheapRestClient (NO database access)
+
 - **Setup**:
   - Use docker-remote-api to start PostgreSQL container (official postgres:17 image)
   - Wait for database readiness (health check or connection retry)
-  - Initialize schema using PostgresCheapSchema via JDBC
-  - Start cheap-rest container configured for PostgreSQL
+  - Schema initialization handled by cheap-rest container on startup
+  - Start cheap-rest Docker container configured for PostgreSQL with "address" AspectTableMapping pre-configured
   - Wait for REST service readiness (actuator health endpoint)
-  - Create CheapRestClient pointing to cheap-rest container
+  - Create CheapRestClient in test pointing to cheap-rest container
+  - NO database beans injected
+  - NO direct database access
 
-- **Test Suite**:
+- **Test Suite** (ALL via REST client ONLY):
   - Full CRUD operations via REST client
-  - AspectTableMapping test with custom "address" table
-  - Verify data persists across cheap-rest container restarts
-  - Test connection pooling and transaction handling
+  - AspectTableMapping test via REST client (upsert and query "address" aspects)
+  - Verify data persists across cheap-rest container restarts (by querying via client before and after restart)
+  - Test connection pooling and transaction handling via repeated client operations
 
 #### 7.4.2 MariaDB Docker Integration Test
 **Class**: `MariaDbDockerIntegrationTest`
+- **Architecture**:
+  - Client test runs in JVM process (NOT in Docker)
+  - Server (cheap-rest) runs in Docker container
+  - MariaDB runs in Docker container
+  - Test ONLY uses CheapRestClient
+
 - **Setup**:
   - Start MariaDB container (official mariadb:11 image)
   - Wait for database readiness
-  - Initialize schema with foreign keys
-  - Start cheap-rest container configured for MariaDB
-  - Create CheapRestClient
+  - Schema initialization handled by cheap-rest container on startup
+  - Start cheap-rest Docker container configured for MariaDB with "inventory" AspectTableMapping pre-configured
+  - Create CheapRestClient in test
+  - NO database beans injected
+  - NO direct database access
 
-- **Test Suite**:
+- **Test Suite** (ALL via REST client ONLY):
   - Same as PostgreSQL Docker test
-  - Additional foreign key constraint validation
-  - Test with and without foreign keys enabled
+  - Foreign key constraint validation via client (attempt operations that would violate constraints, verify error responses)
 
 #### 7.4.3 SQLite Docker Integration Test
 **Class**: `SqliteDockerIntegrationTest`
-- **Setup**:
-  - Start cheap-rest container with SQLite profile
-  - Mount volume for SQLite database file
-  - Create CheapRestClient
+- **Architecture**:
+  - Client test runs in JVM process (NOT in Docker)
+  - Server (cheap-rest) runs in Docker container with SQLite
+  - Test ONLY uses CheapRestClient
 
-- **Test Suite**:
+- **Setup**:
+  - Start cheap-rest Docker container with SQLite profile and "order_item" AspectTableMapping pre-configured
+  - Mount volume for SQLite database file
+  - Create CheapRestClient in test
+  - NO database beans injected
+  - NO direct database access
+
+- **Test Suite** (ALL via REST client ONLY):
   - Same core tests as PostgreSQL
-  - Test database file persistence across restarts
-  - Verify file-based database isolation
+  - Test database file persistence across restarts via client queries
 
 #### 7.4.4 Multi-Container Orchestration Test
 **Class**: `MultiDatabaseDockerOrchestrationTest`
+- **Architecture**:
+  - Client test runs in JVM process (NOT in Docker)
+  - Three separate cheap-rest servers run in Docker containers
+  - Three database containers (PostgreSQL, MariaDB, SQLite)
+  - Test uses three separate CheapRestClient instances
+
 - **Setup**:
   - Start all three database containers simultaneously
-  - Start three cheap-rest containers (one per database)
-  - Create three CheapRestClient instances
+  - Start three cheap-rest containers (one per database), each with appropriate AspectTableMapping pre-configured
+  - Create three CheapRestClient instances in test
+  - NO database beans injected
+  - NO direct database access
 
-- **Tests**:
-  - Perform same operations across all three services in parallel
-  - Verify consistent behavior across all backends
-  - Test network isolation between containers
-  - Validate each service only accesses its designated database
+- **Tests** (ALL via REST clients ONLY):
+  - Perform same operations across all three services in parallel via clients
+  - Verify consistent behavior across all backends via client responses
+  - Test network isolation by verifying each client can only access its designated server
+  - Validate each service only accesses its designated database (indirectly via client operations)
 
 ### 7.5 Gradle Docker Tasks
 
@@ -351,17 +550,18 @@ Define these tasks in `integration-tests/build.gradle.kts`:
 ### 7.7 Docker Test Utilities
 
 **Class**: `DockerTestUtils`
-- `waitForDatabaseReady(host, port, maxWaitSeconds)`: Wait for database connection
-- `waitForRestServiceReady(url, maxWaitSeconds)`: Wait for REST service health check
-- `initializeDatabaseSchema(dataSource, databaseType)`: Initialize schema via JDBC
-- `getDynamicPort(containerId)`: Get dynamically mapped port
-- `execInContainer(containerId, command)`: Execute command in container
+- `waitForDatabaseReady(host, port, maxWaitSeconds)`: Wait for database container to be ready (uses health check, NOT direct connection)
+- `waitForRestServiceReady(url, maxWaitSeconds)`: Wait for REST service health check via HTTP
+- `getDynamicPort(containerId)`: Get dynamically mapped port from Docker API
+- `execInContainer(containerId, command)`: Execute command in container (for debugging only)
+- NO `initializeDatabaseSchema()` method - schema initialization handled by cheap-rest containers
 
 **Class**: `DockerContainerManager`
 - Manages lifecycle of test containers
 - Provides fluent API for container configuration
 - Handles cleanup on test failure
 - Logs container output for debugging
+- NO database connection management - only container lifecycle
 
 ### 7.8 Phase 7 Verification
 After completing Phase 7 implementation:
