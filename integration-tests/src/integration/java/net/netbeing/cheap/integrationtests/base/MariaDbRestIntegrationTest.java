@@ -1,5 +1,6 @@
 package net.netbeing.cheap.integrationtests.base;
 
+import net.netbeing.cheap.db.mariadb.MariaDbCheapSchema;
 import net.netbeing.cheap.integrationtests.util.MariaDbRunnerExtension;
 import net.netbeing.cheap.integrationtests.util.MariaDbIntegrationTestDb;
 import org.junit.jupiter.api.AfterAll;
@@ -7,7 +8,10 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mariadb.jdbc.MariaDbDataSource;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -41,6 +45,47 @@ public abstract class MariaDbRestIntegrationTest extends BaseRestIntegrationTest
     protected String getDatabaseName()
     {
         return getClass().getSimpleName().toLowerCase();
+    }
+
+    @DynamicPropertySource
+    static void configureDatasource(DynamicPropertyRegistry registry) throws Exception
+    {
+        // Configure Spring to use the MariaDB4j instance's actual port and database
+        // The testDb will be initialized during test setup, but we need the port from the shared MariaDB4j instance
+        if (MariaDbRunnerExtension.getDbConfig() != null && MariaDbRunnerExtension.getMariaDB() != null)
+        {
+            int port = MariaDbRunnerExtension.getDbConfig().getPort();
+            // Create a default 'test' database for Spring Boot to connect to
+            try
+            {
+                MariaDbRunnerExtension.getMariaDB().createDB("test");
+            }
+            catch (Exception e)
+            {
+                // Database might already exist from previous test class, ignore
+            }
+
+            // Initialize schema in the test database
+            try
+            {
+                MariaDbDataSource dataSource = new MariaDbDataSource();
+                dataSource.setUrl("jdbc:mariadb://localhost:" + port + "/test?allowMultiQueries=true");
+                dataSource.setUser("root");
+                dataSource.setPassword("");
+
+                MariaDbCheapSchema schema = new MariaDbCheapSchema();
+                schema.executeMainSchemaDdl(dataSource);
+                schema.executeForeignKeysDdl(dataSource);  // Enable foreign keys for integration tests
+                schema.executeAuditSchemaDdl(dataSource);
+            }
+            catch (Exception e)
+            {
+                // Schema might already exist, ignore
+            }
+
+            String url = "jdbc:mariadb://localhost:" + port + "/test?allowMultiQueries=true";
+            registry.add("spring.datasource.url", () -> url);
+        }
     }
 
     @BeforeAll

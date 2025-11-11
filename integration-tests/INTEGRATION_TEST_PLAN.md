@@ -41,22 +41,6 @@ This approach ensures work is saved incrementally and provides clear rollback po
 - `test/resources/integration-tests/` directory for shared JSON test data
 - Sample catalog definitions, aspect definitions, entity data
 
-### 1.4 Phase 1 Verification
-After completing Phase 1 implementation:
-```bash
-# Build the integration-tests module
-./gradlew :integration-tests:build
-
-# Verify placeholder test runs
-./gradlew integration-tests
-
-# Commit work (do NOT push)
-git add .
-git commit -m "Complete Phase 1: Test infrastructure and utilities"
-```
-Expected: Build succeeds, placeholder test passes, infrastructure is ready.
-**Remember**: Commit individual components as you complete them, not just at the end of the phase.
-
 ## 2. Database-Specific Integration Tests (Direct DAO Testing)
 
 ### 2.1 PostgreSQL DAO with AspectTableMapping Tests
@@ -85,24 +69,6 @@ Expected: Build succeeds, placeholder test passes, infrastructure is ready.
 - **Table 1**: "employee" table (entity_id, employee_id, name, department)
 - **Table 2**: "metadata" table (key, value) - no catalog_id or entity_id (lookup table pattern)
 - **Tests**: Same pattern as PostgreSQL test above, plus test foreign key constraints if enabled
-
-### 2.4 Phase 2 Verification
-After completing Phase 2 implementation:
-```bash
-# Build and run all integration tests
-./gradlew integration-tests
-
-# Run specific database tests
-./gradlew :integration-tests:integrationTest --tests "*PostgresDao*"
-./gradlew :integration-tests:integrationTest --tests "*SqliteDao*"
-./gradlew :integration-tests:integrationTest --tests "*MariaDbDao*"
-
-# Commit work (do NOT push)
-git add .
-git commit -m "Complete Phase 2: Database-specific DAO AspectTableMapping tests"
-```
-Expected: All DAO tests pass, custom tables created and verified, AspectTableMapping works for all 3 databases.
-**Remember**: Commit each test class as you complete it (e.g., commit PostgresDaoAspectTableMappingTest, then SqliteDaoAspectTableMappingTest, etc.).
 
 ## 3. End-to-End REST Integration Tests (Service + Client)
 
@@ -135,22 +101,6 @@ Expected: All DAO tests pass, custom tables created and verified, AspectTableMap
 - **Setup**: Use `DatabaseRunnerExtension`, create separate database per test class
 - **Custom Table**: "inventory" table with foreign keys enabled
 - **Test Suite**: Same as PostgreSQL tests plus verify foreign key constraints work
-
-### 3.4 Phase 3 Verification
-After completing Phase 3 implementation:
-```bash
-# Build and run all integration tests
-./gradlew integration-tests
-
-# Run specific REST client tests
-./gradlew :integration-tests:integrationTest --tests "*RestClient*"
-
-# Commit work (do NOT push)
-git add .
-git commit -m "Complete Phase 3: End-to-end REST client integration tests"
-```
-Expected: All REST client integration tests pass, cheap-rest service starts successfully for all 3 databases, REST API endpoints work correctly.
-**Remember**: Commit each REST client test class as you complete it (PostgresRestClientIntegrationTest, then SqliteRestClientIntegrationTest, then MariaDbRestClientIntegrationTest).
 
 ## 4. Cross-Database Consistency Tests
 
