@@ -21,10 +21,19 @@ import java.util.UUID;
  */
 public abstract class BaseClientIntegrationTest
 {
-    @Autowired
     protected CheapRestClient client;
 
     protected ObjectMapper objectMapper = new ObjectMapper();
+
+    /**
+     * Set the REST client. This is called by Spring via autowiring in subclasses.
+     *
+     * @param client REST client to use
+     */
+    protected void setClient(CheapRestClient client)
+    {
+        this.client = client;
+    }
 
     /**
      * Load JSON content from the test resources directory.

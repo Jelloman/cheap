@@ -4,6 +4,7 @@ import net.netbeing.cheap.integrationtests.config.ClientTestConfig;
 import net.netbeing.cheap.integrationtests.config.MariaDbServerTestConfig;
 import net.netbeing.cheap.rest.CheapRestApplication;
 import net.netbeing.cheap.rest.client.CheapRestClient;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
@@ -21,7 +22,12 @@ import org.springframework.test.context.ContextConfiguration;
  */
 @SpringBootTest(
     classes = CheapRestApplication.class,
-    webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT
+    webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT,
+    properties = {
+        "spring.main.allow-bean-definition-overriding=true",
+        "server.port=8083",
+        "cheap.database.type=mariadb"
+    }
 )
 @ContextConfiguration
 @Import({MariaDbServerTestConfig.class, ClientTestConfig.class})
@@ -31,10 +37,11 @@ public abstract class MariaDbClientIntegrationTest extends BaseClientIntegration
      * Inject the MariaDB-specific REST client.
      * This client is configured to connect to the server on port 8083.
      */
-    @Override
+    @Autowired
     @Qualifier("mariadbClient")
-    protected CheapRestClient getClient()
+    @Override
+    protected void setClient(CheapRestClient client)
     {
-        return super.getClient();
+        super.setClient(client);
     }
 }

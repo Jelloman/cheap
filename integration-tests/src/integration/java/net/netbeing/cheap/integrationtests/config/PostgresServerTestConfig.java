@@ -3,6 +3,7 @@ package net.netbeing.cheap.integrationtests.config;
 import io.zonky.test.db.postgres.embedded.EmbeddedPostgres;
 import net.netbeing.cheap.db.AspectTableMapping;
 import net.netbeing.cheap.db.CheapDao;
+import net.netbeing.cheap.db.postgres.PostgresAdapter;
 import net.netbeing.cheap.db.postgres.PostgresCheapSchema;
 import net.netbeing.cheap.db.postgres.PostgresDao;
 import net.netbeing.cheap.impl.basic.CheapFactory;
@@ -38,6 +39,15 @@ public class PostgresServerTestConfig
     private static final Logger logger = LoggerFactory.getLogger(PostgresServerTestConfig.class);
 
     /**
+     * Provides CheapFactory bean for creating Cheap objects.
+     */
+    @Bean
+    public CheapFactory cheapFactory()
+    {
+        return new CheapFactory();
+    }
+
+    /**
      * Provides an embedded PostgreSQL DataSource for testing.
      */
     @Bean
@@ -59,6 +69,18 @@ public class PostgresServerTestConfig
 
         logger.info("Embedded PostgreSQL initialized with schema");
         return dataSource;
+    }
+
+    /**
+     * Provides PostgresDao bean for the server.
+     */
+    @Bean
+    @Primary
+    public CheapDao cheapDao(DataSource dataSource, CheapFactory factory)
+    {
+        logger.info("Creating PostgresDao bean for integration tests");
+        PostgresAdapter adapter = new PostgresAdapter(dataSource, factory);
+        return new PostgresDao(adapter);
     }
 
     /**

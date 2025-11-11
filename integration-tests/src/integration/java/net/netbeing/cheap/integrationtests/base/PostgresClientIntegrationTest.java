@@ -4,6 +4,7 @@ import net.netbeing.cheap.integrationtests.config.ClientTestConfig;
 import net.netbeing.cheap.integrationtests.config.PostgresServerTestConfig;
 import net.netbeing.cheap.rest.CheapRestApplication;
 import net.netbeing.cheap.rest.client.CheapRestClient;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
@@ -21,7 +22,12 @@ import org.springframework.test.context.ContextConfiguration;
  */
 @SpringBootTest(
     classes = CheapRestApplication.class,
-    webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT
+    webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT,
+    properties = {
+        "spring.main.allow-bean-definition-overriding=true",
+        "server.port=8081",
+        "cheap.database.type=postgres"
+    }
 )
 @ContextConfiguration
 @Import({PostgresServerTestConfig.class, ClientTestConfig.class})
@@ -31,10 +37,11 @@ public abstract class PostgresClientIntegrationTest extends BaseClientIntegratio
      * Inject the PostgreSQL-specific REST client.
      * This client is configured to connect to the server on port 8081.
      */
-    @Override
+    @Autowired
     @Qualifier("postgresClient")
-    protected CheapRestClient getClient()
+    @Override
+    protected void setClient(CheapRestClient client)
     {
-        return super.getClient();
+        super.setClient(client);
     }
 }

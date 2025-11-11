@@ -2,6 +2,7 @@ package net.netbeing.cheap.integrationtests.config;
 
 import net.netbeing.cheap.db.AspectTableMapping;
 import net.netbeing.cheap.db.CheapDao;
+import net.netbeing.cheap.db.sqlite.SqliteAdapter;
 import net.netbeing.cheap.db.sqlite.SqliteCheapSchema;
 import net.netbeing.cheap.db.sqlite.SqliteDao;
 import net.netbeing.cheap.impl.basic.CheapFactory;
@@ -41,6 +42,15 @@ public class SqliteServerTestConfig
     private static Path tempDbPath;
 
     /**
+     * Provides CheapFactory bean for creating Cheap objects.
+     */
+    @Bean
+    public CheapFactory cheapFactory()
+    {
+        return new CheapFactory();
+    }
+
+    /**
      * Provides a SQLite DataSource for testing.
      */
     @Bean
@@ -64,6 +74,18 @@ public class SqliteServerTestConfig
 
         logger.info("SQLite database initialized with schema");
         return dataSource;
+    }
+
+    /**
+     * Provides SqliteDao bean for the server.
+     */
+    @Bean
+    @Primary
+    public CheapDao cheapDao(DataSource dataSource, CheapFactory factory)
+    {
+        logger.info("Creating SqliteDao bean for integration tests");
+        SqliteAdapter adapter = new SqliteAdapter(dataSource, factory);
+        return new SqliteDao(adapter);
     }
 
     /**

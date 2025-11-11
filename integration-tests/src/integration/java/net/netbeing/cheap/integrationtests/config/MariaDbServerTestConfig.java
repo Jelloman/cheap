@@ -4,6 +4,7 @@ import ch.vorburger.mariadb4j.DB;
 import ch.vorburger.mariadb4j.DBConfigurationBuilder;
 import net.netbeing.cheap.db.AspectTableMapping;
 import net.netbeing.cheap.db.CheapDao;
+import net.netbeing.cheap.db.mariadb.MariaDbAdapter;
 import net.netbeing.cheap.db.mariadb.MariaDbCheapSchema;
 import net.netbeing.cheap.db.mariadb.MariaDbDao;
 import net.netbeing.cheap.impl.basic.CheapFactory;
@@ -40,6 +41,15 @@ public class MariaDbServerTestConfig
     private static DB embeddedMariaDb;
 
     /**
+     * Provides CheapFactory bean for creating Cheap objects.
+     */
+    @Bean
+    public CheapFactory cheapFactory()
+    {
+        return new CheapFactory();
+    }
+
+    /**
      * Provides an embedded MariaDB DataSource for testing.
      */
     @Bean
@@ -71,6 +81,18 @@ public class MariaDbServerTestConfig
 
         logger.info("Embedded MariaDB initialized with schema");
         return dataSource;
+    }
+
+    /**
+     * Provides MariaDbDao bean for the server.
+     */
+    @Bean
+    @Primary
+    public CheapDao cheapDao(DataSource dataSource, CheapFactory factory)
+    {
+        logger.info("Creating MariaDbDao bean for integration tests");
+        MariaDbAdapter adapter = new MariaDbAdapter(dataSource, factory);
+        return new MariaDbDao(adapter);
     }
 
     /**
