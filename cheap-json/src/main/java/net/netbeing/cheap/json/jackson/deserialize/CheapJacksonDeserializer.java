@@ -21,6 +21,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import net.netbeing.cheap.model.Aspect;
 import net.netbeing.cheap.model.AspectDef;
+import net.netbeing.cheap.model.AspectMap;
 import net.netbeing.cheap.model.Catalog;
 import net.netbeing.cheap.model.CatalogDef;
 import net.netbeing.cheap.model.EntityTreeHierarchy;
@@ -111,6 +112,7 @@ public class CheapJacksonDeserializer
         module.addDeserializer(Hierarchy.class, new HierarchyDeserializer(factory));
         module.addDeserializer(Aspect.class, new AspectDeserializer(factory));
         module.addDeserializer(EntityTreeHierarchy.Node.class, new TreeNodeDeserializer(factory));
+        module.addDeserializer(AspectMap.class, new AspectMapDeserializer(factory));
 
         return module;
     }

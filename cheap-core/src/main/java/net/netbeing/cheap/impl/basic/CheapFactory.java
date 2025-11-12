@@ -839,6 +839,17 @@ public class CheapFactory
         return hierarchy;
     }
 
+    /**
+     * Creates a new aspect map.
+     *
+     * @param aspectDef the aspect definition for aspects in this hierarchy
+     * @return a new AspectMap instance
+     */
+    public @NotNull AspectMap createAspectMap(@NotNull AspectDef aspectDef)
+    {
+        return new AspectMapImpl(aspectDef);
+    }
+
     // ===== Aspect Definition Factory Methods =====
 
     /**
