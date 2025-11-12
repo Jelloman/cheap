@@ -21,11 +21,14 @@ import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonMappingException;
+import com.google.common.base.Strings;
 import net.netbeing.cheap.model.AspectDef;
 import net.netbeing.cheap.model.CatalogDef;
 import net.netbeing.cheap.model.HierarchyDef;
 import net.netbeing.cheap.impl.basic.CheapFactory;
 import org.jetbrains.annotations.NotNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -58,6 +61,8 @@ import java.util.List;
  */
 class CatalogDefDeserializer extends JsonDeserializer<CatalogDef>
 {
+    private static final Logger logger = LoggerFactory.getLogger(CatalogDefDeserializer.class);
+
     private final CheapFactory factory;
 
     public CatalogDefDeserializer(@NotNull CheapFactory factory)
@@ -77,13 +82,15 @@ class CatalogDefDeserializer extends JsonDeserializer<CatalogDef>
 
         while (p.nextToken() != JsonToken.END_OBJECT) {
             String fieldName = p.currentName();
+            if (Strings.isNullOrEmpty(fieldName)) {
+                logger.warn("fieldName is empty or null, token type = {}", p.currentToken());
+            }
             p.nextToken();
 
             switch (fieldName) {
                 case "aspectDefs" -> {
-                    if (p.currentToken() == JsonToken.START_OBJECT) {
-                        while (p.nextToken() != JsonToken.END_OBJECT) {
-                            p.nextToken(); // Move to value
+                    if (p.currentToken() == JsonToken.START_ARRAY) {
+                        while (p.nextToken() != JsonToken.END_ARRAY) {
                             AspectDef aspectDef = p.readValueAs(AspectDef.class);
                             aspectDefs.add(aspectDef);
                             // AspectDef registration is already handled by AspectDefDeserializer

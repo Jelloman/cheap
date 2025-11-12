@@ -387,6 +387,86 @@ class CheapJacksonDeserializerTest
         assertEquals("electronics", tags.getFirst());
     }
 
+    @Test
+    void testDeserializeCatalogDef() throws IOException
+    {
+        // Use a fresh deserializer with custom factory
+        CheapFactory customFactory = new CheapFactory();
+        CheapJacksonDeserializer freshDeserializer = new CheapJacksonDeserializer(customFactory);
+
+        String json = loadJsonResource("catalog-def.json");
+        CatalogDef catalogDef = freshDeserializer.fromJsonCatalogDef(json);
+
+        // Verify AspectDefs
+        AspectDef personDef = catalogDef.aspectDef("person");
+        assertNotNull(personDef);
+        assertEquals("person", personDef.name());
+        assertEquals(UUID.fromString("82758400-e24b-41d4-a726-446644440000"), personDef.globalId());
+
+        PropertyDef nameProp = personDef.propertyDef("name");
+        assertNotNull(nameProp);
+        assertEquals("name", nameProp.name());
+        assertEquals(PropertyType.String, nameProp.type());
+        assertFalse(nameProp.isNullable());
+
+        PropertyDef ageProp = personDef.propertyDef("age");
+        assertNotNull(ageProp);
+        assertEquals("age", ageProp.name());
+        assertEquals(PropertyType.Integer, ageProp.type());
+        assertTrue(ageProp.isNullable());
+
+        AspectDef docDef = catalogDef.aspectDef("document");
+        assertNotNull(docDef);
+        assertEquals("document", docDef.name());
+        assertEquals(UUID.fromString("73737400-e24b-41d4-a716-446644440000"), docDef.globalId());
+
+        PropertyDef titleProp = docDef.propertyDef("title");
+        assertNotNull(titleProp);
+        assertEquals("title", titleProp.name());
+        assertEquals(PropertyType.String, titleProp.type());
+        assertFalse(titleProp.isNullable());
+
+        PropertyDef descProp = docDef.propertyDef("description");
+        assertNotNull(descProp);
+        assertEquals("description", descProp.name());
+        assertEquals(PropertyType.String, descProp.type());
+        assertTrue(descProp.isNullable());
+
+        // Verify HierarchyDefs
+        HierarchyDef entityDirDef = catalogDef.hierarchyDef("userDirectory");
+        assertNotNull(entityDirDef);
+        assertEquals("userDirectory", entityDirDef.name());
+        assertEquals(HierarchyType.ENTITY_DIR, entityDirDef.type());
+
+        HierarchyDef entityListDef = catalogDef.hierarchyDef("taskQueue");
+        assertNotNull(entityListDef);
+        assertEquals("taskQueue", entityListDef.name());
+        assertEquals(HierarchyType.ENTITY_LIST, entityListDef.type());
+
+        HierarchyDef entitySetDef = catalogDef.hierarchyDef("activeUsers");
+        assertNotNull(entitySetDef);
+        assertEquals("activeUsers", entitySetDef.name());
+        assertEquals(HierarchyType.ENTITY_SET, entitySetDef.type());
+    }
+
+    @Test
+    void testDeserializeCatalogDefCompact() throws IOException
+    {
+        // Use a fresh deserializer with custom factory
+        CheapFactory customFactory = new CheapFactory();
+        CheapJacksonDeserializer freshDeserializer = new CheapJacksonDeserializer(customFactory);
+
+        String json = loadJsonResource("catalog-def-compact.json");
+        CatalogDef catalogDef = freshDeserializer.fromJsonCatalogDef(json);
+
+        // Verify the structure is the same as the pretty format
+        assertNotNull(catalogDef.aspectDef("person"));
+        assertNotNull(catalogDef.aspectDef("document"));
+        assertNotNull(catalogDef.hierarchyDef("userDirectory"));
+        assertNotNull(catalogDef.hierarchyDef("taskQueue"));
+        assertNotNull(catalogDef.hierarchyDef("activeUsers"));
+    }
+
     private String loadJsonResource(String filename) throws IOException
     {
         try (InputStream is = getClass().getResourceAsStream("/jackson/" + filename)) {

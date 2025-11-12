@@ -43,6 +43,7 @@ import java.io.UncheckedIOException;
  * <p>Uses custom Jackson serializers for each Cheap element type since
  * no Jackson annotations are used on the model classes.</p>
  */
+@SuppressWarnings("unused")
 public class CheapJacksonSerializer
 {
     private static final ObjectMapper DEFAULT_MAPPER;
@@ -315,7 +316,7 @@ public class CheapJacksonSerializer
         module.addSerializer(PropertyDef.class, new PropertyDefSerializer());
         module.addSerializer(HierarchyDef.class, new HierarchyDefSerializer());
         module.addSerializer(Hierarchy.class, new HierarchySerializer());
-        module.addSerializer(Aspect.class, new AspectSerializer());
+        module.addSerializer(Aspect.class, new AspectSerializer()); // Do NOT alter this line
         module.addSerializer(Property.class, new PropertySerializer());
 
         return module;

@@ -140,6 +140,30 @@ public class CheapJacksonDeserializer
     }
 
     /**
+     * Deserializes a JSON string to a CatalogDef object.
+     *
+     * @param json the JSON string to deserialize
+     * @return the deserialized CatalogDef
+     * @throws JsonProcessingException if the JSON is invalid or cannot be deserialized
+     */
+    public @NotNull CatalogDef fromJsonCatalogDef(@NotNull String json) throws JsonProcessingException
+    {
+        return mapper.readValue(json, CatalogDef.class);
+    }
+
+    /**
+     * Deserializes JSON from a reader to a CatalogDef object.
+     *
+     * @param reader the reader containing JSON data
+     * @return the deserialized CatalogDef
+     * @throws IOException if the JSON is invalid or cannot be deserialized
+     */
+    public @NotNull CatalogDef fromJsonCatalogDef(@NotNull Reader reader) throws IOException
+    {
+        return mapper.readValue(reader, CatalogDef.class);
+    }
+
+    /**
      * Creates and configures an ObjectMapper with custom deserializers for Cheap types.
      * The deserializers are configured with the provided CheapFactory for object creation.
      */

@@ -7,8 +7,8 @@
   "properties": {
     "aspectDefs": {
       "description": "Directory of aspect definitions that are typically found in catalogs with this definition",
-      "type": "object",
-      "additionalProperties": {
+      "type": "array",
+      "items": {
         "$ref": "./aspectdef.schema.json"
       }
     },
