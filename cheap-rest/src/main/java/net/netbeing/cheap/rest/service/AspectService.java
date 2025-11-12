@@ -40,6 +40,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -236,8 +237,8 @@ public class AspectService
      */
     @Transactional(readOnly = true)
     public Map<UUID, Map<String, Aspect>> queryAspects(@NotNull UUID catalogId,
-                                                       @NotNull java.util.Set<UUID> entityIds,
-                                                       java.util.Set<String> aspectDefNames)
+                                                       @NotNull Set<UUID> entityIds,
+                                                       Set<String> aspectDefNames)
     {
         logger.info("Querying aspects for {} entities in catalog {}", entityIds.size(), catalogId);
 

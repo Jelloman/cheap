@@ -29,6 +29,12 @@ import java.util.*;
 @SuppressWarnings("unused")
 public interface CheapRestClient
 {
+    // ========== Configuration Operations ==========
+    /**
+     * Register an AspectDef with this client, allowing Aspects of that type to be deserialized.
+     */
+    void registerAspectDef(@NotNull AspectDef aspectDef);
+
     // ========== Catalog Operations ==========
 
     /**

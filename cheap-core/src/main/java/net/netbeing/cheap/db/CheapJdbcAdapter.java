@@ -25,7 +25,8 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.TimeZone;
 
-public abstract class CheapJdbcAdapter
+@SuppressWarnings("unused")
+public abstract class CheapJdbcAdapter implements AutoCloseable
 {
     /**
      * Data source providing database connections.
@@ -91,4 +92,10 @@ public abstract class CheapJdbcAdapter
     {
         return dataSource.getConnection();
     }
+
+    /**
+     * A shutdown hook that can be wired into frameworks for lifecycle
+     * callbacks, e.g., in Spring, \@Bean(destroyMethod = "close").
+     */
+    public void close() {}
 }

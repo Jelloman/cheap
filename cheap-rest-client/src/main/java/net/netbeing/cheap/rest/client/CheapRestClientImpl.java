@@ -109,6 +109,12 @@ public class CheapRestClientImpl implements CheapRestClient
     // ========== Catalog Operations ==========
 
     @Override
+    public void registerAspectDef(@NotNull AspectDef aspectDef)
+    {
+        factory.registerAspectDef(aspectDef);
+    }
+
+    @Override
     public CreateCatalogResponse createCatalog(
         @NotNull CatalogDef catalogDef,
         @NotNull CatalogSpecies species,

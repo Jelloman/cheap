@@ -6,8 +6,8 @@
         "type": "ES"
       }
     ],
-    "aspectDefs": {
-      "person": {
+    "aspectDefs": [
+      {
         "name": "person",
         "globalId": "550e8400-e29b-41d4-a716-446655440001",
         "propertyDefs": [
@@ -40,7 +40,7 @@
           }
         ]
       }
-    }
+    ]
   },
   "species": "SINK",
   "upstream": null

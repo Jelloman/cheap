@@ -48,7 +48,7 @@ import java.util.UUID;
  * @see Catalog
  * @see AbstractCheapDao
  */
-public interface CheapDao
+public interface CheapDao extends AutoCloseable
 {
     /**
      * Checks if a catalog exists in the database.
@@ -277,4 +277,10 @@ public interface CheapDao
      * @throws SQLException if database operation fails
      */
     boolean deleteCatalog(@NotNull UUID catalogId) throws SQLException;
+
+    /**
+     * A shutdown hook that can be wired into frameworks for lifecycle
+     * callbacks, e.g., in Spring, \@Bean(destroyMethod = "close").
+     */
+    default void close() {}
 }
