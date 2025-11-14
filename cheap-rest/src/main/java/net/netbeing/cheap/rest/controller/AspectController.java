@@ -20,7 +20,7 @@ import net.netbeing.cheap.json.dto.AspectQueryRequest;
 import net.netbeing.cheap.json.dto.AspectQueryResponse;
 import net.netbeing.cheap.json.dto.UpsertAspectsRequest;
 import net.netbeing.cheap.json.dto.UpsertAspectsResponse;
-import net.netbeing.cheap.rest.service.AspectService;
+import net.netbeing.cheap.json.dto.UpsertAspectsResponse.AspectResult;
 import net.netbeing.cheap.rest.service.ReactiveAspectService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -94,12 +94,12 @@ public class AspectController
         return aspectService.upsertAspects(catalogId, aspectDefName, aspectsByEntity)
             .map(results -> {
                 // Convert results to response format
-                List<UpsertAspectsResponse.AspectResult> resultList = new ArrayList<>();
+                List<AspectResult> resultList = new ArrayList<>();
                 int successCount = 0;
                 int failureCount = 0;
 
-                for (AspectService.UpsertResult result : results.values()) {
-                    resultList.add(new UpsertAspectsResponse.AspectResult(
+                for (AspectResult result : results.values()) {
+                    resultList.add(new AspectResult(
                         result.entityId(),
                         result.success(),
                         result.created(),

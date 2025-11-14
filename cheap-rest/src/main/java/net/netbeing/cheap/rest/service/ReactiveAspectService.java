@@ -16,12 +16,14 @@
 
 package net.netbeing.cheap.rest.service;
 
-import net.netbeing.cheap.model.Aspect;
+import net.netbeing.cheap.json.dto.UpsertAspectsResponse.AspectResult;
+import net.netbeing.cheap.model.AspectMap;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Scheduler;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -54,7 +56,7 @@ public class ReactiveAspectService
      * @param aspectsByEntity map of entity ID to property values
      * @return Mono emitting map of entity ID to upsert result
      */
-    public Mono<Map<UUID, AspectService.UpsertResult>> upsertAspects(
+    public Mono<Map<UUID, AspectResult>> upsertAspects(
         @NotNull UUID catalogId,
         @NotNull String aspectDefName,
         @NotNull Map<UUID, Map<String, Object>> aspectsByEntity)
@@ -71,7 +73,7 @@ public class ReactiveAspectService
      * @param aspectDefNames the set of AspectDef names to retrieve (empty = all)
      * @return Mono emitting map of entity ID to map of AspectDef name to Aspect
      */
-    public Mono<Map<UUID, Map<String, Aspect>>> queryAspects(
+    public Mono<List<AspectMap>> queryAspects(
         @NotNull UUID catalogId,
         @NotNull Set<UUID> entityIds,
         Set<String> aspectDefNames)

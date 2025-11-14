@@ -23,6 +23,7 @@ import net.netbeing.cheap.rest.client.exception.*;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.RecordedRequest;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.*;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -39,6 +40,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Unit tests for CheapRestClient using mocked HTTP responses.
  */
+@SuppressWarnings("DataFlowIssue")
 class CheapRestClientTest
 {
     private MockWebServer mockWebServer;
@@ -64,7 +66,7 @@ class CheapRestClientTest
 
     // ========== Utility Methods ==========
 
-    private String loadTestResource(String path)
+    private @NotNull String loadTestResource(String path)
     {
         try {
             Path resourcePath = Path.of("src/test/resources/http-tests/" + path);
@@ -178,7 +180,7 @@ class CheapRestClientTest
 
     @Test
     @DisplayName("Should throw NotFoundException when catalog not found")
-    void testGetCatalogDefNotFound() throws Exception
+    void testGetCatalogDefNotFound()
     {
         // Arrange
         mockWebServer.enqueue(new MockResponse()
@@ -574,7 +576,7 @@ class CheapRestClientTest
 
     @Test
     @DisplayName("Should throw BadRequestException for 400 errors")
-    void testBadRequestException() throws Exception
+    void testBadRequestException()
     {
         // Arrange
         mockWebServer.enqueue(new MockResponse()
@@ -589,7 +591,7 @@ class CheapRestClientTest
 
     @Test
     @DisplayName("Should throw NotFoundException for 404 errors")
-    void testNotFoundException() throws Exception
+    void testNotFoundException()
     {
         // Arrange
         mockWebServer.enqueue(new MockResponse()
@@ -607,7 +609,7 @@ class CheapRestClientTest
 
     @Test
     @DisplayName("Should throw ServerException for 500 errors")
-    void testServerException() throws Exception
+    void testServerException()
     {
         // Arrange
         mockWebServer.enqueue(new MockResponse()
@@ -624,7 +626,7 @@ class CheapRestClientTest
 
     @Test
     @DisplayName("Should throw ClientException for other HTTP errors")
-    void testGenericClientException() throws Exception
+    void testGenericClientException()
     {
         // Arrange
         mockWebServer.enqueue(new MockResponse()

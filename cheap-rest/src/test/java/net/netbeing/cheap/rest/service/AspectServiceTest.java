@@ -16,12 +16,26 @@
 
 package net.netbeing.cheap.rest.service;
 
-import net.netbeing.cheap.model.*;
+import net.netbeing.cheap.json.dto.UpsertAspectsResponse.AspectResult;
+import net.netbeing.cheap.model.Aspect;
+import net.netbeing.cheap.model.AspectMap;
+import net.netbeing.cheap.model.CatalogDef;
+import net.netbeing.cheap.model.CatalogSpecies;
+import net.netbeing.cheap.model.Entity;
+import net.netbeing.cheap.model.MutableAspectDef;
+import net.netbeing.cheap.model.PropertyType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.net.URI;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -32,14 +46,14 @@ class AspectServiceTest extends BaseServiceTest
 {
     private UUID catalogId;
     private String aspectDefName;
+    private MutableAspectDef personAspect;
 
     @BeforeEach
     void setupAspectTest()
     {
         // Create a catalog with an AspectDef
-        MutableAspectDef personAspect = factory.createMutableAspectDef(
-            "com.example.PersonAspect"
-        );
+        aspectDefName = "com.example.PersonAspect";
+        personAspect = factory.createMutableAspectDef(aspectDefName);
         personAspect.add(factory.createPropertyDef(
             "name", PropertyType.String, true, true, false, false, false
         ));
@@ -53,7 +67,6 @@ class AspectServiceTest extends BaseServiceTest
         );
 
         catalogId = catalogService.createCatalog(catalogDef, CatalogSpecies.SINK, null, URI.create("http://example.com/api/catalog"));
-        aspectDefName = "com.example.PersonAspect";
     }
 
     @Test
@@ -69,7 +82,7 @@ class AspectServiceTest extends BaseServiceTest
         aspectsByEntity.put(entityId, properties);
 
         // Upsert
-        Map<UUID, AspectService.UpsertResult> results = aspectService.upsertAspects(
+        Map<UUID, AspectResult> results = aspectService.upsertAspects(
             catalogId,
             aspectDefName,
             aspectsByEntity
@@ -78,7 +91,7 @@ class AspectServiceTest extends BaseServiceTest
         // Verify
         assertNotNull(results);
         assertEquals(1, results.size());
-        AspectService.UpsertResult result = results.get(entityId);
+        AspectResult result = results.get(entityId);
         assertTrue(result.success());
         assertTrue(result.created());
     }
@@ -106,7 +119,7 @@ class AspectServiceTest extends BaseServiceTest
         Map<UUID, Map<String, Object>> aspectsByEntity2 = new HashMap<>();
         aspectsByEntity2.put(entityId, properties2);
 
-        Map<UUID, AspectService.UpsertResult> results = aspectService.upsertAspects(
+        Map<UUID, AspectResult> results = aspectService.upsertAspects(
             catalogId,
             aspectDefName,
             aspectsByEntity2
@@ -115,7 +128,7 @@ class AspectServiceTest extends BaseServiceTest
         // Verify
         assertNotNull(results);
         assertEquals(1, results.size());
-        AspectService.UpsertResult result = results.get(entityId);
+        AspectResult result = results.get(entityId);
         assertTrue(result.success());
         assertFalse(result.created()); // Should be an update, not create
     }
@@ -130,7 +143,7 @@ class AspectServiceTest extends BaseServiceTest
         Map<UUID, Map<String, Object>> aspectsByEntity = createTestAspectsByEntity(entityId1, entityId2, entityId3);
 
         // Upsert all
-        Map<UUID, AspectService.UpsertResult> results = aspectService.upsertAspects(
+        Map<UUID, AspectResult> results = aspectService.upsertAspects(
             catalogId,
             aspectDefName,
             aspectsByEntity
@@ -170,6 +183,8 @@ class AspectServiceTest extends BaseServiceTest
         // Create some aspects
         UUID entityId1 = UUID.randomUUID();
         UUID entityId2 = UUID.randomUUID();
+        Entity entity1 = factory.createEntity(entityId1);
+        Entity entity2 = factory.createEntity(entityId2);
 
         Map<UUID, Map<String, Object>> aspectsByEntity = new HashMap<>();
 
@@ -189,7 +204,7 @@ class AspectServiceTest extends BaseServiceTest
         Set<UUID> entityIds = new HashSet<>(Arrays.asList(entityId1, entityId2));
         Set<String> aspectDefNames = new HashSet<>(Collections.singletonList(aspectDefName));
 
-        Map<UUID, Map<String, Aspect>> results = aspectService.queryAspects(
+        List<AspectMap> results = aspectService.queryAspects(
             catalogId,
             entityIds,
             aspectDefNames
@@ -197,17 +212,20 @@ class AspectServiceTest extends BaseServiceTest
 
         // Verify
         assertNotNull(results);
-        assertEquals(2, results.size());
-        assertTrue(results.containsKey(entityId1));
-        assertTrue(results.containsKey(entityId2));
+        assertEquals(1, results.size());
 
-        Map<String, Aspect> entity1Aspects = results.get(entityId1);
-        assertNotNull(entity1Aspects);
-        assertTrue(entity1Aspects.containsKey(aspectDefName));
+        AspectMap resultMap = results.getFirst();
+        assertEquals(2, resultMap.size());
+        assertTrue(resultMap.containsKey(entity1));
+        assertTrue(resultMap.containsKey(entity2));
 
-        Map<String, Aspect> entity2Aspects = results.get(entityId2);
-        assertNotNull(entity2Aspects);
-        assertTrue(entity2Aspects.containsKey(aspectDefName));
+        Aspect entity1Aspect = resultMap.get(entity1);
+        assertNotNull(entity1Aspect);
+        assertEquals(entity1Aspect.def(), personAspect);
+
+        Aspect entity2Aspect = resultMap.get(entity2);
+        assertNotNull(entity2Aspect);
+        assertEquals(entity2Aspect.def(), personAspect);
     }
 
     @Test
@@ -216,6 +234,8 @@ class AspectServiceTest extends BaseServiceTest
         // Create aspect for only one entity
         UUID entityId1 = UUID.randomUUID();
         UUID entityId2 = UUID.randomUUID(); // This one won't have an aspect
+        Entity entity1 = factory.createEntity(entityId1);
+        Entity entity2 = factory.createEntity(entityId2);
 
         Map<UUID, Map<String, Object>> aspectsByEntity = new HashMap<>();
 
@@ -230,7 +250,7 @@ class AspectServiceTest extends BaseServiceTest
         Set<UUID> entityIds = new HashSet<>(Arrays.asList(entityId1, entityId2));
         Set<String> aspectDefNames = new HashSet<>(Collections.singletonList(aspectDefName));
 
-        Map<UUID, Map<String, Aspect>> results = aspectService.queryAspects(
+        List<AspectMap> results = aspectService.queryAspects(
             catalogId,
             entityIds,
             aspectDefNames
@@ -239,7 +259,10 @@ class AspectServiceTest extends BaseServiceTest
         // Verify - should only get results for entityId1
         assertNotNull(results);
         assertEquals(1, results.size());
-        assertTrue(results.containsKey(entityId1));
-        assertFalse(results.containsKey(entityId2));
+
+        AspectMap resultMap = results.getFirst();
+        assertEquals(1, resultMap.size());
+        assertTrue(resultMap.containsKey(entity1));
+        assertFalse(resultMap.containsKey(entity2));
     }
 }
