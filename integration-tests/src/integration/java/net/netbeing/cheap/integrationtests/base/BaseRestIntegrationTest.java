@@ -1,5 +1,6 @@
 package net.netbeing.cheap.integrationtests.base;
 
+import ch.vorburger.exec.ManagedProcessException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import net.netbeing.cheap.rest.CheapRestApplication;
 import net.netbeing.cheap.rest.client.CheapRestClient;
@@ -39,7 +40,7 @@ public abstract class BaseRestIntegrationTest
      * Subclasses can override to add additional setup.
      */
     @BeforeEach
-    public void setUp() throws SQLException
+    public void setUp() throws SQLException, ManagedProcessException
     {
         client = createRestClient();
         objectMapper = client.getObjectMapper();

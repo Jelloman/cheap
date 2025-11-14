@@ -2,11 +2,28 @@ package net.netbeing.cheap.integrationtests.restclient;
 
 import net.netbeing.cheap.impl.basic.CheapFactory;
 import net.netbeing.cheap.integrationtests.base.SqliteClientIntegrationTest;
-import net.netbeing.cheap.json.dto.*;
-import net.netbeing.cheap.model.*;
+import net.netbeing.cheap.json.dto.AspectDefListResponse;
+import net.netbeing.cheap.json.dto.AspectQueryResponse;
+import net.netbeing.cheap.json.dto.CatalogListResponse;
+import net.netbeing.cheap.json.dto.CreateAspectDefResponse;
+import net.netbeing.cheap.json.dto.CreateCatalogResponse;
+import net.netbeing.cheap.json.dto.UpsertAspectsResponse;
+import net.netbeing.cheap.model.Aspect;
+import net.netbeing.cheap.model.AspectDef;
+import net.netbeing.cheap.model.AspectMap;
+import net.netbeing.cheap.model.CatalogDef;
+import net.netbeing.cheap.model.CatalogSpecies;
+import net.netbeing.cheap.model.Entity;
+import net.netbeing.cheap.model.PropertyDef;
+import net.netbeing.cheap.model.PropertyType;
 import org.junit.jupiter.api.Test;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -15,6 +32,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * Tests the complete flow: REST client -> REST API -> Service -> DAO -> SQLite.
  * ALL tests interact ONLY through the REST client - NO direct database access.
  */
+@SuppressWarnings("unused")
 class SqliteRestClientIntegrationTest extends SqliteClientIntegrationTest
 {
     private final CheapFactory factory = new CheapFactory();
@@ -78,11 +96,15 @@ class SqliteRestClientIntegrationTest extends SqliteClientIntegrationTest
         assertNotNull(personResponse);
         assertNotNull(personResponse.aspectDefId());
 
-        // Create order_item aspect def (for custom table)
-        AspectDef orderItemAspectDef = createOrderItemAspectDef();
-        CreateAspectDefResponse orderItemResponse = client.createAspectDef(catalogId, orderItemAspectDef);
-        assertNotNull(orderItemResponse);
-        assertNotNull(orderItemResponse.aspectDefId());
+        // Create contact aspect def
+        Map<String, PropertyDef> contactProps = new LinkedHashMap<>();
+        contactProps.put("email", factory.createPropertyDef("email", PropertyType.String));
+        contactProps.put("phone", factory.createPropertyDef("phone", PropertyType.String));
+        AspectDef contactAspectDef = factory.createImmutableAspectDef("contact", contactProps);
+
+        CreateAspectDefResponse contactResponse = client.createAspectDef(catalogId, contactAspectDef);
+        assertNotNull(contactResponse);
+        assertNotNull(contactResponse.aspectDefId());
 
         // List aspect defs
         AspectDefListResponse listResponse = client.listAspectDefs(catalogId, 0, 10);
@@ -95,26 +117,28 @@ class SqliteRestClientIntegrationTest extends SqliteClientIntegrationTest
         assertEquals("person", retrievedPerson.name());
 
         // Get aspect def by name
-        AspectDef retrievedOrderItem = client.getAspectDefByName(catalogId, "order_item");
-        assertNotNull(retrievedOrderItem);
-        assertEquals("order_item", retrievedOrderItem.name());
-        assertEquals(orderItemResponse.aspectDefId(), retrievedOrderItem.globalId());
+        AspectDef retrievedContact = client.getAspectDefByName(catalogId, "contact");
+        assertNotNull(retrievedContact);
+        assertEquals("contact", retrievedContact.name());
+        assertEquals(contactResponse.aspectDefId(), retrievedContact.globalId());
     }
 
     @Test
     void customTableMapping()
     {
-        // Create catalog and aspect def
-        CatalogDef catalogDef = factory.createCatalogDef();
+        AspectDef orderItemAspectDef =  createOrderItemAspectDef();
+        client.registerAspectDef(orderItemAspectDef);
+
+        // Create catalog
+        CatalogDef catalogDef = factory.createCatalogDef(Collections.emptyList(), List.of(orderItemAspectDef));
         CreateCatalogResponse catalogResponse = client.createCatalog(catalogDef, CatalogSpecies.SINK, null);
         UUID catalogId = catalogResponse.catalogId();
 
-        AspectDef orderItemAspectDef = createOrderItemAspectDef();
-        client.createAspectDef(catalogId, orderItemAspectDef);
-
-        // Upsert order_item aspects
+        // Upsert order_item aspects using the pre-registered "order_item" AspectDef
         UUID entityId1 = testUuid(1001);
         UUID entityId2 = testUuid(1002);
+        Entity entity1 = factory.createEntity(entityId1);
+        Entity entity2 = factory.createEntity(entityId2);
 
         Map<UUID, Map<String, Object>> aspects = new LinkedHashMap<>();
         aspects.put(entityId1, Map.of(
@@ -138,20 +162,23 @@ class SqliteRestClientIntegrationTest extends SqliteClientIntegrationTest
 
         AspectQueryResponse queryResponse = client.queryAspects(catalogId, entityIds, aspectDefNames);
         assertNotNull(queryResponse);
-        assertEquals(2, queryResponse.results().size());
+        assertEquals(1, queryResponse.results().size());
+
+        AspectMap aspectMap = queryResponse.results().getFirst();
+        assertEquals("order_item", aspectMap.aspectDef().name());
 
         // Verify first order_item
-        Aspect orderItem1 = queryResponse.results().get(entityId1).get("order_item");
+        Aspect orderItem1 = aspectMap.get(entity1);
         assertNotNull(orderItem1);
         assertEquals("Widget Deluxe", orderItem1.get("product_name").read());
-        assertEquals(5, orderItem1.get("quantity").read());
+        assertEquals(5L, orderItem1.get("quantity").read());
         assertEquals(49.99, ((Number) orderItem1.get("price").read()).doubleValue(), 0.001);
 
         // Verify second order_item
-        Aspect orderItem2 = queryResponse.results().get(entityId2).get("order_item");
+        Aspect orderItem2 = aspectMap.get(entity2);
         assertNotNull(orderItem2);
         assertEquals("Gadget Pro", orderItem2.get("product_name").read());
-        assertEquals(3, orderItem2.get("quantity").read());
+        assertEquals(3L, orderItem2.get("quantity").read());
         assertEquals(89.99, ((Number) orderItem2.get("price").read()).doubleValue(), 0.001);
     }
 
@@ -171,9 +198,14 @@ class SqliteRestClientIntegrationTest extends SqliteClientIntegrationTest
 
         client.createAspectDef(catalogId, productAspectDef);
 
+        // Register AspectDef so Aspects can be deserialized
+        client.registerAspectDef(productAspectDef);
+
         // Upsert aspects
         UUID productId1 = testUuid(2001);
         UUID productId2 = testUuid(2002);
+        Entity entity1 = factory.createEntity(productId1);
+        Entity entity2 = factory.createEntity(productId2);
 
         Map<UUID, Map<String, Object>> aspects = new LinkedHashMap<>();
         aspects.put(productId1, Map.of(
@@ -196,14 +228,17 @@ class SqliteRestClientIntegrationTest extends SqliteClientIntegrationTest
 
         AspectQueryResponse queryResponse = client.queryAspects(catalogId, entityIds, aspectDefNames);
         assertNotNull(queryResponse);
-        assertEquals(2, queryResponse.results().size());
+        assertEquals(1, queryResponse.results().size());
 
-        Aspect product1 = queryResponse.results().get(productId1).get("product");
+        AspectMap aspectMap = queryResponse.results().getFirst();
+        assertEquals("product", aspectMap.aspectDef().name());
+
+        Aspect product1 = aspectMap.get(entity1);
+        Aspect product2 = aspectMap.get(entity2);
         assertNotNull(product1);
         assertEquals("PROD-001", product1.get("sku").read());
         assertEquals("Widget", product1.get("name").read());
 
-        Aspect product2 = queryResponse.results().get(productId2).get("product");
         assertNotNull(product2);
         assertEquals("PROD-002", product2.get("sku").read());
         assertEquals("Gadget", product2.get("name").read());

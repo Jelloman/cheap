@@ -2,11 +2,28 @@ package net.netbeing.cheap.integrationtests.restclient;
 
 import net.netbeing.cheap.impl.basic.CheapFactory;
 import net.netbeing.cheap.integrationtests.base.MariaDbClientIntegrationTest;
-import net.netbeing.cheap.json.dto.*;
-import net.netbeing.cheap.model.*;
+import net.netbeing.cheap.json.dto.AspectDefListResponse;
+import net.netbeing.cheap.json.dto.AspectQueryResponse;
+import net.netbeing.cheap.json.dto.CatalogListResponse;
+import net.netbeing.cheap.json.dto.CreateAspectDefResponse;
+import net.netbeing.cheap.json.dto.CreateCatalogResponse;
+import net.netbeing.cheap.json.dto.UpsertAspectsResponse;
+import net.netbeing.cheap.model.Aspect;
+import net.netbeing.cheap.model.AspectDef;
+import net.netbeing.cheap.model.AspectMap;
+import net.netbeing.cheap.model.CatalogDef;
+import net.netbeing.cheap.model.CatalogSpecies;
+import net.netbeing.cheap.model.Entity;
+import net.netbeing.cheap.model.PropertyDef;
+import net.netbeing.cheap.model.PropertyType;
 import org.junit.jupiter.api.Test;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -15,6 +32,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * Tests the complete flow: REST client -> REST API -> Service -> DAO -> MariaDB.
  * ALL tests interact ONLY through the REST client - NO direct database access.
  */
+@SuppressWarnings("unused")
 class MariaDbRestClientIntegrationTest extends MariaDbClientIntegrationTest
 {
     private final CheapFactory factory = new CheapFactory();
@@ -78,11 +96,15 @@ class MariaDbRestClientIntegrationTest extends MariaDbClientIntegrationTest
         assertNotNull(personResponse);
         assertNotNull(personResponse.aspectDefId());
 
-        // Create inventory aspect def (for custom table)
-        AspectDef inventoryAspectDef = createInventoryAspectDef();
-        CreateAspectDefResponse inventoryResponse = client.createAspectDef(catalogId, inventoryAspectDef);
-        assertNotNull(inventoryResponse);
-        assertNotNull(inventoryResponse.aspectDefId());
+        // Create contact aspect def
+        Map<String, PropertyDef> contactProps = new LinkedHashMap<>();
+        contactProps.put("email", factory.createPropertyDef("email", PropertyType.String));
+        contactProps.put("phone", factory.createPropertyDef("phone", PropertyType.String));
+        AspectDef contactAspectDef = factory.createImmutableAspectDef("contact", contactProps);
+
+        CreateAspectDefResponse contactResponse = client.createAspectDef(catalogId, contactAspectDef);
+        assertNotNull(contactResponse);
+        assertNotNull(contactResponse.aspectDefId());
 
         // List aspect defs
         AspectDefListResponse listResponse = client.listAspectDefs(catalogId, 0, 10);
@@ -95,26 +117,29 @@ class MariaDbRestClientIntegrationTest extends MariaDbClientIntegrationTest
         assertEquals("person", retrievedPerson.name());
 
         // Get aspect def by name
-        AspectDef retrievedInventory = client.getAspectDefByName(catalogId, "inventory");
-        assertNotNull(retrievedInventory);
-        assertEquals("inventory", retrievedInventory.name());
-        assertEquals(inventoryResponse.aspectDefId(), retrievedInventory.globalId());
+        AspectDef retrievedContact = client.getAspectDefByName(catalogId, "contact");
+        assertNotNull(retrievedContact);
+        assertEquals("contact", retrievedContact.name());
+        assertEquals(contactResponse.aspectDefId(), retrievedContact.globalId());
     }
 
     @Test
     void customTableMapping()
     {
-        // Create catalog and aspect def
-        CatalogDef catalogDef = factory.createCatalogDef();
+        AspectDef inventoryAspectDef = createInventoryAspectDef();
+        client.registerAspectDef(inventoryAspectDef);
+
+        // Create catalog
+        // Note: The "inventory" AspectDef is already registered by the server for AspectTableMapping
+        CatalogDef catalogDef = factory.createCatalogDef(Collections.emptyList(), List.of(inventoryAspectDef));
         CreateCatalogResponse catalogResponse = client.createCatalog(catalogDef, CatalogSpecies.SINK, null);
         UUID catalogId = catalogResponse.catalogId();
 
-        AspectDef inventoryAspectDef = createInventoryAspectDef();
-        client.createAspectDef(catalogId, inventoryAspectDef);
-
-        // Upsert inventory aspects
+        // Upsert inventory aspects using the pre-registered "inventory" AspectDef
         UUID entityId1 = testUuid(1001);
         UUID entityId2 = testUuid(1002);
+        Entity entity1 = factory.createEntity(entityId1);
+        Entity entity2 = factory.createEntity(entityId2);
 
         Map<UUID, Map<String, Object>> aspects = new LinkedHashMap<>();
         aspects.put(entityId1, Map.of(
@@ -138,21 +163,24 @@ class MariaDbRestClientIntegrationTest extends MariaDbClientIntegrationTest
 
         AspectQueryResponse queryResponse = client.queryAspects(catalogId, entityIds, aspectDefNames);
         assertNotNull(queryResponse);
-        assertEquals(2, queryResponse.results().size());
+        assertEquals(1, queryResponse.results().size());
+
+        AspectMap aspectMap = queryResponse.results().getFirst();
+        assertEquals("inventory", aspectMap.aspectDef().name());
 
         // Verify first inventory item
-        Aspect inventory1 = queryResponse.results().get(entityId1).get("inventory");
+        Aspect inventory1 = aspectMap.get(entity1);
         assertNotNull(inventory1);
         assertEquals("ITEM-A123", inventory1.get("item_code").read());
         assertEquals("Main Warehouse", inventory1.get("warehouse").read());
-        assertEquals(150, inventory1.get("stock_qty").read());
+        assertEquals(150L, inventory1.get("stock_qty").read());
 
         // Verify second inventory item
-        Aspect inventory2 = queryResponse.results().get(entityId2).get("inventory");
+        Aspect inventory2 = aspectMap.get(entity2);
         assertNotNull(inventory2);
         assertEquals("ITEM-B456", inventory2.get("item_code").read());
         assertEquals("South Depot", inventory2.get("warehouse").read());
-        assertEquals(75, inventory2.get("stock_qty").read());
+        assertEquals(75L, inventory2.get("stock_qty").read());
     }
 
     @Test
@@ -171,9 +199,14 @@ class MariaDbRestClientIntegrationTest extends MariaDbClientIntegrationTest
 
         client.createAspectDef(catalogId, productAspectDef);
 
+        // Register AspectDef so Aspects can be deserialized
+        client.registerAspectDef(productAspectDef);
+
         // Upsert aspects
         UUID productId1 = testUuid(2001);
         UUID productId2 = testUuid(2002);
+        Entity entity1 = factory.createEntity(productId1);
+        Entity entity2 = factory.createEntity(productId2);
 
         Map<UUID, Map<String, Object>> aspects = new LinkedHashMap<>();
         aspects.put(productId1, Map.of(
@@ -196,14 +229,17 @@ class MariaDbRestClientIntegrationTest extends MariaDbClientIntegrationTest
 
         AspectQueryResponse queryResponse = client.queryAspects(catalogId, entityIds, aspectDefNames);
         assertNotNull(queryResponse);
-        assertEquals(2, queryResponse.results().size());
+        assertEquals(1, queryResponse.results().size());
 
-        Aspect product1 = queryResponse.results().get(productId1).get("product");
+        AspectMap aspectMap = queryResponse.results().getFirst();
+        assertEquals("product", aspectMap.aspectDef().name());
+
+        Aspect product1 = aspectMap.get(entity1);
+        Aspect product2 = aspectMap.get(entity2);
         assertNotNull(product1);
         assertEquals("PROD-001", product1.get("sku").read());
         assertEquals("Widget", product1.get("name").read());
 
-        Aspect product2 = queryResponse.results().get(productId2).get("product");
         assertNotNull(product2);
         assertEquals("PROD-002", product2.get("sku").read());
         assertEquals("Gadget", product2.get("name").read());
@@ -295,6 +331,9 @@ class MariaDbRestClientIntegrationTest extends MariaDbClientIntegrationTest
         AspectDef aspectDef = factory.createImmutableAspectDef("test_aspect", props);
 
         client.createAspectDef(catalogId, aspectDef);
+
+        // Register AspectDef so Aspects can be deserialized
+        client.registerAspectDef(aspectDef);
 
         // Upsert aspect
         UUID entityId = testUuid(9001);

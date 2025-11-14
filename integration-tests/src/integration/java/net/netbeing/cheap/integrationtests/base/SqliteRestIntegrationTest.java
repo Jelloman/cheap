@@ -1,5 +1,6 @@
 package net.netbeing.cheap.integrationtests.base;
 
+import ch.vorburger.exec.ManagedProcessException;
 import net.netbeing.cheap.db.sqlite.SqliteCheapSchema;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -25,6 +26,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * they cannot be run in parallel.
  */
 @ActiveProfiles("sqlite-test")
+@SuppressWarnings("unused")
 public abstract class SqliteRestIntegrationTest extends BaseRestIntegrationTest
 {
     protected static Path tempDbPath;
@@ -66,7 +68,7 @@ public abstract class SqliteRestIntegrationTest extends BaseRestIntegrationTest
 
     @BeforeEach
     @Override
-    public void setUp() throws SQLException
+    public void setUp() throws SQLException, ManagedProcessException
     {
         super.setUp();
         cleanupDatabase();

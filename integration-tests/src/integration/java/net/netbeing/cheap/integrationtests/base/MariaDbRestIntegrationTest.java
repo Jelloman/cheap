@@ -1,5 +1,6 @@
 package net.netbeing.cheap.integrationtests.base;
 
+import ch.vorburger.exec.ManagedProcessException;
 import net.netbeing.cheap.db.mariadb.MariaDbCheapSchema;
 import net.netbeing.cheap.integrationtests.util.MariaDbRunnerExtension;
 import net.netbeing.cheap.integrationtests.util.MariaDbIntegrationTestDb;
@@ -25,9 +26,10 @@ import java.sql.Statement;
  */
 @ActiveProfiles("mariadb-test")
 @ExtendWith(MariaDbRunnerExtension.class)
+@SuppressWarnings("unused")
 public abstract class MariaDbRestIntegrationTest extends BaseRestIntegrationTest
 {
-    protected static MariaDbIntegrationTestDb testDb;
+    protected MariaDbIntegrationTestDb testDb;
 
     /**
      * Override to specify whether to use foreign keys.
@@ -48,7 +50,7 @@ public abstract class MariaDbRestIntegrationTest extends BaseRestIntegrationTest
     }
 
     @DynamicPropertySource
-    static void configureDatasource(DynamicPropertyRegistry registry) throws Exception
+    static void configureDatasource(DynamicPropertyRegistry registry) throws ManagedProcessException, SQLException
     {
         // Configure Spring to use the MariaDB4j instance's actual port and database
         // The testDb will be initialized during test setup, but we need the port from the shared MariaDB4j instance
@@ -56,32 +58,18 @@ public abstract class MariaDbRestIntegrationTest extends BaseRestIntegrationTest
         {
             int port = MariaDbRunnerExtension.getDbConfig().getPort();
             // Create a default 'test' database for Spring Boot to connect to
-            try
-            {
-                MariaDbRunnerExtension.getMariaDB().createDB("test");
-            }
-            catch (Exception e)
-            {
-                // Database might already exist from previous test class, ignore
-            }
+            MariaDbRunnerExtension.getMariaDB().createDB("test");
 
             // Initialize schema in the test database
-            try
-            {
-                MariaDbDataSource dataSource = new MariaDbDataSource();
-                dataSource.setUrl("jdbc:mariadb://localhost:" + port + "/test?allowMultiQueries=true");
-                dataSource.setUser("root");
-                dataSource.setPassword("");
+            MariaDbDataSource dataSource = new MariaDbDataSource();
+            dataSource.setUrl("jdbc:mariadb://localhost:" + port + "/test?allowMultiQueries=true");
+            dataSource.setUser("root");
+            dataSource.setPassword("");
 
-                MariaDbCheapSchema schema = new MariaDbCheapSchema();
-                schema.executeMainSchemaDdl(dataSource);
-                schema.executeForeignKeysDdl(dataSource);  // Enable foreign keys for integration tests
-                schema.executeAuditSchemaDdl(dataSource);
-            }
-            catch (Exception e)
-            {
-                // Schema might already exist, ignore
-            }
+            MariaDbCheapSchema schema = new MariaDbCheapSchema();
+            schema.executeMainSchemaDdl(dataSource);
+            schema.executeForeignKeysDdl(dataSource);  // Enable foreign keys for integration tests
+            schema.executeAuditSchemaDdl(dataSource);
 
             String url = "jdbc:mariadb://localhost:" + port + "/test?allowMultiQueries=true";
             registry.add("spring.datasource.url", () -> url);
@@ -89,34 +77,27 @@ public abstract class MariaDbRestIntegrationTest extends BaseRestIntegrationTest
     }
 
     @BeforeAll
-    public static void setUpMariaDb() throws Exception
+    public static void setUpMariaDb()
     {
         // Test DB will be created in subclass-specific @BeforeAll
     }
 
     @AfterAll
-    public static void tearDownMariaDb() throws Exception
+    public static void tearDownMariaDb()
     {
         // Nothing to do - MariaDB4j instance is shared and cleaned up by extension
     }
 
     @BeforeEach
     @Override
-    public void setUp() throws SQLException
+    public void setUp() throws SQLException, ManagedProcessException
     {
         super.setUp();
-        try
+        // Ensure test DB is initialized
+        if (testDb == null)
         {
-            // Ensure test DB is initialized
-            if (testDb == null)
-            {
-                testDb = new MariaDbIntegrationTestDb(getDatabaseName(), useForeignKeys());
-                testDb.initializeCheapSchema();
-            }
-        }
-        catch (Exception e)
-        {
-            throw new RuntimeException("Failed to set up MariaDB test database", e);
+            testDb = new MariaDbIntegrationTestDb(getDatabaseName(), useForeignKeys());
+            testDb.initializeCheapSchema();
         }
     }
 
@@ -148,7 +129,7 @@ public abstract class MariaDbRestIntegrationTest extends BaseRestIntegrationTest
      * Execute a SQL statement directly.
      * Useful for verification queries in tests.
      */
-    protected void executeSql(String sql) throws Exception
+    protected void executeSql(String sql) throws SQLException
     {
         try (Connection conn = testDb.dataSource.getConnection();
              Statement stmt = conn.createStatement())

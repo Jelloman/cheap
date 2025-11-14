@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Primary;
 import org.springframework.test.context.TestPropertySource;
 
@@ -30,6 +31,7 @@ import java.util.Map;
  * registers AspectTableMapping for "address" table on startup, and runs on port 8081.
  */
 @TestConfiguration
+@ComponentScan(basePackages = {"net.netbeing.cheap.integrationtests.util"})
 @TestPropertySource(properties = {
     "server.port=8081",
     "cheap.database.type=postgres"

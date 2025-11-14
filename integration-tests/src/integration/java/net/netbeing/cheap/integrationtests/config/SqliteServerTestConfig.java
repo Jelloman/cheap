@@ -15,6 +15,7 @@ import org.sqlite.SQLiteDataSource;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Primary;
 import org.springframework.test.context.TestPropertySource;
 
@@ -32,6 +33,7 @@ import java.util.Map;
  * registers AspectTableMapping for "order_item" table on startup, and runs on port 8082.
  */
 @TestConfiguration
+@ComponentScan(basePackages = {"net.netbeing.cheap.integrationtests.util"})
 @TestPropertySource(properties = {
     "server.port=8082",
     "cheap.database.type=sqlite"

@@ -14,7 +14,7 @@
  *  limitations under the License.
  */
 
-package net.netbeing.cheap.rest;
+package net.netbeing.cheap.integrationtests.util;
 
 import org.reactivestreams.Publisher;
 import org.slf4j.Logger;

@@ -1,5 +1,6 @@
 package net.netbeing.cheap.integrationtests.base;
 
+import ch.vorburger.exec.ManagedProcessException;
 import io.zonky.test.db.postgres.embedded.EmbeddedPostgres;
 import net.netbeing.cheap.db.postgres.PostgresCheapSchema;
 import org.junit.jupiter.api.AfterAll;
@@ -18,6 +19,7 @@ import java.sql.Statement;
  * Sets up and tears down an embedded PostgreSQL instance for testing.
  */
 @ActiveProfiles("postgres-test")
+@SuppressWarnings("unused")
 public abstract class PostgresRestIntegrationTest extends BaseRestIntegrationTest
 {
     protected static EmbeddedPostgres embeddedPostgres;
@@ -50,7 +52,7 @@ public abstract class PostgresRestIntegrationTest extends BaseRestIntegrationTes
 
     @BeforeEach
     @Override
-    public void setUp() throws SQLException
+    public void setUp() throws SQLException, ManagedProcessException
     {
         super.setUp();
         cleanupDatabase();

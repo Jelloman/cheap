@@ -2,11 +2,28 @@ package net.netbeing.cheap.integrationtests.restclient;
 
 import net.netbeing.cheap.impl.basic.CheapFactory;
 import net.netbeing.cheap.integrationtests.base.PostgresClientIntegrationTest;
-import net.netbeing.cheap.json.dto.*;
-import net.netbeing.cheap.model.*;
+import net.netbeing.cheap.json.dto.AspectDefListResponse;
+import net.netbeing.cheap.json.dto.AspectQueryResponse;
+import net.netbeing.cheap.json.dto.CatalogListResponse;
+import net.netbeing.cheap.json.dto.CreateAspectDefResponse;
+import net.netbeing.cheap.json.dto.CreateCatalogResponse;
+import net.netbeing.cheap.json.dto.UpsertAspectsResponse;
+import net.netbeing.cheap.model.Aspect;
+import net.netbeing.cheap.model.AspectDef;
+import net.netbeing.cheap.model.AspectMap;
+import net.netbeing.cheap.model.CatalogDef;
+import net.netbeing.cheap.model.CatalogSpecies;
+import net.netbeing.cheap.model.Entity;
+import net.netbeing.cheap.model.PropertyDef;
+import net.netbeing.cheap.model.PropertyType;
 import org.junit.jupiter.api.Test;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -15,6 +32,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * Tests the complete flow: REST client -> REST API -> Service -> DAO -> PostgreSQL.
  * ALL tests interact ONLY through the REST client - NO direct database access.
  */
+@SuppressWarnings("unused")
 class PostgresRestClientIntegrationTest extends PostgresClientIntegrationTest
 {
     private final CheapFactory factory = new CheapFactory();
@@ -78,11 +96,15 @@ class PostgresRestClientIntegrationTest extends PostgresClientIntegrationTest
         assertNotNull(personResponse);
         assertNotNull(personResponse.aspectDefId());
 
-        // Create address aspect def (for custom table)
-        AspectDef addressAspectDef = createAddressAspectDef();
-        CreateAspectDefResponse addressResponse = client.createAspectDef(catalogId, addressAspectDef);
-        assertNotNull(addressResponse);
-        assertNotNull(addressResponse.aspectDefId());
+        // Create contact aspect def
+        Map<String, PropertyDef> contactProps = new LinkedHashMap<>();
+        contactProps.put("email", factory.createPropertyDef("email", PropertyType.String));
+        contactProps.put("phone", factory.createPropertyDef("phone", PropertyType.String));
+        AspectDef contactAspectDef = factory.createImmutableAspectDef("contact", contactProps);
+
+        CreateAspectDefResponse contactResponse = client.createAspectDef(catalogId, contactAspectDef);
+        assertNotNull(contactResponse);
+        assertNotNull(contactResponse.aspectDefId());
 
         // List aspect defs
         AspectDefListResponse listResponse = client.listAspectDefs(catalogId, 0, 10);
@@ -95,26 +117,28 @@ class PostgresRestClientIntegrationTest extends PostgresClientIntegrationTest
         assertEquals("person", retrievedPerson.name());
 
         // Get aspect def by name
-        AspectDef retrievedAddress = client.getAspectDefByName(catalogId, "address");
-        assertNotNull(retrievedAddress);
-        assertEquals("address", retrievedAddress.name());
-        assertEquals(addressResponse.aspectDefId(), retrievedAddress.globalId());
+        AspectDef retrievedContact = client.getAspectDefByName(catalogId, "contact");
+        assertNotNull(retrievedContact);
+        assertEquals("contact", retrievedContact.name());
+        assertEquals(contactResponse.aspectDefId(), retrievedContact.globalId());
     }
 
     @Test
     void customTableMapping()
     {
-        // Create catalog and aspect def
-        CatalogDef catalogDef = factory.createCatalogDef();
+        AspectDef addressAspectDef =  createAddressAspectDef();
+        client.registerAspectDef(addressAspectDef);
+
+        // Create catalog
+        CatalogDef catalogDef = factory.createCatalogDef(Collections.emptyList(), List.of(addressAspectDef));
         CreateCatalogResponse catalogResponse = client.createCatalog(catalogDef, CatalogSpecies.SINK, null);
         UUID catalogId = catalogResponse.catalogId();
 
-        AspectDef addressAspectDef = createAddressAspectDef();
-        client.createAspectDef(catalogId, addressAspectDef);
-
-        // Upsert address aspects
+        // Upsert address aspects using the pre-registered "address" AspectDef
         UUID entityId1 = testUuid(1001);
         UUID entityId2 = testUuid(1002);
+        Entity entity1 = factory.createEntity(entityId1);
+        Entity entity2 = factory.createEntity(entityId2);
 
         Map<UUID, Map<String, Object>> aspects = new LinkedHashMap<>();
         aspects.put(entityId1, Map.of(
@@ -138,17 +162,20 @@ class PostgresRestClientIntegrationTest extends PostgresClientIntegrationTest
 
         AspectQueryResponse queryResponse = client.queryAspects(catalogId, entityIds, aspectDefNames);
         assertNotNull(queryResponse);
-        assertEquals(2, queryResponse.results().size());
+        assertEquals(1, queryResponse.results().size());
+
+        AspectMap aspectMap = queryResponse.results().getFirst();
+        assertEquals("address", aspectMap.aspectDef().name());
 
         // Verify first address
-        Aspect address1 = queryResponse.results().get(entityId1).get("address");
+        Aspect address1 = aspectMap.get(entity1);
         assertNotNull(address1);
         assertEquals("123 Main St", address1.get("street").read());
         assertEquals("Springfield", address1.get("city").read());
         assertEquals("12345", address1.get("zip").read());
 
         // Verify second address
-        Aspect address2 = queryResponse.results().get(entityId2).get("address");
+        Aspect address2 = aspectMap.get(entity2);
         assertNotNull(address2);
         assertEquals("456 Oak Ave", address2.get("street").read());
         assertEquals("Shelbyville", address2.get("city").read());
@@ -171,9 +198,14 @@ class PostgresRestClientIntegrationTest extends PostgresClientIntegrationTest
 
         client.createAspectDef(catalogId, productAspectDef);
 
+        // Register AspectDef so Aspects can be deserialized
+        client.registerAspectDef(productAspectDef);
+
         // Upsert aspects
         UUID productId1 = testUuid(2001);
         UUID productId2 = testUuid(2002);
+        Entity entity1 = factory.createEntity(productId1);
+        Entity entity2 = factory.createEntity(productId2);
 
         Map<UUID, Map<String, Object>> aspects = new LinkedHashMap<>();
         aspects.put(productId1, Map.of(
@@ -196,14 +228,17 @@ class PostgresRestClientIntegrationTest extends PostgresClientIntegrationTest
 
         AspectQueryResponse queryResponse = client.queryAspects(catalogId, entityIds, aspectDefNames);
         assertNotNull(queryResponse);
-        assertEquals(2, queryResponse.results().size());
+        assertEquals(1, queryResponse.results().size());
 
-        Aspect product1 = queryResponse.results().get(productId1).get("product");
+        AspectMap aspectMap = queryResponse.results().getFirst();
+        assertEquals("product", aspectMap.aspectDef().name());
+
+        Aspect product1 = aspectMap.get(entity1);
+        Aspect product2 = aspectMap.get(entity2);
         assertNotNull(product1);
         assertEquals("PROD-001", product1.get("sku").read());
         assertEquals("Widget", product1.get("name").read());
 
-        Aspect product2 = queryResponse.results().get(productId2).get("product");
         assertNotNull(product2);
         assertEquals("PROD-002", product2.get("sku").read());
         assertEquals("Gadget", product2.get("name").read());
