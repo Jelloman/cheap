@@ -558,6 +558,60 @@ class CheapJacksonSerializerTest
         assertEquals(expectedJson, jacksonResult);
     }
 
+    private CatalogDef setupCatalogDef()
+    {
+        // Create AspectDefs
+        PropertyDef nameProp = new PropertyDefBuilder().setName("name").setType(PropertyType.String).setDefaultValue(null).setHasDefaultValue(false).setIsReadable(true).setIsWritable(true).setIsNullable(false).setIsRemovable(false).setIsMultivalued(false).build();
+        PropertyDef ageProp = new PropertyDefBuilder().setName("age").setType(PropertyType.Integer).setDefaultValue(null).setHasDefaultValue(false).setIsReadable(true).setIsWritable(true).setIsNullable(true).setIsRemovable(false).setIsMultivalued(false).build();
+        Map<String, PropertyDef> personProps = ImmutableMap.of("name", nameProp, "age", ageProp);
+        UUID aspectDefId1 = UUID.fromString("82758400-e24b-41d4-a726-446644440000");
+        AspectDef personAspectDef = new ImmutableAspectDefImpl("person", aspectDefId1, personProps);
+
+        PropertyDef titleProp = new PropertyDefBuilder().setName("title").setType(PropertyType.String).setDefaultValue(null).setHasDefaultValue(false).setIsReadable(true).setIsWritable(true).setIsNullable(false).setIsRemovable(false).setIsMultivalued(false).build();
+        PropertyDef descProp = new PropertyDefBuilder().setName("description").setType(PropertyType.String).setDefaultValue(null).setHasDefaultValue(false).setIsReadable(true).setIsWritable(true).setIsNullable(true).setIsRemovable(false).setIsMultivalued(false).build();
+        Map<String, PropertyDef> docProps = ImmutableMap.of("title", titleProp, "description", descProp);
+        UUID aspectDefId2 = UUID.fromString("73737400-e24b-41d4-a716-446644440000");
+        AspectDef docAspectDef = new ImmutableAspectDefImpl("document", aspectDefId2, docProps);
+
+        // Create HierarchyDefs
+        HierarchyDef entityDirDef = new HierarchyDefImpl("userDirectory", HierarchyType.ENTITY_DIR);
+        HierarchyDef entityListDef = new HierarchyDefImpl("taskQueue", HierarchyType.ENTITY_LIST);
+        HierarchyDef entitySetDef = new HierarchyDefImpl("activeUsers", HierarchyType.ENTITY_SET);
+
+        List<AspectDef> aspectDefs = List.of(personAspectDef, docAspectDef);
+        List<HierarchyDef> hierarchyDefs = List.of(entityDirDef, entityListDef, entitySetDef);
+
+        return factory.createCatalogDef(hierarchyDefs, aspectDefs);
+    }
+
+    @Test
+    void testCatalogDefToJson() throws IOException
+    {
+        CatalogDef catalogDef = setupCatalogDef();
+
+        String jacksonResult = CheapJacksonSerializer.toJson(catalogDef, true);
+        if (WRITE_OUTPUT_PATH != null) {
+            Files.writeString(Paths.get(WRITE_OUTPUT_PATH, "catalog-def.json"), jacksonResult, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+        }
+        String expectedJson = loadExpectedJson("catalog-def.json");
+
+        assertEquals(expectedJson, jacksonResult);
+    }
+
+    @Test
+    void testCatalogDefToJsonCompact() throws IOException
+    {
+        CatalogDef catalogDef = setupCatalogDef();
+
+        String jacksonResult = CheapJacksonSerializer.toJson(catalogDef, false);
+        if (WRITE_OUTPUT_PATH != null) {
+            Files.writeString(Paths.get(WRITE_OUTPUT_PATH, "catalog-def-compact.json"), jacksonResult, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+        }
+        String expectedJson = loadExpectedJson("catalog-def-compact.json");
+
+        assertEquals(expectedJson, jacksonResult);
+    }
+
     private String loadExpectedJson(String filename) throws IOException
     {
         try (InputStream is = getClass().getResourceAsStream("/jackson/" + filename)) {

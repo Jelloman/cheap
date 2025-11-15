@@ -139,7 +139,7 @@ class AspectDeserializer extends JsonDeserializer<Aspect>
         return builder.build();
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings("DuplicateBranchesInSwitch")
     private Object readValue(JsonParser p, PropertyType type) throws IOException
     {
         if (p.currentToken() == JsonToken.VALUE_NULL) {

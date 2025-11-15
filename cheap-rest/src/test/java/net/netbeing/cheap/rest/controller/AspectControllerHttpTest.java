@@ -25,6 +25,8 @@ import org.springframework.http.MediaType;
 import org.springframework.test.annotation.DirtiesContext;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * HTTP integration tests for AspectController.
@@ -75,11 +77,11 @@ class AspectControllerHttpTest extends BaseControllerHttpTest
         JsonNode responseNode = objectMapper.readTree(responseJson);
 
         // Verify structure
-        assertThat(responseNode.has("catalogId")).isTrue();
-        assertThat(responseNode.has("aspectDefName")).isTrue();
-        assertThat(responseNode.has("results")).isTrue();
-        assertThat(responseNode.has("successCount")).isTrue();
-        assertThat(responseNode.has("failureCount")).isTrue();
+        assertTrue(responseNode.has("catalogId"));
+        assertTrue(responseNode.has("aspectDefName"));
+        assertTrue(responseNode.has("results"));
+        assertTrue(responseNode.has("successCount"));
+        assertTrue(responseNode.has("failureCount"));
 
         // Verify success
         assertThat(responseNode.get("aspectDefName").asText()).isEqualTo("person");
@@ -88,13 +90,13 @@ class AspectControllerHttpTest extends BaseControllerHttpTest
 
         // Verify results array
         JsonNode results = responseNode.get("results");
-        assertThat(results.isArray()).isTrue();
+        assertTrue(results.isArray());
         assertThat(results.size()).isEqualTo(2);
 
         // Verify first result
         JsonNode firstResult = results.get(0);
-        assertThat(firstResult.get("success").asBoolean()).isTrue();
-        assertThat(firstResult.get("created").asBoolean()).isTrue();
+        assertTrue(firstResult.get("success").asBoolean());
+        assertTrue(firstResult.get("created").asBoolean());
     }
 
     @Test
@@ -129,7 +131,7 @@ class AspectControllerHttpTest extends BaseControllerHttpTest
         // Verify that it was an update, not a creation
         JsonNode results = responseNode.get("results");
         JsonNode firstResult = results.get(0);
-        assertThat(firstResult.get("success").asBoolean()).isTrue();
+        assertTrue(firstResult.get("success").asBoolean());
         assertThat(firstResult.get("created").asBoolean()).isFalse(); // Should be false for update
     }
 
@@ -162,20 +164,29 @@ class AspectControllerHttpTest extends BaseControllerHttpTest
         JsonNode responseNode = objectMapper.readTree(responseJson);
 
         // Verify structure
-        assertThat(responseNode.has("catalogId")).isTrue();
-        assertThat(responseNode.has("results")).isTrue();
+        assertTrue(responseNode.has("catalogId"));
+        assertTrue(responseNode.has("results"));
 
         // Verify results contain entities
         JsonNode results = responseNode.get("results");
-        assertThat(results.has("660e8400-e29b-41d4-a716-446655440001")).isTrue();
-        assertThat(results.has("660e8400-e29b-41d4-a716-446655440002")).isTrue();
+        assertTrue(results.isArray());
+        assertEquals(1, results.size());
+
+        JsonNode aspectMap = results.get(0);
+        assertTrue(aspectMap.has("aspectDef"));
+        assertEquals("person", aspectMap.get("aspectDef").asText());
+
+        // Verify results contain entities
+        assertTrue(aspectMap.has("contents"));
+        JsonNode contents = aspectMap.get("contents");
+        assertEquals(2, contents.size());
+
+        assertTrue(contents.has("660e8400-e29b-41d4-a716-446655440001"));
+        assertTrue(contents.has("660e8400-e29b-41d4-a716-446655440002"));
 
         // Verify aspects are present
-        JsonNode entity1 = results.get("660e8400-e29b-41d4-a716-446655440001");
-        assertThat(entity1.has("person")).isTrue();
-
-        JsonNode personAspect = entity1.get("person");
-        assertThat(personAspect.has("firstName")).isTrue();
+        JsonNode personAspect = contents.get("660e8400-e29b-41d4-a716-446655440001");
+        assertTrue(personAspect.has("firstName"));
         assertThat(personAspect.get("firstName").asText()).isEqualTo("Alice");
     }
 
@@ -198,8 +209,8 @@ class AspectControllerHttpTest extends BaseControllerHttpTest
         JsonNode responseNode = objectMapper.readTree(responseJson);
 
         // Verify structure
-        assertThat(responseNode.has("catalogId")).isTrue();
-        assertThat(responseNode.has("results")).isTrue();
+        assertTrue(responseNode.has("catalogId"));
+        assertTrue(responseNode.has("results"));
 
         // Results should be empty
         JsonNode results = responseNode.get("results");

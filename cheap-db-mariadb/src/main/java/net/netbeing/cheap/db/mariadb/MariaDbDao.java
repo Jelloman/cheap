@@ -646,12 +646,24 @@ public class MariaDbDao extends AbstractCheapDao
     protected void clearMappedTable(@NotNull Connection conn, @NotNull AspectTableMapping mapping, @NotNull UUID catalogId) throws SQLException
     {
         if (!mapping.hasEntityId() && !mapping.hasCatalogId()) {
-            // No IDs: TRUNCATE the entire table
+            // Pattern 1 - No IDs: TRUNCATE the entire table
             try (Statement stmt = conn.createStatement()) {
                 stmt.execute("TRUNCATE TABLE " + mapping.tableName());
             }
         } else if (!mapping.hasEntityId() && mapping.hasCatalogId()) {
-            // Catalog ID only: DELETE rows for this catalog
+            // Pattern 2 - Catalog ID only: DELETE rows for this catalog
+            String deleteSql = "DELETE FROM " + mapping.tableName() + " WHERE catalog_id = ?";
+            try (PreparedStatement stmt = conn.prepareStatement(deleteSql)) {
+                stmt.setString(1, catalogId.toString());
+                stmt.executeUpdate();
+            }
+        } else if (mapping.hasEntityId() && !mapping.hasCatalogId()) {
+            // Pattern 3 - Entity ID only: TRUNCATE entire table (no catalog filtering possible)
+            try (Statement stmt = conn.createStatement()) {
+                stmt.execute("TRUNCATE TABLE " + mapping.tableName());
+            }
+        } else if (mapping.hasEntityId() && mapping.hasCatalogId()) {
+            // Pattern 4 - Both IDs: DELETE rows for this catalog
             String deleteSql = "DELETE FROM " + mapping.tableName() + " WHERE catalog_id = ?";
             try (PreparedStatement stmt = conn.prepareStatement(deleteSql)) {
                 stmt.setString(1, catalogId.toString());
@@ -1185,6 +1197,12 @@ public class MariaDbDao extends AbstractCheapDao
         try (Connection conn = adapter.getConnection()) {
             conn.setAutoCommit(false);
             try {
+                // Clear all mapped tables before deleting catalog
+                for (AspectTableMapping mapping : aspectTableMappings.values())
+                {
+                    clearMappedTable(conn, mapping, catalogId);
+                }
+
                 // Cascading deletes should also delete all child DB entities.
                 String sql = "DELETE FROM catalog WHERE catalog_id = ?";
                 try (PreparedStatement stmt = conn.prepareStatement(sql)) {

@@ -1,0 +1,90 @@
+package net.netbeing.cheap.integrationtests.base;
+
+import ch.vorburger.exec.ManagedProcessException;
+import io.zonky.test.db.postgres.embedded.EmbeddedPostgres;
+import net.netbeing.cheap.db.postgres.PostgresCheapSchema;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.springframework.test.context.ActiveProfiles;
+
+import javax.sql.DataSource;
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.Statement;
+
+/**
+ * Base class for integration tests using embedded PostgreSQL database.
+ * Sets up and tears down an embedded PostgreSQL instance for testing.
+ */
+@ActiveProfiles("postgres-test")
+@SuppressWarnings("unused")
+public abstract class PostgresRestIntegrationTest extends BaseRestIntegrationTest
+{
+    protected static EmbeddedPostgres embeddedPostgres;
+    protected static DataSource dataSource;
+
+    @BeforeAll
+    public static void setUpPostgres() throws SQLException, IOException
+    {
+        // Start embedded PostgreSQL
+        embeddedPostgres = EmbeddedPostgres.builder()
+            .setPort(5433) // Use non-standard port to avoid conflicts
+            .start();
+
+        dataSource = embeddedPostgres.getPostgresDatabase();
+
+        // Initialize schema
+        PostgresCheapSchema schema = new PostgresCheapSchema();
+        schema.executeMainSchemaDdl(dataSource);
+        schema.executeAuditSchemaDdl(dataSource);
+    }
+
+    @AfterAll
+    public static void tearDownPostgres() throws IOException
+    {
+        if (embeddedPostgres != null)
+        {
+            embeddedPostgres.close();
+        }
+    }
+
+    @BeforeEach
+    @Override
+    public void setUp() throws SQLException, ManagedProcessException
+    {
+        super.setUp();
+        cleanupDatabase();
+    }
+
+    @Override
+    protected void cleanupDatabase() throws SQLException
+    {
+        // Truncate all tables to ensure clean state between tests
+        PostgresCheapSchema schema = new PostgresCheapSchema();
+        schema.executeTruncateSchemaDdl(dataSource);
+    }
+
+    /**
+     * Get the test database DataSource.
+     * Useful for direct database access in tests.
+     */
+    protected DataSource getDataSource()
+    {
+        return dataSource;
+    }
+
+    /**
+     * Execute a SQL statement directly.
+     * Useful for verification queries in tests.
+     */
+    protected void executeSql(String sql) throws SQLException
+    {
+        try (Connection conn = dataSource.getConnection();
+             Statement stmt = conn.createStatement())
+        {
+            stmt.execute(sql);
+        }
+    }
+}

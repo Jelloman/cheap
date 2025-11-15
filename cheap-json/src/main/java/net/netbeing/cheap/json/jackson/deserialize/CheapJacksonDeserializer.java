@@ -21,6 +21,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import net.netbeing.cheap.model.Aspect;
 import net.netbeing.cheap.model.AspectDef;
+import net.netbeing.cheap.model.AspectMap;
 import net.netbeing.cheap.model.Catalog;
 import net.netbeing.cheap.model.CatalogDef;
 import net.netbeing.cheap.model.EntityTreeHierarchy;
@@ -111,6 +112,7 @@ public class CheapJacksonDeserializer
         module.addDeserializer(Hierarchy.class, new HierarchyDeserializer(factory));
         module.addDeserializer(Aspect.class, new AspectDeserializer(factory));
         module.addDeserializer(EntityTreeHierarchy.Node.class, new TreeNodeDeserializer(factory));
+        module.addDeserializer(AspectMap.class, new AspectMapDeserializer(factory));
 
         return module;
     }
@@ -137,6 +139,30 @@ public class CheapJacksonDeserializer
     public @NotNull Catalog fromJson(@NotNull Reader reader) throws IOException
     {
         return mapper.readValue(reader, Catalog.class);
+    }
+
+    /**
+     * Deserializes a JSON string to a CatalogDef object.
+     *
+     * @param json the JSON string to deserialize
+     * @return the deserialized CatalogDef
+     * @throws JsonProcessingException if the JSON is invalid or cannot be deserialized
+     */
+    public @NotNull CatalogDef fromJsonCatalogDef(@NotNull String json) throws JsonProcessingException
+    {
+        return mapper.readValue(json, CatalogDef.class);
+    }
+
+    /**
+     * Deserializes JSON from a reader to a CatalogDef object.
+     *
+     * @param reader the reader containing JSON data
+     * @return the deserialized CatalogDef
+     * @throws IOException if the JSON is invalid or cannot be deserialized
+     */
+    public @NotNull CatalogDef fromJsonCatalogDef(@NotNull Reader reader) throws IOException
+    {
+        return mapper.readValue(reader, CatalogDef.class);
     }
 
     /**

@@ -55,13 +55,12 @@ class CatalogDefSerializer extends JsonSerializer<CatalogDef>
         gen.writeStartObject();
         
         gen.writeFieldName("aspectDefs");
-        gen.writeStartObject();
+        gen.writeStartArray();
         for (AspectDef aspectDef : catalogDef.aspectDefs()) {
-            gen.writeFieldName(aspectDef.name());
             gen.writeObject(aspectDef);
         }
-        gen.writeEndObject();
-        
+        gen.writeEndArray();
+
         gen.writeFieldName("hierarchyDefs");
         gen.writeStartArray();
         for (HierarchyDef hierarchyDef : catalogDef.hierarchyDefs()) {

@@ -18,8 +18,10 @@ package net.netbeing.cheap.rest.service;
 
 import net.netbeing.cheap.db.CheapDao;
 import net.netbeing.cheap.impl.basic.CheapFactory;
+import net.netbeing.cheap.json.dto.UpsertAspectsResponse.AspectResult;
 import net.netbeing.cheap.model.Aspect;
 import net.netbeing.cheap.model.AspectDef;
+import net.netbeing.cheap.model.AspectMap;
 import net.netbeing.cheap.model.AspectMapHierarchy;
 import net.netbeing.cheap.model.Catalog;
 import net.netbeing.cheap.model.Entity;
@@ -40,6 +42,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -74,7 +77,7 @@ public class AspectService
      * @throws UnprocessableEntityException if entities don't exist and createEntities is false
      */
     @Transactional
-    public Map<UUID, UpsertResult> upsertAspects(@NotNull UUID catalogId, @NotNull String aspectDefName,
+    public Map<UUID, AspectResult> upsertAspects(@NotNull UUID catalogId, @NotNull String aspectDefName,
                                                  @NotNull Map<UUID, Map<String, Object>> aspectsByEntity)
     {
         logger.info("Upserting {} aspects of type {} in catalog {}",
@@ -111,7 +114,7 @@ public class AspectService
         }
 
         // Process each aspect
-        Map<UUID, UpsertResult> results = processAspectsForUpsert(aspectDefName, aspectsByEntity, aspectDef, aspectMap);
+        Map<UUID, AspectResult> results = processAspectsForUpsert(aspectDefName, aspectsByEntity, aspectDef, aspectMap);
 
         // Save the catalog with all changes
         try {
@@ -125,10 +128,10 @@ public class AspectService
         return results;
     }
 
-    private @NotNull Map<UUID, UpsertResult> processAspectsForUpsert(@NotNull String aspectDefName, @NotNull Map<UUID
+    private @NotNull Map<UUID, AspectResult> processAspectsForUpsert(@NotNull String aspectDefName, @NotNull Map<UUID
         , Map<String, Object>> aspectsByEntity, AspectDef aspectDef, AspectMapHierarchy aspectMap)
     {
-        Map<UUID, UpsertResult> results = new LinkedHashMap<>();
+        Map<UUID, AspectResult> results = new LinkedHashMap<>();
         for (Map.Entry<UUID, Map<String, Object>> entry : aspectsByEntity.entrySet()) {
             UUID entityId = entry.getKey();
             Map<String, Object> properties = entry.getValue();
@@ -178,14 +181,14 @@ public class AspectService
                 // Add or update the aspect in the hierarchy
                 aspectMap.put(entity, aspect);
 
-                results.put(entityId, new UpsertResult(
+                results.put(entityId, new AspectResult(
                     entityId, true, !isUpdate,
                     isUpdate ? "Aspect updated" : "Aspect created"
                 ));
 
             } catch (Exception e) {
                 logger.error("Failed to upsert aspect for entity {}", entityId, e);
-                results.put(entityId, new UpsertResult(
+                results.put(entityId, new AspectResult(
                     entityId, false, false, e.getMessage()
                 ));
             }
@@ -230,14 +233,14 @@ public class AspectService
      *
      * @param catalogId      the catalog ID
      * @param entityIds      the set of entity IDs to query
-     * @param aspectDefNames the set of AspectDef names to retrieve (empty = all)
-     * @return map of entity ID to map of AspectDef name to Aspect
+     * @param aspectDefNames the set of AspectDef names to retrieve
+     * @return list of AspectMaps, mapping entity id to aspect
      * @throws ResourceNotFoundException if catalog is not found
      */
     @Transactional(readOnly = true)
-    public Map<UUID, Map<String, Aspect>> queryAspects(@NotNull UUID catalogId,
-                                                       @NotNull java.util.Set<UUID> entityIds,
-                                                       java.util.Set<String> aspectDefNames)
+    public List<AspectMap> queryAspects(@NotNull UUID catalogId,
+                                        @NotNull Set<UUID> entityIds,
+                                        @NotNull Set<String> aspectDefNames)
     {
         logger.info("Querying aspects for {} entities in catalog {}", entityIds.size(), catalogId);
 
@@ -253,62 +256,34 @@ public class AspectService
             throw new CheapException("Failed to load catalog: " + e.getMessage(), e);
         }
 
-        Map<UUID, Map<String, Aspect>> results = new LinkedHashMap<>();
-
-        // For each entity
-        for (UUID entityId : entityIds) {
-            Entity entity = factory.getEntity(entityId);
-            if (entity == null) {
-                // Entity doesn't exist, skip it
-                continue;
+        // lookup AspectDefs to query
+        List<AspectDef> aspectDefsToQuery = new ArrayList<>(aspectDefNames.size());
+        for (AspectDef aspectDef : catalog.aspectDefs()) {
+            if (aspectDefNames.contains(aspectDef.name())) {
+                aspectDefsToQuery.add(aspectDef);
             }
+        }
 
-            Map<String, Aspect> aspectsByName = new LinkedHashMap<>();
+        List<AspectMap> results = new ArrayList<>(aspectDefsToQuery.size());
 
-            // Determine which AspectDefs to query
-            Iterable<AspectDef> aspectDefsToQuery;
-            if (aspectDefNames == null || aspectDefNames.isEmpty()) {
-                // Query all AspectDefs
-                aspectDefsToQuery = catalog.aspectDefs();
-            } else {
-                // Query only specified AspectDefs
-                List<AspectDef> filtered = new ArrayList<>();
-                for (AspectDef aspectDef : catalog.aspectDefs()) {
-                    if (aspectDefNames.contains(aspectDef.name())) {
-                        filtered.add(aspectDef);
-                    }
-                }
-                aspectDefsToQuery = filtered;
-            }
+        // For each AspectDef, get the hierarchy and lookup all entities
+        for (AspectDef aspectDef : aspectDefsToQuery) {
+            AspectMapHierarchy hierarchy = catalog.aspects(aspectDef);
+            AspectMap aspectMap = factory.createAspectMap(aspectDef);
 
-            // Get aspects for each AspectDef
-            for (AspectDef aspectDef : aspectDefsToQuery) {
-                AspectMapHierarchy aspectMap = catalog.aspects(aspectDef);
-                if (aspectMap != null) {
-                    Aspect aspect = aspectMap.get(entity);
-                    if (aspect != null) {
-                        aspectsByName.put(aspectDef.name(), aspect);
-                    }
+            for (UUID entityId : entityIds) {
+                Entity entity = factory.createEntity(entityId);
+                Aspect aspect = hierarchy.get(entity);
+                if (aspect != null) {
+                    aspectMap.put(entity, aspect);
                 }
             }
 
-            if (!aspectsByName.isEmpty()) {
-                results.put(entityId, aspectsByName);
+            if (!aspectMap.isEmpty()) {
+                results.add(aspectMap);
             }
         }
 
         return results;
-    }
-
-    /**
-     * Result of an aspect upsert operation for a single entity.
-     */
-    public record UpsertResult(
-        UUID entityId,
-        boolean success,
-        boolean created,
-        String message
-    )
-    {
     }
 }

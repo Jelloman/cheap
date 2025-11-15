@@ -45,7 +45,7 @@ public class OpenApiConfig
                 .version("0.1")
                 .contact(new Contact()
                     .name("Cheap Project")
-                    .url("https://github.com/cheap"))
+                    .url("https://github.com/Jelloman/cheap"))
                 .license(new License()
                     .name("Apache License 2.0")
                     .url("http://www.apache.org/licenses/LICENSE-2.0")))

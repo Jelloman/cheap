@@ -16,7 +16,6 @@
 
 package net.netbeing.cheap.db.mariadb;
 
-import ch.vorburger.exec.ManagedProcessException;
 import net.netbeing.cheap.model.Aspect;
 import net.netbeing.cheap.model.AspectDef;
 import net.netbeing.cheap.model.AspectMapHierarchy;
@@ -24,7 +23,6 @@ import net.netbeing.cheap.model.HierarchyType;
 import net.netbeing.cheap.model.Property;
 import net.netbeing.cheap.model.PropertyDef;
 import net.netbeing.cheap.model.PropertyType;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;

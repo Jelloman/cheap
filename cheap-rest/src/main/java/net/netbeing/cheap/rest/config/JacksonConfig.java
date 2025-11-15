@@ -21,8 +21,6 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import net.netbeing.cheap.impl.basic.CheapFactory;
 import net.netbeing.cheap.json.jackson.deserialize.CheapJacksonDeserializer;
 import net.netbeing.cheap.json.jackson.serialize.CheapJacksonSerializer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
@@ -43,14 +41,18 @@ import org.springframework.web.reactive.config.WebFluxConfigurer;
 @Configuration
 public class JacksonConfig implements WebFluxConfigurer
 {
-    private static final Logger logger = LoggerFactory.getLogger(JacksonConfig.class);
-
-    private final CheapFactory cheapFactory;
-    private ObjectMapper configuredMapper;
+    private final ObjectMapper configuredMapper;
 
     public JacksonConfig(CheapFactory cheapFactory)
     {
-        this.cheapFactory = cheapFactory;
+        configuredMapper = new ObjectMapper();
+        configuredMapper.enable(SerializationFeature.INDENT_OUTPUT);
+
+        // Register Cheap custom serializers module
+        configuredMapper.registerModule(CheapJacksonSerializer.createCheapModule());
+
+        // Register Cheap custom deserializers module
+        configuredMapper.registerModule(CheapJacksonDeserializer.createCheapModule(cheapFactory));
     }
 
     /**
@@ -64,20 +66,6 @@ public class JacksonConfig implements WebFluxConfigurer
     @Primary
     public ObjectMapper objectMapper()
     {
-        if (configuredMapper == null) {
-            logger.info("Configuring Jackson ObjectMapper with Cheap serializers and deserializers");
-
-            configuredMapper = new ObjectMapper();
-            configuredMapper.enable(SerializationFeature.INDENT_OUTPUT);
-
-            // Register Cheap custom serializers module
-            configuredMapper.registerModule(CheapJacksonSerializer.createCheapModule());
-
-            // Register Cheap custom deserializers module
-            configuredMapper.registerModule(CheapJacksonDeserializer.createCheapModule(cheapFactory));
-
-            logger.info("Jackson ObjectMapper configured successfully with Cheap serializers and deserializers");
-        }
         return configuredMapper;
     }
 

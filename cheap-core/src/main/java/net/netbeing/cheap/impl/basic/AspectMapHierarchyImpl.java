@@ -16,22 +16,12 @@
 
 package net.netbeing.cheap.impl.basic;
 
-import net.netbeing.cheap.model.Aspect;
 import net.netbeing.cheap.model.AspectDef;
 import net.netbeing.cheap.model.AspectMapHierarchy;
 import net.netbeing.cheap.model.Catalog;
-import net.netbeing.cheap.model.Entity;
 import net.netbeing.cheap.model.Hierarchy;
 import net.netbeing.cheap.model.HierarchyType;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.Collection;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Set;
-import java.util.function.BiConsumer;
-import java.util.function.BiFunction;
-import java.util.function.Function;
 
 /**
  * Basic implementation of an AspectMapHierarchy that maps entities to aspects.
@@ -43,7 +33,7 @@ import java.util.function.Function;
  * @see AspectMapHierarchy
  * @see Hierarchy
  */
-public class AspectMapHierarchyImpl implements AspectMapHierarchy
+public class AspectMapHierarchyImpl extends AspectMapImpl implements AspectMapHierarchy
 {
     /** The catalog containing this hierarchy. */
     private final Catalog catalog;
@@ -51,14 +41,8 @@ public class AspectMapHierarchyImpl implements AspectMapHierarchy
     /** The name of this hierarchy in the catalog. */
     private final String name;
 
-    /** The aspect definition for the aspects stored in this hierarchy. */
-    private final AspectDef aspectDef;
-
     /** The version number of this hierarchy. */
     private final long version;
-
-    /** The internal map storing entity-to-aspect mappings. */
-    private final Map<Entity, Aspect> aspects;
 
     /**
      * Creates a new AspectMapHierarchyImpl to contain the given AspectDef.
@@ -80,22 +64,10 @@ public class AspectMapHierarchyImpl implements AspectMapHierarchy
      */
     protected AspectMapHierarchyImpl(@NotNull Catalog catalog, @NotNull AspectDef aspectDef, long version)
     {
+        super(aspectDef);
         this.catalog = catalog;
-        this.aspectDef = aspectDef;
         this.version = version;
         this.name = aspectDef.name();
-        this.aspects = new LinkedHashMap<>();
-    }
-
-    /**
-     * Returns the aspect definition for aspects stored in this hierarchy.
-     * 
-     * @return the aspect definition
-     */
-    @Override
-    public AspectDef aspectDef()
-    {
-        return aspectDef;
     }
 
     /**
@@ -138,146 +110,5 @@ public class AspectMapHierarchyImpl implements AspectMapHierarchy
     public long version()
     {
         return version;
-    }
-
-    // Map interface delegation methods
-
-    @Override
-    public int size()
-    {
-        return aspects.size();
-    }
-
-    @Override
-    public boolean isEmpty()
-    {
-        return aspects.isEmpty();
-    }
-
-    @Override
-    public boolean containsKey(Object key)
-    {
-        return aspects.containsKey(key);
-    }
-
-    @Override
-    public boolean containsValue(Object value)
-    {
-        return aspects.containsValue(value);
-    }
-
-    @Override
-    public Aspect get(Object key)
-    {
-        return aspects.get(key);
-    }
-
-    @Override
-    public Aspect put(Entity key, Aspect value)
-    {
-        return aspects.put(key, value);
-    }
-
-    @Override
-    public Aspect remove(Object key)
-    {
-        return aspects.remove(key);
-    }
-
-    @Override
-    public void putAll(@NotNull Map<? extends Entity, ? extends Aspect> m)
-    {
-        aspects.putAll(m);
-    }
-
-    @Override
-    public void clear()
-    {
-        aspects.clear();
-    }
-
-    @Override
-    public @NotNull Set<Entity> keySet()
-    {
-        return aspects.keySet();
-    }
-
-    @Override
-    public @NotNull Collection<Aspect> values()
-    {
-        return aspects.values();
-    }
-
-    @Override
-    public @NotNull Set<Entry<Entity, Aspect>> entrySet()
-    {
-        return aspects.entrySet();
-    }
-
-    @SuppressWarnings("SuspiciousMethodCalls")
-    @Override
-    public Aspect getOrDefault(Object key, Aspect defaultValue)
-    {
-        return aspects.getOrDefault(key, defaultValue);
-    }
-
-    @Override
-    public void forEach(BiConsumer<? super Entity, ? super Aspect> action)
-    {
-        aspects.forEach(action);
-    }
-
-    @Override
-    public void replaceAll(BiFunction<? super Entity, ? super Aspect, ? extends Aspect> function)
-    {
-        aspects.replaceAll(function);
-    }
-
-    @Override
-    public Aspect putIfAbsent(Entity key, Aspect value)
-    {
-        return aspects.putIfAbsent(key, value);
-    }
-
-    @Override
-    public boolean remove(Object key, Object value)
-    {
-        return aspects.remove(key, value);
-    }
-
-    @Override
-    public boolean replace(Entity key, Aspect oldValue, Aspect newValue)
-    {
-        return aspects.replace(key, oldValue, newValue);
-    }
-
-    @Override
-    public Aspect replace(Entity key, Aspect value)
-    {
-        return aspects.replace(key, value);
-    }
-
-    @Override
-    public Aspect computeIfAbsent(Entity key, @NotNull Function<? super Entity, ? extends Aspect> mappingFunction)
-    {
-        return aspects.computeIfAbsent(key, mappingFunction);
-    }
-
-    @Override
-    public Aspect computeIfPresent(Entity key, @NotNull BiFunction<? super Entity, ? super Aspect, ? extends Aspect> remappingFunction)
-    {
-        return aspects.computeIfPresent(key, remappingFunction);
-    }
-
-    @Override
-    public Aspect compute(Entity key, @NotNull BiFunction<? super Entity, ? super Aspect, ? extends Aspect> remappingFunction)
-    {
-        return aspects.compute(key, remappingFunction);
-    }
-
-    @Override
-    public Aspect merge(Entity key, @NotNull Aspect value, @NotNull BiFunction<? super Aspect, ? super Aspect, ? extends Aspect> remappingFunction)
-    {
-        return aspects.merge(key, value, remappingFunction);
     }
 }

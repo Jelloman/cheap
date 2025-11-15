@@ -47,7 +47,9 @@ import java.util.UUID;
 @Slf4j
 public class CheapRestClientImpl implements CheapRestClient
 {
-    private final WebClient webClient;
+    protected final WebClient webClient;
+    protected final ObjectMapper objectMapper;
+    protected final CheapFactory factory;
 
     /**
      * Creates a new CheapRestClient with the specified base URL.
@@ -56,13 +58,11 @@ public class CheapRestClientImpl implements CheapRestClient
      */
     public CheapRestClientImpl(@NotNull String baseUrl)
     {
-        // Configure ObjectMapper with Cheap serializers and deserializers
-        ObjectMapper objectMapper = new ObjectMapper();
-        CheapFactory factory = new CheapFactory();
-        objectMapper.registerModule(CheapJacksonSerializer.createCheapModule());
-        objectMapper.registerModule(CheapJacksonDeserializer.createCheapModule(factory));
+        this.objectMapper = new ObjectMapper();
+        this.factory = new CheapFactory();
+        registerCheapModules();
 
-        // Configure WebClient with custom ObjectMapper
+        // Configure WebClient with our custom ObjectMapper
         ExchangeStrategies strategies = ExchangeStrategies.builder()
             .codecs(configurer -> {
                 configurer.defaultCodecs().jackson2JsonEncoder(new Jackson2JsonEncoder(objectMapper));
@@ -84,9 +84,35 @@ public class CheapRestClientImpl implements CheapRestClient
     public CheapRestClientImpl(@NotNull WebClient webClient)
     {
         this.webClient = webClient;
+        this.objectMapper = new ObjectMapper();
+        this.factory = new CheapFactory();
+        registerCheapModules();
+    }
+
+    protected void registerCheapModules()
+    {
+        // Configure ObjectMapper with Cheap serializers and deserializers
+        objectMapper.registerModule(CheapJacksonSerializer.createCheapModule());
+        objectMapper.registerModule(CheapJacksonDeserializer.createCheapModule(factory));
+    }
+
+    public ObjectMapper getObjectMapper()
+    {
+        return objectMapper;
+    }
+
+    public CheapFactory getFactory()
+    {
+        return factory;
     }
 
     // ========== Catalog Operations ==========
+
+    @Override
+    public void registerAspectDef(@NotNull AspectDef aspectDef)
+    {
+        factory.registerAspectDef(aspectDef);
+    }
 
     @Override
     public CreateCatalogResponse createCatalog(
@@ -121,7 +147,7 @@ public class CheapRestClientImpl implements CheapRestClient
     }
 
     @Override
-    public CatalogDef getCatalog(@NotNull UUID catalogId)
+    public CatalogDef getCatalogDef(@NotNull UUID catalogId)
     {
         return webClient.get()
             .uri("/api/catalog/{catalogId}", catalogId)
@@ -193,7 +219,8 @@ public class CheapRestClientImpl implements CheapRestClient
         @NotNull Map<UUID, Map<String, Object>> aspects)
     {
         UpsertAspectsRequest request = new UpsertAspectsRequest(
-            aspects.entrySet().stream()
+            aspects.entrySet()
+                .stream()
                 .map(entry -> new UpsertAspectsRequest.AspectData(
                     entry.getKey(),
                     entry.getValue()
@@ -302,7 +329,8 @@ public class CheapRestClientImpl implements CheapRestClient
                 case 400 -> new CheapRestBadRequestException("Bad request: " + ex.getMessage(), ex);
                 case 404 -> new CheapRestNotFoundException("Resource not found: " + ex.getMessage(), ex);
                 case 500, 503 -> new CheapRestServerException("Server error: " + ex.getMessage(), ex);
-                default -> new CheapRestClientException("HTTP error " + ex.getStatusCode() + ": " + ex.getMessage(), ex);
+                default ->
+                    new CheapRestClientException("HTTP error " + ex.getStatusCode() + ": " + ex.getMessage(), ex);
             };
         }
 

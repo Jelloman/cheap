@@ -17,9 +17,9 @@
 package net.netbeing.cheap.json.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import net.netbeing.cheap.model.Aspect;
+import net.netbeing.cheap.model.AspectMap;
 
-import java.util.Map;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -27,7 +27,7 @@ import java.util.UUID;
  */
 public record AspectQueryResponse(
     @JsonProperty("catalogId") UUID catalogId,
-    @JsonProperty("results") Map<UUID, Map<String, Aspect>> results
+    @JsonProperty("results") List<AspectMap> results
 )
 {
 }

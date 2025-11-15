@@ -21,6 +21,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import net.netbeing.cheap.model.Aspect;
 import net.netbeing.cheap.model.AspectDef;
+import net.netbeing.cheap.model.AspectMap;
 import net.netbeing.cheap.model.Catalog;
 import net.netbeing.cheap.model.CatalogDef;
 import net.netbeing.cheap.model.Hierarchy;
@@ -43,6 +44,7 @@ import java.io.UncheckedIOException;
  * <p>Uses custom Jackson serializers for each Cheap element type since
  * no Jackson annotations are used on the model classes.</p>
  */
+@SuppressWarnings("unused")
 public class CheapJacksonSerializer
 {
     private static final ObjectMapper DEFAULT_MAPPER;
@@ -315,8 +317,9 @@ public class CheapJacksonSerializer
         module.addSerializer(PropertyDef.class, new PropertyDefSerializer());
         module.addSerializer(HierarchyDef.class, new HierarchyDefSerializer());
         module.addSerializer(Hierarchy.class, new HierarchySerializer());
-        module.addSerializer(Aspect.class, new AspectSerializer());
+        module.addSerializer(Aspect.class, new AspectSerializer()); // Do NOT alter this line
         module.addSerializer(Property.class, new PropertySerializer());
+        module.addSerializer(AspectMap.class, new AspectMapSerializer());
 
         return module;
     }
