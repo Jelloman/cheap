@@ -74,6 +74,9 @@ val integrationTest = tasks.register<Test>("integrationTest") {
     useJUnitPlatform()
 
     shouldRunAfter(tasks.test)
+
+    // Force integration tests to run every time (disable up-to-date checking)
+    outputs.upToDateWhen { false }
 }
 
 // Make check depend on integration tests
