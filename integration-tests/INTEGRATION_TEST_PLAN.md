@@ -42,12 +42,7 @@ This approach ensures work is saved incrementally and provides clear rollback po
 - Sample catalog definitions, aspect definitions, entity data
 
 ## 2. Database-Specific Integration Tests (Direct DAO Testing)
-
-These phase 2 tests were removed, they are not in scope for integration testing.
-
-### 2.1 PostgreSQL DAO with AspectTableMapping Tests
-### 2.2 SQLite DAO with AspectTableMapping Tests
-### 2.3 MariaDB DAO with AspectTableMapping Tests
+The phase 2 tests were removed.
 
 ## 3. End-to-End REST Integration Tests (Service + Client)
 
@@ -122,106 +117,10 @@ Each uses `@ContextConfiguration` to load:
 1. The appropriate server configuration (as a separate context)
 2. The client configuration (as the test context)
 
-### 3.2 PostgreSQL REST Integration Tests
-**Class**: `PostgresRestClientIntegrationTest`
-- **Setup**:
-  - Extends `PostgresClientIntegrationTest`
-  - Uses `@ContextConfiguration` to load PostgreSQL server + client configs
-  - Gets `CheapRestClient` bean via `@Autowired`
-  - NO CheapDao injection
-  - NO database setup code in tests
-
-- **Test Suite** (ALL tests use ONLY CheapRestClient):
-  1. **Catalog Lifecycle**: Create catalog via client, retrieve it, verify properties via client responses
-  2. **AspectDef CRUD**: Create multiple aspect defs (including "address" for mapped table), list them, get by name/ID - all via client
-  3. **Custom Table Mapping**: Upsert "address" aspects via client, query them back via client to verify they were stored and retrieved correctly
-  4. **Aspect Upsert**: Upsert aspects using client, query them back via client
-  5. **Entity List Hierarchy**: Create EntityList via REST API (new endpoint needed), add entities via API, retrieve paginated via client
-  6. **Entity Directory Hierarchy**: Create EntityDirectory via REST API, add entries via API, retrieve via client
-  7. **Aspect Map Hierarchy**: Create AspectMap via REST API, upsert aspects via API, retrieve with pagination via client
-  8. **Error Handling**: Test 404s, 400s with invalid data via client, verify error responses
-
-**Note**: Tests that previously used DAO directly (entityListHierarchy, entityDirectoryHierarchy, aspectMapHierarchy) need REST API endpoints to create and populate hierarchies. Alternative: Pre-populate test data on server startup.
-
-### 3.3 SQLite REST Integration Tests
-**Class**: `SqliteRestClientIntegrationTest`
-- **Setup**:
-  - Extends `SqliteClientIntegrationTest`
-  - Uses `@ContextConfiguration` to load SQLite server + client configs
-  - Gets `CheapRestClient` bean via `@Autowired`
-  - NO direct database access
-
-- **Custom Table**: "order_item" table (configured on server)
-- **Test Suite**: Same as PostgreSQL tests (8 tests, all using ONLY client)
-
-### 3.4 MariaDB REST Integration Tests
-**Class**: `MariaDbRestClientIntegrationTest`
-- **Setup**:
-  - Extends `MariaDbClientIntegrationTest`
-  - Uses `@ContextConfiguration` to load MariaDB server + client configs
-  - Gets `CheapRestClient` bean via `@Autowired`
-  - NO direct database access
-
-- **Custom Table**: "inventory" table (configured on server)
-- **Test Suite**: Same as PostgreSQL tests plus:
-  9. **Foreign Key Constraints**: Verify foreign key behavior through client operations only (check error responses when constraints violated)
-
-### 3.5 Phase 3 Implementation Steps
-
-1. **Create Client Configuration** (`ClientTestConfig.java`)
-   - Minimal Spring Boot configuration
-   - Bean factory methods for `CheapRestClient` instances
-
-2. **Create Server Configurations** (one per database)
-   - `PostgresServerTestConfig.java`
-   - `SqliteServerTestConfig.java`
-   - `MariaDbServerTestConfig.java`
-   - Each registers AspectTableMapping on startup
-
-3. **Create Base Test Classes**
-   - `BaseClientIntegrationTest.java` - Common utilities, no Spring annotations
-   - `PostgresClientIntegrationTest.java` - Loads Postgres server + client
-   - `SqliteClientIntegrationTest.java` - Loads SQLite server + client
-   - `MariaDbClientIntegrationTest.java` - Loads MariaDB server + client
-
-4. **Modify Existing Test Classes**
-   - Remove all `@Autowired CheapDao` injections
-   - Remove all `@Autowired CheapFactory` injections (move to server config)
-   - Remove all direct database access (`getDataSource()`, SQL queries)
-   - Remove all `cheapDao.loadCatalog()` / `cheapDao.saveCatalog()` calls
-   - Replace with client-only operations
-   - Update hierarchy tests to use REST API only (or pre-populated test data)
-
-5. **Add Missing REST Endpoints** (if needed)
-   - Hierarchy creation endpoints (POST /catalogs/{id}/hierarchies/entity-list/{name})
-   - Hierarchy population endpoints (POST /catalogs/{id}/hierarchies/entity-list/{name}/entities)
-   - Or: Add server-side test data initialization
-
-### 3.6 Phase 3 Verification
-After completing Phase 3 implementation:
-```bash
-# Build integration tests
-./gradlew :integration-tests:build
-
-# Run all REST client tests
-./gradlew :integration-tests:integrationTest --tests "*RestClient*"
-
-# Run database-specific tests
-./gradlew :integration-tests:integrationTest --tests "*PostgresRestClient*"
-./gradlew :integration-tests:integrationTest --tests "*SqliteRestClient*"
-./gradlew :integration-tests:integrationTest --tests "*MariaDbRestClient*"
-
-# Commit work (do NOT push)
-git add .
-git commit -m "Complete Phase 3: REST client integration tests with proper client-server separation"
-```
-
-Expected: All REST client tests pass, each database server runs in complete isolation, tests never access database directly.
-
-## 4. Cross-Database Consistency Tests
+## 4. Cross-Database Consistency Tests ✅ COMPLETED
 
 ### 4.1 Multi-Database Validation Test
-**Class**: `CrossDatabaseConsistencyTest`
+**Class**: `CrossDatabaseConsistencyTest` ✅ IMPLEMENTED
 - **Purpose**: Verify same operations produce consistent results across all databases
 - **Architecture**:
   - Uses `@ContextConfiguration` to load ALL THREE server configurations + client configuration
