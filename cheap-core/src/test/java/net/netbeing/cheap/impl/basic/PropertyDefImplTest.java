@@ -20,7 +20,6 @@ class PropertyDefImplTest
         assertTrue(propDef.isReadable());
         assertTrue(propDef.isWritable());
         assertTrue(propDef.isNullable());
-        assertTrue(propDef.isRemovable());
         assertFalse(propDef.isMultivalued());
     }
 
@@ -51,7 +50,6 @@ class PropertyDefImplTest
             .setIsReadable(true)
             .setIsWritable(false)
             .setIsNullable(false)
-            .setIsRemovable(true)
             .setIsMultivalued(true)
             .build();
 
@@ -62,7 +60,6 @@ class PropertyDefImplTest
         assertTrue(propDef.isReadable());
         assertFalse(propDef.isWritable());
         assertFalse(propDef.isNullable());
-        assertTrue(propDef.isRemovable());
         assertTrue(propDef.isMultivalued());
     }
 
@@ -82,7 +79,6 @@ class PropertyDefImplTest
         assertTrue(propDef.isReadable());
         assertTrue(propDef.isWritable());
         assertTrue(propDef.isNullable());
-        assertTrue(propDef.isRemovable());
         assertFalse(propDef.isMultivalued());
     }
 
@@ -161,8 +157,12 @@ class PropertyDefImplTest
     @Test
     void fullyEquals_DifferentAttributes_ReturnsFalse()
     {
-        PropertyDefImpl propDef1 = new PropertyDefBuilder().setName("testProp").setType(PropertyType.String).setIsReadable(true).setIsWritable(true).setIsNullable(true).setIsRemovable(true).setIsMultivalued(false).build();
-        PropertyDefImpl propDef2 = new PropertyDefBuilder().setName("testProp").setType(PropertyType.String).setIsReadable(true).setIsWritable(false).setIsNullable(true).setIsRemovable(true).setIsMultivalued(false).build();
+        PropertyDefImpl propDef1 = new PropertyDefBuilder().setName("testProp").setType(PropertyType.String)
+            .setIsReadable(true).setIsWritable(true).setIsNullable(true).setIsMultivalued(false)
+            .build();
+        PropertyDefImpl propDef2 = new PropertyDefBuilder().setName("testProp").setType(PropertyType.String)
+            .setIsReadable(true).setIsWritable(false).setIsNullable(true).setIsMultivalued(false)
+            .build();
 
         assertFalse(propDef1.fullyEquals(propDef2));
     }
@@ -213,8 +213,12 @@ class PropertyDefImplTest
     @Test
     void hash_DifferentAttributes_ReturnsDifferentHash()
     {
-        PropertyDefImpl propDef1 = new PropertyDefBuilder().setName("testProp").setType(PropertyType.String).setIsReadable(true).setIsWritable(true).setIsNullable(true).setIsRemovable(true).setIsMultivalued(false).build();
-        PropertyDefImpl propDef2 = new PropertyDefBuilder().setName("testProp").setType(PropertyType.String).setIsReadable(true).setIsWritable(false).setIsNullable(true).setIsRemovable(true).setIsMultivalued(false).build();
+        PropertyDefImpl propDef1 = new PropertyDefBuilder().setName("testProp").setType(PropertyType.String)
+            .setIsReadable(true).setIsWritable(true).setIsNullable(true).setIsMultivalued(false)
+            .build();
+        PropertyDefImpl propDef2 = new PropertyDefBuilder().setName("testProp").setType(PropertyType.String)
+            .setIsReadable(true).setIsWritable(false).setIsNullable(true).setIsMultivalued(false)
+            .build();
 
         assertNotEquals(propDef1.hash(), propDef2.hash());
     }
@@ -230,7 +234,9 @@ class PropertyDefImplTest
     @Test
     void validatePropertyValue_NullValueNullableProperty_ReturnsTrue()
     {
-        PropertyDefImpl propDef = new PropertyDefBuilder().setName("testProp").setType(PropertyType.String).setIsReadable(true).setIsWritable(true).setIsNullable(true).setIsRemovable(true).setIsMultivalued(false).build();
+        PropertyDefImpl propDef = new PropertyDefBuilder().setName("testProp").setType(PropertyType.String)
+            .setIsReadable(true).setIsWritable(true).setIsNullable(true).setIsMultivalued(false)
+            .build();
 
         assertTrue(propDef.validatePropertyValue(null, false));
     }
@@ -238,7 +244,9 @@ class PropertyDefImplTest
     @Test
     void validatePropertyValue_NullValueNonNullableProperty_ReturnsFalse()
     {
-        PropertyDefImpl propDef = new PropertyDefBuilder().setName("testProp").setType(PropertyType.String).setIsReadable(true).setIsWritable(true).setIsNullable(false).setIsRemovable(true).setIsMultivalued(false).build();
+        PropertyDefImpl propDef = new PropertyDefBuilder().setName("testProp").setType(PropertyType.String)
+            .setIsReadable(true).setIsWritable(true).setIsNullable(false).setIsMultivalued(false)
+            .build();
 
         assertFalse(propDef.validatePropertyValue(null, false));
     }
@@ -246,7 +254,9 @@ class PropertyDefImplTest
     @Test
     void validatePropertyValue_NullValueNonNullablePropertyThrowExceptions_ThrowsIllegalArgumentException()
     {
-        PropertyDefImpl propDef = new PropertyDefBuilder().setName("testProp").setType(PropertyType.String).setIsReadable(true).setIsWritable(true).setIsNullable(false).setIsRemovable(true).setIsMultivalued(false).build();
+        PropertyDefImpl propDef = new PropertyDefBuilder().setName("testProp").setType(PropertyType.String)
+            .setIsReadable(true).setIsWritable(true).setIsNullable(false).setIsMultivalued(false)
+            .build();
 
         assertThrows(IllegalArgumentException.class, () -> propDef.validatePropertyValue(null, true));
     }

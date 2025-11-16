@@ -320,8 +320,8 @@ public class PostgresDao extends AbstractCheapDao
         UUID aspectDefId = aspectDef.globalId();
 
         String sql = "INSERT INTO property_def (aspect_def_id, name, property_index, property_type, default_value, " +
-            "has_default_value, is_readable, is_writable, is_nullable, is_removable, is_multivalued) " +
-            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) " +
+            "has_default_value, is_readable, is_writable, is_nullable, is_multivalued) " +
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) " +
             "ON CONFLICT (aspect_def_id, name) DO UPDATE SET " +
             "property_index = EXCLUDED.property_index, " +
             "property_type = EXCLUDED.property_type, " +
@@ -330,7 +330,6 @@ public class PostgresDao extends AbstractCheapDao
             "is_readable = EXCLUDED.is_readable, " +
             "is_writable = EXCLUDED.is_writable, " +
             "is_nullable = EXCLUDED.is_nullable, " +
-            "is_removable = EXCLUDED.is_removable, " +
             "is_multivalued = EXCLUDED.is_multivalued";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setObject(1, aspectDefId);
@@ -342,8 +341,7 @@ public class PostgresDao extends AbstractCheapDao
             stmt.setBoolean(7, propDef.isReadable());
             stmt.setBoolean(8, propDef.isWritable());
             stmt.setBoolean(9, propDef.isNullable());
-            stmt.setBoolean(10, propDef.isRemovable());
-            stmt.setBoolean(11, propDef.isMultivalued());
+            stmt.setBoolean(10, propDef.isMultivalued());
             stmt.executeUpdate();
         }
     }
@@ -1183,7 +1181,7 @@ public class PostgresDao extends AbstractCheapDao
 
         // Load property definitions first, ordered by property_index to maintain insertion order
         String propSql = "SELECT pd.name, pd.property_type, pd.default_value, pd.has_default_value, " +
-            "pd.is_readable, pd.is_writable, pd.is_nullable, pd.is_removable, pd.is_multivalued " +
+            "pd.is_readable, pd.is_writable, pd.is_nullable, pd.is_multivalued " +
             "FROM property_def pd JOIN aspect_def ad ON pd.aspect_def_id = ad.aspect_def_id " +
             "WHERE ad.aspect_def_id = ? ORDER BY pd.property_index";
 
@@ -1200,11 +1198,10 @@ public class PostgresDao extends AbstractCheapDao
                     boolean propReadable = rs.getBoolean("is_readable");
                     boolean propWritable = rs.getBoolean("is_writable");
                     boolean isNullable = rs.getBoolean("is_nullable");
-                    boolean isRemovable = rs.getBoolean("is_removable");
                     boolean isMultivalued = rs.getBoolean("is_multivalued");
 
                     PropertyDef propDef = adapter.getFactory().createPropertyDef(propName, type, defaultValue, hasDefaultValue,
-                        propReadable, propWritable, isNullable, isRemovable, isMultivalued);
+                        propReadable, propWritable, isNullable, isMultivalued);
 
                     propertyDefMap.put(propName, propDef);
                 }

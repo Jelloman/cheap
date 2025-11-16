@@ -454,7 +454,7 @@ class MariaDbDaoTest
         {
             // Create AspectDef with multivalued String property
             PropertyDef tagsProp = getDb().factory.createPropertyDef("tags", PropertyType.String,
-                true, true, true, true, true);
+                true, true, true, true);
 
             Map<String, PropertyDef> propDefs = Map.of("tags", tagsProp);
             AspectDef productDef = getDb().factory.createImmutableAspectDef("product", propDefs);
@@ -525,7 +525,7 @@ class MariaDbDaoTest
         {
             // Create AspectDef with multivalued Integer property
             PropertyDef scoresProp = getDb().factory.createPropertyDef("scores", PropertyType.Integer,
-                true, true, true, true, true);
+                true, true, true, true);
 
             Map<String, PropertyDef> propDefs = Map.of("scores", scoresProp);
             AspectDef testDef = getDb().factory.createImmutableAspectDef("test_results", propDefs);
@@ -569,7 +569,7 @@ class MariaDbDaoTest
         {
             // Create AspectDef with multivalued property
             PropertyDef tagsProp = getDb().factory.createPropertyDef("tags", PropertyType.String,
-                true, true, true, true, true);
+                true, true, true, true);
 
             Map<String, PropertyDef> propDefs = Map.of("tags", tagsProp);
             AspectDef productDef = getDb().factory.createImmutableAspectDef("product", propDefs);
@@ -624,7 +624,7 @@ class MariaDbDaoTest
         {
             // Create AspectDef with nullable multivalued property
             PropertyDef tagsProp = getDb().factory.createPropertyDef("tags", PropertyType.String,
-                true, true, true, true, true);
+                true, true, true, true);
 
             Map<String, PropertyDef> propDefs = Map.of("tags", tagsProp);
             AspectDef productDef = getDb().factory.createImmutableAspectDef("product", propDefs);
@@ -678,11 +678,11 @@ class MariaDbDaoTest
         {
             // Create AspectDef with both single-valued and multivalued properties
             PropertyDef titleProp = getDb().factory.createPropertyDef("title", PropertyType.String,
-                null, false, true, true, false, false, false);
+                null, false, true, true, false, false);
             PropertyDef tagsProp = getDb().factory.createPropertyDef("tags", PropertyType.String,
-                true, true, true, true, true);
+                true, true, true, true);
             PropertyDef pricesProp = getDb().factory.createPropertyDef("prices", PropertyType.Float,
-                true, true, true, true, true);
+                true, true, true, true);
 
             Map<String, PropertyDef> propDefs = new LinkedHashMap<>();
             propDefs.put("title", titleProp);
@@ -763,9 +763,9 @@ class MariaDbDaoTest
         {
             // Create AspectDef with multivalued Boolean and UUID properties
             PropertyDef flagsProp = getDb().factory.createPropertyDef("flags", PropertyType.Boolean,
-                true, true, true, true, true);
+                true, true, true, true);
             PropertyDef idsProp = getDb().factory.createPropertyDef("ids", PropertyType.UUID,
-                true, true, true, true, true);
+                true, true, true, true);
 
             Map<String, PropertyDef> propDefs = new LinkedHashMap<>();
             propDefs.put("flags", flagsProp);
@@ -825,7 +825,7 @@ class MariaDbDaoTest
         {
             // Create AspectDef with multivalued property
             PropertyDef tagsProp = getDb().factory.createPropertyDef("tags", PropertyType.String,
-                true, true, true, true, true);
+                true, true, true, true);
 
             Map<String, PropertyDef> propDefs = Map.of("tags", tagsProp);
             AspectDef productDef = getDb().factory.createImmutableAspectDef("product", propDefs);
@@ -1079,29 +1079,29 @@ class MariaDbDaoTest
             String aspectDefName = "all_types_aspect";
 
             PropertyDef intProp = getDb().factory.createPropertyDef("int_prop", PropertyType.Integer, null, false,
-                true, true, true, false, false);
+                true, true, true, false);
             PropertyDef floatProp = getDb().factory.createPropertyDef("float_prop", PropertyType.Float, null, false,
-                true, true, true, false, false);
+                true, true, true, false);
             PropertyDef boolProp = getDb().factory.createPropertyDef("bool_prop", PropertyType.Boolean, null, false,
-                true, true, true, false, false);
+                true, true, true, false);
             PropertyDef stringProp = getDb().factory.createPropertyDef("string_prop", PropertyType.String, null,
-                false, true, true, true, false, false);
+                false, true, true, true, false);
             PropertyDef textProp = getDb().factory.createPropertyDef("text_prop", PropertyType.Text, null, false,
-                true, true, true, false, false);
+                true, true, true, false);
             PropertyDef bigIntProp = getDb().factory.createPropertyDef("bigint_prop", PropertyType.BigInteger, null,
-                false, true, true, true, false, false);
+                false, true, true, true, false);
             PropertyDef bigDecProp = getDb().factory.createPropertyDef("bigdec_prop", PropertyType.BigDecimal, null,
-                false, true, true, true, false, false);
+                false, true, true, true, false);
             PropertyDef dateProp = getDb().factory.createPropertyDef("date_prop", PropertyType.DateTime, null, false,
-                true, true, true, false, false);
+                true, true, true, false);
             PropertyDef uriProp = getDb().factory.createPropertyDef("uri_prop", PropertyType.URI, null, false, true,
-                true, true, false, false);
+                true, true, false);
             PropertyDef uuidProp = getDb().factory.createPropertyDef("uuid_prop", PropertyType.UUID, null, false,
-                true, true, true, false, false);
+                true, true, true, false);
             PropertyDef clobProp = getDb().factory.createPropertyDef("clob_prop", PropertyType.CLOB, null, false,
-                true, true, true, false, false);
+                true, true, true, false);
             PropertyDef blobProp = getDb().factory.createPropertyDef("blob_prop", PropertyType.BLOB, null, false,
-                true, true, true, false, false);
+                true, true, true, false);
 
             Map<String, PropertyDef> propDefs = new LinkedHashMap<>();
             propDefs.put("int_prop", intProp);
@@ -1231,13 +1231,13 @@ class MariaDbDaoTest
             // Create an AspectDef with properties in a specific order
             Map<String, PropertyDef> propDefs = new LinkedHashMap<>();
             propDefs.put("zebra", getDb().factory.createPropertyDef("zebra", PropertyType.String, null, false, true,
-                true, true, false, false));
+                true, true, false));
             propDefs.put("alpha", getDb().factory.createPropertyDef("alpha", PropertyType.Integer, null, false, true,
-                true, true, false, false));
+                true, true, false));
             propDefs.put("middle", getDb().factory.createPropertyDef("middle", PropertyType.Boolean, null, false,
-                true, true, true, false, false));
+                true, true, true, false));
             propDefs.put("beta", getDb().factory.createPropertyDef("beta", PropertyType.Float, null, false, true,
-                true, true, false, false));
+                true, true, false));
 
             AspectDef originalDef = getDb().factory.createImmutableAspectDef("ordered_aspect", propDefs);
 

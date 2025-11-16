@@ -233,8 +233,8 @@ public class SqliteDao extends AbstractCheapDao
         String aspectDefId = aspectDef.globalId().toString();
 
         String sql = "INSERT INTO property_def (aspect_def_id, name, property_index, property_type, default_value, " +
-            "has_default_value, is_readable, is_writable, is_nullable, is_removable, is_multivalued) " +
-            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) " +
+            "has_default_value, is_readable, is_writable, is_nullable, is_multivalued) " +
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) " +
             "ON CONFLICT (aspect_def_id, name) DO UPDATE SET " +
             "property_index = excluded.property_index, " +
             "property_type = excluded.property_type, " +
@@ -243,7 +243,6 @@ public class SqliteDao extends AbstractCheapDao
             "is_readable = excluded.is_readable, " +
             "is_writable = excluded.is_writable, " +
             "is_nullable = excluded.is_nullable, " +
-            "is_removable = excluded.is_removable, " +
             "is_multivalued = excluded.is_multivalued";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, aspectDefId);
@@ -255,8 +254,7 @@ public class SqliteDao extends AbstractCheapDao
             stmt.setInt(7, propDef.isReadable() ? 1 : 0);
             stmt.setInt(8, propDef.isWritable() ? 1 : 0);
             stmt.setInt(9, propDef.isNullable() ? 1 : 0);
-            stmt.setInt(10, propDef.isRemovable() ? 1 : 0);
-            stmt.setInt(11, propDef.isMultivalued() ? 1 : 0);
+            stmt.setInt(10, propDef.isMultivalued() ? 1 : 0);
             stmt.executeUpdate();
         }
     }
@@ -1083,7 +1081,7 @@ public class SqliteDao extends AbstractCheapDao
 
         // Load property definitions first, ordered by property_index to maintain insertion order
         String propSql = "SELECT pd.name, pd.property_type, pd.default_value, pd.has_default_value, " +
-            "pd.is_readable, pd.is_writable, pd.is_nullable, pd.is_removable, pd.is_multivalued " +
+            "pd.is_readable, pd.is_writable, pd.is_nullable, pd.is_multivalued " +
             "FROM property_def pd JOIN aspect_def ad ON pd.aspect_def_id = ad.aspect_def_id " +
             "WHERE ad.aspect_def_id = ? ORDER BY pd.property_index";
 
@@ -1100,11 +1098,10 @@ public class SqliteDao extends AbstractCheapDao
                     boolean propReadable = rs.getInt("is_readable") == 1;
                     boolean propWritable = rs.getInt("is_writable") == 1;
                     boolean isNullable = rs.getInt("is_nullable") == 1;
-                    boolean isRemovable = rs.getInt("is_removable") == 1;
                     boolean isMultivalued = rs.getInt("is_multivalued") == 1;
 
                     PropertyDef propDef = adapter.getFactory().createPropertyDef(propName, type, defaultValue, hasDefaultValue,
-                        propReadable, propWritable, isNullable, isRemovable, isMultivalued);
+                        propReadable, propWritable, isNullable, isMultivalued);
 
                     propertyDefMap.put(propName, propDef);
                 }

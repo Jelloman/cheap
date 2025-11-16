@@ -39,7 +39,6 @@ CREATE TABLE property_def (
     is_readable BOOLEAN NOT NULL DEFAULT true,
     is_writable BOOLEAN NOT NULL DEFAULT true,
     is_nullable BOOLEAN NOT NULL DEFAULT true,
-    is_removable BOOLEAN NOT NULL DEFAULT false,
     is_multivalued BOOLEAN NOT NULL DEFAULT false,
     PRIMARY KEY (aspect_def_id, name)
 );

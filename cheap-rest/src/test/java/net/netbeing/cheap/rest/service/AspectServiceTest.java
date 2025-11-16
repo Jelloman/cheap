@@ -54,12 +54,8 @@ class AspectServiceTest extends BaseServiceTest
         // Create a catalog with an AspectDef
         aspectDefName = "com.example.PersonAspect";
         personAspect = factory.createMutableAspectDef(aspectDefName);
-        personAspect.add(factory.createPropertyDef(
-            "name", PropertyType.String, true, true, false, false, false
-        ));
-        personAspect.add(factory.createPropertyDef(
-            "age", PropertyType.Integer, true, true, true, false, false
-        ));
+        personAspect.add(factory.createPropertyDef("name", PropertyType.String, true, true, false, false));
+        personAspect.add(factory.createPropertyDef("age", PropertyType.Integer, true, true, true, false));
 
         CatalogDef catalogDef = factory.createCatalogDef(
             Collections.emptyList(),

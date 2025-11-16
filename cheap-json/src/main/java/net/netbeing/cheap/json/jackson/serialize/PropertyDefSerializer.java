@@ -66,9 +66,6 @@ class PropertyDefSerializer extends JsonSerializer<PropertyDef>
         if (!propertyDef.isNullable()) {
             gen.writeBooleanField("isNullable", false);
         }
-        if (propertyDef.isRemovable()) {
-            gen.writeBooleanField("isRemovable", true);
-        }
         if (propertyDef.isMultivalued()) {
             gen.writeBooleanField("isMultivalued", true);
         }

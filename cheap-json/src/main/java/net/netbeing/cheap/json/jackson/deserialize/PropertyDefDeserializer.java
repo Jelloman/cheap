@@ -76,7 +76,6 @@ class PropertyDefDeserializer extends JsonDeserializer<PropertyDef>
         boolean isReadable = true;
         boolean isWritable = true;
         boolean isNullable = false;
-        boolean isRemovable = false;
         boolean isMultivalued = false;
 
         while (p.nextToken() != JsonToken.END_OBJECT) {
@@ -91,7 +90,6 @@ class PropertyDefDeserializer extends JsonDeserializer<PropertyDef>
                 case "isReadable" -> isReadable = p.getBooleanValue();
                 case "isWritable" -> isWritable = p.getBooleanValue();
                 case "isNullable" -> isNullable = p.getBooleanValue();
-                case "isRemovable" -> isRemovable = p.getBooleanValue();
                 case "isMultivalued" -> isMultivalued = p.getBooleanValue();
                 default -> p.skipChildren(); // Skip unknown fields
             }
@@ -102,7 +100,7 @@ class PropertyDefDeserializer extends JsonDeserializer<PropertyDef>
         }
 
         return factory.createPropertyDef(name, type, defaultValue, hasDefaultValue,
-                                       isReadable, isWritable, isNullable, isRemovable, isMultivalued);
+                                       isReadable, isWritable, isNullable, isMultivalued);
     }
 
     private Object readValue(JsonParser p, PropertyType type) throws IOException

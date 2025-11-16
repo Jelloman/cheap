@@ -29,7 +29,7 @@ class MultivaluedPropertyTest
     void testMultivaluedStringProperty_CreateAndRead()
     {
         PropertyDef propDef = factory.createPropertyDef("tags", PropertyType.String,
-            true, true, true, true, true);
+            true, true, true, true);
 
         assertTrue(propDef.isMultivalued());
         assertEquals(PropertyType.String, propDef.type());
@@ -55,7 +55,7 @@ class MultivaluedPropertyTest
     void testMultivaluedIntegerProperty_CreateAndRead()
     {
         PropertyDef propDef = factory.createPropertyDef("scores", PropertyType.Integer,
-            true, true, true, true, true);
+            true, true, true, true);
 
         assertTrue(propDef.isMultivalued());
         assertEquals(PropertyType.Integer, propDef.type());
@@ -65,7 +65,6 @@ class MultivaluedPropertyTest
 
         assertNotNull(property);
 
-        @SuppressWarnings("unchecked")
         List<Long> readScores = property.unsafeReadAs();
         assertEquals(4, readScores.size());
         assertEquals(100L, readScores.get(0));
@@ -78,7 +77,7 @@ class MultivaluedPropertyTest
     void testMultivaluedBooleanProperty_CreateAndRead()
     {
         PropertyDef propDef = factory.createPropertyDef("flags", PropertyType.Boolean,
-            true, true, true, true, true);
+            true, true, true, true);
 
         assertTrue(propDef.isMultivalued());
 
@@ -98,7 +97,7 @@ class MultivaluedPropertyTest
     void testMultivaluedFloatProperty_CreateAndRead()
     {
         PropertyDef propDef = factory.createPropertyDef("temperatures", PropertyType.Float,
-            true, true, true, true, true);
+            true, true, true, true);
 
         List<Double> temps = List.of(98.6, 99.1, 97.8, 98.2);
         Property property = factory.createProperty(propDef, temps);
@@ -114,7 +113,7 @@ class MultivaluedPropertyTest
     void testMultivaluedUUIDProperty_CreateAndRead()
     {
         PropertyDef propDef = factory.createPropertyDef("identifiers", PropertyType.UUID,
-            true, true, true, true, true);
+            true, true, true, true);
 
         UUID id1 = UUID.randomUUID();
         UUID id2 = UUID.randomUUID();
@@ -133,7 +132,7 @@ class MultivaluedPropertyTest
     void testMultivaluedURIProperty_CreateAndRead() throws Exception
     {
         PropertyDef propDef = factory.createPropertyDef("links", PropertyType.URI,
-            true, true, true, true, true);
+            true, true, true, true);
 
         URI uri1 = new URI("https://example.com");
         URI uri2 = new URI("https://test.com");
@@ -152,7 +151,7 @@ class MultivaluedPropertyTest
     void testMultivaluedBigIntegerProperty_CreateAndRead()
     {
         PropertyDef propDef = factory.createPropertyDef("bigNumbers", PropertyType.BigInteger,
-            true, true, true, true, true);
+            true, true, true, true);
 
         BigInteger big1 = new BigInteger("12345678901234567890");
         BigInteger big2 = new BigInteger("98765432109876543210");
@@ -171,7 +170,7 @@ class MultivaluedPropertyTest
     void testMultivaluedBigDecimalProperty_CreateAndRead()
     {
         PropertyDef propDef = factory.createPropertyDef("prices", PropertyType.BigDecimal,
-            true, true, true, true, true);
+            true, true, true, true);
 
         BigDecimal price1 = new BigDecimal("123.45");
         BigDecimal price2 = new BigDecimal("678.90");
@@ -190,7 +189,7 @@ class MultivaluedPropertyTest
     void testMultivaluedDateTimeProperty_CreateAndRead()
     {
         PropertyDef propDef = factory.createPropertyDef("timestamps", PropertyType.DateTime,
-            true, true, true, true, true);
+            true, true, true, true);
 
         ZonedDateTime time1 = ZonedDateTime.now();
         ZonedDateTime time2 = time1.plusHours(1);
@@ -209,7 +208,7 @@ class MultivaluedPropertyTest
     void testMultivaluedProperty_EmptyList()
     {
         PropertyDef propDef = factory.createPropertyDef("tags", PropertyType.String,
-            true, true, true, true, true);
+            true, true, true, true);
 
         List<String> emptyList = List.of();
         Property property = factory.createProperty(propDef, emptyList);
@@ -224,7 +223,7 @@ class MultivaluedPropertyTest
     void testMultivaluedProperty_NullValue_Nullable()
     {
         PropertyDef propDef = factory.createPropertyDef("tags", PropertyType.String,
-            true, true, true, true, true); // nullable=true
+            true, true, true, true); // nullable=true
 
         Property property = factory.createProperty(propDef, null);
 
@@ -237,9 +236,9 @@ class MultivaluedPropertyTest
         Entity entity = factory.createEntity();
 
         PropertyDef tagsDef = factory.createPropertyDef("tags", PropertyType.String,
-            true, true, true, true, true);
+            true, true, true, true);
         PropertyDef scoresDef = factory.createPropertyDef("scores", PropertyType.Integer,
-            true, true, true, true, true);
+            true, true, true, true);
 
         MutableAspectDef aspectDef = (MutableAspectDef) factory.createMutableAspectDef("testAspect");
         aspectDef.add(tagsDef);
@@ -276,7 +275,7 @@ class MultivaluedPropertyTest
     void testMultivaluedProperty_ValidationWithList_Succeeds()
     {
         PropertyDef propDef = factory.createPropertyDef("tags", PropertyType.String,
-            true, true, true, true, true);
+            true, true, true, true);
 
         List<String> tags = List.of("java", "cheap");
 
@@ -289,7 +288,7 @@ class MultivaluedPropertyTest
     void testMultivaluedProperty_ValidationWithExceptions_Succeeds()
     {
         PropertyDef propDef = factory.createPropertyDef("tags", PropertyType.String,
-            true, true, true, true, true);
+            true, true, true, true);
 
         List<String> tags = List.of("java", "cheap");
 
@@ -302,7 +301,7 @@ class MultivaluedPropertyTest
     void testMultivaluedProperty_ValidationWithWrongElementType_Fails()
     {
         PropertyDef propDef = factory.createPropertyDef("numbers", PropertyType.Integer,
-            true, true, true, true, true);
+            true, true, true, true);
 
         // Create a list with wrong element type
         List<String> wrongTypeList = List.of("not", "numbers");
@@ -325,7 +324,7 @@ class MultivaluedPropertyTest
     void testMultivaluedProperty_ValidationWithNonListValue_Fails()
     {
         PropertyDef propDef = factory.createPropertyDef("tags", PropertyType.String,
-            true, true, true, true, true);
+            true, true, true, true);
 
         // Pass a single String instead of a List
         String singleValue = "not a list";
@@ -348,7 +347,7 @@ class MultivaluedPropertyTest
     void testSingleValuedProperty_NotMultivalued()
     {
         PropertyDef propDef = factory.createPropertyDef("name", PropertyType.String,
-            true, true, true, true, false); // isMultivalued = false
+            true, true, true, false); // isMultivalued = false
 
         assertFalse(propDef.isMultivalued());
 
@@ -365,7 +364,7 @@ class MultivaluedPropertyTest
         // Note: createReadOnlyPropertyDef doesn't support multivalued properties
         // Use the full constructor instead
         PropertyDef propDef = factory.createPropertyDef("tags", PropertyType.String,
-            null, false, true, false, true, true, true);
+            null, false, true, false, true, true);
 
         assertTrue(propDef.isMultivalued());
         assertTrue(propDef.isReadable());
@@ -384,7 +383,7 @@ class MultivaluedPropertyTest
     {
         List<String> defaultTags = List.of("default");
         PropertyDef propDef = factory.createPropertyDef("tags", PropertyType.String,
-            defaultTags, true, true, true, true, true, true);
+            defaultTags, true, true, true, true, true);
 
         assertTrue(propDef.hasDefaultValue());
         assertTrue(propDef.isMultivalued());

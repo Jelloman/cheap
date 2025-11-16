@@ -41,7 +41,6 @@ CREATE TABLE property_def (
     is_readable INTEGER NOT NULL DEFAULT 1 CHECK (is_readable IN (0, 1)),
     is_writable INTEGER NOT NULL DEFAULT 1 CHECK (is_writable IN (0, 1)),
     is_nullable INTEGER NOT NULL DEFAULT 1 CHECK (is_nullable IN (0, 1)),
-    is_removable INTEGER NOT NULL DEFAULT 0 CHECK (is_removable IN (0, 1)),
     is_multivalued INTEGER NOT NULL DEFAULT 0 CHECK (is_multivalued IN (0, 1)),
     PRIMARY KEY (aspect_def_id, name)
 );
