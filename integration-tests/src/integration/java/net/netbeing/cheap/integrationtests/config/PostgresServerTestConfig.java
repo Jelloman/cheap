@@ -1,6 +1,7 @@
 package net.netbeing.cheap.integrationtests.config;
 
 import io.zonky.test.db.postgres.embedded.EmbeddedPostgres;
+import jakarta.annotation.PreDestroy;
 import net.netbeing.cheap.db.AspectTableMapping;
 import net.netbeing.cheap.db.CheapDao;
 import net.netbeing.cheap.db.postgres.PostgresAdapter;
@@ -40,6 +41,11 @@ public class PostgresServerTestConfig
 {
     private static final Logger logger = LoggerFactory.getLogger(PostgresServerTestConfig.class);
 
+    // Static singleton to share embedded PostgreSQL across all Spring contexts
+    private static EmbeddedPostgres embeddedPostgres = null;
+    private static DataSource dataSource = null;
+    private static final Object LOCK = new Object();
+
     /**
      * Provides CheapFactory bean for creating Cheap objects.
      */
@@ -51,26 +57,40 @@ public class PostgresServerTestConfig
 
     /**
      * Provides an embedded PostgreSQL DataSource for testing.
+     * Uses static singleton to ensure only one embedded PostgreSQL instance across all test contexts.
      */
     @Bean
     @Primary
     public DataSource embeddedPostgresDataSource() throws IOException, SQLException
     {
-        logger.info("Starting embedded PostgreSQL for integration tests on port 5433");
+        synchronized (LOCK) {
+            if (embeddedPostgres == null) {
+                logger.info("Starting embedded PostgreSQL for integration tests on port 5433");
 
-        EmbeddedPostgres embeddedPostgres = EmbeddedPostgres.builder()
-            .setPort(5433) // Non-standard port to avoid conflicts
-            .start();
+                embeddedPostgres = EmbeddedPostgres.builder()
+                    .setPort(5433) // Non-standard port to avoid conflicts
+                    .start();
 
-        DataSource dataSource = embeddedPostgres.getPostgresDatabase();
+                dataSource = embeddedPostgres.getPostgresDatabase();
 
-        // Initialize schema
-        PostgresCheapSchema schema = new PostgresCheapSchema();
-        schema.executeMainSchemaDdl(dataSource);
-        schema.executeAuditSchemaDdl(dataSource);
+                // Initialize schema
+                PostgresCheapSchema schema = new PostgresCheapSchema();
+                schema.executeMainSchemaDdl(dataSource);
+                schema.executeAuditSchemaDdl(dataSource);
 
-        logger.info("Embedded PostgreSQL initialized with schema");
-        return dataSource;
+                logger.info("Embedded PostgreSQL initialized with schema");
+            } else {
+                logger.info("Reusing existing embedded PostgreSQL instance on port 5433");
+            }
+            return dataSource;
+        }
+    }
+
+    @PreDestroy
+    public void preDestroy() throws IOException
+    {
+        // Don't close the shared instance - let JVM shutdown handle it
+        logger.info("PostgresServerTestConfig cleanup (keeping shared embedded PostgreSQL running)");
     }
 
     /**
@@ -93,7 +113,7 @@ public class PostgresServerTestConfig
     @Bean
     public ApplicationRunner registerAddressTableMapping(CheapDao cheapDao, CheapFactory factory)
     {
-        return args -> {
+        return _ -> {
             logger.info("Registering 'address' AspectTableMapping for PostgreSQL server");
 
             // Create AspectDef for address custom table

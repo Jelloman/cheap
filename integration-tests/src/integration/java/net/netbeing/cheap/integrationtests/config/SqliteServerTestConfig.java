@@ -1,5 +1,6 @@
 package net.netbeing.cheap.integrationtests.config;
 
+import jakarta.annotation.PreDestroy;
 import net.netbeing.cheap.db.AspectTableMapping;
 import net.netbeing.cheap.db.CheapDao;
 import net.netbeing.cheap.db.sqlite.SqliteAdapter;
@@ -38,10 +39,15 @@ import java.util.Map;
     "server.port=8082",
     "cheap.database.type=sqlite"
 })
+@SuppressWarnings("java:S2696")
 public class SqliteServerTestConfig
 {
     private static final Logger logger = LoggerFactory.getLogger(SqliteServerTestConfig.class);
-    private static Path tempDbPath;
+
+    // Static singleton to share SQLite database across all Spring contexts
+    private static Path tempDbPath = null;
+    private static DataSource dataSource = null;
+    private static final Object LOCK = new Object();
 
     /**
      * Provides CheapFactory bean for creating Cheap objects.
@@ -54,28 +60,43 @@ public class SqliteServerTestConfig
 
     /**
      * Provides a SQLite DataSource for testing.
+     * Uses static singleton to ensure only one SQLite database across all test contexts.
      */
     @Bean
     @Primary
     public DataSource sqliteDataSource() throws IOException, SQLException
     {
-        logger.info("Setting up SQLite database for integration tests");
+        synchronized (LOCK) {
+            if (dataSource == null) {
+                logger.info("Setting up SQLite database for integration tests");
 
-        // Create temporary database file
-        tempDbPath = Files.createTempFile("cheap-sqlite-integration-test-", ".db");
-        logger.info("Created temporary SQLite database at: {}", tempDbPath.toAbsolutePath());
+                // Create temporary database file
+                tempDbPath = Files.createTempFile("cheap-sqlite-integration-test-", ".db");
+                logger.info("Created temporary SQLite database at: {}", tempDbPath.toAbsolutePath());
 
-        // Set up data source
-        SQLiteDataSource dataSource = new SQLiteDataSource();
-        dataSource.setUrl("jdbc:sqlite:" + tempDbPath.toAbsolutePath());
+                // Set up data source
+                SQLiteDataSource sqliteDataSource = new SQLiteDataSource();
+                sqliteDataSource.setUrl("jdbc:sqlite:" + tempDbPath.toAbsolutePath());
 
-        // Initialize schema
-        SqliteCheapSchema schema = new SqliteCheapSchema();
-        schema.executeMainSchemaDdl(dataSource);
-        schema.executeAuditSchemaDdl(dataSource);
+                // Initialize schema
+                SqliteCheapSchema schema = new SqliteCheapSchema();
+                schema.executeMainSchemaDdl(sqliteDataSource);
+                schema.executeAuditSchemaDdl(sqliteDataSource);
 
-        logger.info("SQLite database initialized with schema");
-        return dataSource;
+                dataSource = sqliteDataSource;
+                logger.info("SQLite database initialized with schema");
+            } else {
+                logger.info("Reusing existing SQLite database at: {}", tempDbPath.toAbsolutePath());
+            }
+            return dataSource;
+        }
+    }
+
+    @PreDestroy
+    public void preDestroy() throws IOException
+    {
+        // Don't delete the shared database file - let JVM shutdown handle it
+        logger.info("SqliteServerTestConfig cleanup (keeping shared SQLite database)");
     }
 
     /**
@@ -98,7 +119,7 @@ public class SqliteServerTestConfig
     @Bean
     public ApplicationRunner registerOrderItemTableMapping(CheapDao cheapDao, CheapFactory factory)
     {
-        return args -> {
+        return _ -> {
             logger.info("Registering 'order_item' AspectTableMapping for SQLite server");
 
             // Create AspectDef for order_item custom table

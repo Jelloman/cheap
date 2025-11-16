@@ -3,7 +3,7 @@ package net.netbeing.cheap.integrationtests.config;
 import ch.vorburger.exec.ManagedProcessException;
 import ch.vorburger.mariadb4j.DB;
 import ch.vorburger.mariadb4j.DBConfigurationBuilder;
-import lombok.SneakyThrows;
+import jakarta.annotation.PreDestroy;
 import net.netbeing.cheap.db.AspectTableMapping;
 import net.netbeing.cheap.db.CheapDao;
 import net.netbeing.cheap.db.mariadb.MariaDbAdapter;
@@ -24,6 +24,7 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.test.context.TestPropertySource;
 
 import javax.sql.DataSource;
+import java.io.IOException;
 import java.sql.SQLException;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -42,7 +43,11 @@ import java.util.Map;
 public class MariaDbServerTestConfig
 {
     private static final Logger logger = LoggerFactory.getLogger(MariaDbServerTestConfig.class);
-    private DB embeddedMariaDb;
+
+    // Static singleton to share embedded MariaDB across all Spring contexts
+    private static DB embeddedMariaDb = null;
+    private static DataSource dataSource = null;
+    private static final Object LOCK = new Object();
 
     /**
      * Provides CheapFactory bean for creating Cheap objects.
@@ -55,62 +60,68 @@ public class MariaDbServerTestConfig
 
     /**
      * Provides an embedded MariaDB DataSource for testing.
+     * Uses static singleton to ensure only one embedded MariaDB instance across all test contexts.
      */
     @Bean
     @Primary
     public DataSource embeddedMariaDbDataSource() throws SQLException, ManagedProcessException
     {
-        logger.info("Starting embedded MariaDB for integration tests");
+        synchronized (LOCK) {
+            if (embeddedMariaDb == null) {
+                logger.info("Starting embedded MariaDB for integration tests on port 3307");
 
-        // Start embedded MariaDB4j on a non-standard port
-        DBConfigurationBuilder configBuilder = DBConfigurationBuilder.newBuilder();
-        configBuilder.setPort(3307); // Non-standard port to avoid conflicts
-        embeddedMariaDb = DB.newEmbeddedDB(configBuilder.build());
-        embeddedMariaDb.start();
+                // Start embedded MariaDB4j on a non-standard port
+                DBConfigurationBuilder configBuilder = DBConfigurationBuilder.newBuilder();
+                configBuilder.setPort(3307); // Non-standard port to avoid conflicts
+                embeddedMariaDb = DB.newEmbeddedDB(configBuilder.build());
+                embeddedMariaDb.start();
 
-        // Create test database
-        embeddedMariaDb.createDB("cheap_test");
+                // Create test database
+                embeddedMariaDb.createDB("cheap_test");
 
-        // Set up data source
-        MariaDbDataSource dataSource = getMariaDbDataSource();
+                // Set up data source
+                dataSource = getMariaDbDataSource();
 
-        logger.info("Embedded MariaDB initialized with schema");
-        return dataSource;
+                logger.info("Embedded MariaDB initialized with schema");
+            } else {
+                logger.info("Reusing existing embedded MariaDB instance on port 3307");
+            }
+            return dataSource;
+        }
     }
 
     private static MariaDbDataSource getMariaDbDataSource() throws SQLException
     {
-        MariaDbDataSource dataSource = new MariaDbDataSource();
-        dataSource.setUrl("jdbc:mariadb://localhost:3307/cheap_test?allowMultiQueries=true");
-        dataSource.setUser("root");
-        dataSource.setPassword("");
+        MariaDbDataSource mariaDbDataSource = new MariaDbDataSource();
+        mariaDbDataSource.setUrl("jdbc:mariadb://localhost:3307/cheap_test?allowMultiQueries=true");
+        mariaDbDataSource.setUser("root");
+        mariaDbDataSource.setPassword("");
 
         // Initialize schema
         MariaDbCheapSchema schema = new MariaDbCheapSchema();
-        schema.executeMainSchemaDdl(dataSource);
-        schema.executeForeignKeysDdl(dataSource);  // Enable foreign keys for integration tests
-        schema.executeAuditSchemaDdl(dataSource);
-        return dataSource;
+        schema.executeMainSchemaDdl(mariaDbDataSource);
+        schema.executeForeignKeysDdl(mariaDbDataSource);  // Enable foreign keys for integration tests
+        schema.executeAuditSchemaDdl(mariaDbDataSource);
+        return mariaDbDataSource;
+    }
+
+    @PreDestroy
+    public void preDestroy() throws IOException
+    {
+        // Don't stop the shared instance - let JVM shutdown handle it
+        logger.info("MariaDbServerTestConfig cleanup (keeping shared embedded MariaDB running)");
     }
 
     /**
      * Provides MariaDbDao bean for the server.
      */
-    @Bean(destroyMethod = "close")
+    @Bean
     @Primary
     public CheapDao cheapDao(DataSource dataSource, CheapFactory factory)
     {
         logger.info("Creating MariaDbDao bean for integration tests");
         MariaDbAdapter adapter = new MariaDbAdapter(dataSource, factory);
-        return new MariaDbDao(adapter) {
-            @SneakyThrows
-            public void close()
-            {
-                if (embeddedMariaDb != null) {
-                    embeddedMariaDb.stop();
-                }
-            }
-        };
+        return new MariaDbDao(adapter);
     }
 
     /**
@@ -121,7 +132,7 @@ public class MariaDbServerTestConfig
     @Bean
     public ApplicationRunner registerInventoryTableMapping(CheapDao cheapDao, CheapFactory factory)
     {
-        return args -> {
+        return _ -> {
             logger.info("Registering 'inventory' AspectTableMapping for MariaDB server");
 
             // Create AspectDef for inventory custom table
