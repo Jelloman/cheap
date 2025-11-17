@@ -28,6 +28,7 @@ import net.netbeing.cheap.model.EntityTreeHierarchy;
 import net.netbeing.cheap.model.Hierarchy;
 import net.netbeing.cheap.model.HierarchyDef;
 import net.netbeing.cheap.rest.exception.ResourceNotFoundException;
+import net.netbeing.cheap.rest.exception.ValidationException;
 import net.netbeing.cheap.util.CheapException;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -252,5 +253,365 @@ public class HierarchyService
             logger.error("Failed to create hierarchy");
             throw new CheapException("Failed to create hierarchy: " + e.getMessage(), e);
         }
+    }
+
+    // ========================================
+    // Entity List/Set Mutation Operations
+    // ========================================
+
+    /**
+     * Adds entity IDs to an EntityList or EntitySet hierarchy.
+     *
+     * @param catalogId the catalog ID
+     * @param hierarchyName the hierarchy name
+     * @param entityIds the list of entity IDs to add
+     * @return the number of entity IDs added
+     * @throws ResourceNotFoundException if catalog or hierarchy is not found
+     * @throws ValidationException if hierarchy is not an EntityList or EntitySet
+     */
+    @Transactional
+    public int addEntityIds(@NotNull UUID catalogId, @NotNull String hierarchyName, @NotNull List<UUID> entityIds)
+    {
+        logger.debug("Adding {} entity IDs to hierarchy {} in catalog {}", entityIds.size(), hierarchyName, catalogId);
+
+        Hierarchy hierarchy = getHierarchy(catalogId, hierarchyName);
+
+        try {
+            Catalog catalog = dao.loadCatalog(catalogId);
+
+            int count = switch (hierarchy) {
+                case EntityListHierarchy list -> {
+                    for (UUID entityId : entityIds) {
+                        Entity entity = catalog.entity(entityId);
+                        if (entity == null) {
+                            entity = catalog.addEntity(entityId);
+                        }
+                        list.add(entity);
+                    }
+                    yield entityIds.size();
+                }
+                case EntitySetHierarchy set -> {
+                    for (UUID entityId : entityIds) {
+                        Entity entity = catalog.entity(entityId);
+                        if (entity == null) {
+                            entity = catalog.addEntity(entityId);
+                        }
+                        set.add(entity);
+                    }
+                    yield entityIds.size();
+                }
+                default -> throw new ValidationException(
+                    "Hierarchy '" + hierarchyName + "' is not an EntityList or EntitySet"
+                );
+            };
+
+            dao.saveCatalog(catalog);
+            logger.info("Successfully added {} entity IDs to hierarchy {}", count, hierarchyName);
+            return count;
+        } catch (SQLException e) {
+            logger.error("Failed to add entity IDs to hierarchy");
+            throw new CheapException("Failed to add entity IDs: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Removes entity IDs from an EntityList or EntitySet hierarchy.
+     *
+     * @param catalogId the catalog ID
+     * @param hierarchyName the hierarchy name
+     * @param entityIds the list of entity IDs to remove
+     * @return the number of entity IDs removed
+     * @throws ResourceNotFoundException if catalog or hierarchy is not found
+     * @throws ValidationException if hierarchy is not an EntityList or EntitySet
+     */
+    @Transactional
+    public int removeEntityIds(@NotNull UUID catalogId, @NotNull String hierarchyName, @NotNull List<UUID> entityIds)
+    {
+        logger.debug("Removing {} entity IDs from hierarchy {} in catalog {}", entityIds.size(), hierarchyName, catalogId);
+
+        Hierarchy hierarchy = getHierarchy(catalogId, hierarchyName);
+
+        try {
+            Catalog catalog = dao.loadCatalog(catalogId);
+
+            int count = switch (hierarchy) {
+                case EntityListHierarchy list -> {
+                    int removed = 0;
+                    for (UUID entityId : entityIds) {
+                        Entity entity = catalog.entity(entityId);
+                        if (entity != null && list.remove(entity)) {
+                            removed++;
+                        }
+                    }
+                    yield removed;
+                }
+                case EntitySetHierarchy set -> {
+                    int removed = 0;
+                    for (UUID entityId : entityIds) {
+                        Entity entity = catalog.entity(entityId);
+                        if (entity != null && set.remove(entity)) {
+                            removed++;
+                        }
+                    }
+                    yield removed;
+                }
+                default -> throw new ValidationException(
+                    "Hierarchy '" + hierarchyName + "' is not an EntityList or EntitySet"
+                );
+            };
+
+            dao.saveCatalog(catalog);
+            logger.info("Successfully removed {} entity IDs from hierarchy {}", count, hierarchyName);
+            return count;
+        } catch (SQLException e) {
+            logger.error("Failed to remove entity IDs from hierarchy");
+            throw new CheapException("Failed to remove entity IDs: " + e.getMessage(), e);
+        }
+    }
+
+    // ========================================
+    // Entity Directory Mutation Operations
+    // ========================================
+
+    /**
+     * Adds entries (name -> entity ID pairs) to an EntityDirectory hierarchy.
+     *
+     * @param catalogId the catalog ID
+     * @param hierarchyName the hierarchy name
+     * @param entries the map of name -> entity ID pairs to add
+     * @return the number of entries added
+     * @throws ResourceNotFoundException if catalog or hierarchy is not found
+     * @throws ValidationException if hierarchy is not an EntityDirectory
+     */
+    @Transactional
+    public int addDirectoryEntries(@NotNull UUID catalogId, @NotNull String hierarchyName, @NotNull Map<String, UUID> entries)
+    {
+        logger.debug("Adding {} entries to directory {} in catalog {}", entries.size(), hierarchyName, catalogId);
+
+        Hierarchy hierarchy = getHierarchy(catalogId, hierarchyName);
+
+        if (!(hierarchy instanceof EntityDirectoryHierarchy directory)) {
+            throw new ValidationException("Hierarchy '" + hierarchyName + "' is not an EntityDirectory");
+        }
+
+        try {
+            Catalog catalog = dao.loadCatalog(catalogId);
+
+            for (Map.Entry<String, UUID> entry : entries.entrySet()) {
+                Entity entity = catalog.entity(entry.getValue());
+                if (entity == null) {
+                    entity = catalog.addEntity(entry.getValue());
+                }
+                directory.put(entry.getKey(), entity);
+            }
+
+            dao.saveCatalog(catalog);
+            logger.info("Successfully added {} entries to directory {}", entries.size(), hierarchyName);
+            return entries.size();
+        } catch (SQLException e) {
+            logger.error("Failed to add entries to directory");
+            throw new CheapException("Failed to add entries: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Removes entries from an EntityDirectory hierarchy by names.
+     *
+     * @param catalogId the catalog ID
+     * @param hierarchyName the hierarchy name
+     * @param names the list of names to remove
+     * @return the number of entries removed
+     * @throws ResourceNotFoundException if catalog or hierarchy is not found
+     * @throws ValidationException if hierarchy is not an EntityDirectory
+     */
+    @Transactional
+    public int removeDirectoryEntriesByNames(@NotNull UUID catalogId, @NotNull String hierarchyName, @NotNull List<String> names)
+    {
+        logger.debug("Removing {} entries by name from directory {} in catalog {}", names.size(), hierarchyName, catalogId);
+
+        Hierarchy hierarchy = getHierarchy(catalogId, hierarchyName);
+
+        if (!(hierarchy instanceof EntityDirectoryHierarchy directory)) {
+            throw new ValidationException("Hierarchy '" + hierarchyName + "' is not an EntityDirectory");
+        }
+
+        try {
+            Catalog catalog = dao.loadCatalog(catalogId);
+
+            int removed = 0;
+            for (String name : names) {
+                if (directory.remove(name) != null) {
+                    removed++;
+                }
+            }
+
+            dao.saveCatalog(catalog);
+            logger.info("Successfully removed {} entries from directory {}", removed, hierarchyName);
+            return removed;
+        } catch (SQLException e) {
+            logger.error("Failed to remove entries from directory");
+            throw new CheapException("Failed to remove entries: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Removes entries from an EntityDirectory hierarchy by entity IDs.
+     *
+     * @param catalogId the catalog ID
+     * @param hierarchyName the hierarchy name
+     * @param entityIds the list of entity IDs to remove
+     * @return the number of entries removed
+     * @throws ResourceNotFoundException if catalog or hierarchy is not found
+     * @throws ValidationException if hierarchy is not an EntityDirectory
+     */
+    @Transactional
+    public int removeDirectoryEntriesByIds(@NotNull UUID catalogId, @NotNull String hierarchyName, @NotNull List<UUID> entityIds)
+    {
+        logger.debug("Removing {} entries by entity ID from directory {} in catalog {}", entityIds.size(), hierarchyName, catalogId);
+
+        Hierarchy hierarchy = getHierarchy(catalogId, hierarchyName);
+
+        if (!(hierarchy instanceof EntityDirectoryHierarchy directory)) {
+            throw new ValidationException("Hierarchy '" + hierarchyName + "' is not an EntityDirectory");
+        }
+
+        try {
+            Catalog catalog = dao.loadCatalog(catalogId);
+
+            int removed = 0;
+            // Find and remove entries that have the specified entity IDs
+            List<String> keysToRemove = new ArrayList<>();
+            for (Map.Entry<String, Entity> entry : directory.entrySet()) {
+                if (entityIds.contains(entry.getValue().globalId())) {
+                    keysToRemove.add(entry.getKey());
+                }
+            }
+
+            for (String key : keysToRemove) {
+                if (directory.remove(key) != null) {
+                    removed++;
+                }
+            }
+
+            dao.saveCatalog(catalog);
+            logger.info("Successfully removed {} entries from directory {}", removed, hierarchyName);
+            return removed;
+        } catch (SQLException e) {
+            logger.error("Failed to remove entries from directory");
+            throw new CheapException("Failed to remove entries: " + e.getMessage(), e);
+        }
+    }
+
+    // ========================================
+    // Entity Tree Mutation Operations
+    // ========================================
+
+    /**
+     * Adds child nodes to an EntityTree hierarchy under a specific parent node.
+     *
+     * @param catalogId the catalog ID
+     * @param hierarchyName the hierarchy name
+     * @param parentPath the path to the parent node
+     * @param nodes the map of child name -> entity ID pairs to add
+     * @return the number of nodes added
+     * @throws ResourceNotFoundException if catalog, hierarchy, or parent node is not found
+     * @throws ValidationException if hierarchy is not an EntityTree
+     */
+    @Transactional
+    public int addTreeNodes(@NotNull UUID catalogId, @NotNull String hierarchyName, @NotNull String parentPath, @NotNull Map<String, UUID> nodes)
+    {
+        logger.debug("Adding {} nodes to tree {} under path {} in catalog {}", nodes.size(), hierarchyName, parentPath, catalogId);
+
+        Hierarchy hierarchy = getHierarchy(catalogId, hierarchyName);
+
+        if (!(hierarchy instanceof EntityTreeHierarchy tree)) {
+            throw new ValidationException("Hierarchy '" + hierarchyName + "' is not an EntityTree");
+        }
+
+        try {
+            Catalog catalog = dao.loadCatalog(catalogId);
+
+            // Find the parent node
+            EntityTreeHierarchy.Node parent = tree.getNodeByPath(parentPath);
+            if (parent == null) {
+                throw new ResourceNotFoundException("Parent node not found at path: " + parentPath);
+            }
+
+            // Add each child node
+            for (Map.Entry<String, UUID> entry : nodes.entrySet()) {
+                Entity entity = catalog.entity(entry.getValue());
+                if (entity == null) {
+                    entity = catalog.addEntity(entry.getValue());
+                }
+                parent.addChild(entry.getKey(), entity);
+            }
+
+            dao.saveCatalog(catalog);
+            logger.info("Successfully added {} nodes to tree {}", nodes.size(), hierarchyName);
+            return nodes.size();
+        } catch (SQLException e) {
+            logger.error("Failed to add nodes to tree");
+            throw new CheapException("Failed to add nodes: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Removes nodes from an EntityTree hierarchy by paths.
+     * Removal cascades to remove all descendants.
+     *
+     * @param catalogId the catalog ID
+     * @param hierarchyName the hierarchy name
+     * @param paths the list of node paths to remove
+     * @return the number of nodes removed (including descendants)
+     * @throws ResourceNotFoundException if catalog or hierarchy is not found
+     * @throws ValidationException if hierarchy is not an EntityTree
+     */
+    @Transactional
+    public int removeTreeNodes(@NotNull UUID catalogId, @NotNull String hierarchyName, @NotNull List<String> paths)
+    {
+        logger.debug("Removing {} nodes from tree {} in catalog {}", paths.size(), hierarchyName, catalogId);
+
+        Hierarchy hierarchy = getHierarchy(catalogId, hierarchyName);
+
+        if (!(hierarchy instanceof EntityTreeHierarchy tree)) {
+            throw new ValidationException("Hierarchy '" + hierarchyName + "' is not an EntityTree");
+        }
+
+        try {
+            Catalog catalog = dao.loadCatalog(catalogId);
+
+            int totalRemoved = 0;
+            for (String path : paths) {
+                EntityTreeHierarchy.Node node = tree.getNodeByPath(path);
+                if (node != null) {
+                    // Count nodes before removal (node + all descendants)
+                    int nodeCount = countTreeNodes(node);
+
+                    // Remove the node (this cascades to descendants)
+                    if (tree.removeNode(path)) {
+                        totalRemoved += nodeCount;
+                    }
+                }
+            }
+
+            dao.saveCatalog(catalog);
+            logger.info("Successfully removed {} nodes (including descendants) from tree {}", totalRemoved, hierarchyName);
+            return totalRemoved;
+        } catch (SQLException e) {
+            logger.error("Failed to remove nodes from tree");
+            throw new CheapException("Failed to remove nodes: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Counts the number of nodes in a tree (node + all descendants).
+     */
+    private int countTreeNodes(EntityTreeHierarchy.Node node)
+    {
+        int count = 1; // Count this node
+        for (EntityTreeHierarchy.Node child : node.children().values()) {
+            count += countTreeNodes(child);
+        }
+        return count;
     }
 }
