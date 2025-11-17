@@ -2,7 +2,6 @@ package net.netbeing.cheap.integrationtests.config;
 
 import net.netbeing.cheap.rest.client.CheapRestClient;
 import net.netbeing.cheap.rest.client.CheapRestClientImpl;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -17,8 +16,7 @@ public class ClientTestConfig
     /**
      * REST client for PostgreSQL server (port 8081).
      */
-    @Bean
-    @Qualifier("postgresClient")
+    @Bean("postgresClient")
     public CheapRestClient postgresRestClient()
     {
         return new CheapRestClientImpl("http://localhost:8081");
@@ -27,8 +25,7 @@ public class ClientTestConfig
     /**
      * REST client for SQLite server (port 8082).
      */
-    @Bean
-    @Qualifier("sqliteClient")
+    @Bean("sqliteClient")
     public CheapRestClient sqliteRestClient()
     {
         return new CheapRestClientImpl("http://localhost:8082");
@@ -37,8 +34,7 @@ public class ClientTestConfig
     /**
      * REST client for MariaDB server (port 8083).
      */
-    @Bean
-    @Qualifier("mariadbClient")
+    @Bean("mariadbClient")
     public CheapRestClient mariadbRestClient()
     {
         return new CheapRestClientImpl("http://localhost:8083");

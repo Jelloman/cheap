@@ -90,7 +90,7 @@ public abstract class MariaDbRestIntegrationTest extends BaseRestIntegrationTest
 
     @BeforeEach
     @Override
-    public void setUp() throws SQLException, ManagedProcessException
+    public void setUp() throws ManagedProcessException, SQLException
     {
         super.setUp();
         // Ensure test DB is initialized

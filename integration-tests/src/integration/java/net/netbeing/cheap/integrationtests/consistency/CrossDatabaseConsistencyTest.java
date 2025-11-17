@@ -459,9 +459,9 @@ class CrossDatabaseConsistencyTest extends BaseClientIntegrationTest
         assertEquals(1, sqliteQuery.results().size());
         assertEquals(1, mariadbQuery.results().size());
 
-        AspectMap postgresAspectMap = postgresQuery.results().get(0);
-        AspectMap sqliteAspectMap = sqliteQuery.results().get(0);
-        AspectMap mariadbAspectMap = mariadbQuery.results().get(0);
+        AspectMap postgresAspectMap = postgresQuery.results().getFirst();
+        AspectMap sqliteAspectMap = sqliteQuery.results().getFirst();
+        AspectMap mariadbAspectMap = mariadbQuery.results().getFirst();
 
         assertEquals("customer", postgresAspectMap.aspectDef().name());
         assertEquals("customer", sqliteAspectMap.aspectDef().name());

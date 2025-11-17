@@ -33,6 +33,7 @@ public abstract class BaseClientIntegrationTest
      *
      * @return REST client
      */
+    @SuppressWarnings("unused")
     protected CheapRestClient getClient()
     {
         return client;
