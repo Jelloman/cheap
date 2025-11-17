@@ -397,7 +397,7 @@ public class CatalogService
                         species + " catalogs must have an upstream catalog"
                     ));
                 }
-                // TODO: Validate that upstream catalog exists
+                // Validating that the upstream catalog exists is not in scope here.
             }
         }
 
@@ -412,7 +412,7 @@ public class CatalogService
      * @param catalog the catalog to add the hierarchy to
      * @param hierarchyDef the hierarchy definition
      */
-    private void createAndAddHierarchy(@NotNull Catalog catalog, @NotNull HierarchyDef hierarchyDef)
+    protected void createAndAddHierarchy(@NotNull Catalog catalog, @NotNull HierarchyDef hierarchyDef)
     {
         switch (hierarchyDef.type()) {
             case ENTITY_LIST -> catalog.createEntityList(hierarchyDef.name(), 0L);

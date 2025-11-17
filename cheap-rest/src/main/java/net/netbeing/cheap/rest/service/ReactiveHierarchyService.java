@@ -23,6 +23,7 @@ import net.netbeing.cheap.model.EntityListHierarchy;
 import net.netbeing.cheap.model.EntitySetHierarchy;
 import net.netbeing.cheap.model.EntityTreeHierarchy;
 import net.netbeing.cheap.model.Hierarchy;
+import net.netbeing.cheap.model.HierarchyDef;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
@@ -142,6 +143,19 @@ public class ReactiveHierarchyService
     public Mono<Long> countHierarchyItems(Hierarchy hierarchy)
     {
         return Mono.fromCallable(() -> hierarchyService.countHierarchyItems(hierarchy))
+            .subscribeOn(jdbcScheduler);
+    }
+
+    /**
+     * Creates a new hierarchy from a HierarchyDef and adds it to the catalog reactively.
+     *
+     * @param catalogId the catalog ID
+     * @param hierarchyDef the hierarchy definition
+     * @return Mono emitting the name of the created hierarchy
+     */
+    public Mono<String> createHierarchy(@NotNull UUID catalogId, @NotNull HierarchyDef hierarchyDef)
+    {
+        return Mono.fromCallable(() -> hierarchyService.createHierarchy(catalogId, hierarchyDef))
             .subscribeOn(jdbcScheduler);
     }
 }

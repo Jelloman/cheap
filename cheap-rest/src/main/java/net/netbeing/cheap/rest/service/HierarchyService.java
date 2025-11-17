@@ -16,7 +16,6 @@
 
 package net.netbeing.cheap.rest.service;
 
-import com.google.common.collect.Iterables;
 import net.netbeing.cheap.db.CheapDao;
 import net.netbeing.cheap.model.Aspect;
 import net.netbeing.cheap.model.AspectMapHierarchy;
@@ -27,6 +26,7 @@ import net.netbeing.cheap.model.EntityListHierarchy;
 import net.netbeing.cheap.model.EntitySetHierarchy;
 import net.netbeing.cheap.model.EntityTreeHierarchy;
 import net.netbeing.cheap.model.Hierarchy;
+import net.netbeing.cheap.model.HierarchyDef;
 import net.netbeing.cheap.rest.exception.ResourceNotFoundException;
 import net.netbeing.cheap.util.CheapException;
 import org.jetbrains.annotations.NotNull;
@@ -52,10 +52,12 @@ public class HierarchyService
     private static final Logger logger = LoggerFactory.getLogger(HierarchyService.class);
 
     private final CheapDao dao;
+    private final CatalogService catalogService;
 
-    public HierarchyService(CheapDao dao)
+    public HierarchyService(CheapDao dao, CatalogService catalogService)
     {
         this.dao = dao;
+        this.catalogService = catalogService;
     }
 
     /**
@@ -211,11 +213,44 @@ public class HierarchyService
     public long countHierarchyItems(Hierarchy hierarchy)
     {
         return switch (hierarchy) {
-            case EntityListHierarchy list -> Iterables.size(list);
-            case EntitySetHierarchy set -> Iterables.size(set);
-            case EntityDirectoryHierarchy dir -> Iterables.size(dir.entrySet());
-            case AspectMapHierarchy map -> Iterables.size(map.entrySet());
+            case EntityListHierarchy list -> list.size();
+            case EntitySetHierarchy set -> set.size();
+            case EntityDirectoryHierarchy dir -> dir.size();
+            case AspectMapHierarchy map -> map.size();
             default -> 0;
         };
+    }
+
+    /**
+     * Creates a new hierarchy from a HierarchyDef and adds it to the catalog.
+     *
+     * @param catalogId the catalog ID
+     * @param hierarchyDef the hierarchy definition
+     * @return the name of the created hierarchy
+     * @throws ResourceNotFoundException if catalog is not found
+     */
+    @Transactional
+    public String createHierarchy(@NotNull UUID catalogId, @NotNull HierarchyDef hierarchyDef)
+    {
+        logger.debug("Creating hierarchy {} in catalog {}", hierarchyDef.name(), catalogId);
+
+        try {
+            Catalog catalog = dao.loadCatalog(catalogId);
+            if (catalog == null) {
+                throw new ResourceNotFoundException("Catalog not found: " + catalogId);
+            }
+
+            // Delegate to CatalogService to create and add the hierarchy
+            catalogService.createAndAddHierarchy(catalog, hierarchyDef);
+
+            // Save the updated catalog
+            dao.saveCatalog(catalog);
+
+            logger.info("Successfully created hierarchy {} in catalog {}", hierarchyDef.name(), catalogId);
+            return hierarchyDef.name();
+        } catch (SQLException e) {
+            logger.error("Failed to create hierarchy");
+            throw new CheapException("Failed to create hierarchy: " + e.getMessage(), e);
+        }
     }
 }

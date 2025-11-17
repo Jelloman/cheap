@@ -16,15 +16,18 @@
 
 package net.netbeing.cheap.rest.service;
 
-import net.netbeing.cheap.model.Catalog;
+import net.netbeing.cheap.json.dto.GetCatalogDefResponse;
+import net.netbeing.cheap.model.AspectDef;
 import net.netbeing.cheap.model.CatalogDef;
 import net.netbeing.cheap.model.CatalogSpecies;
+import net.netbeing.cheap.model.HierarchyDef;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Scheduler;
 
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -54,7 +57,7 @@ public class ReactiveCatalogService
      * @param catalogDef the catalog definition
      * @param species the catalog species
      * @param upstream the upstream catalog ID (may be null for SOURCE/SINK)
-     * @param uri optional URI for the catalog
+     * @param baseCatalogURL optional URI for the catalog
      * @return Mono emitting the UUID of the newly created catalog
      */
     public Mono<UUID> createCatalog(@NotNull CatalogDef catalogDef, @NotNull CatalogSpecies species,
@@ -84,19 +87,7 @@ public class ReactiveCatalogService
      */
     public Mono<Long> countCatalogs()
     {
-        return Mono.fromCallable(() -> catalogService.countCatalogs())
-            .subscribeOn(jdbcScheduler);
-    }
-
-    /**
-     * Gets a catalog by ID reactively.
-     *
-     * @param catalogId the catalog ID
-     * @return Mono emitting the catalog
-     */
-    public Mono<Catalog> getCatalog(@NotNull UUID catalogId)
-    {
-        return Mono.fromCallable(() -> catalogService.getCatalog(catalogId))
+        return Mono.fromCallable(catalogService::countCatalogs)
             .subscribeOn(jdbcScheduler);
     }
 
@@ -120,17 +111,17 @@ public class ReactiveCatalogService
      * @param catalogId the catalog ID
      * @return Mono emitting the catalog definition response DTO
      */
-    public Mono<net.netbeing.cheap.json.dto.GetCatalogDefResponse> getCatalogDefResponse(@NotNull UUID catalogId)
+    public Mono<GetCatalogDefResponse> getCatalogDefResponse(@NotNull UUID catalogId)
     {
         return getCatalogDef(catalogId)
             .map(catalogDef -> {
-                var hierarchyDefs = new java.util.ArrayList<net.netbeing.cheap.model.HierarchyDef>();
+                var hierarchyDefs = new ArrayList<HierarchyDef>();
                 catalogDef.hierarchyDefs().forEach(hierarchyDefs::add);
 
-                var aspectDefs = new java.util.ArrayList<net.netbeing.cheap.model.AspectDef>();
+                var aspectDefs = new java.util.ArrayList<AspectDef>();
                 catalogDef.aspectDefs().forEach(aspectDefs::add);
 
-                return new net.netbeing.cheap.json.dto.GetCatalogDefResponse(hierarchyDefs, aspectDefs);
+                return new GetCatalogDefResponse(hierarchyDefs, aspectDefs);
             });
     }
 }

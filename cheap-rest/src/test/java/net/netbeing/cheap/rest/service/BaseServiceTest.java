@@ -77,7 +77,7 @@ public abstract class BaseServiceTest
         catalogService.setService(catalogService); // Inject self-reference for transactional methods
         aspectDefService = new AspectDefService(dao);
         aspectService = new AspectService(dao, factory);
-        hierarchyService = new HierarchyService(dao);
+        hierarchyService = new HierarchyService(dao, catalogService);
     }
 
     @AfterEach

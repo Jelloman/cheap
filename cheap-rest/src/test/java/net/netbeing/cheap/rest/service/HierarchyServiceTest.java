@@ -16,11 +16,16 @@
 
 package net.netbeing.cheap.rest.service;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import net.netbeing.cheap.json.jackson.deserialize.CheapJacksonDeserializer;
 import net.netbeing.cheap.model.*;
 import net.netbeing.cheap.rest.exception.ResourceNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -179,5 +184,36 @@ class HierarchyServiceTest extends BaseServiceTest
         dirHierarchy.put("key2", entity2);
 
         assertEquals(2, hierarchyService.countHierarchyItems(dirHierarchy));
+    }
+
+    @Test
+    void testCreateHierarchy() throws IOException
+    {
+        // Load the JSON test resource
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(CheapJacksonDeserializer.createCheapModule(factory));
+
+        InputStream jsonStream = getClass().getResourceAsStream(
+            "/http-tests/hierarchy/create-hierarchy.json"
+        );
+        assertNotNull(jsonStream, "Test resource file not found");
+
+        JsonNode jsonNode = mapper.readTree(jsonStream);
+        HierarchyDef hierarchyDef = mapper.treeToValue(
+            jsonNode.get("hierarchyDef"),
+            HierarchyDef.class
+        );
+
+        // Create the hierarchy
+        String hierarchyName = hierarchyService.createHierarchy(catalogId, hierarchyDef);
+
+        // Verify the hierarchy was created
+        assertEquals("projects", hierarchyName);
+
+        // Verify we can retrieve the hierarchy
+        Hierarchy hierarchy = hierarchyService.getHierarchy(catalogId, "projects");
+        assertNotNull(hierarchy);
+        assertEquals("projects", hierarchy.name());
+        assertEquals(HierarchyType.ENTITY_LIST, hierarchy.type());
     }
 }
