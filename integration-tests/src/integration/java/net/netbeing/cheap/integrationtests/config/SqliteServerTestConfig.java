@@ -48,6 +48,7 @@ public class SqliteServerTestConfig
     private static Path tempDbPath = null;
     private static DataSource dataSource = null;
     private static final Object LOCK = new Object();
+    private static int referenceCount = 0;
 
     /**
      * Provides CheapFactory bean for creating Cheap objects.
@@ -80,6 +81,7 @@ public class SqliteServerTestConfig
 
                 // Initialize schema
                 SqliteCheapSchema schema = new SqliteCheapSchema();
+                schema.executeDropSchemaDdl(sqliteDataSource);
                 schema.executeMainSchemaDdl(sqliteDataSource);
                 schema.executeAuditSchemaDdl(sqliteDataSource);
 
@@ -88,6 +90,10 @@ public class SqliteServerTestConfig
             } else {
                 logger.info("Reusing existing SQLite database at: {}", tempDbPath.toAbsolutePath());
             }
+
+            referenceCount++;
+            logger.info("SQLite reference count incremented to {}", referenceCount);
+
             return dataSource;
         }
     }
@@ -95,8 +101,19 @@ public class SqliteServerTestConfig
     @PreDestroy
     public void preDestroy() throws IOException
     {
-        // Don't delete the shared database file - let JVM shutdown handle it
-        logger.info("SqliteServerTestConfig cleanup (keeping shared SQLite database)");
+        synchronized (LOCK) {
+            referenceCount--;
+            logger.info("SQLite reference count decremented to {}", referenceCount);
+
+            if (referenceCount == 0 && tempDbPath != null) {
+                logger.info("Deleting shared SQLite database (last context)");
+                Files.deleteIfExists(tempDbPath);
+                tempDbPath = null;
+                dataSource = null;
+            } else if (referenceCount > 0) {
+                logger.info("Keeping shared SQLite database ({} contexts still active)", referenceCount);
+            }
+        }
     }
 
     /**

@@ -48,6 +48,7 @@ public class MariaDbServerTestConfig
     private static DB embeddedMariaDb = null;
     private static DataSource dataSource = null;
     private static final Object LOCK = new Object();
+    private static int referenceCount = 0;
 
     /**
      * Provides CheapFactory bean for creating Cheap objects.
@@ -86,6 +87,10 @@ public class MariaDbServerTestConfig
             } else {
                 logger.info("Reusing existing embedded MariaDB instance on port 3307");
             }
+
+            referenceCount++;
+            logger.info("MariaDB reference count incremented to {}", referenceCount);
+
             return dataSource;
         }
     }
@@ -99,6 +104,7 @@ public class MariaDbServerTestConfig
 
         // Initialize schema
         MariaDbCheapSchema schema = new MariaDbCheapSchema();
+        schema.executeDropSchemaDdl(mariaDbDataSource);
         schema.executeMainSchemaDdl(mariaDbDataSource);
         schema.executeForeignKeysDdl(mariaDbDataSource);  // Enable foreign keys for integration tests
         schema.executeAuditSchemaDdl(mariaDbDataSource);
@@ -108,8 +114,19 @@ public class MariaDbServerTestConfig
     @PreDestroy
     public void preDestroy() throws IOException
     {
-        // Don't stop the shared instance - let JVM shutdown handle it
-        logger.info("MariaDbServerTestConfig cleanup (keeping shared embedded MariaDB running)");
+        synchronized (LOCK) {
+            referenceCount--;
+            logger.info("MariaDB reference count decremented to {}", referenceCount);
+
+            if (referenceCount == 0 && embeddedMariaDb != null) {
+                logger.info("Stopping shared embedded MariaDB (last context)");
+                embeddedMariaDb.stop();
+                embeddedMariaDb = null;
+                dataSource = null;
+            } else if (referenceCount > 0) {
+                logger.info("Keeping shared embedded MariaDB running ({} contexts still active)", referenceCount);
+            }
+        }
     }
 
     /**

@@ -45,6 +45,7 @@ public class PostgresServerTestConfig
     private static EmbeddedPostgres embeddedPostgres = null;
     private static DataSource dataSource = null;
     private static final Object LOCK = new Object();
+    private static int referenceCount = 0;
 
     /**
      * Provides CheapFactory bean for creating Cheap objects.
@@ -75,6 +76,7 @@ public class PostgresServerTestConfig
 
                 // Initialize schema
                 PostgresCheapSchema schema = new PostgresCheapSchema();
+                schema.executeDropSchemaDdl(dataSource);
                 schema.executeMainSchemaDdl(dataSource);
                 schema.executeAuditSchemaDdl(dataSource);
 
@@ -82,6 +84,10 @@ public class PostgresServerTestConfig
             } else {
                 logger.info("Reusing existing embedded PostgreSQL instance on port 5433");
             }
+
+            referenceCount++;
+            logger.info("PostgreSQL reference count incremented to {}", referenceCount);
+
             return dataSource;
         }
     }
@@ -89,8 +95,19 @@ public class PostgresServerTestConfig
     @PreDestroy
     public void preDestroy() throws IOException
     {
-        // Don't close the shared instance - let JVM shutdown handle it
-        logger.info("PostgresServerTestConfig cleanup (keeping shared embedded PostgreSQL running)");
+        synchronized (LOCK) {
+            referenceCount--;
+            logger.info("PostgreSQL reference count decremented to {}", referenceCount);
+
+            if (referenceCount == 0 && embeddedPostgres != null) {
+                logger.info("Closing shared embedded PostgreSQL (last context)");
+                embeddedPostgres.close();
+                embeddedPostgres = null;
+                dataSource = null;
+            } else if (referenceCount > 0) {
+                logger.info("Keeping shared embedded PostgreSQL running ({} contexts still active)", referenceCount);
+            }
+        }
     }
 
     /**
