@@ -230,4 +230,150 @@ class HierarchyControllerHttpTest extends BaseControllerHttpTest
             .exchange()
             .expectStatus().isNotFound();
     }
+
+    @Test
+    void testCreateEntityListHierarchy() throws Exception
+    {
+        // Load the JSON request for creating an entity list hierarchy
+        String createRequest = loadJson("hierarchy/create-hierarchy.json");
+
+        // Create the hierarchy
+        String responseJson = webTestClient.post()
+            .uri("/api/catalog/" + catalogId + "/hierarchies")
+            .contentType(MediaType.APPLICATION_JSON)
+            .bodyValue(createRequest)
+            .exchange()
+            .expectStatus().isCreated()
+            .expectHeader().contentType(MediaType.APPLICATION_JSON)
+            .expectBody(String.class)
+            .returnResult()
+            .getResponseBody();
+
+        // Verify response
+        JsonNode responseNode = objectMapper.readTree(responseJson);
+        assertThat(responseNode.has("hierarchyName")).isTrue();
+        assertThat(responseNode.has("message")).isTrue();
+        assertThat(responseNode.get("hierarchyName").asText()).isEqualTo("projects");
+        assertThat(responseNode.get("message").asText()).isEqualTo("Hierarchy created successfully");
+
+        // Verify we can retrieve the created hierarchy
+        String getResponse = webTestClient.get()
+            .uri("/api/catalog/" + catalogId + "/hierarchies/projects?page=0&size=20")
+            .exchange()
+            .expectStatus().isOk()
+            .expectBody(String.class)
+            .returnResult()
+            .getResponseBody();
+
+        JsonNode getNode = objectMapper.readTree(getResponse);
+        assertThat(getNode.get("hierarchyName").asText()).isEqualTo("projects");
+    }
+
+    @Test
+    void testCreateEntitySetHierarchy() throws Exception
+    {
+        // Load the JSON request for creating an entity set hierarchy
+        String createRequest = loadJson("hierarchy/create-hierarchy-set.json");
+
+        // Create the hierarchy
+        String responseJson = webTestClient.post()
+            .uri("/api/catalog/" + catalogId + "/hierarchies")
+            .contentType(MediaType.APPLICATION_JSON)
+            .bodyValue(createRequest)
+            .exchange()
+            .expectStatus().isCreated()
+            .expectHeader().contentType(MediaType.APPLICATION_JSON)
+            .expectBody(String.class)
+            .returnResult()
+            .getResponseBody();
+
+        // Verify response
+        JsonNode responseNode = objectMapper.readTree(responseJson);
+        assertThat(responseNode.get("hierarchyName").asText()).isEqualTo("users");
+        assertThat(responseNode.get("message").asText()).isEqualTo("Hierarchy created successfully");
+
+        // Verify we can retrieve the created hierarchy
+        String getResponse = webTestClient.get()
+            .uri("/api/catalog/" + catalogId + "/hierarchies/users?page=0&size=20")
+            .exchange()
+            .expectStatus().isOk()
+            .expectBody(String.class)
+            .returnResult()
+            .getResponseBody();
+
+        JsonNode getNode = objectMapper.readTree(getResponse);
+        assertThat(getNode.get("hierarchyName").asText()).isEqualTo("users");
+    }
+
+    @Test
+    void testCreateEntityTreeHierarchy() throws Exception
+    {
+        // Load the JSON request for creating an entity tree hierarchy
+        String createRequest = loadJson("hierarchy/create-hierarchy-tree.json");
+
+        // Create the hierarchy
+        String responseJson = webTestClient.post()
+            .uri("/api/catalog/" + catalogId + "/hierarchies")
+            .contentType(MediaType.APPLICATION_JSON)
+            .bodyValue(createRequest)
+            .exchange()
+            .expectStatus().isCreated()
+            .expectHeader().contentType(MediaType.APPLICATION_JSON)
+            .expectBody(String.class)
+            .returnResult()
+            .getResponseBody();
+
+        // Verify response
+        JsonNode responseNode = objectMapper.readTree(responseJson);
+        assertThat(responseNode.get("hierarchyName").asText()).isEqualTo("categories");
+        assertThat(responseNode.get("message").asText()).isEqualTo("Hierarchy created successfully");
+
+        // Verify we can retrieve the created hierarchy
+        String getResponse = webTestClient.get()
+            .uri("/api/catalog/" + catalogId + "/hierarchies/categories")
+            .exchange()
+            .expectStatus().isOk()
+            .expectBody(String.class)
+            .returnResult()
+            .getResponseBody();
+
+        JsonNode getNode = objectMapper.readTree(getResponse);
+        assertThat(getNode.get("hierarchyName").asText()).isEqualTo("categories");
+    }
+
+    @Test
+    void testCreateEntityDirectoryHierarchy() throws Exception
+    {
+        // Load the JSON request for creating an entity directory hierarchy
+        String createRequest = loadJson("hierarchy/create-hierarchy-directory.json");
+
+        // Create the hierarchy
+        String responseJson = webTestClient.post()
+            .uri("/api/catalog/" + catalogId + "/hierarchies")
+            .contentType(MediaType.APPLICATION_JSON)
+            .bodyValue(createRequest)
+            .exchange()
+            .expectStatus().isCreated()
+            .expectHeader().contentType(MediaType.APPLICATION_JSON)
+            .expectBody(String.class)
+            .returnResult()
+            .getResponseBody();
+
+        // Verify response
+        JsonNode responseNode = objectMapper.readTree(responseJson);
+        assertThat(responseNode.get("hierarchyName").asText()).isEqualTo("documents");
+        assertThat(responseNode.get("message").asText()).isEqualTo("Hierarchy created successfully");
+
+        // Verify we can retrieve the created hierarchy
+        String getResponse = webTestClient.get()
+            .uri("/api/catalog/" + catalogId + "/hierarchies/documents?page=0&size=20")
+            .exchange()
+            .expectStatus().isOk()
+            .expectBody(String.class)
+            .returnResult()
+            .getResponseBody();
+
+        JsonNode getNode = objectMapper.readTree(getResponse);
+        assertThat(getNode.get("hierarchyName").asText()).isEqualTo("documents");
+    }
 }

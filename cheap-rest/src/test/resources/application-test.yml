@@ -1,12 +1,18 @@
 spring:
   datasource:
-    # Embedded PostgreSQL will override this
-    url: jdbc:postgresql://localhost:5432/test
-    driver-class-name: org.postgresql.Driver
+    # URL will be dynamically set by test base class
+    url: "jdbc:sqlite::memory:"
+    driver-class-name: org.sqlite.JDBC
+    hikari:
+      maximum-pool-size: 5
+      minimum-idle: 1
+      connection-timeout: 20000
+      idle-timeout: 300000
+      max-lifetime: 1200000
 
 cheap:
   database:
-    type: postgres
+    type: sqlite
   pagination:
     default-page-size: 20
     max-page-size: 100
@@ -17,3 +23,5 @@ logging:
   level:
     net.netbeing.cheap: DEBUG
     org.springframework: INFO
+    org.sqlite: INFO
+

@@ -216,4 +216,100 @@ class HierarchyServiceTest extends BaseServiceTest
         assertEquals("projects", hierarchy.name());
         assertEquals(HierarchyType.ENTITY_LIST, hierarchy.type());
     }
+
+    @Test
+    void testCreateHierarchySet() throws IOException
+    {
+        // Load the JSON test resource for Entity Set
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(CheapJacksonDeserializer.createCheapModule(factory));
+
+        InputStream jsonStream = getClass().getResourceAsStream(
+            "/http-tests/hierarchy/create-hierarchy-set.json"
+        );
+        assertNotNull(jsonStream, "Test resource file not found");
+
+        JsonNode jsonNode = mapper.readTree(jsonStream);
+        HierarchyDef hierarchyDef = mapper.treeToValue(
+            jsonNode.get("hierarchyDef"),
+            HierarchyDef.class
+        );
+
+        // Create the hierarchy
+        String hierarchyName = hierarchyService.createHierarchy(catalogId, hierarchyDef);
+
+        // Verify the hierarchy was created
+        assertEquals("users", hierarchyName);
+
+        // Verify we can retrieve the hierarchy
+        Hierarchy hierarchy = hierarchyService.getHierarchy(catalogId, "users");
+        assertNotNull(hierarchy);
+        assertEquals("users", hierarchy.name());
+        assertEquals(HierarchyType.ENTITY_SET, hierarchy.type());
+        assertTrue(hierarchy instanceof EntitySetHierarchy);
+    }
+
+    @Test
+    void testCreateHierarchyTree() throws IOException
+    {
+        // Load the JSON test resource for Entity Tree
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(CheapJacksonDeserializer.createCheapModule(factory));
+
+        InputStream jsonStream = getClass().getResourceAsStream(
+            "/http-tests/hierarchy/create-hierarchy-tree.json"
+        );
+        assertNotNull(jsonStream, "Test resource file not found");
+
+        JsonNode jsonNode = mapper.readTree(jsonStream);
+        HierarchyDef hierarchyDef = mapper.treeToValue(
+            jsonNode.get("hierarchyDef"),
+            HierarchyDef.class
+        );
+
+        // Create the hierarchy
+        String hierarchyName = hierarchyService.createHierarchy(catalogId, hierarchyDef);
+
+        // Verify the hierarchy was created
+        assertEquals("categories", hierarchyName);
+
+        // Verify we can retrieve the hierarchy
+        Hierarchy hierarchy = hierarchyService.getHierarchy(catalogId, "categories");
+        assertNotNull(hierarchy);
+        assertEquals("categories", hierarchy.name());
+        assertEquals(HierarchyType.ENTITY_TREE, hierarchy.type());
+        assertTrue(hierarchy instanceof EntityTreeHierarchy);
+    }
+
+    @Test
+    void testCreateHierarchyDirectory() throws IOException
+    {
+        // Load the JSON test resource for Entity Directory
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(CheapJacksonDeserializer.createCheapModule(factory));
+
+        InputStream jsonStream = getClass().getResourceAsStream(
+            "/http-tests/hierarchy/create-hierarchy-directory.json"
+        );
+        assertNotNull(jsonStream, "Test resource file not found");
+
+        JsonNode jsonNode = mapper.readTree(jsonStream);
+        HierarchyDef hierarchyDef = mapper.treeToValue(
+            jsonNode.get("hierarchyDef"),
+            HierarchyDef.class
+        );
+
+        // Create the hierarchy
+        String hierarchyName = hierarchyService.createHierarchy(catalogId, hierarchyDef);
+
+        // Verify the hierarchy was created
+        assertEquals("documents", hierarchyName);
+
+        // Verify we can retrieve the hierarchy
+        Hierarchy hierarchy = hierarchyService.getHierarchy(catalogId, "documents");
+        assertNotNull(hierarchy);
+        assertEquals("documents", hierarchy.name());
+        assertEquals(HierarchyType.ENTITY_DIR, hierarchy.type());
+        assertTrue(hierarchy instanceof EntityDirectoryHierarchy);
+    }
 }
