@@ -28,6 +28,7 @@ import java.util.UUID;
  * This class helps reduce duplication in test setup by providing reusable methods
  * for creating and populating test Cheap elements and database tables.
  */
+@SuppressWarnings({"unused", "ClassCanBeRecord"})
 public class CheapTestFactory
 {
     private final CheapFactory factory;
@@ -107,6 +108,7 @@ public class CheapTestFactory
      * @return the EntityIds containing all created IDs
      * @throws SQLException if database operation fails
      */
+    @SuppressWarnings("UnusedReturnValue")
     public EntityIds populateAllHierarchyTypes(Connection conn, UUID catalogId) throws SQLException
     {
         UUID entityId = UUID.randomUUID();
@@ -190,8 +192,8 @@ public class CheapTestFactory
     {
         executeUpdate(conn,
             "INSERT INTO property_def (aspect_def_id, name, property_index, property_type, default_value, has_default_value, " +
-                "is_readable, is_writable, is_nullable, is_removable, is_multivalued) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                "is_readable, is_writable, is_nullable, is_multivalued) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             aspectDefId, name, propertyIndex, "STR", null, false, true, true, true, false, false);
     }
 

@@ -132,7 +132,7 @@ class AspectPropertyMapImplTest
         aspectDef = new MutableAspectDefImpl("testAspect");
         aspect = new AspectPropertyMapImpl(entity, aspectDef);
         PropertyDefImpl nonReadablePropDef =
-            new PropertyDefBuilder().setName("readonly").setType(PropertyType.String).setIsReadable(false).setIsWritable(true).setIsNullable(true).setIsRemovable(true).setIsMultivalued(false).build();
+            new PropertyDefBuilder().setName("readonly").setType(PropertyType.String).setIsReadable(false).setIsWritable(true).setIsNullable(true).setIsMultivalued(false).build();
         Property nonReadableProperty = new PropertyImpl(nonReadablePropDef, "value");
         aspect.put(nonReadableProperty);
 
@@ -148,7 +148,8 @@ class AspectPropertyMapImplTest
         aspectDef = new MutableAspectDefImpl("testAspect");
         aspect = new AspectPropertyMapImpl(entity, aspectDef);
         PropertyDefImpl readablePropDef =
-            new PropertyDefBuilder().setName("readable").setType(PropertyType.String).setIsReadable(true).setIsWritable(true).setIsNullable(true).setIsRemovable(true).setIsMultivalued(false).build();
+            new PropertyDefBuilder().setName("readable").setType(PropertyType.String).setIsReadable(true)
+                .setIsWritable(true).setIsNullable(true).setIsMultivalued(false).build();
         Property readableProperty = new PropertyImpl(readablePropDef, "value");
         aspect.put(readableProperty);
 
@@ -215,7 +216,8 @@ class AspectPropertyMapImplTest
         aspectDef = new MutableAspectDefImpl("testAspect");
         aspect = new AspectPropertyMapImpl(entity, aspectDef);
         PropertyDefImpl nonWritablePropDef =
-            new PropertyDefBuilder().setName("readonly").setType(PropertyType.String).setIsReadable(true).setIsWritable(false).setIsNullable(true).setIsRemovable(true).setIsMultivalued(false).build();
+            new PropertyDefBuilder().setName("readonly").setType(PropertyType.String).setIsReadable(true)
+                .setIsWritable(false).setIsNullable(true).setIsMultivalued(false).build();
         Property existingProperty = new PropertyImpl(nonWritablePropDef, "old-value");
         aspect.props.put("readonly", existingProperty);
 
@@ -233,11 +235,11 @@ class AspectPropertyMapImplTest
         aspectDef = new MutableAspectDefImpl("testAspect");
         aspect = new AspectPropertyMapImpl(entity, aspectDef);
         PropertyDefImpl pd1 =
-            new PropertyDefBuilder().setName("prop").setType(PropertyType.String).setIsReadable(true).setIsWritable(true).setIsNullable(true).setIsRemovable(true).setIsMultivalued(false).build();
+            new PropertyDefBuilder().setName("prop").setType(PropertyType.String).setIsReadable(true).setIsWritable(true).setIsNullable(true).setIsMultivalued(false).build();
         aspectDef.add(pd1);
 
         PropertyDefImpl pd2 =
-            new PropertyDefBuilder().setName("prop").setType(PropertyType.Integer).setIsReadable(true).setIsWritable(true).setIsNullable(true).setIsRemovable(true).setIsMultivalued(false).build();
+            new PropertyDefBuilder().setName("prop").setType(PropertyType.Integer).setIsReadable(true).setIsWritable(true).setIsNullable(true).setIsMultivalued(false).build();
 
         Property existingProperty = new PropertyImpl(pd1, "value");
         aspect.props.put("prop", existingProperty);
@@ -256,7 +258,8 @@ class AspectPropertyMapImplTest
         aspectDef = new MutableAspectDefImpl("testAspect");
         aspect = new AspectPropertyMapImpl(entity, aspectDef);
         PropertyDefImpl writablePropDef =
-            new PropertyDefBuilder().setName("writable").setType(PropertyType.String).setIsReadable(true).setIsWritable(true).setIsNullable(true).setIsRemovable(true).setIsMultivalued(false).build();
+            new PropertyDefBuilder().setName("writable").setType(PropertyType.String).setIsReadable(true)
+                .setIsWritable(true).setIsNullable(true).setIsMultivalued(false).build();
 
         Property existingProperty = new PropertyImpl(writablePropDef, "old-value");
         aspect.props.put("writable", existingProperty);

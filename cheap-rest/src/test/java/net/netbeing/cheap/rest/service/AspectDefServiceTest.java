@@ -52,7 +52,7 @@ class AspectDefServiceTest extends BaseServiceTest
 
         // Create AspectDef
         MutableAspectDef aspectDef = factory.createMutableAspectDef("com.example.TestAspect");
-        aspectDef.add(factory.createPropertyDef("testProp", PropertyType.String, true, true, false, false, false));
+        aspectDef.add(factory.createPropertyDef("testProp", PropertyType.String, true, true, false, false));
 
         // Create AspectDef in catalog
         AspectDef created = aspectDefService.createAspectDef(catalogId, aspectDef);
@@ -69,7 +69,7 @@ class AspectDefServiceTest extends BaseServiceTest
         UUID nonExistentCatalogId = UUID.randomUUID();
 
         MutableAspectDef aspectDef = factory.createMutableAspectDef("com.example.TestAspect");
-        aspectDef.add(factory.createPropertyDef("testProp", PropertyType.String, true, true, false, false, false));
+        aspectDef.add(factory.createPropertyDef("testProp", PropertyType.String, true, true, false, false));
 
         assertThrows(ResourceNotFoundException.class, () -> aspectDefService.createAspectDef(nonExistentCatalogId,
             aspectDef));
@@ -81,7 +81,7 @@ class AspectDefServiceTest extends BaseServiceTest
         UUID catalogId = setupTestCatalog();
 
         MutableAspectDef aspectDef = factory.createMutableAspectDef("com.example.TestAspect");
-        aspectDef.add(factory.createPropertyDef("testProp", PropertyType.String, true, true, false, false, false));
+        aspectDef.add(factory.createPropertyDef("testProp", PropertyType.String, true, true, false, false));
 
         // Create first time - should succeed
         aspectDefService.createAspectDef(catalogId, aspectDef);
@@ -89,7 +89,7 @@ class AspectDefServiceTest extends BaseServiceTest
         // Create second time with same name - should fail
         MutableAspectDef duplicate = factory.createMutableAspectDef("com.example.TestAspect", UUID.randomUUID(),
             new HashMap<>());
-        duplicate.add(factory.createPropertyDef("prop", PropertyType.String, true, true, false, false, false));
+        duplicate.add(factory.createPropertyDef("prop", PropertyType.String, true, true, false, false));
 
         assertThrows(ResourceConflictException.class, () -> aspectDefService.createAspectDef(catalogId, duplicate));
     }
@@ -102,7 +102,7 @@ class AspectDefServiceTest extends BaseServiceTest
         // Create multiple AspectDefs
         for (int i = 0; i < 3; i++) {
             MutableAspectDef aspectDef = factory.createMutableAspectDef("com.example.Aspect" + i);
-            aspectDef.add(factory.createPropertyDef("prop", PropertyType.String, true, true, false, false, false));
+            aspectDef.add(factory.createPropertyDef("prop", PropertyType.String, true, true, false, false));
             aspectDefService.createAspectDef(catalogId, aspectDef);
         }
 
@@ -120,7 +120,7 @@ class AspectDefServiceTest extends BaseServiceTest
         // Create multiple AspectDefs
         for (int i = 0; i < 5; i++) {
             MutableAspectDef aspectDef = factory.createMutableAspectDef("com.example.Aspect" + i);
-            aspectDef.add(factory.createPropertyDef("prop", PropertyType.String, true, true, false, false, false));
+            aspectDef.add(factory.createPropertyDef("prop", PropertyType.String, true, true, false, false));
             aspectDefService.createAspectDef(catalogId, aspectDef);
         }
 
@@ -148,7 +148,7 @@ class AspectDefServiceTest extends BaseServiceTest
         // Create AspectDefs
         for (int i = 0; i < 3; i++) {
             MutableAspectDef aspectDef = factory.createMutableAspectDef("com.example.Aspect" + i);
-            aspectDef.add(factory.createPropertyDef("prop", PropertyType.String, true, true, false, false, false));
+            aspectDef.add(factory.createPropertyDef("prop", PropertyType.String, true, true, false, false));
             aspectDefService.createAspectDef(catalogId, aspectDef);
             assertEquals(i + 1, aspectDefService.countAspectDefs(catalogId));
         }
@@ -163,7 +163,7 @@ class AspectDefServiceTest extends BaseServiceTest
         UUID aspectDefId = UUID.randomUUID();
         MutableAspectDef original = factory.createMutableAspectDef("com.example.TestAspect", aspectDefId,
             new HashMap<>());
-        original.add(factory.createPropertyDef("testProp", PropertyType.String, true, true, false, false, false));
+        original.add(factory.createPropertyDef("testProp", PropertyType.String, true, true, false, false));
         aspectDefService.createAspectDef(catalogId, original);
 
         // Get by name
@@ -191,7 +191,7 @@ class AspectDefServiceTest extends BaseServiceTest
         UUID aspectDefId = UUID.randomUUID();
         MutableAspectDef original = factory.createMutableAspectDef("com.example.TestAspect", aspectDefId,
             new HashMap<>());
-        original.add(factory.createPropertyDef("testProp", PropertyType.String, true, true, false, false, false));
+        original.add(factory.createPropertyDef("testProp", PropertyType.String, true, true, false, false));
         aspectDefService.createAspectDef(catalogId, original);
 
         // Get by ID

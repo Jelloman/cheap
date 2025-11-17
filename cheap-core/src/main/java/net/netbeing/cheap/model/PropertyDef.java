@@ -97,15 +97,6 @@ public interface PropertyDef
     }
 
     /**
-     * Determines whether properties of this type can be removed from their parent aspect.
-     * 
-     * @return true if the property can be removed, false if it is mandatory
-     */
-    default boolean isRemovable() {
-        return false;
-    }
-
-    /**
      * Determines whether properties of this type can hold multiple values.
      * A multivalued property can contain a collection of values rather than a single value.
      * 
@@ -128,7 +119,6 @@ public interface PropertyDef
             isReadable() == other.isReadable() &&
             isWritable() == other.isWritable() &&
             isNullable() == other.isNullable() &&
-            isRemovable() == other.isRemovable() &&
             Objects.equals(defaultValue(), other.defaultValue()) &&
             type().equals(other.type()) &&
             name().equals(other.name());
@@ -149,7 +139,6 @@ public interface PropertyDef
         hasher.update(isReadable());
         hasher.update(isWritable());
         hasher.update(isNullable());
-        hasher.update(isRemovable());
         hasher.update(hasDefaultValue());
         if (hasDefaultValue() && defaultValue() != null) {
             hasher.update(defaultValue().hashCode());

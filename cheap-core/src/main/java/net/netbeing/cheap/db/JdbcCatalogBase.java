@@ -148,7 +148,6 @@ public abstract class JdbcCatalogBase extends CatalogImpl
                         .setIsReadable(true)
                         .setIsWritable(true)
                         .setIsNullable(isNullable)
-                        .setIsRemovable(true)
                         .setIsMultivalued(false).build();
 
                     aspectDef.add(propertyDef);

@@ -34,7 +34,7 @@ import java.util.Objects;
  * <ul>
  *   <li>Automatic {@link PropertyType} inference from Java types using {@link CheapReflectionUtil#typeOf}</li>
  *   <li>Nullability detection based on {@code @NotNull} annotations</li>
- *   <li>Multi-valued property support for arrays and collections</li>
+ *   <li>Multivalued property support for arrays and collections</li>
  *   <li>Read-only access pattern enforcing record immutability</li>
  * </ul>
  * 
@@ -127,19 +127,6 @@ public record RecordPropertyDef(
      */
     @Override
     public boolean isWritable()
-    {
-        return false;
-    }
-
-    /**
-     * {@inheritDoc}
-     * 
-     * <p>Record properties are never removable since record structure is fixed at compile time.</p>
-     * 
-     * @return always {@code false} for record properties
-     */
-    @Override
-    public boolean isRemovable()
     {
         return false;
     }

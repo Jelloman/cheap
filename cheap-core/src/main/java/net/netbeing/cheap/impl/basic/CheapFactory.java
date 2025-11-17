@@ -972,17 +972,15 @@ public class CheapFactory
      * @param isReadable      whether the property can be read
      * @param isWritable      whether the property can be written
      * @param isNullable      whether the property accepts null values
-     * @param isRemovable     whether the property can be removed
      * @param isMultivalued   whether the property can hold multiple values
      * @return a new PropertyDef instance
      */
     public @NotNull PropertyDef createPropertyDef(@NotNull String name, @NotNull PropertyType type,
                                                   Object defaultValue, boolean hasDefaultValue, boolean isReadable,
-                                                  boolean isWritable, boolean isNullable, boolean isRemovable,
-                                                  boolean isMultivalued)
+                                                  boolean isWritable, boolean isNullable, boolean isMultivalued)
     {
         return new PropertyDefImpl(name, type, defaultValue, hasDefaultValue, isReadable, isWritable, isNullable,
-            isRemovable, isMultivalued);
+            isMultivalued);
     }
 
     /**
@@ -1008,13 +1006,12 @@ public class CheapFactory
      * @param isReadable    whether the property can be read
      * @param isWritable    whether the property can be written
      * @param isNullable    whether the property accepts null values
-     * @param isRemovable   whether the property can be removed
      * @param isMultivalued whether the property can hold multiple values
      * @return a new PropertyDef instance
      */
     public @NotNull PropertyDef createPropertyDef(@NotNull String name, @NotNull PropertyType type,
                                                   boolean isReadable, boolean isWritable, boolean isNullable,
-                                                  boolean isRemovable, boolean isMultivalued)
+                                                  boolean isMultivalued)
     {
         return new PropertyDefBuilder()
             .setName(name)
@@ -1022,7 +1019,6 @@ public class CheapFactory
             .setIsReadable(isReadable)
             .setIsWritable(isWritable)
             .setIsNullable(isNullable)
-            .setIsRemovable(isRemovable)
             .setIsMultivalued(isMultivalued)
             .build();
     }
@@ -1033,16 +1029,14 @@ public class CheapFactory
      * @param name        the name of the property
      * @param type        the data type of the property
      * @param isNullable  whether the property accepts null values
-     * @param isRemovable whether the property can be removed
      * @return a new read-only PropertyDef instance
      */
     public @NotNull PropertyDef createReadOnlyPropertyDef(@NotNull String name, @NotNull PropertyType type,
-                                                          boolean isNullable, boolean isRemovable)
+                                                          boolean isNullable)
     {
         return new PropertyDefBuilder()
             .setName(name)
             .setType(type)
-            .setIsRemovable(isRemovable)
             .setIsNullable(isNullable)
             .setIsReadable(true)
             .setIsWritable(false)

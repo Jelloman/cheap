@@ -256,7 +256,7 @@ class CheapFactoryTest
     {
         // Test property definition with all parameters
         PropertyDef fullPropertyDef = factory.createPropertyDef(
-            "testProp", PropertyType.String, "default", true, true, true, true, true, false);
+            "testProp", PropertyType.String, "default", true, true, true, true, false);
         assertNotNull(fullPropertyDef);
         assertEquals("testProp", fullPropertyDef.name());
         assertEquals(PropertyType.String, fullPropertyDef.type());
@@ -265,7 +265,6 @@ class CheapFactoryTest
         assertTrue(fullPropertyDef.isReadable());
         assertTrue(fullPropertyDef.isWritable());
         assertTrue(fullPropertyDef.isNullable());
-        assertTrue(fullPropertyDef.isRemovable());
         assertFalse(fullPropertyDef.isMultivalued());
         
         // Test property definition with default settings
@@ -276,23 +275,21 @@ class CheapFactoryTest
         
         // Test property definition with specified accessibility
         PropertyDef accessPropertyDef = factory.createPropertyDef(
-            "accessProp", PropertyType.Boolean, true, false, false, true, true);
+            "accessProp", PropertyType.Boolean, true, false, false, true);
         assertNotNull(accessPropertyDef);
         assertEquals("accessProp", accessPropertyDef.name());
         assertTrue(accessPropertyDef.isReadable());
         assertFalse(accessPropertyDef.isWritable());
         assertFalse(accessPropertyDef.isNullable());
-        assertTrue(accessPropertyDef.isRemovable());
         assertTrue(accessPropertyDef.isMultivalued());
         
         // Test read-only property definition
-        PropertyDef readOnlyDef = factory.createReadOnlyPropertyDef("readOnlyProp", PropertyType.String, true, false);
+        PropertyDef readOnlyDef = factory.createReadOnlyPropertyDef("readOnlyProp", PropertyType.String, false);
         assertNotNull(readOnlyDef);
         assertEquals("readOnlyProp", readOnlyDef.name());
         assertTrue(readOnlyDef.isReadable());
         assertFalse(readOnlyDef.isWritable());
-        assertTrue(readOnlyDef.isNullable());
-        assertFalse(readOnlyDef.isRemovable());
+        assertFalse(readOnlyDef.isNullable());
     }
 
     @Test
@@ -552,7 +549,7 @@ class CheapFactoryTest
             factory.createCatalog(null, null));
         
         assertThrows(NullPointerException.class, () -> 
-            factory.createEntity((UUID) null));
+            factory.createEntity(null));
         
         assertThrows(NullPointerException.class, () -> 
             factory.createHierarchyDef(null, HierarchyType.ENTITY_SET));

@@ -21,11 +21,14 @@ import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonMappingException;
+import net.netbeing.cheap.json.jackson.serialize.CheapJacksonSerializer;
 import net.netbeing.cheap.model.AspectDef;
 import net.netbeing.cheap.model.PropertyDef;
 import net.netbeing.cheap.model.PropertyType;
 import net.netbeing.cheap.impl.basic.CheapFactory;
 import org.jetbrains.annotations.NotNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -65,6 +68,8 @@ import java.util.UUID;
  */
 class AspectDefDeserializer extends JsonDeserializer<AspectDef>
 {
+    private static final Logger logger = LoggerFactory.getLogger(AspectDefDeserializer.class);
+
     private final CheapFactory factory;
 
     public AspectDefDeserializer(@NotNull CheapFactory factory)
@@ -143,6 +148,7 @@ class AspectDefDeserializer extends JsonDeserializer<AspectDef>
         AspectDef existingDef = factory.getAspectDef(name);
         if (existingDef != null) {
             if (!existingDef.fullyEquals(def)) {
+                logger.error("AspectDef mismatch:\n{}\n{}", CheapJacksonSerializer.toJson(existingDef,true), CheapJacksonSerializer.toJson(def,true));
                 throw new JsonMappingException(p, "Attempted to deserialize AspectDef " + name + " that conflicts with the AspectDef already registered with that name.");
             }
         } else {
@@ -165,7 +171,6 @@ class AspectDefDeserializer extends JsonDeserializer<AspectDef>
         boolean isReadable = flags.isReadable;
         boolean isWritable = flags.isWritable;
         boolean isNullable = true;
-        boolean isRemovable = flags.canRemoveProperties;
         boolean isMultivalued = false;
 
         while (p.nextToken() != JsonToken.END_OBJECT) {
@@ -182,7 +187,6 @@ class AspectDefDeserializer extends JsonDeserializer<AspectDef>
                 case "isReadable" -> isReadable = p.getBooleanValue();
                 case "isWritable" -> isWritable = p.getBooleanValue();
                 case "isNullable" -> isNullable = p.getBooleanValue();
-                case "isRemovable" -> isRemovable = p.getBooleanValue();
                 case "isMultivalued" -> isMultivalued = p.getBooleanValue();
                 default -> p.skipChildren(); // Skip unknown fields
             }
@@ -193,7 +197,7 @@ class AspectDefDeserializer extends JsonDeserializer<AspectDef>
         }
 
         return factory.createPropertyDef(name, type, defaultValue, hasDefaultValue, isReadable,
-            isWritable, isNullable, isRemovable, isMultivalued);
+            isWritable, isNullable, isMultivalued);
     }
 
     private Object readValue(JsonParser p, PropertyType type) throws IOException

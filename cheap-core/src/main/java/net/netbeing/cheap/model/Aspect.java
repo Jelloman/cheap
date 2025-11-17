@@ -42,6 +42,7 @@ import org.jetbrains.annotations.NotNull;
  * <p>Property access is controlled by the aspect definition's security model,
  * including readability, writability, and nullability constraints.</p>
  */
+@SuppressWarnings("unused")
 public interface Aspect
 {
     /**
@@ -278,9 +279,6 @@ public interface Aspect
         PropertyDef currDef = currProp.def();
         if (currDef != propDef) { //TODO: use Entities.equal after writing it
             throw new ClassCastException("PropertyDef '" + propName + "' is not equal to existing PropertyDef '" + currDef.name() + "' in Aspect '" + name + "'.");
-        }
-        if (!currDef.isRemovable()) {
-            throw new UnsupportedOperationException("Property '" + propName + "' in Aspect '" + name + "' is not removable.");
         }
         // TODO: Should value be checked for equality also? It may seem more "correct" but what's the benefit? It also prevents removal of unreadable properties.
         unsafeRemove(propName);

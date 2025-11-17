@@ -37,9 +37,13 @@ class AspectPropertyMapBuilderTest
         aspectDef = new MutableAspectDefImpl("testAspect");
 
         // Create property definitions
-        stringPropDef = new PropertyDefBuilder().setName("stringProp").setType(PropertyType.String).setIsReadable(true).setIsWritable(true).setIsNullable(false).setIsRemovable(true).setIsMultivalued(false).build();
-        intPropDef = new PropertyDefBuilder().setName("intProp").setType(PropertyType.Integer).setIsReadable(true).setIsWritable(true).setIsNullable(false).setIsRemovable(true).setIsMultivalued(false).build();
-        nullablePropDef = new PropertyDefBuilder().setName("nullableProp").setType(PropertyType.String).setIsReadable(true).setIsWritable(true).setIsNullable(true).setIsRemovable(true).setIsMultivalued(false).build();
+        stringPropDef = new PropertyDefBuilder().setName("stringProp").setType(PropertyType.String).setIsReadable(true)
+            .setIsWritable(true).setIsNullable(false).setIsMultivalued(false).build();
+        intPropDef = new PropertyDefBuilder().setName("intProp").setType(PropertyType.Integer).setIsReadable(true)
+            .setIsWritable(true).setIsNullable(false).setIsMultivalued(false).build();
+        nullablePropDef = new PropertyDefBuilder().setName("nullableProp").setType(PropertyType.String)
+            .setIsReadable(true).setIsWritable(true).setIsNullable(true).setIsMultivalued(false)
+            .build();
 
         // Add properties to aspect definition
         ((MutableAspectDefImpl) aspectDef).add(stringPropDef);
@@ -161,7 +165,7 @@ class AspectPropertyMapBuilderTest
     {
         builder.aspectDef(aspectDef);
 
-        assertThrows(NullPointerException.class, () -> builder.property((Property) null));
+        assertThrows(NullPointerException.class, () -> builder.property(null));
     }
 
     @Test
@@ -182,7 +186,9 @@ class AspectPropertyMapBuilderTest
     @Test
     void property_PropertyObjectMismatchedDefinition_ThrowsException()
     {
-        PropertyDef differentDef = new PropertyDefBuilder().setName("stringProp").setType(PropertyType.String).setIsReadable(false).setIsWritable(true).setIsNullable(false).setIsRemovable(true).setIsMultivalued(false).build();
+        PropertyDef differentDef = new PropertyDefBuilder().setName("stringProp").setType(PropertyType.String)
+            .setIsReadable(false).setIsWritable(true).setIsNullable(false).setIsMultivalued(false)
+            .build();
         Property propertyWithDifferentDef = new PropertyImpl(differentDef, "value");
         builder.aspectDef(aspectDef);
 

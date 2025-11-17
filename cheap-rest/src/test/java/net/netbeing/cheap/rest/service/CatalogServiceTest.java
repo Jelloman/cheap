@@ -45,7 +45,7 @@ class CatalogServiceTest extends BaseServiceTest
     {
         // Create a simple AspectDef
         MutableAspectDef personAspect = factory.createMutableAspectDef("com.example.PersonAspect");
-        personAspect.add(factory.createPropertyDef("name", PropertyType.String, true, true, false, false, false));
+        personAspect.add(factory.createPropertyDef("name", PropertyType.String, true, true, false, false));
 
         // Create a HierarchyDef
         HierarchyDef peopleHierarchy = factory.createHierarchyDef("people", HierarchyType.ENTITY_SET);
@@ -184,7 +184,7 @@ class CatalogServiceTest extends BaseServiceTest
     {
         // Create catalog with AspectDef and HierarchyDef
         MutableAspectDef personAspect = factory.createMutableAspectDef("com.example.PersonAspect");
-        personAspect.add(factory.createPropertyDef("name", PropertyType.String, true, true, false, false, false));
+        personAspect.add(factory.createPropertyDef("name", PropertyType.String, true, true, false, false));
 
         HierarchyDef peopleHierarchy = factory.createHierarchyDef("people", HierarchyType.ENTITY_SET);
 

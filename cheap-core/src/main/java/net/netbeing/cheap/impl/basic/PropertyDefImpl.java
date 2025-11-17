@@ -44,7 +44,6 @@ public final class PropertyDefImpl implements PropertyDef
     private final boolean isReadable;
     private final boolean isWritable;
     private final boolean isNullable;
-    private final boolean isRemovable;
     private final boolean isMultivalued;
 
     /** Cached hash value (0 means not yet computed). */
@@ -60,7 +59,6 @@ public final class PropertyDefImpl implements PropertyDef
      * @param isReadable whether the property can be read
      * @param isWritable whether the property can be written
      * @param isNullable whether the property accepts null values
-     * @param isRemovable whether the property can be removed
      * @param isMultivalued whether the property can hold multiple values
      *
      * @throws IllegalArgumentException if the name is empty
@@ -74,7 +72,6 @@ public final class PropertyDefImpl implements PropertyDef
             boolean isReadable,
             boolean isWritable,
             boolean isNullable,
-            boolean isRemovable,
             boolean isMultivalued)
     {
         Objects.requireNonNull(type);
@@ -88,7 +85,6 @@ public final class PropertyDefImpl implements PropertyDef
         this.isReadable = isReadable;
         this.isWritable = isWritable;
         this.isNullable = isNullable;
-        this.isRemovable = isRemovable;
         this.isMultivalued = isMultivalued;
     }
 
@@ -132,12 +128,6 @@ public final class PropertyDefImpl implements PropertyDef
     public boolean isNullable()
     {
         return isNullable;
-    }
-
-    @Override
-    public boolean isRemovable()
-    {
-        return isRemovable;
     }
 
     @Override
@@ -202,7 +192,6 @@ public final class PropertyDefImpl implements PropertyDef
                 ", isReadable=" + isReadable +
                 ", isWritable=" + isWritable +
                 ", isNullable=" + isNullable +
-                ", isRemovable=" + isRemovable +
                 ", isMultivalued=" + isMultivalued +
                 ']';
     }

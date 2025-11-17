@@ -202,7 +202,7 @@ class PropertyValueAdapterTest
     {
         // When called directly, ZonedDateTime.parse throws DateTimeParseException
         // When called through coerce() with PropertyDef, it gets wrapped in IllegalArgumentException
-        PropertyDef dateProp = new PropertyDefImpl("date", PropertyType.DateTime, null, false, true, true, true, true, false);
+        PropertyDef dateProp = new PropertyDefImpl("date", PropertyType.DateTime, null, false, true, true, true, false);
         assertThrows(IllegalArgumentException.class, () -> adapter.coerce(dateProp, "not a date"));
         assertThrows(IllegalArgumentException.class, () -> adapter.coerce(dateProp, 42));
     }
@@ -255,7 +255,7 @@ class PropertyValueAdapterTest
     @Test
     void testCoerce_alreadyCorrectType()
     {
-        PropertyDef propDef = new PropertyDefImpl("test", PropertyType.Integer, null, false, true, true, true, true, false);
+        PropertyDef propDef = new PropertyDefImpl("test", PropertyType.Integer, null, false, true, true, true, false);
         Long value = 42L;
 
         Object result = adapter.coerce(propDef, value);
@@ -265,7 +265,7 @@ class PropertyValueAdapterTest
     @Test
     void testCoerce_coercionNeeded()
     {
-        PropertyDef propDef = new PropertyDefImpl("test", PropertyType.Integer, null, false, true, true, true, true, false);
+        PropertyDef propDef = new PropertyDefImpl("test", PropertyType.Integer, null, false, true, true, true, false);
 
         Object result = adapter.coerce(propDef, 42);
         assertEquals(42L, result);
@@ -274,7 +274,7 @@ class PropertyValueAdapterTest
     @Test
     void testCoerce_nullValue_nullable()
     {
-        PropertyDef propDef = new PropertyDefImpl("test", PropertyType.String, null, false, true, true, true, true, false);
+        PropertyDef propDef = new PropertyDefImpl("test", PropertyType.String, null, false, true, true, true, false);
 
         Object result = adapter.coerce(propDef, null);
         assertNull(result);
@@ -283,7 +283,7 @@ class PropertyValueAdapterTest
     @Test
     void testCoerce_nullValue_notNullable()
     {
-        PropertyDef propDef = new PropertyDefImpl("test", PropertyType.String, null, false, true, true, false, true, false);
+        PropertyDef propDef = new PropertyDefImpl("test", PropertyType.String, null, false, true, true, false, false);
 
         IllegalArgumentException exception = assertThrows(
             IllegalArgumentException.class,
@@ -296,7 +296,7 @@ class PropertyValueAdapterTest
     @Test
     void testCoerce_multivalued_fromList()
     {
-        PropertyDef propDef = new PropertyDefImpl("test", PropertyType.Integer, null, false, true, true, true, true, true);
+        PropertyDef propDef = new PropertyDefImpl("test", PropertyType.Integer, null, false, true, true, true, true);
         List<Integer> input = List.of(1, 2, 3);
 
         Object result = adapter.coerce(propDef, input);
@@ -313,7 +313,7 @@ class PropertyValueAdapterTest
     @Test
     void testCoerce_multivalued_fromArray()
     {
-        PropertyDef propDef = new PropertyDefImpl("test", PropertyType.Integer, null, false, true, true, true, true, true);
+        PropertyDef propDef = new PropertyDefImpl("test", PropertyType.Integer, null, false, true, true, true, true);
         Integer[] input = {1, 2, 3};
 
         Object result = adapter.coerce(propDef, input);
@@ -330,7 +330,7 @@ class PropertyValueAdapterTest
     @Test
     void testCoerce_multivalued_listNoCoercionNeeded()
     {
-        PropertyDef propDef = new PropertyDefImpl("test", PropertyType.Integer, null, false, true, true, true, true, true);
+        PropertyDef propDef = new PropertyDefImpl("test", PropertyType.Integer, null, false, true, true, true, true);
         List<Long> input = List.of(1L, 2L, 3L);
 
         Object result = adapter.coerce(propDef, input);
@@ -340,7 +340,7 @@ class PropertyValueAdapterTest
     @Test
     void testCoerce_multivalued_invalidInput()
     {
-        PropertyDef propDef = new PropertyDefImpl("test", PropertyType.Integer, null, false, true, true, true, true, true);
+        PropertyDef propDef = new PropertyDefImpl("test", PropertyType.Integer, null, false, true, true, true, true);
 
         IllegalArgumentException exception = assertThrows(
             IllegalArgumentException.class,
@@ -352,7 +352,7 @@ class PropertyValueAdapterTest
     @Test
     void testCoerce_singleValued_cannotPassList()
     {
-        PropertyDef propDef = new PropertyDefImpl("test", PropertyType.Integer, null, false, true, true, true, true, false);
+        PropertyDef propDef = new PropertyDefImpl("test", PropertyType.Integer, null, false, true, true, true, false);
         List<Integer> input = List.of(1, 2, 3);
 
         // For single-valued properties, lists are coerced to the target type
@@ -365,53 +365,53 @@ class PropertyValueAdapterTest
     void testCoerce_allPropertyTypes()
     {
         // Integer
-        PropertyDef intProp = new PropertyDefImpl("int", PropertyType.Integer, null, false, true, true, true, true, false);
+        PropertyDef intProp = new PropertyDefImpl("int", PropertyType.Integer, null, false, true, true, true, false);
         assertEquals(42L, adapter.coerce(intProp, 42));
 
         // Float
-        PropertyDef floatProp = new PropertyDefImpl("float", PropertyType.Float, null, false, true, true, true, true, false);
+        PropertyDef floatProp = new PropertyDefImpl("float", PropertyType.Float, null, false, true, true, true, false);
         assertEquals(42.5, adapter.coerce(floatProp, 42.5));
 
         // Boolean
-        PropertyDef boolProp = new PropertyDefImpl("bool", PropertyType.Boolean, null, false, true, true, true, true, false);
+        PropertyDef boolProp = new PropertyDefImpl("bool", PropertyType.Boolean, null, false, true, true, true, false);
         assertEquals(Boolean.TRUE, adapter.coerce(boolProp, "true"));
 
         // String
-        PropertyDef stringProp = new PropertyDefImpl("string", PropertyType.String, null, false, true, true, true, true, false);
+        PropertyDef stringProp = new PropertyDefImpl("string", PropertyType.String, null, false, true, true, true, false);
         assertEquals("hello", adapter.coerce(stringProp, "hello"));
 
         // Text
-        PropertyDef textProp = new PropertyDefImpl("text", PropertyType.Text, null, false, true, true, true, true, false);
+        PropertyDef textProp = new PropertyDefImpl("text", PropertyType.Text, null, false, true, true, true, false);
         assertEquals("hello", adapter.coerce(textProp, "hello"));
 
         // CLOB
-        PropertyDef clobProp = new PropertyDefImpl("clob", PropertyType.CLOB, null, false, true, true, true, true, false);
+        PropertyDef clobProp = new PropertyDefImpl("clob", PropertyType.CLOB, null, false, true, true, true, false);
         assertEquals("hello", adapter.coerce(clobProp, "hello"));
 
         // BigInteger
-        PropertyDef bigIntProp = new PropertyDefImpl("bigint", PropertyType.BigInteger, null, false, true, true, true, true, false);
+        PropertyDef bigIntProp = new PropertyDefImpl("bigint", PropertyType.BigInteger, null, false, true, true, true, false);
         assertEquals(new BigInteger("42"), adapter.coerce(bigIntProp, 42));
 
         // BigDecimal
-        PropertyDef bigDecProp = new PropertyDefImpl("bigdec", PropertyType.BigDecimal, null, false, true, true, true, true, false);
+        PropertyDef bigDecProp = new PropertyDefImpl("bigdec", PropertyType.BigDecimal, null, false, true, true, true, false);
         assertEquals(new BigDecimal("42.5"), adapter.coerce(bigDecProp, 42.5));
 
         // DateTime
-        PropertyDef dateProp = new PropertyDefImpl("date", PropertyType.DateTime, null, false, true, true, true, true, false);
+        PropertyDef dateProp = new PropertyDefImpl("date", PropertyType.DateTime, null, false, true, true, true, false);
         ZonedDateTime expected = ZonedDateTime.parse("2025-01-15T10:30:00Z");
         assertEquals(expected, adapter.coerce(dateProp, "2025-01-15T10:30:00Z"));
 
         // URI
-        PropertyDef uriProp = new PropertyDefImpl("uri", PropertyType.URI, null, false, true, true, true, true, false);
+        PropertyDef uriProp = new PropertyDefImpl("uri", PropertyType.URI, null, false, true, true, true, false);
         assertEquals(URI.create("https://example.com"), adapter.coerce(uriProp, "https://example.com"));
 
         // UUID
-        PropertyDef uuidProp = new PropertyDefImpl("uuid", PropertyType.UUID, null, false, true, true, true, true, false);
+        PropertyDef uuidProp = new PropertyDefImpl("uuid", PropertyType.UUID, null, false, true, true, true, false);
         UUID uuid = UUID.randomUUID();
         assertEquals(uuid, adapter.coerce(uuidProp, uuid.toString()));
 
         // BLOB
-        PropertyDef blobProp = new PropertyDefImpl("blob", PropertyType.BLOB, null, false, true, true, true, true, false);
+        PropertyDef blobProp = new PropertyDefImpl("blob", PropertyType.BLOB, null, false, true, true, true, false);
         byte[] expectedBytes = new byte[] { 1, 2, (byte) 171, (byte) 205 };
         assertArrayEquals(expectedBytes, (byte[]) adapter.coerce(blobProp, "0102ABCD"));
     }
@@ -432,7 +432,7 @@ class PropertyValueAdapterTest
     @Test
     void testCoerce_emptyList()
     {
-        PropertyDef propDef = new PropertyDefImpl("test", PropertyType.Integer, null, false, true, true, true, true, true);
+        PropertyDef propDef = new PropertyDefImpl("test", PropertyType.Integer, null, false, true, true, true, true);
         List<Integer> input = List.of();
 
         Object result = adapter.coerce(propDef, input);
@@ -443,7 +443,7 @@ class PropertyValueAdapterTest
     @Test
     void testCoerce_primitiveArray()
     {
-        PropertyDef propDef = new PropertyDefImpl("test", PropertyType.Integer, null, false, true, true, true, true, true);
+        PropertyDef propDef = new PropertyDefImpl("test", PropertyType.Integer, null, false, true, true, true, true);
         int[] input = {1, 2, 3};
 
         Object result = adapter.coerce(propDef, input);

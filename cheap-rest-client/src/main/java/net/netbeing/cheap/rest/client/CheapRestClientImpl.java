@@ -164,13 +164,18 @@ public class CheapRestClientImpl implements CheapRestClient
         @NotNull UUID catalogId,
         @NotNull AspectDef aspectDef)
     {
-        return webClient.post()
+        CreateAspectDefResponse response = webClient.post()
             .uri("/api/catalog/{catalogId}/aspect-defs", catalogId)
             .bodyValue(aspectDef)
             .retrieve()
             .bodyToMono(CreateAspectDefResponse.class)
             .onErrorMap(this::mapException)
             .block();
+
+        if (response != null && response.aspectDefId() != null) {
+            registerAspectDef(aspectDef);
+        }
+        return response;
     }
 
     @Override

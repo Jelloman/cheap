@@ -107,9 +107,6 @@ class AspectDefSerializer extends JsonSerializer<AspectDef>
         if (!propertyDef.isNullable()) {
             gen.writeBooleanField("isNullable", false);
         }
-        if (aspectDef.canRemoveProperties() && propertyDef.isRemovable()) {
-            gen.writeBooleanField("isRemovable", true);
-        }
         if (propertyDef.isMultivalued()) {
             gen.writeBooleanField("isMultivalued", true);
         }

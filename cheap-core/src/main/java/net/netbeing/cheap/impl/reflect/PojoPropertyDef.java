@@ -38,7 +38,7 @@ import java.util.Objects;
  *   <li>Automatic property name derivation from method names (removing "get"/"set"/"is" prefixes)</li>
  *   <li>Property type inference using {@link CheapReflectionUtil} methods</li>
  *   <li>Nullability analysis based on {@code @NotNull} annotations on methods</li>
- *   <li>Multi-valued property detection for arrays and collections</li>
+ *   <li>Multivalued property detection for arrays and collections</li>
  *   <li>Java primitive type tracking for optimization</li>
  * </ul>
  * 
@@ -119,7 +119,7 @@ public record PojoPropertyDef(
      *   <li>Property name by removing "get" or "is" prefix and lowercasing the first letter</li>
      *   <li>Property type from the method's return type</li>
      *   <li>Nullability from method annotations and return type</li>
-     *   <li>Multi-valued status for arrays and collections</li>
+     *   <li>Multivalued status for arrays and collections</li>
      *   <li>Primitive type status for boxing optimization</li>
      * </ul>
      * 
@@ -165,7 +165,7 @@ public record PojoPropertyDef(
      *   <li>Property name by removing "set" prefix and lowercasing the first letter</li>
      *   <li>Property type from the method's parameter type</li>
      *   <li>Nullability from method parameter annotations</li>
-     *   <li>Multi-valued status for arrays and collections</li>
+     *   <li>Multivalued status for arrays and collections</li>
      *   <li>Primitive type status for boxing optimization</li>
      * </ul>
      * 
@@ -276,19 +276,5 @@ public record PojoPropertyDef(
         } else {
             return fromGetterSetter(getter, setter);
         }
-    }
-
-    /**
-     * {@inheritDoc}
-     * 
-     * <p>POJO properties are never removable since property structure is defined by the class methods
-     * and cannot be modified at runtime.</p>
-     * 
-     * @return always {@code false} for POJO properties
-     */
-    @Override
-    public boolean isRemovable()
-    {
-        return false;
     }
 }

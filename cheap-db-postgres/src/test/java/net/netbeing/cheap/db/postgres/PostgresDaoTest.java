@@ -533,18 +533,18 @@ class PostgresDaoTest
         // Create an AspectDef with one Property of each type
         String aspectDefName = "all_types_aspect";
 
-        PropertyDef intProp = factory.createPropertyDef("int_prop", PropertyType.Integer, null, false, true, true, true, false, false);
-        PropertyDef floatProp = factory.createPropertyDef("float_prop", PropertyType.Float, null, false, true, true, true, false, false);
-        PropertyDef boolProp = factory.createPropertyDef("bool_prop", PropertyType.Boolean, null, false, true, true, true, false, false);
-        PropertyDef stringProp = factory.createPropertyDef("string_prop", PropertyType.String, null, false, true, true, true, false, false);
-        PropertyDef textProp = factory.createPropertyDef("text_prop", PropertyType.Text, null, false, true, true, true, false, false);
-        PropertyDef bigIntProp = factory.createPropertyDef("bigint_prop", PropertyType.BigInteger, null, false, true, true, true, false, false);
-        PropertyDef bigDecProp = factory.createPropertyDef("bigdec_prop", PropertyType.BigDecimal, null, false, true, true, true, false, false);
-        PropertyDef dateProp = factory.createPropertyDef("date_prop", PropertyType.DateTime, null, false, true, true, true, false, false);
-        PropertyDef uriProp = factory.createPropertyDef("uri_prop", PropertyType.URI, null, false, true, true, true, false, false);
-        PropertyDef uuidProp = factory.createPropertyDef("uuid_prop", PropertyType.UUID, null, false, true, true, true, false, false);
-        PropertyDef clobProp = factory.createPropertyDef("clob_prop", PropertyType.CLOB, null, false, true, true, true, false, false);
-        PropertyDef blobProp = factory.createPropertyDef("blob_prop", PropertyType.BLOB, null, false, true, true, true, false, false);
+        PropertyDef intProp = factory.createPropertyDef("int_prop", PropertyType.Integer, null, false, true, true, true, false);
+        PropertyDef floatProp = factory.createPropertyDef("float_prop", PropertyType.Float, null, false, true, true, true, false);
+        PropertyDef boolProp = factory.createPropertyDef("bool_prop", PropertyType.Boolean, null, false, true, true, true, false);
+        PropertyDef stringProp = factory.createPropertyDef("string_prop", PropertyType.String, null, false, true, true, true, false);
+        PropertyDef textProp = factory.createPropertyDef("text_prop", PropertyType.Text, null, false, true, true, true, false);
+        PropertyDef bigIntProp = factory.createPropertyDef("bigint_prop", PropertyType.BigInteger, null, false, true, true, true, false);
+        PropertyDef bigDecProp = factory.createPropertyDef("bigdec_prop", PropertyType.BigDecimal, null, false, true, true, true, false);
+        PropertyDef dateProp = factory.createPropertyDef("date_prop", PropertyType.DateTime, null, false, true, true, true, false);
+        PropertyDef uriProp = factory.createPropertyDef("uri_prop", PropertyType.URI, null, false, true, true, true, false);
+        PropertyDef uuidProp = factory.createPropertyDef("uuid_prop", PropertyType.UUID, null, false, true, true, true, false);
+        PropertyDef clobProp = factory.createPropertyDef("clob_prop", PropertyType.CLOB, null, false, true, true, true, false);
+        PropertyDef blobProp = factory.createPropertyDef("blob_prop", PropertyType.BLOB, null, false, true, true, true, false);
 
         Map<String, PropertyDef> propDefs = new LinkedHashMap<>();
         propDefs.put("int_prop", intProp);
@@ -691,7 +691,7 @@ class PostgresDaoTest
 
         // Create AspectDef with multivalued String property
         PropertyDef tagsProp = factory.createPropertyDef("tags", PropertyType.String,
-            true, true, true, true, true);
+            true, true, true, true);
 
         Map<String, PropertyDef> propDefs = Map.of("tags", tagsProp);
         AspectDef productDef = factory.createImmutableAspectDef("product", propDefs);
@@ -763,7 +763,7 @@ class PostgresDaoTest
 
         // Create AspectDef with multivalued Integer property
         PropertyDef scoresProp = factory.createPropertyDef("scores", PropertyType.Integer,
-            true, true, true, true, true);
+            true, true, true, true);
 
         Map<String, PropertyDef> propDefs = Map.of("scores", scoresProp);
         AspectDef testDef = factory.createImmutableAspectDef("test_results", propDefs);
@@ -809,7 +809,7 @@ class PostgresDaoTest
 
         // Create AspectDef with multivalued property
         PropertyDef tagsProp = factory.createPropertyDef("tags", PropertyType.String,
-            true, true, true, true, true);
+            true, true, true, true);
 
         Map<String, PropertyDef> propDefs = Map.of("tags", tagsProp);
         AspectDef productDef = factory.createImmutableAspectDef("product", propDefs);
@@ -866,7 +866,7 @@ class PostgresDaoTest
 
         // Create AspectDef with nullable multivalued property
         PropertyDef tagsProp = factory.createPropertyDef("tags", PropertyType.String,
-            true, true, true, true, true);
+            true, true, true, true);
 
         Map<String, PropertyDef> propDefs = Map.of("tags", tagsProp);
         AspectDef productDef = factory.createImmutableAspectDef("product", propDefs);
@@ -922,11 +922,11 @@ class PostgresDaoTest
 
         // Create AspectDef with both single-valued and multivalued properties
         PropertyDef titleProp = factory.createPropertyDef("title", PropertyType.String,
-            null, false, true, true, false, false, false);
+            null, false, true, true, false, false);
         PropertyDef tagsProp = factory.createPropertyDef("tags", PropertyType.String,
-            true, true, true, true, true);
+            true, true, true, true);
         PropertyDef pricesProp = factory.createPropertyDef("prices", PropertyType.Float,
-            true, true, true, true, true);
+            true, true, true, true);
 
         Map<String, PropertyDef> propDefs = new LinkedHashMap<>();
         propDefs.put("title", titleProp);
@@ -1008,9 +1008,9 @@ class PostgresDaoTest
 
         // Create AspectDef with multivalued Boolean and UUID properties
         PropertyDef flagsProp = factory.createPropertyDef("flags", PropertyType.Boolean,
-            true, true, true, true, true);
+            true, true, true, true);
         PropertyDef idsProp = factory.createPropertyDef("ids", PropertyType.UUID,
-            true, true, true, true, true);
+            true, true, true, true);
 
         Map<String, PropertyDef> propDefs = new LinkedHashMap<>();
         propDefs.put("flags", flagsProp);
@@ -1072,7 +1072,7 @@ class PostgresDaoTest
 
         // Create AspectDef with multivalued property
         PropertyDef tagsProp = factory.createPropertyDef("tags", PropertyType.String,
-            true, true, true, true, true);
+            true, true, true, true);
 
         Map<String, PropertyDef> propDefs = Map.of("tags", tagsProp);
         AspectDef productDef = factory.createImmutableAspectDef("product", propDefs);
@@ -1314,10 +1314,10 @@ class PostgresDaoTest
 
         // Create an AspectDef with properties in a specific order
         Map<String, PropertyDef> propDefs = new LinkedHashMap<>();
-        propDefs.put("zebra", factory.createPropertyDef("zebra", PropertyType.String, null, false, true, true, true, false, false));
-        propDefs.put("alpha", factory.createPropertyDef("alpha", PropertyType.Integer, null, false, true, true, true, false, false));
-        propDefs.put("middle", factory.createPropertyDef("middle", PropertyType.Boolean, null, false, true, true, true, false, false));
-        propDefs.put("beta", factory.createPropertyDef("beta", PropertyType.Float, null, false, true, true, true, false, false));
+        propDefs.put("zebra", factory.createPropertyDef("zebra", PropertyType.String, null, false, true, true, true, false));
+        propDefs.put("alpha", factory.createPropertyDef("alpha", PropertyType.Integer, null, false, true, true, true, false));
+        propDefs.put("middle", factory.createPropertyDef("middle", PropertyType.Boolean, null, false, true, true, true, false));
+        propDefs.put("beta", factory.createPropertyDef("beta", PropertyType.Float, null, false, true, true, true, false));
 
         AspectDef originalDef = factory.createImmutableAspectDef("ordered_aspect", propDefs);
 

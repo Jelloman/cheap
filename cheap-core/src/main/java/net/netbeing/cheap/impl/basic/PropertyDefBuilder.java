@@ -27,7 +27,6 @@ public class PropertyDefBuilder
     private boolean isReadable = true;
     private boolean isWritable = true;
     private boolean isNullable = true;
-    private boolean isRemovable = true;
     private boolean isMultivalued = false;
 
     public PropertyDefBuilder setName(String name)
@@ -76,12 +75,6 @@ public class PropertyDefBuilder
         return this;
     }
 
-    public PropertyDefBuilder setIsRemovable(boolean isRemovable)
-    {
-        this.isRemovable = isRemovable;
-        return this;
-    }
-
     public PropertyDefBuilder setIsMultivalued(boolean isMultivalued)
     {
         this.isMultivalued = isMultivalued;
@@ -90,6 +83,6 @@ public class PropertyDefBuilder
 
     public PropertyDefImpl build()
     {
-        return new PropertyDefImpl(name, type, defaultValue, hasDefaultValue, isReadable, isWritable, isNullable, isRemovable, isMultivalued);
+        return new PropertyDefImpl(name, type, defaultValue, hasDefaultValue, isReadable, isWritable, isNullable, isMultivalued);
     }
 }
