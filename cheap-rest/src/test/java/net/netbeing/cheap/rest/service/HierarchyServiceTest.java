@@ -20,9 +20,11 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import net.netbeing.cheap.json.jackson.deserialize.CheapJacksonDeserializer;
 import net.netbeing.cheap.model.*;
+import net.netbeing.cheap.rest.TestStartEndLogger;
 import net.netbeing.cheap.rest.exception.ResourceNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -33,6 +35,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Unit tests for HierarchyService.
  */
+@ExtendWith(TestStartEndLogger.class)
 class HierarchyServiceTest extends BaseServiceTest
 {
     private UUID catalogId;
@@ -246,7 +249,7 @@ class HierarchyServiceTest extends BaseServiceTest
         assertNotNull(hierarchy);
         assertEquals("users", hierarchy.name());
         assertEquals(HierarchyType.ENTITY_SET, hierarchy.type());
-        assertTrue(hierarchy instanceof EntitySetHierarchy);
+        assertInstanceOf(EntitySetHierarchy.class, hierarchy);
     }
 
     @Test
@@ -278,7 +281,7 @@ class HierarchyServiceTest extends BaseServiceTest
         assertNotNull(hierarchy);
         assertEquals("categories", hierarchy.name());
         assertEquals(HierarchyType.ENTITY_TREE, hierarchy.type());
-        assertTrue(hierarchy instanceof EntityTreeHierarchy);
+        assertInstanceOf(EntityTreeHierarchy.class, hierarchy);
     }
 
     @Test
@@ -310,6 +313,6 @@ class HierarchyServiceTest extends BaseServiceTest
         assertNotNull(hierarchy);
         assertEquals("documents", hierarchy.name());
         assertEquals(HierarchyType.ENTITY_DIR, hierarchy.type());
-        assertTrue(hierarchy instanceof EntityDirectoryHierarchy);
+        assertInstanceOf(EntityDirectoryHierarchy.class, hierarchy);
     }
 }

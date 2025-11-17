@@ -24,9 +24,11 @@ import net.netbeing.cheap.model.HierarchyDef;
 import net.netbeing.cheap.model.HierarchyType;
 import net.netbeing.cheap.model.MutableAspectDef;
 import net.netbeing.cheap.model.PropertyType;
+import net.netbeing.cheap.rest.TestStartEndLogger;
 import net.netbeing.cheap.rest.exception.ResourceNotFoundException;
 import net.netbeing.cheap.rest.exception.ValidationException;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.net.URI;
 import java.util.Collections;
@@ -38,6 +40,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Unit tests for CatalogService.
  */
+@ExtendWith(TestStartEndLogger.class)
 class CatalogServiceTest extends BaseServiceTest
 {
     @Test

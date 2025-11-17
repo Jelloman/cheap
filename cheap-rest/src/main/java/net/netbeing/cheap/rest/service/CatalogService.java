@@ -124,6 +124,7 @@ public class CatalogService
 
         // Save the catalog
         try {
+            logger.info("Creating catalog with ID: {}", catalogId);
             dao.saveCatalog(catalog);
             logger.info("Successfully created catalog with ID: {}", catalogId);
             return catalogId;
