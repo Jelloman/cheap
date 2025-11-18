@@ -18,6 +18,8 @@ package net.netbeing.cheap.rest.client;
 
 import net.netbeing.cheap.model.*;
 import net.netbeing.cheap.json.dto.*;
+import net.netbeing.cheap.rest.client.exception.CheapRestBadRequestException;
+import net.netbeing.cheap.rest.client.exception.CheapRestNotFoundException;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
@@ -141,6 +143,20 @@ public interface CheapRestClient
     );
 
     // ========== Hierarchy Operations ==========
+
+    /**
+     * Creates a new hierarchy in a catalog.
+     *
+     * @param catalogId the catalog ID
+     * @param hierarchyDef the hierarchy definition
+     * @return the created hierarchy response
+     * @throws CheapRestNotFoundException if catalog not found
+     * @throws CheapRestBadRequestException if invalid hierarchy definition
+     */
+    CreateHierarchyResponse createHierarchy(
+        @NotNull UUID catalogId,
+        @NotNull HierarchyDef hierarchyDef
+    );
 
     /**
      * Gets the contents of an EntityList or EntitySet hierarchy.

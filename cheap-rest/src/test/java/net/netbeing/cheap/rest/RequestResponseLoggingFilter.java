@@ -138,11 +138,11 @@ public class RequestResponseLoggingFilter implements WebFilter
 
         @Override
         @NonNull
+        @SuppressWarnings("deprecation")
         public Mono<Void> writeWith(@NonNull Publisher<? extends DataBuffer> body) {
             var flux = Flux.from(body)
                 .doOnNext(dataBuffer -> {
                     try {
-                        //noinspection deprecation
                         Channels.newChannel(cachedBody).write(dataBuffer.toByteBuffer().asReadOnlyBuffer());
                     } catch (Exception e) {
                         logger.error("Error caching response body", e);

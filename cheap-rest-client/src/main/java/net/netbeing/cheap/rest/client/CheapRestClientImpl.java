@@ -25,6 +25,7 @@ import net.netbeing.cheap.json.jackson.serialize.CheapJacksonSerializer;
 import net.netbeing.cheap.model.AspectDef;
 import net.netbeing.cheap.model.CatalogDef;
 import net.netbeing.cheap.model.CatalogSpecies;
+import net.netbeing.cheap.model.HierarchyDef;
 import net.netbeing.cheap.rest.client.exception.CheapRestBadRequestException;
 import net.netbeing.cheap.rest.client.exception.CheapRestClientException;
 import net.netbeing.cheap.rest.client.exception.CheapRestNotFoundException;
@@ -262,6 +263,22 @@ public class CheapRestClientImpl implements CheapRestClient
     }
 
     // ========== Hierarchy Operations ==========
+
+    @Override
+    public CreateHierarchyResponse createHierarchy(
+        @NotNull UUID catalogId,
+        @NotNull HierarchyDef hierarchyDef)
+    {
+        CreateHierarchyRequest request = new CreateHierarchyRequest(hierarchyDef);
+
+        return webClient.post()
+            .uri("/api/catalog/{catalogId}/hierarchies", catalogId)
+            .bodyValue(request)
+            .retrieve()
+            .bodyToMono(CreateHierarchyResponse.class)
+            .onErrorMap(this::mapException)
+            .block();
+    }
 
     @Override
     public EntityListResponse getEntityList(

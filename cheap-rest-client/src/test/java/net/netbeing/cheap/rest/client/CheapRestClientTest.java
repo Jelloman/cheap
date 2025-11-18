@@ -410,6 +410,76 @@ class CheapRestClientTest
     // ========== Hierarchy Operation Tests ==========
 
     @Test
+    @DisplayName("Should create hierarchy successfully")
+    void testCreateHierarchy() throws Exception
+    {
+        // Arrange
+        String responseJson = """
+            {
+              "hierarchyName": "test-hierarchy",
+              "message": "Hierarchy created successfully"
+            }
+            """;
+
+        mockWebServer.enqueue(new MockResponse()
+            .setResponseCode(201)
+            .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+            .setBody(responseJson));
+
+        UUID catalogId = UUID.fromString("550e8400-e29b-41d4-a716-446655440000");
+        HierarchyDef hierarchyDef = factory.createHierarchyDef("test-hierarchy", HierarchyType.ENTITY_LIST);
+
+        // Act
+        CreateHierarchyResponse response = client.createHierarchy(catalogId, hierarchyDef);
+
+        // Assert
+        assertNotNull(response);
+        assertEquals("test-hierarchy", response.hierarchyName());
+        assertEquals("Hierarchy created successfully", response.message());
+
+        // Verify request
+        RecordedRequest recordedRequest = mockWebServer.takeRequest();
+        assertEquals("POST", recordedRequest.getMethod());
+        assertEquals("/api/catalog/" + catalogId + "/hierarchies", recordedRequest.getPath());
+    }
+
+    @Test
+    @DisplayName("Should throw NotFoundException when catalog not found for createHierarchy")
+    void testCreateHierarchy_CatalogNotFound()
+    {
+        // Arrange
+        mockWebServer.enqueue(new MockResponse()
+            .setResponseCode(404)
+            .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+            .setBody("{\"message\":\"Catalog not found\"}"));
+
+        UUID catalogId = UUID.randomUUID();
+        HierarchyDef hierarchyDef = factory.createHierarchyDef("test-hierarchy", HierarchyType.ENTITY_LIST);
+
+        // Act & Assert
+        assertThrows(CheapRestNotFoundException.class,
+            () -> client.createHierarchy(catalogId, hierarchyDef));
+    }
+
+    @Test
+    @DisplayName("Should throw BadRequestException for invalid hierarchy definition")
+    void testCreateHierarchy_InvalidDefinition()
+    {
+        // Arrange
+        mockWebServer.enqueue(new MockResponse()
+            .setResponseCode(400)
+            .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+            .setBody("{\"message\":\"Invalid hierarchy definition\"}"));
+
+        UUID catalogId = UUID.randomUUID();
+        HierarchyDef hierarchyDef = factory.createHierarchyDef("test-hierarchy", HierarchyType.ENTITY_LIST);
+
+        // Act & Assert
+        assertThrows(CheapRestBadRequestException.class,
+            () -> client.createHierarchy(catalogId, hierarchyDef));
+    }
+
+    @Test
     @DisplayName("Should get entity list successfully")
     void testGetEntityList() throws Exception
     {
