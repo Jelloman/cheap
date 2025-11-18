@@ -23,8 +23,8 @@ ADD COLUMN created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAM
 -- ========== ADD AUDIT COLUMNS TO CORE ENTITY TABLES ==========
 
 -- Add audit columns to entity
-ALTER TABLE entity
-ADD COLUMN created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP;
+--ALTER TABLE entity
+--ADD COLUMN created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP;
 
 -- Add audit columns to catalog
 ALTER TABLE catalog
@@ -73,7 +73,7 @@ ADD COLUMN created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAM
 -- ========== CREATE AUDIT INDEXES ==========
 
 -- Entity index on created_at
-CREATE INDEX idx_entity_created_at ON entity(created_at);
+--CREATE INDEX idx_entity_created_at ON entity(created_at);
 
 -- ========== TRIGGERS FOR AUTOMATIC UPDATES ==========
 
@@ -113,7 +113,7 @@ COMMENT ON COLUMN aspect_def.updated_at IS 'Timestamp when the aspect definition
 COMMENT ON COLUMN property_def.created_at IS 'Timestamp when the property definition was created';
 COMMENT ON COLUMN property_def.updated_at IS 'Timestamp when the property definition was last updated';
 
-COMMENT ON COLUMN entity.created_at IS 'Timestamp when the entity was created';
+--COMMENT ON COLUMN entity.created_at IS 'Timestamp when the entity was created';
 
 COMMENT ON COLUMN catalog.created_at IS 'Timestamp when the catalog was created';
 COMMENT ON COLUMN catalog.updated_at IS 'Timestamp when the catalog was last updated';

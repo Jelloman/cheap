@@ -332,6 +332,7 @@ public class MariaDbDao extends AbstractCheapDao
         }
     }
 
+    /*
     @Override
     public void saveEntity(@NotNull Connection conn, @NotNull Entity entity) throws SQLException
     {
@@ -341,6 +342,7 @@ public class MariaDbDao extends AbstractCheapDao
             stmt.executeUpdate();
         }
     }
+    */
 
     @Override
     protected void saveCatalogRecord(@NotNull Connection conn, @NotNull Catalog catalog) throws SQLException
@@ -394,7 +396,7 @@ public class MariaDbDao extends AbstractCheapDao
             stmt.setString(2, hierarchy.name());
             int order = 0;
             for (Entity entity : hierarchy) {
-                saveEntity(conn, entity);
+                //saveEntity(conn, entity);
                 stmt.setString(3, entity.globalId().toString());
                 stmt.setInt(4, order++);
                 stmt.addBatch();
@@ -416,7 +418,7 @@ public class MariaDbDao extends AbstractCheapDao
             stmt.setString(2, hierarchy.name());
             int order = 0;
             for (Entity entity : hierarchy) {
-                saveEntity(conn, entity);
+                //saveEntity(conn, entity);
                 stmt.setString(3, entity.globalId().toString());
                 stmt.setInt(4, order++);
                 stmt.addBatch();
@@ -440,7 +442,7 @@ public class MariaDbDao extends AbstractCheapDao
             int order = 0;
             for (Map.Entry<String,Entity> entry : hierarchy.entrySet()) {
                 if (entry.getValue() != null) {
-                    saveEntity(conn, entry.getValue());
+                    //saveEntity(conn, entry.getValue());
                     stmt.setString(3, entry.getKey());
                     stmt.setString(4, entry.getValue().globalId().toString());
                     stmt.setInt(5, order++);
@@ -537,7 +539,7 @@ public class MariaDbDao extends AbstractCheapDao
             int order = 0;
             for (Map.Entry<Entity,Aspect> entry : hierarchy.entrySet()) {
                 Entity entity = entry.getKey();
-                saveEntity(conn, entity);
+                //saveEntity(conn, entity);
 
                 Aspect aspect = entry.getValue();
                 if (aspect != null) {

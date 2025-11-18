@@ -64,7 +64,7 @@ class SqliteCheapSchemaTest
         // Verify that key tables were created
         assertTrue(tableExists(connection, "aspect_def"), "aspect_def table should exist");
         assertTrue(tableExists(connection, "property_def"), "property_def table should exist");
-        assertTrue(tableExists(connection, "entity"), "entity table should exist");
+        //assertTrue(tableExists(connection, "entity"), "entity table should exist");
         assertTrue(tableExists(connection, "catalog"), "catalog table should exist");
         assertTrue(tableExists(connection, "catalog_aspect_def"), "catalog_aspect_def table should exist");
         assertTrue(tableExists(connection, "hierarchy"), "hierarchy table should exist");
@@ -94,7 +94,7 @@ class SqliteCheapSchemaTest
         // Verify that key tables have been dropped
         assertFalse(tableExists(connection, "aspect_def"), "aspect_def table should be dropped");
         assertFalse(tableExists(connection, "property_def"), "property_def table should be dropped");
-        assertFalse(tableExists(connection, "entity"), "entity table should be dropped");
+//        assertFalse(tableExists(connection, "entity"), "entity table should be dropped");
         assertFalse(tableExists(connection, "catalog"), "catalog table should be dropped");
         assertFalse(tableExists(connection, "catalog_aspect_def"), "catalog_aspect_def table should be dropped");
         assertFalse(tableExists(connection, "hierarchy"), "hierarchy table should be dropped");
@@ -148,7 +148,7 @@ class SqliteCheapSchemaTest
             testFactory.populateAllHierarchyTypes(conn, catalogId);
 
             // Verify all tables have at least 1 row
-            assertTrue(getRowCount(conn, "entity") >= 1, "entity should have at least 1 row");
+//            assertTrue(getRowCount(conn, "entity") >= 1, "entity should have at least 1 row");
             assertTrue(getRowCount(conn, "aspect_def") >= 1, "aspect_def should have at least 1 row");
             assertTrue(getRowCount(conn, "property_def") >= 1, "property_def should have at least 1 row");
             assertTrue(getRowCount(conn, "catalog") >= 1, "catalog should have at least 1 row");
@@ -166,7 +166,7 @@ class SqliteCheapSchemaTest
         schema.executeTruncateSchemaDdl(connection);
 
         // Verify all tables are empty
-        assertEquals(0, getRowCount(conn, "entity"), "entity should be empty after truncate");
+//        assertEquals(0, getRowCount(conn, "entity"), "entity should be empty after truncate");
         assertEquals(0, getRowCount(conn, "aspect_def"), "aspect_def should be empty after truncate");
         assertEquals(0, getRowCount(conn, "property_def"), "property_def should be empty after truncate");
         assertEquals(0, getRowCount(conn, "catalog"), "catalog should be empty after truncate");

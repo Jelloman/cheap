@@ -5,9 +5,10 @@
 -- ========== CORE CHEAP ELEMENT TABLES ==========
 
 -- Entity: Represents entities with only global ID (conceptual objects)
-CREATE TABLE entity (
-    entity_id CHAR(36) PRIMARY KEY
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+-- Temporarily retired; planning to restore as an optional feature
+-- CREATE TABLE entity (
+--    entity_id CHAR(36) PRIMARY KEY
+-- ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- AspectDef: First-class entity defining aspect structure and metadata
 CREATE TABLE aspect_def (

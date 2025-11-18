@@ -17,7 +17,7 @@ DELETE FROM aspect;
 DELETE FROM hierarchy;
 DELETE FROM catalog_aspect_def;
 DELETE FROM catalog;
-DELETE FROM entity;
+--DELETE FROM entity;
 DELETE FROM property_def;
 DELETE FROM aspect_def;
 

@@ -23,8 +23,8 @@ ALTER TABLE hierarchy
 
 -- Aspect foreign keys
 ALTER TABLE aspect
-    ADD CONSTRAINT fk_aspect_entity FOREIGN KEY (entity_id)
-        REFERENCES entity(entity_id) ON DELETE CASCADE,
+--    ADD CONSTRAINT fk_aspect_entity FOREIGN KEY (entity_id)
+--        REFERENCES entity(entity_id) ON DELETE CASCADE,
     ADD CONSTRAINT fk_aspect_aspect_def FOREIGN KEY (aspect_def_id)
         REFERENCES aspect_def(aspect_def_id) ON DELETE CASCADE,
     ADD CONSTRAINT fk_aspect_catalog FOREIGN KEY (catalog_id)
@@ -36,23 +36,23 @@ ALTER TABLE property_value
         REFERENCES aspect(entity_id, aspect_def_id, catalog_id) ON DELETE CASCADE;
 
 -- Hierarchy content table foreign keys
-ALTER TABLE hierarchy_entity_list
-    ADD CONSTRAINT fk_hierarchy_entity_list_entity FOREIGN KEY (entity_id)
-        REFERENCES entity(entity_id) ON DELETE CASCADE;
+-- ALTER TABLE hierarchy_entity_list
+--    ADD CONSTRAINT fk_hierarchy_entity_list_entity FOREIGN KEY (entity_id)
+--        REFERENCES entity(entity_id) ON DELETE CASCADE;
 
-ALTER TABLE hierarchy_entity_set
-    ADD CONSTRAINT fk_hierarchy_entity_set_entity FOREIGN KEY (entity_id)
-        REFERENCES entity(entity_id) ON DELETE CASCADE;
+-- ALTER TABLE hierarchy_entity_set
+--    ADD CONSTRAINT fk_hierarchy_entity_set_entity FOREIGN KEY (entity_id)
+--        REFERENCES entity(entity_id) ON DELETE CASCADE;
 
-ALTER TABLE hierarchy_entity_directory
-    ADD CONSTRAINT fk_hierarchy_entity_directory_entity FOREIGN KEY (entity_id)
-        REFERENCES entity(entity_id) ON DELETE CASCADE;
+-- ALTER TABLE hierarchy_entity_directory
+--    ADD CONSTRAINT fk_hierarchy_entity_directory_entity FOREIGN KEY (entity_id)
+--        REFERENCES entity(entity_id) ON DELETE CASCADE;
 
 ALTER TABLE hierarchy_entity_tree_node
+--    ADD CONSTRAINT fk_hierarchy_entity_tree_entity FOREIGN KEY (entity_id)
+--        REFERENCES entity(entity_id) ON DELETE CASCADE,
     ADD CONSTRAINT fk_hierarchy_entity_tree_parent FOREIGN KEY (parent_node_id)
-        REFERENCES hierarchy_entity_tree_node(node_id) ON DELETE CASCADE,
-    ADD CONSTRAINT fk_hierarchy_entity_tree_entity FOREIGN KEY (entity_id)
-        REFERENCES entity(entity_id) ON DELETE CASCADE;
+        REFERENCES hierarchy_entity_tree_node(node_id) ON DELETE CASCADE;
 
 ALTER TABLE hierarchy_aspect_map
     ADD CONSTRAINT fk_hierarchy_aspect_map_aspect_def FOREIGN KEY (aspect_def_id)

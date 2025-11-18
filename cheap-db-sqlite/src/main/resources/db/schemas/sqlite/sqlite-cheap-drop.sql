@@ -33,7 +33,7 @@ DROP TABLE IF EXISTS aspect;
 DROP TABLE IF EXISTS hierarchy;
 DROP TABLE IF EXISTS catalog_aspect_def;
 DROP TABLE IF EXISTS catalog;
-DROP TABLE IF EXISTS entity;
+--DROP TABLE IF EXISTS entity;
 
 -- ========== DROP DEFINITION TABLES ==========
 
