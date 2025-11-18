@@ -17,10 +17,13 @@
 package net.netbeing.cheap.rest.controller;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import net.netbeing.cheap.rest.TestStartEndLogger;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.test.annotation.DirtiesContext;
 
@@ -31,6 +34,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 @Execution(ExecutionMode.SAME_THREAD)
+@ExtendWith(TestStartEndLogger.class)
 class HierarchyControllerHttpTest extends BaseControllerHttpTest
 {
     private String catalogId;
@@ -461,7 +465,7 @@ class HierarchyControllerHttpTest extends BaseControllerHttpTest
 
         // Now remove one entity
         String removeRequest = loadJson("hierarchy/remove-entity-ids-request.json");
-        String responseJson = webTestClient.delete()
+        String responseJson = webTestClient.method(HttpMethod.DELETE)
             .uri("/api/catalog/" + catalogId + "/hierarchies/people/entities")
             .contentType(MediaType.APPLICATION_JSON)
             .bodyValue(removeRequest)
@@ -549,7 +553,7 @@ class HierarchyControllerHttpTest extends BaseControllerHttpTest
 
         // Now remove one entry by name
         String removeRequest = loadJson("hierarchy/remove-directory-entries-by-names-request.json");
-        String responseJson = webTestClient.delete()
+        String responseJson = webTestClient.method(HttpMethod.DELETE)
             .uri("/api/catalog/" + catalogId + "/hierarchies/documents/entries")
             .contentType(MediaType.APPLICATION_JSON)
             .bodyValue(removeRequest)
@@ -580,7 +584,7 @@ class HierarchyControllerHttpTest extends BaseControllerHttpTest
 
         // Now remove entries by IDs
         String removeRequest = loadJson("hierarchy/remove-directory-entries-by-ids-request.json");
-        String responseJson = webTestClient.delete()
+        String responseJson = webTestClient.method(HttpMethod.DELETE)
             .uri("/api/catalog/" + catalogId + "/hierarchies/documents/entries")
             .contentType(MediaType.APPLICATION_JSON)
             .bodyValue(removeRequest)
@@ -598,7 +602,7 @@ class HierarchyControllerHttpTest extends BaseControllerHttpTest
     }
 
     @Test
-    void testRemoveDirectoryEntriesWithBothNamesAndIdsReturns400() throws Exception
+    void testRemoveDirectoryEntriesWithBothNamesAndIdsReturns400()
     {
         // Create a request with both names and IDs (invalid)
         String invalidRequest = """
@@ -608,7 +612,7 @@ class HierarchyControllerHttpTest extends BaseControllerHttpTest
         }
         """;
 
-        webTestClient.delete()
+        webTestClient.method(HttpMethod.DELETE)
             .uri("/api/catalog/" + catalogId + "/hierarchies/documents/entries")
             .contentType(MediaType.APPLICATION_JSON)
             .bodyValue(invalidRequest)
@@ -617,7 +621,7 @@ class HierarchyControllerHttpTest extends BaseControllerHttpTest
     }
 
     @Test
-    void testRemoveDirectoryEntriesWithNeitherNamesNorIdsReturns400() throws Exception
+    void testRemoveDirectoryEntriesWithNeitherNamesNorIdsReturns400()
     {
         // Create a request with neither names nor IDs (invalid)
         String invalidRequest = """
@@ -627,7 +631,7 @@ class HierarchyControllerHttpTest extends BaseControllerHttpTest
         }
         """;
 
-        webTestClient.delete()
+        webTestClient.method(HttpMethod.DELETE)
             .uri("/api/catalog/" + catalogId + "/hierarchies/documents/entries")
             .contentType(MediaType.APPLICATION_JSON)
             .bodyValue(invalidRequest)
@@ -660,7 +664,7 @@ class HierarchyControllerHttpTest extends BaseControllerHttpTest
         // Verify response
         JsonNode responseNode = objectMapper.readTree(responseJson);
         assertThat(responseNode.get("operation").asText()).isEqualTo("add");
-        assertThat(responseNode.get("count").asInt()).isEqualTo(2);
+        assertThat(responseNode.get("nodesAffected").asInt()).isEqualTo(2);
         assertThat(responseNode.get("message").asText()).contains("Added 2 node(s)");
     }
 
@@ -692,7 +696,7 @@ class HierarchyControllerHttpTest extends BaseControllerHttpTest
 
         // Now remove one node
         String removeRequest = loadJson("hierarchy/remove-tree-nodes-request.json");
-        String responseJson = webTestClient.delete()
+        String responseJson = webTestClient.method(HttpMethod.DELETE)
             .uri("/api/catalog/" + catalogId + "/hierarchies/categories/nodes")
             .contentType(MediaType.APPLICATION_JSON)
             .bodyValue(removeRequest)
@@ -706,12 +710,12 @@ class HierarchyControllerHttpTest extends BaseControllerHttpTest
         // Verify response
         JsonNode responseNode = objectMapper.readTree(responseJson);
         assertThat(responseNode.get("operation").asText()).isEqualTo("remove");
-        assertThat(responseNode.get("count").asInt()).isGreaterThanOrEqualTo(1);
+        assertThat(responseNode.get("nodesAffected").asInt()).isGreaterThanOrEqualTo(1);
         assertThat(responseNode.get("message").asText()).contains("including descendants");
     }
 
     @Test
-    void testAddTreeNodesToNonexistentParentReturns404() throws Exception
+    void testAddTreeNodesToNonexistentParentReturns404()
     {
         // Create a request with a non-existent parent path
         String invalidRequest = """

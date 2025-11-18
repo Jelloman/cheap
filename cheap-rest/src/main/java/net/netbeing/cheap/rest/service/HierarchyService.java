@@ -16,7 +16,9 @@
 
 package net.netbeing.cheap.rest.service;
 
+import jakarta.annotation.Resource;
 import net.netbeing.cheap.db.CheapDao;
+import net.netbeing.cheap.impl.basic.CheapFactory;
 import net.netbeing.cheap.model.Aspect;
 import net.netbeing.cheap.model.AspectMapHierarchy;
 import net.netbeing.cheap.model.Catalog;
@@ -33,11 +35,13 @@ import net.netbeing.cheap.util.CheapException;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -54,11 +58,28 @@ public class HierarchyService
 
     private final CheapDao dao;
     private final CatalogService catalogService;
+    private final CheapFactory factory;
 
-    public HierarchyService(CheapDao dao, CatalogService catalogService)
+    @Resource
+    @Lazy
+    private HierarchyService service;
+
+    public HierarchyService(CheapDao dao, CatalogService catalogService, CheapFactory factory)
     {
         this.dao = dao;
         this.catalogService = catalogService;
+        this.factory = factory;
+    }
+
+    /**
+     * Sets the service reference for Spring proxy injection.
+     * Package-private for testing purposes.
+     *
+     * @param hierarchyService the service reference
+     */
+    void setService(HierarchyService hierarchyService)
+    {
+        this.service = hierarchyService;
     }
 
     /**
@@ -74,22 +95,14 @@ public class HierarchyService
     {
         logger.debug("Getting hierarchy {} from catalog {}", hierarchyName, catalogId);
 
-        try {
-            Catalog catalog = dao.loadCatalog(catalogId);
-            if (catalog == null) {
-                throw new ResourceNotFoundException("Catalog not found: " + catalogId);
-            }
+        Catalog catalog = catalogService.getCatalog(catalogId);
 
-            Hierarchy hierarchy = catalog.hierarchy(hierarchyName);
-            if (hierarchy == null) {
-                throw new ResourceNotFoundException("Hierarchy not found: " + hierarchyName);
-            }
-
-            return hierarchy;
-        } catch (SQLException e) {
-            logger.error("Failed to load catalog");
-            throw new CheapException("Failed to load catalog: " + e.getMessage(), e);
+        Hierarchy hierarchy = catalog.hierarchy(hierarchyName);
+        if (hierarchy == null) {
+            throw new ResourceNotFoundException("Hierarchy not found: " + hierarchyName);
         }
+
+        return hierarchy;
     }
 
     /**
@@ -102,19 +115,11 @@ public class HierarchyService
      */
     public List<UUID> getEntityListContents(EntityListHierarchy hierarchy, int page, int size)
     {
-        List<UUID> allIds = new ArrayList<>();
-        for (Entity entity : hierarchy) {
-            allIds.add(entity.globalId());
-        }
-
-        int start = page * size;
-        int end = Math.min(start + size, allIds.size());
-
-        if (start >= allIds.size()) {
-            return new ArrayList<>();
-        }
-
-        return new ArrayList<>(allIds.subList(start, end));
+        return hierarchy.stream()
+            .skip((long) page * size)
+            .limit(size)
+            .map(Entity::globalId)
+            .toList();
     }
 
     /**
@@ -127,19 +132,11 @@ public class HierarchyService
      */
     public List<UUID> getEntitySetContents(EntitySetHierarchy hierarchy, int page, int size)
     {
-        List<UUID> allIds = new ArrayList<>();
-        for (Entity entity : hierarchy) {
-            allIds.add(entity.globalId());
-        }
-
-        int start = page * size;
-        int end = Math.min(start + size, allIds.size());
-
-        if (start >= allIds.size()) {
-            return new ArrayList<>();
-        }
-
-        return new ArrayList<>(allIds.subList(start, end));
+        return hierarchy.stream()
+            .skip((long) page * size)
+            .limit(size)
+            .map(Entity::globalId)
+            .toList();
     }
 
     /**
@@ -152,20 +149,14 @@ public class HierarchyService
      */
     public Map<String, UUID> getEntityDirectoryContents(EntityDirectoryHierarchy hierarchy, int page, int size)
     {
-        List<Map.Entry<String, Entity>> allEntries = new ArrayList<>(hierarchy.entrySet());
+        final Map<String, UUID> contents = HashMap.newHashMap(size);
 
-        int start = page * size;
-        int end = Math.min(start + size, allEntries.size());
+        hierarchy.entrySet().stream()
+            .skip((long) page * size)
+            .limit(size)
+            .forEach(entry -> contents.put(entry.getKey(), entry.getValue().globalId()));
 
-        Map<String, UUID> result = new LinkedHashMap<>();
-        if (start < allEntries.size()) {
-            for (int i = start; i < end; i++) {
-                Map.Entry<String, Entity> entry = allEntries.get(i);
-                result.put(entry.getKey(), entry.getValue().globalId());
-            }
-        }
-
-        return result;
+        return contents;
     }
 
     /**
@@ -235,12 +226,8 @@ public class HierarchyService
     {
         logger.debug("Creating hierarchy {} in catalog {}", hierarchyDef.name(), catalogId);
 
+        Catalog catalog = catalogService.getCatalog(catalogId);
         try {
-            Catalog catalog = dao.loadCatalog(catalogId);
-            if (catalog == null) {
-                throw new ResourceNotFoundException("Catalog not found: " + catalogId);
-            }
-
             // Delegate to CatalogService to create and add the hierarchy
             catalogService.createAndAddHierarchy(catalog, hierarchyDef);
 
@@ -274,28 +261,21 @@ public class HierarchyService
     {
         logger.debug("Adding {} entity IDs to hierarchy {} in catalog {}", entityIds.size(), hierarchyName, catalogId);
 
-        Hierarchy hierarchy = getHierarchy(catalogId, hierarchyName);
+        Catalog catalog = catalogService.getCatalog(catalogId);
+        Hierarchy hierarchy = service.getHierarchy(catalogId, hierarchyName);
 
         try {
-            Catalog catalog = dao.loadCatalog(catalogId);
-
             int count = switch (hierarchy) {
                 case EntityListHierarchy list -> {
                     for (UUID entityId : entityIds) {
-                        Entity entity = catalog.entity(entityId);
-                        if (entity == null) {
-                            entity = catalog.addEntity(entityId);
-                        }
+                        Entity entity = factory.getOrRegisterNewEntity(entityId);
                         list.add(entity);
                     }
                     yield entityIds.size();
                 }
                 case EntitySetHierarchy set -> {
                     for (UUID entityId : entityIds) {
-                        Entity entity = catalog.entity(entityId);
-                        if (entity == null) {
-                            entity = catalog.addEntity(entityId);
-                        }
+                        Entity entity = factory.getOrRegisterNewEntity(entityId);
                         set.add(entity);
                     }
                     yield entityIds.size();
@@ -329,17 +309,16 @@ public class HierarchyService
     {
         logger.debug("Removing {} entity IDs from hierarchy {} in catalog {}", entityIds.size(), hierarchyName, catalogId);
 
-        Hierarchy hierarchy = getHierarchy(catalogId, hierarchyName);
+        Catalog catalog = catalogService.getCatalog(catalogId);
+        Hierarchy hierarchy = service.getHierarchy(catalogId, hierarchyName);
 
         try {
-            Catalog catalog = dao.loadCatalog(catalogId);
-
             int count = switch (hierarchy) {
                 case EntityListHierarchy list -> {
                     int removed = 0;
                     for (UUID entityId : entityIds) {
-                        Entity entity = catalog.entity(entityId);
-                        if (entity != null && list.remove(entity)) {
+                        Entity entity = factory.getOrRegisterNewEntity(entityId);
+                        if (list.remove(entity)) {
                             removed++;
                         }
                     }
@@ -348,8 +327,8 @@ public class HierarchyService
                 case EntitySetHierarchy set -> {
                     int removed = 0;
                     for (UUID entityId : entityIds) {
-                        Entity entity = catalog.entity(entityId);
-                        if (entity != null && set.remove(entity)) {
+                        Entity entity = factory.getOrRegisterNewEntity(entityId);
+                        if (set.remove(entity)) {
                             removed++;
                         }
                     }
@@ -388,20 +367,16 @@ public class HierarchyService
     {
         logger.debug("Adding {} entries to directory {} in catalog {}", entries.size(), hierarchyName, catalogId);
 
-        Hierarchy hierarchy = getHierarchy(catalogId, hierarchyName);
+        Catalog catalog = catalogService.getCatalog(catalogId);
+        Hierarchy hierarchy = service.getHierarchy(catalogId, hierarchyName);
 
         if (!(hierarchy instanceof EntityDirectoryHierarchy directory)) {
             throw new ValidationException("Hierarchy '" + hierarchyName + "' is not an EntityDirectory");
         }
 
         try {
-            Catalog catalog = dao.loadCatalog(catalogId);
-
             for (Map.Entry<String, UUID> entry : entries.entrySet()) {
-                Entity entity = catalog.entity(entry.getValue());
-                if (entity == null) {
-                    entity = catalog.addEntity(entry.getValue());
-                }
+                Entity entity = factory.getOrRegisterNewEntity(entry.getValue());
                 directory.put(entry.getKey(), entity);
             }
 
@@ -429,15 +404,14 @@ public class HierarchyService
     {
         logger.debug("Removing {} entries by name from directory {} in catalog {}", names.size(), hierarchyName, catalogId);
 
-        Hierarchy hierarchy = getHierarchy(catalogId, hierarchyName);
+        Catalog catalog = catalogService.getCatalog(catalogId);
+        Hierarchy hierarchy = service.getHierarchy(catalogId, hierarchyName);
 
         if (!(hierarchy instanceof EntityDirectoryHierarchy directory)) {
             throw new ValidationException("Hierarchy '" + hierarchyName + "' is not an EntityDirectory");
         }
 
         try {
-            Catalog catalog = dao.loadCatalog(catalogId);
-
             int removed = 0;
             for (String name : names) {
                 if (directory.remove(name) != null) {
@@ -469,15 +443,14 @@ public class HierarchyService
     {
         logger.debug("Removing {} entries by entity ID from directory {} in catalog {}", entityIds.size(), hierarchyName, catalogId);
 
-        Hierarchy hierarchy = getHierarchy(catalogId, hierarchyName);
+        Catalog catalog = catalogService.getCatalog(catalogId);
+        Hierarchy hierarchy = service.getHierarchy(catalogId, hierarchyName);
 
         if (!(hierarchy instanceof EntityDirectoryHierarchy directory)) {
             throw new ValidationException("Hierarchy '" + hierarchyName + "' is not an EntityDirectory");
         }
 
         try {
-            Catalog catalog = dao.loadCatalog(catalogId);
-
             int removed = 0;
             // Find and remove entries that have the specified entity IDs
             List<String> keysToRemove = new ArrayList<>();
@@ -522,28 +495,26 @@ public class HierarchyService
     {
         logger.debug("Adding {} nodes to tree {} under path {} in catalog {}", nodes.size(), hierarchyName, parentPath, catalogId);
 
-        Hierarchy hierarchy = getHierarchy(catalogId, hierarchyName);
+        Catalog catalog = catalogService.getCatalog(catalogId);
+        Hierarchy hierarchy = service.getHierarchy(catalogId, hierarchyName);
 
         if (!(hierarchy instanceof EntityTreeHierarchy tree)) {
             throw new ValidationException("Hierarchy '" + hierarchyName + "' is not an EntityTree");
         }
 
         try {
-            Catalog catalog = dao.loadCatalog(catalogId);
-
             // Find the parent node
-            EntityTreeHierarchy.Node parent = tree.getNodeByPath(parentPath);
+            EntityTreeHierarchy.Node parent = findNodeByPath(tree.root(), parentPath);
             if (parent == null) {
                 throw new ResourceNotFoundException("Parent node not found at path: " + parentPath);
             }
 
             // Add each child node
             for (Map.Entry<String, UUID> entry : nodes.entrySet()) {
-                Entity entity = catalog.entity(entry.getValue());
-                if (entity == null) {
-                    entity = catalog.addEntity(entry.getValue());
-                }
-                parent.addChild(entry.getKey(), entity);
+                Entity entity = factory.getOrRegisterNewEntity(entry.getValue());
+                // Create a new node with the entity
+                EntityTreeHierarchy.Node child = factory.createTreeNode(entity, parent);
+                parent.put(entry.getKey(), child);
             }
 
             dao.saveCatalog(catalog);
@@ -571,25 +542,51 @@ public class HierarchyService
     {
         logger.debug("Removing {} nodes from tree {} in catalog {}", paths.size(), hierarchyName, catalogId);
 
-        Hierarchy hierarchy = getHierarchy(catalogId, hierarchyName);
+        Catalog catalog = catalogService.getCatalog(catalogId);
+        Hierarchy hierarchy = service.getHierarchy(catalogId, hierarchyName);
 
         if (!(hierarchy instanceof EntityTreeHierarchy tree)) {
             throw new ValidationException("Hierarchy '" + hierarchyName + "' is not an EntityTree");
         }
 
         try {
-            Catalog catalog = dao.loadCatalog(catalogId);
-
             int totalRemoved = 0;
             for (String path : paths) {
-                EntityTreeHierarchy.Node node = tree.getNodeByPath(path);
-                if (node != null) {
-                    // Count nodes before removal (node + all descendants)
-                    int nodeCount = countTreeNodes(node);
+                // Parse the path to get parent and child name
+                String[] parts = path.split("/");
+                if (parts.length == 0) {
+                    continue; // Skip invalid paths
+                }
 
-                    // Remove the node (this cascades to descendants)
-                    if (tree.removeNode(path)) {
-                        totalRemoved += nodeCount;
+                // Find parent path
+                StringBuilder parentPathBuilder = new StringBuilder();
+                for (int i = 0; i < parts.length - 1; i++) {
+                    if (!parts[i].isEmpty()) {
+                        parentPathBuilder.append("/").append(parts[i]);
+                    }
+                }
+                String parentPath = parentPathBuilder.toString();
+                if (parentPath.isEmpty()) {
+                    parentPath = "/";
+                }
+
+                String childName = parts[parts.length - 1];
+                if (childName.isEmpty()) {
+                    continue; // Skip invalid paths
+                }
+
+                // Find the parent node and remove the child
+                EntityTreeHierarchy.Node parent = findNodeByPath(tree.root(), parentPath);
+                if (parent != null) {
+                    EntityTreeHierarchy.Node node = parent.get(childName);
+                    if (node != null) {
+                        // Count nodes before removal (node + all descendants)
+                        int nodeCount = countTreeNodes(node);
+
+                        // Remove the node (this cascades to descendants)
+                        if (parent.remove(childName) != null) {
+                            totalRemoved += nodeCount;
+                        }
                     }
                 }
             }
@@ -609,9 +606,46 @@ public class HierarchyService
     private int countTreeNodes(EntityTreeHierarchy.Node node)
     {
         int count = 1; // Count this node
-        for (EntityTreeHierarchy.Node child : node.children().values()) {
+        for (EntityTreeHierarchy.Node child : node.values()) {
             count += countTreeNodes(child);
         }
         return count;
+    }
+
+    /**
+     * Finds a node by path in the tree.
+     *
+     * @param root the root node
+     * @param path the path to search for (e.g., "/folder1/folder2")
+     * @return the node at the path, or null if not found
+     */
+    private EntityTreeHierarchy.Node findNodeByPath(EntityTreeHierarchy.Node root, String path)
+    {
+        if (path == null || path.isEmpty()) {
+            return null;
+        }
+
+        // Handle root path
+        if (path.equals("/")) {
+            return root;
+        }
+
+        // Split path and navigate
+        String[] parts = path.split("/");
+        EntityTreeHierarchy.Node current = root;
+
+        for (String part : parts) {
+            if (part.isEmpty()) {
+                continue; // Skip empty parts from leading/trailing slashes
+            }
+
+            EntityTreeHierarchy.Node child = current.get(part);
+            if (child == null) {
+                return null; // Path not found
+            }
+            current = child;
+        }
+
+        return current;
     }
 }

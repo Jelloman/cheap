@@ -82,9 +82,10 @@ public abstract class BaseServiceTest
         // Initialize services
         catalogService = new CatalogService(dao, factory, dataSource);
         catalogService.setService(catalogService); // Inject self-reference for transactional methods
-        aspectDefService = new AspectDefService(dao);
-        aspectService = new AspectService(dao, factory);
-        hierarchyService = new HierarchyService(dao, catalogService);
+        aspectDefService = new AspectDefService(catalogService, dao);
+        aspectService = new AspectService(dao, catalogService, factory);
+        hierarchyService = new HierarchyService(dao, catalogService, factory);
+        hierarchyService.setService(hierarchyService);
 
         // Close the connection
         if (connection != null && !connection.isClosed()) {

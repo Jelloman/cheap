@@ -48,27 +48,12 @@ public class AspectDefService
     private static final Logger logger = LoggerFactory.getLogger(AspectDefService.class);
 
     private final CheapDao dao;
+    private final CatalogService catalogService;
 
-    public AspectDefService(CheapDao dao)
+    public AspectDefService(CatalogService catalogService, CheapDao dao)
     {
+        this.catalogService = catalogService;
         this.dao = dao;
-    }
-
-    private @NotNull Catalog loadCatalog(@NotNull UUID catalogId, String method)
-    {
-        Catalog catalog;
-        try {
-            logger.info("Loading catalog with ID: {} during {}", catalogId, method);
-            catalog = dao.loadCatalog(catalogId);
-            logger.info("Successfully loaded catalog with ID: {} during {}", catalogId, method);
-            if (catalog == null) {
-                throw new ResourceNotFoundException("Catalog not found: " + catalogId);
-            }
-        } catch (SQLException e) {
-            logger.error("Failed to load catalog during {}.", method);
-            throw new CheapException("Failed to load catalog: " + e.getMessage(), e);
-        }
-        return catalog;
     }
 
     /**
@@ -88,11 +73,10 @@ public class AspectDefService
             logger.info("Creating AspectDef {} in catalog {}", aspectDef.name(), catalogId);
         }
 
-        // Load the catalog
-        Catalog catalog = loadCatalog(catalogId, "createAspectDef");
-
         // Validate the AspectDef
         validateAspectDef(aspectDef);
+
+        Catalog catalog = catalogService.getCatalog(catalogId);
 
         // Check for duplicate name
         for (AspectDef existing : catalog.aspectDefs()) {
@@ -136,8 +120,7 @@ public class AspectDefService
     {
         logger.debug("Listing AspectDefs for catalog {} - page: {}, size: {}", catalogId, page, size);
 
-        // Load the catalog
-        Catalog catalog = loadCatalog(catalogId, "listAspectDefs");
+        Catalog catalog = catalogService.getCatalog(catalogId);
 
         // Get all AspectDefs and paginate
         List<AspectDef> allAspectDefs = new ArrayList<>();
@@ -166,7 +149,7 @@ public class AspectDefService
     @Transactional(readOnly = true)
     public long countAspectDefs(@NotNull UUID catalogId)
     {
-        Catalog catalog = loadCatalog(catalogId, "countAspectDefs");
+        Catalog catalog = catalogService.getCatalog(catalogId);
         return Iterables.size(catalog.aspectDefs());
     }
 
@@ -183,7 +166,7 @@ public class AspectDefService
     {
         logger.debug("Getting AspectDef by name({}) from catalog {}", name, catalogId);
 
-        Catalog catalog = loadCatalog(catalogId, "getAspectDefByName");
+        Catalog catalog = catalogService.getCatalog(catalogId);
 
         for (AspectDef aspectDef : catalog.aspectDefs()) {
             if (aspectDef.name().equals(name)) {
@@ -207,7 +190,7 @@ public class AspectDefService
     {
         logger.debug("Getting AspectDef by id({}) from catalog {}", aspectDefId, catalogId);
 
-        Catalog catalog = loadCatalog(catalogId, "getAspectDefById");
+        Catalog catalog = catalogService.getCatalog(catalogId);
 
         for (AspectDef aspectDef : catalog.aspectDefs()) {
             if (aspectDef.globalId().equals(aspectDefId)) {

@@ -17,8 +17,10 @@
 package net.netbeing.cheap.rest.controller;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import net.netbeing.cheap.rest.TestStartEndLogger;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.springframework.http.MediaType;
@@ -34,6 +36,7 @@ import static org.awaitility.Awaitility.await;
  */
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 @Execution(ExecutionMode.SAME_THREAD)
+@ExtendWith(TestStartEndLogger.class)
 class AspectDefControllerHttpTest extends BaseControllerHttpTest
 {
     private String catalogId;

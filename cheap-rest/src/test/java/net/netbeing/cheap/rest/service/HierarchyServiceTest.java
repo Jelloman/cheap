@@ -575,9 +575,9 @@ class HierarchyServiceTest extends BaseServiceTest
         Catalog catalog = catalogService.getCatalog(catalogId);
         EntityTreeHierarchy treeHierarchy = (EntityTreeHierarchy) catalog.hierarchy("myTree");
         EntityTreeHierarchy.Node root = treeHierarchy.root();
-        assertEquals(2, root.children().size());
-        assertTrue(root.children().containsKey("folder1"));
-        assertTrue(root.children().containsKey("folder2"));
+        assertEquals(2, root.size());
+        assertTrue(root.containsKey("folder1"));
+        assertTrue(root.containsKey("folder2"));
     }
 
     @Test
@@ -639,9 +639,9 @@ class HierarchyServiceTest extends BaseServiceTest
         Catalog catalog = catalogService.getCatalog(catalogId);
         EntityTreeHierarchy treeHierarchy = (EntityTreeHierarchy) catalog.hierarchy("myTree");
         EntityTreeHierarchy.Node root = treeHierarchy.root();
-        assertEquals(1, root.children().size());
-        assertFalse(root.children().containsKey("folder1"));
-        assertTrue(root.children().containsKey("folder2"));
+        assertEquals(1, root.size());
+        assertFalse(root.containsKey("folder1"));
+        assertTrue(root.containsKey("folder2"));
     }
 
     @Test

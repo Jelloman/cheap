@@ -48,6 +48,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 /**
  * Service layer for Catalog operations.
@@ -61,6 +63,8 @@ public class CatalogService
     private final CheapDao dao;
     private final CheapFactory factory;
     private final DataSource dataSource;
+
+    private final ConcurrentMap<UUID, Catalog> catalogStore = new ConcurrentHashMap<>();
 
     @Resource
     @Lazy
@@ -127,6 +131,9 @@ public class CatalogService
             logger.info("Creating catalog with ID: {}", catalogId);
             dao.saveCatalog(catalog);
             logger.info("Successfully created catalog with ID: {}", catalogId);
+
+            catalogStore.put(catalogId, catalog);
+
             return catalogId;
         } catch (SQLException e) {
             logger.error("Failed to save catalog");
@@ -208,11 +215,17 @@ public class CatalogService
     {
         logger.debug("Getting catalog: {}", catalogId);
 
+        Catalog catalog = catalogStore.get(catalogId);
+        if (catalog != null) {
+            return catalog;
+        }
+
         try {
-            Catalog catalog = dao.loadCatalog(catalogId);
+            catalog = dao.loadCatalog(catalogId);
             if (catalog == null) {
                 throw new ResourceNotFoundException("Catalog not found: " + catalogId);
             }
+            catalogStore.put(catalogId, catalog);
             return catalog;
         } catch (SQLException e) {
             logger.error("Failed to load catalog");
