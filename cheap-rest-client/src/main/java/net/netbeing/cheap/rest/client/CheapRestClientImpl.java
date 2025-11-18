@@ -32,10 +32,12 @@ import net.netbeing.cheap.rest.client.exception.CheapRestServerException;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.http.codec.json.Jackson2JsonDecoder;
 import org.springframework.http.codec.json.Jackson2JsonEncoder;
+import org.springframework.http.HttpMethod;
 import org.springframework.web.reactive.function.client.ExchangeStrategies;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -321,6 +323,128 @@ public class CheapRestClientImpl implements CheapRestClient
                 .build(catalogId, hierarchyName))
             .retrieve()
             .bodyToMono(AspectMapResponse.class)
+            .onErrorMap(this::mapException)
+            .block();
+    }
+
+    // ========== Hierarchy Mutation Operations ==========
+
+    @Override
+    public EntityIdsOperationResponse addEntityIds(
+        @NotNull UUID catalogId,
+        @NotNull String hierarchyName,
+        @NotNull List<UUID> entityIds)
+    {
+        AddEntityIdsRequest request = new AddEntityIdsRequest(entityIds);
+
+        return webClient.post()
+            .uri("/api/catalog/{catalogId}/hierarchies/{hierarchyName}/entities", catalogId, hierarchyName)
+            .bodyValue(request)
+            .retrieve()
+            .bodyToMono(EntityIdsOperationResponse.class)
+            .onErrorMap(this::mapException)
+            .block();
+    }
+
+    @Override
+    public EntityIdsOperationResponse removeEntityIds(
+        @NotNull UUID catalogId,
+        @NotNull String hierarchyName,
+        @NotNull List<UUID> entityIds)
+    {
+        RemoveEntityIdsRequest request = new RemoveEntityIdsRequest(entityIds);
+
+        return webClient.method(HttpMethod.DELETE)
+            .uri("/api/catalog/{catalogId}/hierarchies/{hierarchyName}/entities", catalogId, hierarchyName)
+            .bodyValue(request)
+            .retrieve()
+            .bodyToMono(EntityIdsOperationResponse.class)
+            .onErrorMap(this::mapException)
+            .block();
+    }
+
+    @Override
+    public DirectoryOperationResponse addDirectoryEntries(
+        @NotNull UUID catalogId,
+        @NotNull String hierarchyName,
+        @NotNull Map<String, UUID> entries)
+    {
+        AddDirectoryEntriesRequest request = new AddDirectoryEntriesRequest(entries);
+
+        return webClient.post()
+            .uri("/api/catalog/{catalogId}/hierarchies/{hierarchyName}/entries", catalogId, hierarchyName)
+            .bodyValue(request)
+            .retrieve()
+            .bodyToMono(DirectoryOperationResponse.class)
+            .onErrorMap(this::mapException)
+            .block();
+    }
+
+    @Override
+    public DirectoryOperationResponse removeDirectoryEntriesByNames(
+        @NotNull UUID catalogId,
+        @NotNull String hierarchyName,
+        @NotNull List<String> names)
+    {
+        RemoveDirectoryEntriesRequest request = new RemoveDirectoryEntriesRequest(names, null);
+
+        return webClient.method(HttpMethod.DELETE)
+            .uri("/api/catalog/{catalogId}/hierarchies/{hierarchyName}/entries", catalogId, hierarchyName)
+            .bodyValue(request)
+            .retrieve()
+            .bodyToMono(DirectoryOperationResponse.class)
+            .onErrorMap(this::mapException)
+            .block();
+    }
+
+    @Override
+    public DirectoryOperationResponse removeDirectoryEntriesByEntityIds(
+        @NotNull UUID catalogId,
+        @NotNull String hierarchyName,
+        @NotNull List<UUID> entityIds)
+    {
+        RemoveDirectoryEntriesRequest request = new RemoveDirectoryEntriesRequest(null, entityIds);
+
+        return webClient.method(HttpMethod.DELETE)
+            .uri("/api/catalog/{catalogId}/hierarchies/{hierarchyName}/entries", catalogId, hierarchyName)
+            .bodyValue(request)
+            .retrieve()
+            .bodyToMono(DirectoryOperationResponse.class)
+            .onErrorMap(this::mapException)
+            .block();
+    }
+
+    @Override
+    public TreeOperationResponse addTreeNodes(
+        @NotNull UUID catalogId,
+        @NotNull String hierarchyName,
+        String parentPath,
+        @NotNull Map<String, UUID> nodes)
+    {
+        AddTreeNodesRequest request = new AddTreeNodesRequest(parentPath, nodes);
+
+        return webClient.post()
+            .uri("/api/catalog/{catalogId}/hierarchies/{hierarchyName}/nodes", catalogId, hierarchyName)
+            .bodyValue(request)
+            .retrieve()
+            .bodyToMono(TreeOperationResponse.class)
+            .onErrorMap(this::mapException)
+            .block();
+    }
+
+    @Override
+    public TreeOperationResponse removeTreeNodes(
+        @NotNull UUID catalogId,
+        @NotNull String hierarchyName,
+        @NotNull List<String> paths)
+    {
+        RemoveTreeNodesRequest request = new RemoveTreeNodesRequest(paths);
+
+        return webClient.method(HttpMethod.DELETE)
+            .uri("/api/catalog/{catalogId}/hierarchies/{hierarchyName}/nodes", catalogId, hierarchyName)
+            .bodyValue(request)
+            .retrieve()
+            .bodyToMono(TreeOperationResponse.class)
             .onErrorMap(this::mapException)
             .block();
     }

@@ -281,12 +281,12 @@ public interface CheapRestClient
     );
 
     /**
-     * Adds nodes to an EntityTree hierarchy under a specified parent.
+     * Adds nodes to an EntityTree hierarchy under a specified parent path.
      *
      * @param catalogId the catalog ID
      * @param hierarchyName the hierarchy name
-     * @param parentNodeId the parent node ID (null for root-level nodes)
-     * @param childEntityIds map of child entity IDs to their names
+     * @param parentPath the parent node path (null or empty for root-level nodes, e.g., "/root/folder1")
+     * @param nodes map of child names to entity IDs
      * @return the operation response with success status and count
      * @throws net.netbeing.cheap.rest.client.exception.CheapRestNotFoundException if catalog, hierarchy, or parent node not found
      * @throws net.netbeing.cheap.rest.client.exception.CheapRestBadRequestException if wrong hierarchy type or invalid request
@@ -294,16 +294,16 @@ public interface CheapRestClient
     TreeOperationResponse addTreeNodes(
         @NotNull UUID catalogId,
         @NotNull String hierarchyName,
-        UUID parentNodeId,
-        @NotNull Map<UUID, String> childEntityIds
+        String parentPath,
+        @NotNull Map<String, UUID> nodes
     );
 
     /**
-     * Removes nodes from an EntityTree hierarchy (cascade deletes all descendants).
+     * Removes nodes from an EntityTree hierarchy by their paths (cascade deletes all descendants).
      *
      * @param catalogId the catalog ID
      * @param hierarchyName the hierarchy name
-     * @param nodeIds the list of node IDs to remove
+     * @param paths the list of node paths to remove (e.g., ["/root/folder1", "/root/folder2"])
      * @return the operation response with success status and count
      * @throws net.netbeing.cheap.rest.client.exception.CheapRestNotFoundException if catalog or hierarchy not found
      * @throws net.netbeing.cheap.rest.client.exception.CheapRestBadRequestException if wrong hierarchy type or invalid request
@@ -311,6 +311,6 @@ public interface CheapRestClient
     TreeOperationResponse removeTreeNodes(
         @NotNull UUID catalogId,
         @NotNull String hierarchyName,
-        @NotNull List<UUID> nodeIds
+        @NotNull List<String> paths
     );
 }
