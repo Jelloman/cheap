@@ -1,22 +1,21 @@
 package net.netbeing.cheap.integrationtests.base;
 
+import net.netbeing.cheap.impl.basic.CheapFactory;
 import net.netbeing.cheap.rest.client.CheapRestClient;
 
 import java.util.UUID;
 
 /**
  * Abstract base class for all client-side integration tests.
- * Provides common utilities for:
- * - JSON loading from test resources
- * - REST client access
- * - Test data generation
+ * Provides common utilities for REST client access and test data generation.
  *
- * NO @SpringBootTest annotation - subclasses must configure their own Spring context.
- * NO database access methods - tests interact ONLY through REST client.
+ * Subclasses must configure their own Spring context with @SpringBootTest.
+ * All tests interact ONLY through REST client - NO direct database access.
  */
 public abstract class BaseClientIntegrationTest
 {
     protected CheapRestClient client;
+    protected final CheapFactory factory = new CheapFactory();
 
     /**
      * Set the REST client. This is called by Spring via autowiring in subclasses.
