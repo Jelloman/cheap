@@ -2,6 +2,7 @@ package net.netbeing.cheap.integrationtests.restclient;
 
 import net.netbeing.cheap.impl.basic.CheapFactory;
 import net.netbeing.cheap.integrationtests.base.MariaDbClientIntegrationTest;
+import net.netbeing.cheap.integrationtests.util.TestStartEndLogger;
 import net.netbeing.cheap.json.dto.AspectDefListResponse;
 import net.netbeing.cheap.json.dto.AspectQueryResponse;
 import net.netbeing.cheap.json.dto.CatalogListResponse;
@@ -26,6 +27,7 @@ import net.netbeing.cheap.model.HierarchyType;
 import net.netbeing.cheap.model.PropertyDef;
 import net.netbeing.cheap.model.PropertyType;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -42,6 +44,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * ALL tests interact ONLY through the REST client - NO direct database access.
  */
 @SuppressWarnings("unused")
+@ExtendWith(TestStartEndLogger.class)
 class MariaDbRestClientIntegrationTest extends MariaDbClientIntegrationTest
 {
     private final CheapFactory factory = new CheapFactory();
@@ -80,7 +83,7 @@ class MariaDbRestClientIntegrationTest extends MariaDbClientIntegrationTest
         assertNotNull(retrieved);
 
         // List catalogs
-        CatalogListResponse listResponse = client.listCatalogs(0, 10);
+        CatalogListResponse listResponse = client.listCatalogs(0, 100);
 
         assertNotNull(listResponse);
         assertTrue(listResponse.totalElements() >= 1);
@@ -549,7 +552,10 @@ class MariaDbRestClientIntegrationTest extends MariaDbClientIntegrationTest
         UUID catalogId = catalogResponse.catalogId();
 
         HierarchyDef hierarchyDef = factory.createHierarchyDef("my-tree", HierarchyType.ENTITY_TREE);
-        client.createHierarchy(catalogId, hierarchyDef);
+        CreateHierarchyResponse response = client.createHierarchy(catalogId, hierarchyDef);
+
+        assertTrue(response.success());
+        assertEquals("my-tree", response.hierarchyName());
 
         // Add root-level nodes
         UUID entity1 = testUuid(6001);

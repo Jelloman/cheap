@@ -6,6 +6,7 @@ import net.netbeing.cheap.integrationtests.config.ClientTestConfig;
 import net.netbeing.cheap.integrationtests.config.MariaDbServerTestConfig;
 import net.netbeing.cheap.integrationtests.config.PostgresServerTestConfig;
 import net.netbeing.cheap.integrationtests.config.SqliteServerTestConfig;
+import net.netbeing.cheap.integrationtests.util.TestStartEndLogger;
 import net.netbeing.cheap.json.dto.AspectDefListResponse;
 import net.netbeing.cheap.json.dto.AspectQueryResponse;
 import net.netbeing.cheap.json.dto.CatalogListResponse;
@@ -26,6 +27,8 @@ import net.netbeing.cheap.rest.client.CheapRestClientImpl;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.parallel.ResourceLock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
@@ -49,6 +52,10 @@ import static org.junit.jupiter.api.Assertions.*;
  * - NO direct database access - ALL verification through REST API responses only
  * - Tests perform identical operations on all three clients and compare results
  */
+@ExtendWith(TestStartEndLogger.class)
+@ResourceLock("port-8081")
+@ResourceLock("port-8082")
+@ResourceLock("port-8083")
 class CrossDatabaseConsistencyTest extends BaseClientIntegrationTest
 {
     private static final Logger logger = LoggerFactory.getLogger(CrossDatabaseConsistencyTest.class);

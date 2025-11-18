@@ -93,6 +93,7 @@ public class RequestResponseLoggingFilter implements WebFilter
         private final Flux<DataBuffer> cachedBody;
         private final Mono<String> bodyString;
 
+        @SuppressWarnings("deprecated")
         public CachedBodyServerHttpRequestDecorator(ServerHttpRequest delegate) {
             super(delegate);
 

@@ -491,9 +491,10 @@ public class HierarchyService
      * @throws ValidationException if hierarchy is not an EntityTree
      */
     @Transactional
-    public int addTreeNodes(@NotNull UUID catalogId, @NotNull String hierarchyName, @NotNull String parentPath, @NotNull Map<String, UUID> nodes)
+    public int addTreeNodes(@NotNull UUID catalogId, @NotNull String hierarchyName, String parentPath, @NotNull Map<String, UUID> nodes)
     {
         logger.debug("Adding {} nodes to tree {} under path {} in catalog {}", nodes.size(), hierarchyName, parentPath, catalogId);
+        parentPath = (parentPath == null) ? "/" : parentPath;
 
         Catalog catalog = catalogService.getCatalog(catalogId);
         Hierarchy hierarchy = service.getHierarchy(catalogId, hierarchyName);

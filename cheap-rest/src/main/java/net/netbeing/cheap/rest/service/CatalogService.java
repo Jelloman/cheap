@@ -156,13 +156,14 @@ public class CatalogService
         try (Connection conn = dataSource.getConnection()) {
             // Query all catalog IDs from the database
             List<UUID> allCatalogIds = new ArrayList<>();
-            String sql = "SELECT catalog_id FROM catalog ORDER BY catalog_id";
+            String sql = "SELECT catalog_id FROM catalog ORDER BY catalog_id"; // FIXME!!
 
             try (PreparedStatement stmt = conn.prepareStatement(sql);
                 ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
                     String catalogIdStr = rs.getString("catalog_id");
-                    allCatalogIds.add(UUID.fromString(catalogIdStr));                }
+                    allCatalogIds.add(UUID.fromString(catalogIdStr));
+                }
             }
 
             // Calculate pagination

@@ -4,10 +4,12 @@ import net.netbeing.cheap.integrationtests.config.ClientTestConfig;
 import net.netbeing.cheap.integrationtests.config.PostgresServerTestConfig;
 import net.netbeing.cheap.rest.CheapRestApplication;
 import net.netbeing.cheap.rest.client.CheapRestClient;
+import org.junit.jupiter.api.parallel.ResourceLock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
 
 /**
@@ -31,6 +33,8 @@ import org.springframework.test.context.ContextConfiguration;
 )
 @ContextConfiguration
 @Import({PostgresServerTestConfig.class, ClientTestConfig.class})
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
+@ResourceLock("port-8081")
 public abstract class PostgresClientIntegrationTest extends BaseClientIntegrationTest
 {
     /**
