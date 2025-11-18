@@ -529,9 +529,9 @@ class CrossDatabaseConsistencyTest extends BaseClientIntegrationTest
         assertNotNull(sqlitePage0);
         assertNotNull(mariadbPage0);
 
-        assertEquals(5, postgresPage0.content().size());
-        assertEquals(5, sqlitePage0.content().size());
-        assertEquals(5, mariadbPage0.content().size());
+        assertEquals(5, postgresPage0.aspectDefs().size());
+        assertEquals(5, sqlitePage0.aspectDefs().size());
+        assertEquals(5, mariadbPage0.aspectDefs().size());
 
         assertTrue(postgresPage0.totalElements() >= 15);
         assertTrue(sqlitePage0.totalElements() >= 15);
@@ -550,9 +550,9 @@ class CrossDatabaseConsistencyTest extends BaseClientIntegrationTest
         AspectDefListResponse sqlitePage1 = sqliteClient.listAspectDefs(sqliteCatalog.catalogId(), 1, 5);
         AspectDefListResponse mariadbPage1 = mariadbClient.listAspectDefs(mariadbCatalog.catalogId(), 1, 5);
 
-        assertEquals(5, postgresPage1.content().size());
-        assertEquals(5, sqlitePage1.content().size());
-        assertEquals(5, mariadbPage1.content().size());
+        assertEquals(5, postgresPage1.aspectDefs().size());
+        assertEquals(5, sqlitePage1.aspectDefs().size());
+        assertEquals(5, mariadbPage1.aspectDefs().size());
 
         assertEquals(1, postgresPage1.page());
         assertEquals(1, sqlitePage1.page());
@@ -563,9 +563,9 @@ class CrossDatabaseConsistencyTest extends BaseClientIntegrationTest
         AspectDefListResponse sqlitePage2 = sqliteClient.listAspectDefs(sqliteCatalog.catalogId(), 2, 5);
         AspectDefListResponse mariadbPage2 = mariadbClient.listAspectDefs(mariadbCatalog.catalogId(), 2, 5);
 
-        assertTrue(postgresPage2.content().size() >= 5);
-        assertTrue(sqlitePage2.content().size() >= 5);
-        assertTrue(mariadbPage2.content().size() >= 5);
+        assertTrue(postgresPage2.aspectDefs().size() >= 5);
+        assertTrue(sqlitePage2.aspectDefs().size() >= 5);
+        assertTrue(mariadbPage2.aspectDefs().size() >= 5);
 
         // Verify catalog list pagination
         CatalogListResponse postgresCatalogList = postgresClient.listCatalogs(0, 5);
@@ -635,9 +635,9 @@ class CrossDatabaseConsistencyTest extends BaseClientIntegrationTest
         assertNotNull(sqliteAspectDefs);
         assertNotNull(mariadbAspectDefs);
 
-        assertTrue(postgresAspectDefs.content().size() >= 5);
-        assertTrue(sqliteAspectDefs.content().size() >= 5);
-        assertTrue(mariadbAspectDefs.content().size() >= 5);
+        assertTrue(postgresAspectDefs.aspectDefs().size() >= 5);
+        assertTrue(sqliteAspectDefs.aspectDefs().size() >= 5);
+        assertTrue(mariadbAspectDefs.aspectDefs().size() >= 5);
 
         // Test catalog listing order - should be consistent across all databases
         CatalogListResponse postgresCatalogs = postgresClient.listCatalogs(0, 10);
@@ -649,9 +649,9 @@ class CrossDatabaseConsistencyTest extends BaseClientIntegrationTest
         assertNotNull(mariadbCatalogs);
 
         // Verify the most recently created catalog appears in all lists
-        assertTrue(postgresCatalogs.content().contains(postgresCatalog.catalogId()));
-        assertTrue(sqliteCatalogs.content().contains(sqliteCatalog.catalogId()));
-        assertTrue(mariadbCatalogs.content().contains(mariadbCatalog.catalogId()));
+        assertTrue(postgresCatalogs.catalogIds().contains(postgresCatalog.catalogId()));
+        assertTrue(sqliteCatalogs.catalogIds().contains(sqliteCatalog.catalogId()));
+        assertTrue(mariadbCatalogs.catalogIds().contains(mariadbCatalog.catalogId()));
 
         logger.info("Sorting/ordering consistency verified across all databases");
     }
