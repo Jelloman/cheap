@@ -120,7 +120,7 @@ class AspectDefControllerHttpTest extends BaseControllerHttpTest
         JsonNode responseNode = objectMapper.readTree(responseJson);
 
         assertThat(responseNode.has("catalogId")).isTrue();
-        assertThat(responseNode.has("content")).isTrue();
+        assertThat(responseNode.has("aspectDefs")).isTrue();
         assertThat(responseNode.has("page")).isTrue();
         assertThat(responseNode.has("size")).isTrue();
         assertThat(responseNode.has("totalElements")).isTrue();

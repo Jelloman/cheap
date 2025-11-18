@@ -23,6 +23,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  */
 public record CreateHierarchyResponse(
     @JsonProperty("hierarchyName") String hierarchyName,
+    @JsonProperty("success") boolean success,
     @JsonProperty("message") String message
 )
 {

@@ -96,7 +96,7 @@ class CatalogControllerHttpTest extends BaseControllerHttpTest
         // Verify response structure
         JsonNode responseNode = objectMapper.readTree(responseJson);
 
-        assertThat(responseNode.has("content")).isTrue();
+        assertThat(responseNode.has("catalogIds")).isTrue();
         assertThat(responseNode.has("page")).isTrue();
         assertThat(responseNode.has("size")).isTrue();
         assertThat(responseNode.has("totalElements")).isTrue();

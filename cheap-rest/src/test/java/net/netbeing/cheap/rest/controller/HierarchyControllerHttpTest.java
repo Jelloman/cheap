@@ -75,7 +75,7 @@ class HierarchyControllerHttpTest extends BaseControllerHttpTest
 
         assertThat(responseNode.has("catalogId")).isTrue();
         assertThat(responseNode.has("hierarchyName")).isTrue();
-        assertThat(responseNode.has("content")).isTrue();
+        assertThat(responseNode.has("entityIds")).isTrue();
         assertThat(responseNode.has("page")).isTrue();
         assertThat(responseNode.has("size")).isTrue();
         assertThat(responseNode.has("totalElements")).isTrue();
@@ -107,7 +107,7 @@ class HierarchyControllerHttpTest extends BaseControllerHttpTest
 
         assertThat(responseNode.has("catalogId")).isTrue();
         assertThat(responseNode.has("hierarchyName")).isTrue();
-        assertThat(responseNode.has("content")).isTrue();
+        assertThat(responseNode.has("entityIds")).isTrue();
         assertThat(responseNode.has("page")).isTrue();
         assertThat(responseNode.has("size")).isTrue();
         assertThat(responseNode.has("totalElements")).isTrue();

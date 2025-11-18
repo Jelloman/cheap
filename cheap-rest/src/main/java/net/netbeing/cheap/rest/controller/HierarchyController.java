@@ -79,6 +79,7 @@ public class HierarchyController
         return hierarchyService.createHierarchy(catalogId, request.hierarchyDef())
             .map(hierarchyName -> new CreateHierarchyResponse(
                 hierarchyName,
+                true,
                 "Hierarchy created successfully"
             ));
     }

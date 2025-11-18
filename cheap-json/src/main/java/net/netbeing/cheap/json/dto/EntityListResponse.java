@@ -27,7 +27,7 @@ import java.util.UUID;
 public record EntityListResponse(
     @JsonProperty("catalogId") UUID catalogId,
     @JsonProperty("hierarchyName") String hierarchyName,
-    @JsonProperty("content") List<UUID> content,
+    @JsonProperty("entityIds") List<UUID> entityIds,
     @JsonProperty("page") int page,
     @JsonProperty("size") int size,
     @JsonProperty("totalElements") long totalElements,

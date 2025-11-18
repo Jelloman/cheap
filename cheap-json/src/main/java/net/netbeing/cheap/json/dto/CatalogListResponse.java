@@ -25,7 +25,7 @@ import java.util.UUID;
  * Response DTO for paginated catalog list.
  */
 public record CatalogListResponse(
-    @JsonProperty("content") List<UUID> content,
+    @JsonProperty("catalogIds") List<UUID> catalogIds,
     @JsonProperty("page") int page,
     @JsonProperty("size") int size,
     @JsonProperty("totalElements") long totalElements,

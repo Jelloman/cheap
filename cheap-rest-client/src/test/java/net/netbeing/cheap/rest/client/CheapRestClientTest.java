@@ -117,7 +117,7 @@ class CheapRestClientTest
         // Arrange
         String responseJson = """
             {
-              "content": [
+              "catalogIds": [
                 "550e8400-e29b-41d4-a716-446655440000",
                 "550e8400-e29b-41d4-a716-446655440001"
               ],
@@ -138,7 +138,7 @@ class CheapRestClientTest
 
         // Assert
         assertNotNull(response);
-        assertEquals(2, response.content().size());
+        assertEquals(2, response.catalogIds().size());
         assertEquals(0, response.page());
         assertEquals(10, response.size());
         assertEquals(2, response.totalElements());
@@ -246,7 +246,7 @@ class CheapRestClientTest
         String responseJson = """
             {
               "catalogId": "550e8400-e29b-41d4-a716-446655440000",
-              "content": [],
+              "aspectDefs": [],
               "page": 0,
               "size": 10,
               "totalElements": 0,
@@ -266,7 +266,7 @@ class CheapRestClientTest
 
         // Assert
         assertNotNull(response);
-        assertEquals(0, response.content().size());
+        assertEquals(0, response.aspectDefs().size());
         assertEquals(0, response.page());
         assertEquals(10, response.size());
 
@@ -417,6 +417,7 @@ class CheapRestClientTest
         String responseJson = """
             {
               "hierarchyName": "test-hierarchy",
+              "success": true,
               "message": "Hierarchy created successfully"
             }
             """;
@@ -435,6 +436,7 @@ class CheapRestClientTest
         // Assert
         assertNotNull(response);
         assertEquals("test-hierarchy", response.hierarchyName());
+        assertTrue(response.success());
         assertEquals("Hierarchy created successfully", response.message());
 
         // Verify request
@@ -488,7 +490,7 @@ class CheapRestClientTest
             {
               "catalogId": "550e8400-e29b-41d4-a716-446655440000",
               "hierarchyName": "people",
-              "content": [
+              "entityIds": [
                 "550e8400-e29b-41d4-a716-446655440000",
                 "550e8400-e29b-41d4-a716-446655440001"
               ],
@@ -512,7 +514,7 @@ class CheapRestClientTest
 
         // Assert
         assertNotNull(response);
-        assertEquals(2, response.content().size());
+        assertEquals(2, response.entityIds().size());
         assertEquals(0, response.page());
         assertEquals(10, response.size());
 

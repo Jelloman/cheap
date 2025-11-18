@@ -223,8 +223,8 @@ public interface CheapRestClient
      * @param hierarchyName the hierarchy name
      * @param entityIds the list of entity IDs to add
      * @return the operation response with success status and count
-     * @throws net.netbeing.cheap.rest.client.exception.CheapRestNotFoundException if catalog or hierarchy not found
-     * @throws net.netbeing.cheap.rest.client.exception.CheapRestBadRequestException if wrong hierarchy type or invalid request
+     * @throws CheapRestNotFoundException if catalog or hierarchy not found
+     * @throws CheapRestBadRequestException if wrong hierarchy type or invalid request
      */
     EntityIdsOperationResponse addEntityIds(
         @NotNull UUID catalogId,
@@ -239,8 +239,8 @@ public interface CheapRestClient
      * @param hierarchyName the hierarchy name
      * @param entityIds the list of entity IDs to remove
      * @return the operation response with success status and count
-     * @throws net.netbeing.cheap.rest.client.exception.CheapRestNotFoundException if catalog or hierarchy not found
-     * @throws net.netbeing.cheap.rest.client.exception.CheapRestBadRequestException if wrong hierarchy type or invalid request
+     * @throws CheapRestNotFoundException if catalog or hierarchy not found
+     * @throws CheapRestBadRequestException if wrong hierarchy type or invalid request
      */
     EntityIdsOperationResponse removeEntityIds(
         @NotNull UUID catalogId,
@@ -255,8 +255,8 @@ public interface CheapRestClient
      * @param hierarchyName the hierarchy name
      * @param entries map of entry names to entity IDs
      * @return the operation response with success status and count
-     * @throws net.netbeing.cheap.rest.client.exception.CheapRestNotFoundException if catalog or hierarchy not found
-     * @throws net.netbeing.cheap.rest.client.exception.CheapRestBadRequestException if wrong hierarchy type or invalid request
+     * @throws CheapRestNotFoundException if catalog or hierarchy not found
+     * @throws CheapRestBadRequestException if wrong hierarchy type or invalid request
      */
     DirectoryOperationResponse addDirectoryEntries(
         @NotNull UUID catalogId,
@@ -271,8 +271,8 @@ public interface CheapRestClient
      * @param hierarchyName the hierarchy name
      * @param names the list of entry names to remove
      * @return the operation response with success status and count
-     * @throws net.netbeing.cheap.rest.client.exception.CheapRestNotFoundException if catalog or hierarchy not found
-     * @throws net.netbeing.cheap.rest.client.exception.CheapRestBadRequestException if wrong hierarchy type or invalid request
+     * @throws CheapRestNotFoundException if catalog or hierarchy not found
+     * @throws CheapRestBadRequestException if wrong hierarchy type or invalid request
      */
     DirectoryOperationResponse removeDirectoryEntriesByNames(
         @NotNull UUID catalogId,
@@ -287,8 +287,8 @@ public interface CheapRestClient
      * @param hierarchyName the hierarchy name
      * @param entityIds the list of entity IDs to remove
      * @return the operation response with success status and count
-     * @throws net.netbeing.cheap.rest.client.exception.CheapRestNotFoundException if catalog or hierarchy not found
-     * @throws net.netbeing.cheap.rest.client.exception.CheapRestBadRequestException if wrong hierarchy type or invalid request
+     * @throws CheapRestNotFoundException if catalog or hierarchy not found
+     * @throws CheapRestBadRequestException if wrong hierarchy type or invalid request
      */
     DirectoryOperationResponse removeDirectoryEntriesByEntityIds(
         @NotNull UUID catalogId,
@@ -304,8 +304,8 @@ public interface CheapRestClient
      * @param parentPath the parent node path (null or empty for root-level nodes, e.g., "/root/folder1")
      * @param nodes map of child names to entity IDs
      * @return the operation response with success status and count
-     * @throws net.netbeing.cheap.rest.client.exception.CheapRestNotFoundException if catalog, hierarchy, or parent node not found
-     * @throws net.netbeing.cheap.rest.client.exception.CheapRestBadRequestException if wrong hierarchy type or invalid request
+     * @throws CheapRestNotFoundException if catalog, hierarchy, or parent node not found
+     * @throws CheapRestBadRequestException if wrong hierarchy type or invalid request
      */
     TreeOperationResponse addTreeNodes(
         @NotNull UUID catalogId,
@@ -321,8 +321,8 @@ public interface CheapRestClient
      * @param hierarchyName the hierarchy name
      * @param paths the list of node paths to remove (e.g., ["/root/folder1", "/root/folder2"])
      * @return the operation response with success status and count
-     * @throws net.netbeing.cheap.rest.client.exception.CheapRestNotFoundException if catalog or hierarchy not found
-     * @throws net.netbeing.cheap.rest.client.exception.CheapRestBadRequestException if wrong hierarchy type or invalid request
+     * @throws CheapRestNotFoundException if catalog or hierarchy not found
+     * @throws CheapRestBadRequestException if wrong hierarchy type or invalid request
      */
     TreeOperationResponse removeTreeNodes(
         @NotNull UUID catalogId,
