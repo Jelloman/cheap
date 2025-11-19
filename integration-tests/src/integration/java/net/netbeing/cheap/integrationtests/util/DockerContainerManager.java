@@ -334,6 +334,20 @@ public class DockerContainerManager implements AutoCloseable
             log.info("Creating container from image: {}", imageName);
 
             try {
+                // Clean up any existing container with the same name from previous failed runs
+                if (containerName != null) {
+                    try {
+                        dockerClient.removeContainerCmd(containerName)
+                                .withForce(true)
+                                .withRemoveVolumes(true)
+                                .exec();
+                        log.info("Removed existing container with name: {}", containerName);
+                    } catch (Exception e) {
+                        // Container doesn't exist, which is fine
+                        log.debug("No existing container found with name: {}", containerName);
+                    }
+                }
+
                 CreateContainerCmd cmd = dockerClient.createContainerCmd(imageName);
 
                 if (containerName != null) {

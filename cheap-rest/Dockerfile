@@ -17,7 +17,8 @@ EXPOSE 8080
 ENV SPRING_PROFILES_ACTIVE=postgres
 ENV DB_PASSWORD=changeme
 ENV CHEAP_DB_PATH=/data/cheap.db
-ENV JAVA_OPTS=""
+# Java 24 requires native access for SQLite JDBC driver
+ENV JAVA_OPTS="--enable-native-access=ALL-UNNAMED"
 
 # Health check using wget (available in alpine)
 HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
