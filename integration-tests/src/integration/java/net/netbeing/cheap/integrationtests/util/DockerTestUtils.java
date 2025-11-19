@@ -52,7 +52,7 @@ public class DockerTestUtils {
                 }
 
                 // Check health status
-                InspectContainerResponse.ContainerState.Health health = inspection.getState().getHealth();
+                var health = inspection.getState().getHealth();
                 if (health != null) {
                     String healthStatus = health.getStatus();
                     log.debug("Attempt {}: Container {} health status: {}", attempt, containerId, healthStatus);

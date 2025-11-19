@@ -16,6 +16,7 @@ import net.netbeing.cheap.model.Entity;
 import net.netbeing.cheap.model.PropertyDef;
 import net.netbeing.cheap.model.PropertyType;
 import net.netbeing.cheap.rest.client.CheapRestClient;
+import net.netbeing.cheap.rest.client.CheapRestClientImpl;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Tag;
@@ -43,6 +44,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @Tag("mariadb")
 class MariaDbDockerIntegrationTest extends BaseClientIntegrationTest
 {
+    private static CheapRestClient client;
     private static DockerContainerManager containerManager;
     private static String mariaDbContainerId;
     private static String cheapRestContainerId;
@@ -96,7 +98,7 @@ class MariaDbDockerIntegrationTest extends BaseClientIntegrationTest
                 "cheap-rest container did not become ready in time");
 
         // Initialize client
-        client = new CheapRestClient(baseUrl);
+        client = new CheapRestClientImpl(baseUrl);
     }
 
     @AfterAll
@@ -265,7 +267,7 @@ class MariaDbDockerIntegrationTest extends BaseClientIntegrationTest
         assertTrue(DockerTestUtils.waitForRestServiceReady(newBaseUrl, 120));
 
         // Create new client pointing to restarted server
-        client = new CheapRestClient(newBaseUrl);
+        client = new CheapRestClientImpl(newBaseUrl);
 
         // Re-register AspectDef in new client instance
         client.registerAspectDef(itemAspectDef);

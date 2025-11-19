@@ -1,7 +1,7 @@
 package net.netbeing.cheap.integrationtests.docker;
 
 import com.github.dockerjava.api.DockerClient;
-import net.netbeing.cheap.CheapFactory;
+import net.netbeing.cheap.impl.basic.CheapFactory;
 import net.netbeing.cheap.integrationtests.util.DockerContainerManager;
 import net.netbeing.cheap.integrationtests.util.DockerTestUtils;
 import net.netbeing.cheap.json.dto.AspectQueryResponse;
@@ -16,6 +16,7 @@ import net.netbeing.cheap.model.Entity;
 import net.netbeing.cheap.model.PropertyDef;
 import net.netbeing.cheap.model.PropertyType;
 import net.netbeing.cheap.rest.client.CheapRestClient;
+import net.netbeing.cheap.rest.client.CheapRestClientImpl;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Tag;
@@ -46,7 +47,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @Tag("orchestration")
 class MultiDatabaseDockerOrchestrationTest
 {
-    private static final CheapFactory factory = CheapFactory.defaultFactory();
+    private static final CheapFactory factory = new CheapFactory();
 
     private static DockerContainerManager containerManager;
     private static final String NETWORK_NAME = "multi-db-orchestration-test-network";
@@ -91,9 +92,9 @@ class MultiDatabaseDockerOrchestrationTest
         startCheapRestServers(dockerClient);
 
         // Create clients
-        postgresClient = new CheapRestClient("http://localhost:" + postgresRestPort);
-        mariaDbClient = new CheapRestClient("http://localhost:" + mariaDbRestPort);
-        sqliteClient = new CheapRestClient("http://localhost:" + sqliteRestPort);
+        postgresClient = new CheapRestClientImpl("http://localhost:" + postgresRestPort);
+        mariaDbClient = new CheapRestClientImpl("http://localhost:" + mariaDbRestPort);
+        sqliteClient = new CheapRestClientImpl("http://localhost:" + sqliteRestPort);
     }
 
     private static void startDatabases(DockerClient dockerClient)

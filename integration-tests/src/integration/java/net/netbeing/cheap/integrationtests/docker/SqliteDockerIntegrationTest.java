@@ -16,6 +16,7 @@ import net.netbeing.cheap.model.Entity;
 import net.netbeing.cheap.model.PropertyDef;
 import net.netbeing.cheap.model.PropertyType;
 import net.netbeing.cheap.rest.client.CheapRestClient;
+import net.netbeing.cheap.rest.client.CheapRestClientImpl;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Tag;
@@ -42,6 +43,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @Tag("sqlite")
 class SqliteDockerIntegrationTest extends BaseClientIntegrationTest
 {
+    private static CheapRestClient client;
     private static DockerContainerManager containerManager;
     private static String cheapRestContainerId;
     private static int cheapRestPort;
@@ -77,7 +79,7 @@ class SqliteDockerIntegrationTest extends BaseClientIntegrationTest
                 "cheap-rest container did not become ready in time");
 
         // Initialize client
-        client = new CheapRestClient(baseUrl);
+        client = new CheapRestClientImpl(baseUrl);
     }
 
     @AfterAll
@@ -252,7 +254,7 @@ class SqliteDockerIntegrationTest extends BaseClientIntegrationTest
         assertTrue(DockerTestUtils.waitForRestServiceReady(newBaseUrl, 120));
 
         // Create new client pointing to restarted server
-        client = new CheapRestClient(newBaseUrl);
+        client = new CheapRestClientImpl(newBaseUrl);
 
         // Re-register AspectDef in new client instance
         client.registerAspectDef(itemAspectDef);
@@ -279,7 +281,7 @@ class SqliteDockerIntegrationTest extends BaseClientIntegrationTest
         // Create AspectDef
         Map<String, PropertyDef> dataProps = new LinkedHashMap<>();
         dataProps.put("value", factory.createPropertyDef("value", PropertyType.String));
-        dataProps.put("timestamp", factory.createPropertyDef("timestamp", PropertyType.Long));
+        dataProps.put("timestamp", factory.createPropertyDef("timestamp", PropertyType.Integer));
         AspectDef dataAspectDef = factory.createImmutableAspectDef("data", dataProps);
 
         client.createAspectDef(catalogId, dataAspectDef);
@@ -289,7 +291,7 @@ class SqliteDockerIntegrationTest extends BaseClientIntegrationTest
         for (int i = 0; i < 5; i++) {
             UUID entityId = testUuid(13000 + i);
             Map<UUID, Map<String, Object>> data = new LinkedHashMap<>();
-            data.put(entityId, Map.of("value", "Data-" + i, "timestamp", System.currentTimeMillis()));
+            data.put(entityId, Map.of("value", "Data-" + i, "timestamp", i));
 
             UpsertAspectsResponse response = client.upsertAspects(catalogId, "data", data);
             assertEquals(1, response.successCount());
