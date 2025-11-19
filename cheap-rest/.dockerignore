@@ -3,9 +3,9 @@
 .gitignore
 
 # Build outputs
-build/
+# build/  # Commented out to allow copying JAR from build/libs
 target/
-*.jar
+# *.jar  # Commented out to allow Docker image build
 *.war
 *.class
 
@@ -28,9 +28,9 @@ PLAN.md
 *.md
 
 # Docker
-Dockerfile
+# Dockerfile  # Commented out to allow Docker image build
 docker-compose*.yml
-.dockerignore
+# .dockerignore
 
 # Test
 src/test/

@@ -15,6 +15,7 @@ import net.netbeing.cheap.model.CatalogSpecies;
 import net.netbeing.cheap.model.Entity;
 import net.netbeing.cheap.model.PropertyDef;
 import net.netbeing.cheap.model.PropertyType;
+import net.netbeing.cheap.rest.client.CheapRestClient;
 import net.netbeing.cheap.rest.client.CheapRestClientImpl;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -48,6 +49,7 @@ class SqliteDockerIntegrationTest extends BaseClientIntegrationTest
     private static DockerContainerManager containerManager;
     private static String cheapRestContainerId;
     private static String baseUrl;
+    private static CheapRestClient mainClient;
 
     private static final String NETWORK_NAME = "sqlite-docker-test-network";
     private static final String SQLITE_VOLUME = System.getProperty("java.io.tmpdir") + "/cheap-sqlite-docker-test";
@@ -85,12 +87,14 @@ class SqliteDockerIntegrationTest extends BaseClientIntegrationTest
         baseUrl = "http://localhost:" + cheapRestPort;
         assertTrue(DockerTestUtils.waitForRestServiceReady(baseUrl, 120),
             "cheap-rest container did not become ready in time");
+
+        mainClient = new CheapRestClientImpl(baseUrl);
     }
 
     @BeforeEach
     void setupClient()
     {
-        setClient(new CheapRestClientImpl(baseUrl));
+        setClient(mainClient);
     }
 
     @AfterAll
