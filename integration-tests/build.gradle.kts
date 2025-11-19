@@ -65,8 +65,9 @@ dependencies {
     integrationRuntimeOnly(libs.junit.jupiter)
 
     // Docker integration for tests
-    integrationImplementation("com.github.docker-java:docker-java-core:3.3.4")
-    integrationImplementation("com.github.docker-java:docker-java-transport-httpclient5:3.3.4")
+    integrationImplementation(libs.docker.java.core)
+    integrationImplementation(libs.docker.java.transport.httpclient5)
+    integrationImplementation(libs.httpclient5)
 }
 
 java {
