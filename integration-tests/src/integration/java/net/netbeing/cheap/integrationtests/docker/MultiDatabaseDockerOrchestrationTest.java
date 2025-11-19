@@ -22,6 +22,8 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
@@ -54,18 +56,15 @@ class MultiDatabaseDockerOrchestrationTest
 
     // PostgreSQL
     private static String postgresDbContainerId;
-    private static String postgresRestContainerId;
     private static int postgresRestPort;
     private static CheapRestClient postgresClient;
 
     // MariaDB
     private static String mariaDbContainerId;
-    private static String mariaDbRestContainerId;
     private static int mariaDbRestPort;
     private static CheapRestClient mariaDbClient;
 
     // SQLite
-    private static String sqliteRestContainerId;
     private static int sqliteRestPort;
     private static CheapRestClient sqliteClient;
     private static final String SQLITE_VOLUME = System.getProperty("java.io.tmpdir") + "/cheap-multi-db-sqlite-test";
@@ -80,7 +79,7 @@ class MultiDatabaseDockerOrchestrationTest
         containerManager.createNetwork(NETWORK_NAME);
 
         // Start all database containers in parallel
-        startDatabases(dockerClient);
+        startDatabases();
 
         // Wait for databases to be ready
         assertTrue(DockerTestUtils.waitForDatabaseReady(dockerClient, postgresDbContainerId, 60),
@@ -97,7 +96,7 @@ class MultiDatabaseDockerOrchestrationTest
         sqliteClient = new CheapRestClientImpl("http://localhost:" + sqliteRestPort);
     }
 
-    private static void startDatabases(DockerClient dockerClient)
+    private static void startDatabases()
     {
         // Start PostgreSQL
         postgresDbContainerId = containerManager.container("postgres:17")
@@ -125,6 +124,9 @@ class MultiDatabaseDockerOrchestrationTest
 
     private static void startCheapRestServers(DockerClient dockerClient)
     {
+        String postgresRestContainerId;
+        String mariaDbRestContainerId;
+        String sqliteRestContainerId;
         // Start PostgreSQL cheap-rest
         postgresRestContainerId = containerManager.container("cheap-rest:latest")
                 .name("multi-db-cheap-rest-postgres")
@@ -171,19 +173,15 @@ class MultiDatabaseDockerOrchestrationTest
     }
 
     @AfterAll
-    static void teardownMultiDatabaseEnvironment()
+    static void teardownMultiDatabaseEnvironment() throws IOException
     {
         if (containerManager != null) {
             containerManager.close();
         }
 
         // Clean up SQLite volume
-        try {
-            java.nio.file.Files.deleteIfExists(java.nio.file.Path.of(SQLITE_VOLUME, "cheap.db"));
-            java.nio.file.Files.deleteIfExists(java.nio.file.Path.of(SQLITE_VOLUME));
-        } catch (Exception e) {
-            // Best effort cleanup
-        }
+        Files.deleteIfExists(java.nio.file.Path.of(SQLITE_VOLUME, "cheap.db"));
+        Files.deleteIfExists(java.nio.file.Path.of(SQLITE_VOLUME));
     }
 
     @Test

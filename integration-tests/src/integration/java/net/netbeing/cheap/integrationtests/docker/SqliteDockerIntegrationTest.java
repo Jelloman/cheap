@@ -15,13 +15,15 @@ import net.netbeing.cheap.model.CatalogSpecies;
 import net.netbeing.cheap.model.Entity;
 import net.netbeing.cheap.model.PropertyDef;
 import net.netbeing.cheap.model.PropertyType;
-import net.netbeing.cheap.rest.client.CheapRestClient;
 import net.netbeing.cheap.rest.client.CheapRestClientImpl;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -43,10 +45,10 @@ import static org.junit.jupiter.api.Assertions.*;
 @Tag("sqlite")
 class SqliteDockerIntegrationTest extends BaseClientIntegrationTest
 {
-    private static CheapRestClient client;
     private static DockerContainerManager containerManager;
     private static String cheapRestContainerId;
-    private static int cheapRestPort;
+    private static String baseUrl;
+
     private static final String NETWORK_NAME = "sqlite-docker-test-network";
     private static final String SQLITE_VOLUME = System.getProperty("java.io.tmpdir") + "/cheap-sqlite-docker-test";
 
@@ -54,48 +56,52 @@ class SqliteDockerIntegrationTest extends BaseClientIntegrationTest
     static void setupDockerEnvironment()
     {
         containerManager = new DockerContainerManager(true);
-        DockerClient dockerClient = containerManager.getDockerClient();
 
         // Create network
         containerManager.createNetwork(NETWORK_NAME);
 
+        startContainer();
+    }
+
+    private static void startContainer()
+    {
+        DockerClient dockerClient = containerManager.getDockerClient();
+
         // Start cheap-rest container with SQLite
         cheapRestContainerId = containerManager.container("cheap-rest:latest")
-                .name("cheap-rest-sqlite-docker-test")
-                .env("SPRING_PROFILES_ACTIVE", "sqlite")
-                .env("CHEAP_DB_PATH", "/data/cheap.db")
-                .network(NETWORK_NAME)
-                .volume(SQLITE_VOLUME, "/data")
-                .exposePort(8080)
-                .start();
+            .name("cheap-rest-sqlite-docker-test")
+            .env("SPRING_PROFILES_ACTIVE", "sqlite")
+            .env("CHEAP_DB_PATH", "/data/cheap.db")
+            .network(NETWORK_NAME)
+            .volume(SQLITE_VOLUME, "/data")
+            .exposePort(8080)
+            .start();
 
         // Get dynamically mapped port
-        cheapRestPort = DockerTestUtils.getDynamicPort(dockerClient, cheapRestContainerId, 8080);
+        int cheapRestPort = DockerTestUtils.getDynamicPort(dockerClient, cheapRestContainerId, 8080);
         assertTrue(cheapRestPort > 0, "Failed to get dynamic port for cheap-rest container");
 
         // Wait for cheap-rest to be ready
-        String baseUrl = "http://localhost:" + cheapRestPort;
+        baseUrl = "http://localhost:" + cheapRestPort;
         assertTrue(DockerTestUtils.waitForRestServiceReady(baseUrl, 120),
-                "cheap-rest container did not become ready in time");
+            "cheap-rest container did not become ready in time");
+    }
 
-        // Initialize client
-        client = new CheapRestClientImpl(baseUrl);
+    @BeforeEach
+    void setupClient()
+    {
+        setClient(new CheapRestClientImpl(baseUrl));
     }
 
     @AfterAll
-    static void teardownDockerEnvironment()
+    static void teardownDockerEnvironment() throws IOException
     {
         if (containerManager != null) {
             containerManager.close();
         }
 
-        // Clean up SQLite volume
-        try {
-            java.nio.file.Files.deleteIfExists(java.nio.file.Path.of(SQLITE_VOLUME, "cheap.db"));
-            java.nio.file.Files.deleteIfExists(java.nio.file.Path.of(SQLITE_VOLUME));
-        } catch (Exception e) {
-            // Best effort cleanup
-        }
+        Files.deleteIfExists(java.nio.file.Path.of(SQLITE_VOLUME, "cheap.db"));
+        Files.deleteIfExists(java.nio.file.Path.of(SQLITE_VOLUME));
     }
 
     @Test
@@ -240,21 +246,10 @@ class SqliteDockerIntegrationTest extends BaseClientIntegrationTest
         containerManager.stopContainer(cheapRestContainerId);
         containerManager.removeContainer(cheapRestContainerId);
 
-        cheapRestContainerId = containerManager.container("cheap-rest:latest")
-                .name("cheap-rest-sqlite-docker-test-restarted")
-                .env("SPRING_PROFILES_ACTIVE", "sqlite")
-                .env("CHEAP_DB_PATH", "/data/cheap.db")
-                .network(NETWORK_NAME)
-                .volume(SQLITE_VOLUME, "/data")
-                .exposePort(8080)
-                .start();
-
-        cheapRestPort = DockerTestUtils.getDynamicPort(containerManager.getDockerClient(), cheapRestContainerId, 8080);
-        String newBaseUrl = "http://localhost:" + cheapRestPort;
-        assertTrue(DockerTestUtils.waitForRestServiceReady(newBaseUrl, 120));
+        startContainer();
 
         // Create new client pointing to restarted server
-        client = new CheapRestClientImpl(newBaseUrl);
+        client = new CheapRestClientImpl(baseUrl);
 
         // Re-register AspectDef in new client instance
         client.registerAspectDef(itemAspectDef);

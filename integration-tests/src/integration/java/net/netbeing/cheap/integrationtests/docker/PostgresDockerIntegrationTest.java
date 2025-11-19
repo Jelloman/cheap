@@ -15,10 +15,10 @@ import net.netbeing.cheap.model.CatalogSpecies;
 import net.netbeing.cheap.model.Entity;
 import net.netbeing.cheap.model.PropertyDef;
 import net.netbeing.cheap.model.PropertyType;
-import net.netbeing.cheap.rest.client.CheapRestClient;
 import net.netbeing.cheap.rest.client.CheapRestClientImpl;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
@@ -44,18 +44,17 @@ import static org.junit.jupiter.api.Assertions.*;
 @Tag("postgres")
 class PostgresDockerIntegrationTest extends BaseClientIntegrationTest
 {
-    private static CheapRestClient client;
+    private static String baseUrl;
     private static DockerContainerManager containerManager;
-    private static String postgresContainerId;
     private static String cheapRestContainerId;
-    private static int cheapRestPort;
+
     private static final String NETWORK_NAME = "postgres-docker-test-network";
 
     @BeforeAll
     static void setupDockerEnvironment()
     {
+        String postgresContainerId;
         containerManager = new DockerContainerManager(true);
-        DockerClient dockerClient = containerManager.getDockerClient();
 
         // Create network
         containerManager.createNetwork(NETWORK_NAME);
@@ -72,33 +71,44 @@ class PostgresDockerIntegrationTest extends BaseClientIntegrationTest
                 .start();
 
         // Wait for PostgreSQL to be ready
+        DockerClient dockerClient = containerManager.getDockerClient();
         assertTrue(DockerTestUtils.waitForDatabaseReady(dockerClient, postgresContainerId, 60),
                 "PostgreSQL container did not become ready in time");
 
+        startContainer();
+    }
+
+    private static void startContainer()
+    {
+        int cheapRestPort;
         // Start cheap-rest container
         cheapRestContainerId = containerManager.container("cheap-rest:latest")
-                .name("cheap-rest-postgres-docker-test")
-                .env("SPRING_PROFILES_ACTIVE", "postgres")
-                .env("SPRING_DATASOURCE_URL", "jdbc:postgresql://postgres-docker-test:5432/cheap")
-                .env("SPRING_DATASOURCE_USERNAME", "cheap_user")
-                .env("SPRING_DATASOURCE_PASSWORD", "test_password")
-                .env("DB_PASSWORD", "test_password")
-                .network(NETWORK_NAME)
-                .exposePort(8080)
-                .start();
+            .name("cheap-rest-postgres-docker-test")
+            .env("SPRING_PROFILES_ACTIVE", "postgres")
+            .env("SPRING_DATASOURCE_URL", "jdbc:postgresql://postgres-docker-test:5432/cheap")
+            .env("SPRING_DATASOURCE_USERNAME", "cheap_user")
+            .env("SPRING_DATASOURCE_PASSWORD", "test_password")
+            .env("DB_PASSWORD", "test_password")
+            .network(NETWORK_NAME)
+            .exposePort(8080)
+            .start();
 
         // Get dynamically mapped port
+        DockerClient dockerClient = containerManager.getDockerClient();
         cheapRestPort = DockerTestUtils.getDynamicPort(dockerClient, cheapRestContainerId, 8080);
         assertTrue(cheapRestPort > 0, "Failed to get dynamic port for cheap-rest container");
 
         // Wait for cheap-rest to be ready
-        String baseUrl = "http://localhost:" + cheapRestPort;
-        assertTrue(DockerTestUtils.waitForRestServiceReady(baseUrl, 120),
-                "cheap-rest container did not become ready in time");
-
-        // Initialize client
-        client = new CheapRestClientImpl(baseUrl);
+        baseUrl = "http://localhost:" + cheapRestPort;
+        assertTrue(DockerTestUtils.waitForRestServiceReady(baseUrl, 120), "cheap-rest container did not become ready in time");
     }
+
+    @BeforeEach
+    void setupClient()
+    {
+        setClient(new CheapRestClientImpl(baseUrl));
+    }
+
 
     @AfterAll
     static void teardownDockerEnvironment()
@@ -250,23 +260,10 @@ class PostgresDockerIntegrationTest extends BaseClientIntegrationTest
         containerManager.stopContainer(cheapRestContainerId);
         containerManager.removeContainer(cheapRestContainerId);
 
-        cheapRestContainerId = containerManager.container("cheap-rest:latest")
-                .name("cheap-rest-postgres-docker-test-restarted")
-                .env("SPRING_PROFILES_ACTIVE", "postgres")
-                .env("SPRING_DATASOURCE_URL", "jdbc:postgresql://postgres-docker-test:5432/cheap")
-                .env("SPRING_DATASOURCE_USERNAME", "cheap_user")
-                .env("SPRING_DATASOURCE_PASSWORD", "test_password")
-                .env("DB_PASSWORD", "test_password")
-                .network(NETWORK_NAME)
-                .exposePort(8080)
-                .start();
-
-        cheapRestPort = DockerTestUtils.getDynamicPort(containerManager.getDockerClient(), cheapRestContainerId, 8080);
-        String newBaseUrl = "http://localhost:" + cheapRestPort;
-        assertTrue(DockerTestUtils.waitForRestServiceReady(newBaseUrl, 120));
+        startContainer();
 
         // Create new client pointing to restarted server
-        client = new CheapRestClientImpl(newBaseUrl);
+        client = new CheapRestClientImpl(baseUrl);
 
         // Re-register AspectDef in new client instance
         client.registerAspectDef(itemAspectDef);

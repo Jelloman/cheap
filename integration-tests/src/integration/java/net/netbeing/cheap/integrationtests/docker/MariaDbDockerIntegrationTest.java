@@ -15,10 +15,10 @@ import net.netbeing.cheap.model.CatalogSpecies;
 import net.netbeing.cheap.model.Entity;
 import net.netbeing.cheap.model.PropertyDef;
 import net.netbeing.cheap.model.PropertyType;
-import net.netbeing.cheap.rest.client.CheapRestClient;
 import net.netbeing.cheap.rest.client.CheapRestClientImpl;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
@@ -44,16 +44,16 @@ import static org.junit.jupiter.api.Assertions.*;
 @Tag("mariadb")
 class MariaDbDockerIntegrationTest extends BaseClientIntegrationTest
 {
-    private static CheapRestClient client;
     private static DockerContainerManager containerManager;
-    private static String mariaDbContainerId;
     private static String cheapRestContainerId;
-    private static int cheapRestPort;
+    private static String baseUrl;
+
     private static final String NETWORK_NAME = "mariadb-docker-test-network";
 
     @BeforeAll
     static void setupDockerEnvironment()
     {
+        String mariaDbContainerId;
         containerManager = new DockerContainerManager(true);
         DockerClient dockerClient = containerManager.getDockerClient();
 
@@ -77,28 +77,35 @@ class MariaDbDockerIntegrationTest extends BaseClientIntegrationTest
                 "MariaDB container did not become ready in time");
 
         // Start cheap-rest container
-        cheapRestContainerId = containerManager.container("cheap-rest:latest")
-                .name("cheap-rest-mariadb-docker-test")
-                .env("SPRING_PROFILES_ACTIVE", "mariadb")
-                .env("SPRING_DATASOURCE_URL", "jdbc:mariadb://mariadb-docker-test:3306/cheap")
-                .env("SPRING_DATASOURCE_USERNAME", "cheap_user")
-                .env("SPRING_DATASOURCE_PASSWORD", "test_password")
-                .env("DB_PASSWORD", "test_password")
-                .network(NETWORK_NAME)
-                .exposePort(8080)
-                .start();
+        startContainer();
+    }
 
-        // Get dynamically mapped port
-        cheapRestPort = DockerTestUtils.getDynamicPort(dockerClient, cheapRestContainerId, 8080);
+    private static void startContainer()
+    {
+        int cheapRestPort;
+        cheapRestContainerId = containerManager.container("cheap-rest:latest")
+            .name("cheap-rest-mariadb-docker-test-restarted")
+            .env("SPRING_PROFILES_ACTIVE", "mariadb")
+            .env("SPRING_DATASOURCE_URL", "jdbc:mariadb://mariadb-docker-test:3306/cheap")
+            .env("SPRING_DATASOURCE_USERNAME", "cheap_user")
+            .env("SPRING_DATASOURCE_PASSWORD", "test_password")
+            .env("DB_PASSWORD", "test_password")
+            .network(NETWORK_NAME)
+            .exposePort(8080)
+            .start();
+
+        cheapRestPort = DockerTestUtils.getDynamicPort(containerManager.getDockerClient(), cheapRestContainerId, 8080);
         assertTrue(cheapRestPort > 0, "Failed to get dynamic port for cheap-rest container");
 
-        // Wait for cheap-rest to be ready
-        String baseUrl = "http://localhost:" + cheapRestPort;
+        baseUrl = "http://localhost:" + cheapRestPort;
         assertTrue(DockerTestUtils.waitForRestServiceReady(baseUrl, 120),
-                "cheap-rest container did not become ready in time");
+            "cheap-rest container did not become ready in time");
+    }
 
-        // Initialize client
-        client = new CheapRestClientImpl(baseUrl);
+    @BeforeEach
+    void setupClient()
+    {
+        setClient(new CheapRestClientImpl(baseUrl));
     }
 
     @AfterAll
@@ -251,23 +258,10 @@ class MariaDbDockerIntegrationTest extends BaseClientIntegrationTest
         containerManager.stopContainer(cheapRestContainerId);
         containerManager.removeContainer(cheapRestContainerId);
 
-        cheapRestContainerId = containerManager.container("cheap-rest:latest")
-                .name("cheap-rest-mariadb-docker-test-restarted")
-                .env("SPRING_PROFILES_ACTIVE", "mariadb")
-                .env("SPRING_DATASOURCE_URL", "jdbc:mariadb://mariadb-docker-test:3306/cheap")
-                .env("SPRING_DATASOURCE_USERNAME", "cheap_user")
-                .env("SPRING_DATASOURCE_PASSWORD", "test_password")
-                .env("DB_PASSWORD", "test_password")
-                .network(NETWORK_NAME)
-                .exposePort(8080)
-                .start();
-
-        cheapRestPort = DockerTestUtils.getDynamicPort(containerManager.getDockerClient(), cheapRestContainerId, 8080);
-        String newBaseUrl = "http://localhost:" + cheapRestPort;
-        assertTrue(DockerTestUtils.waitForRestServiceReady(newBaseUrl, 120));
+        startContainer();
 
         // Create new client pointing to restarted server
-        client = new CheapRestClientImpl(newBaseUrl);
+        client = new CheapRestClientImpl(baseUrl);
 
         // Re-register AspectDef in new client instance
         client.registerAspectDef(itemAspectDef);

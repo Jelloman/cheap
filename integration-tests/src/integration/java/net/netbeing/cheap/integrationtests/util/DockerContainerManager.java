@@ -11,6 +11,7 @@ import com.github.dockerjava.core.DockerClientImpl;
 import com.github.dockerjava.httpclient5.ApacheDockerHttpClient;
 import com.github.dockerjava.transport.DockerHttpClient;
 import lombok.extern.slf4j.Slf4j;
+import net.netbeing.cheap.util.CheapException;
 
 import java.time.Duration;
 import java.util.*;
@@ -20,19 +21,12 @@ import java.util.*;
  * Provides a fluent API for container configuration and handles cleanup on test completion.
  */
 @Slf4j
-public class DockerContainerManager implements AutoCloseable {
-
+public class DockerContainerManager implements AutoCloseable
+{
     private final DockerClient dockerClient;
     private final List<String> managedContainers;
     private final List<String> managedNetworks;
     private final boolean logContainerOutput;
-
-    /**
-     * Create a new DockerContainerManager with default settings.
-     */
-    public DockerContainerManager() {
-        this(true);
-    }
 
     /**
      * Create a new DockerContainerManager.
@@ -73,7 +67,9 @@ public class DockerContainerManager implements AutoCloseable {
      * @param networkName Network name
      * @return Network ID
      */
-    public String createNetwork(String networkName) {
+    @SuppressWarnings("UnusedReturnValue")
+    public String createNetwork(String networkName)
+    {
         log.info("Creating Docker network: {}", networkName);
 
         try {
@@ -89,7 +85,7 @@ public class DockerContainerManager implements AutoCloseable {
 
         } catch (Exception e) {
             log.error("Error creating network {}", networkName, e);
-            throw new RuntimeException("Failed to create network: " + networkName, e);
+            throw new CheapException("Failed to create network: " + networkName, e);
         }
     }
 
@@ -122,7 +118,7 @@ public class DockerContainerManager implements AutoCloseable {
 
         } catch (Exception e) {
             log.error("Error starting container {}", containerId, e);
-            throw new RuntimeException("Failed to start container: " + containerId, e);
+            throw new CheapException("Failed to start container: " + containerId, e);
         }
     }
 
@@ -268,17 +264,6 @@ public class DockerContainerManager implements AutoCloseable {
         }
 
         /**
-         * Add multiple environment variables.
-         *
-         * @param env Map of environment variables
-         * @return This builder
-         */
-        public ContainerBuilder env(Map<String, String> env) {
-            this.environment.putAll(env);
-            return this;
-        }
-
-        /**
          * Expose a port with dynamic host port mapping.
          *
          * @param containerPort Port to expose
@@ -296,6 +281,7 @@ public class DockerContainerManager implements AutoCloseable {
          * @param containerPort Container port
          * @return This builder
          */
+        @SuppressWarnings("unused")
         public ContainerBuilder bindPort(int hostPort, int containerPort) {
             this.portBindings.add(hostPort + ":" + containerPort);
             return this;
@@ -406,7 +392,7 @@ public class DockerContainerManager implements AutoCloseable {
 
             } catch (Exception e) {
                 log.error("Error creating container from image {}", imageName, e);
-                throw new RuntimeException("Failed to create container: " + imageName, e);
+                throw new CheapException("Failed to create container: " + imageName, e);
             }
         }
 

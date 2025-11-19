@@ -2,7 +2,6 @@ package net.netbeing.cheap.integrationtests.util;
 
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.command.InspectContainerResponse;
-import com.github.dockerjava.api.model.ContainerPort;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -17,9 +16,11 @@ import java.util.Map;
  * Provides methods for waiting on container readiness and retrieving container information.
  */
 @Slf4j
-public class DockerTestUtils {
+public class DockerTestUtils
+{
 
-    private DockerTestUtils() {
+    private DockerTestUtils()
+    {
         // Utility class
     }
 
@@ -27,12 +28,13 @@ public class DockerTestUtils {
      * Wait for a database container to be ready by checking its health status.
      * Does NOT attempt direct database connections.
      *
-     * @param dockerClient Docker client instance
-     * @param containerId Container ID or name
+     * @param dockerClient   Docker client instance
+     * @param containerId    Container ID or name
      * @param maxWaitSeconds Maximum time to wait in seconds
      * @return true if database is ready, false if timeout
      */
-    public static boolean waitForDatabaseReady(DockerClient dockerClient, String containerId, int maxWaitSeconds) {
+    public static boolean waitForDatabaseReady(DockerClient dockerClient, String containerId, int maxWaitSeconds)
+    {
         log.info("Waiting for database container {} to be ready (max {} seconds)...", containerId, maxWaitSeconds);
 
         long startTime = System.currentTimeMillis();
@@ -59,7 +61,7 @@ public class DockerTestUtils {
 
                     if ("healthy".equals(healthStatus)) {
                         log.info("Database container {} is ready after {} seconds",
-                                containerId, (System.currentTimeMillis() - startTime) / 1000);
+                            containerId, (System.currentTimeMillis() - startTime) / 1000);
                         return true;
                     }
                 } else {
@@ -80,7 +82,7 @@ public class DockerTestUtils {
                 log.debug("Attempt {}: Error checking container {}: {}", attempt, containerId, e.getMessage());
                 try {
                     Thread.sleep(1000);
-                } catch (InterruptedException ie) {
+                } catch (InterruptedException _) {
                     Thread.currentThread().interrupt();
                     return false;
                 }
@@ -94,16 +96,17 @@ public class DockerTestUtils {
     /**
      * Wait for a REST service to be ready by polling its health endpoint.
      *
-     * @param baseUrl Base URL of the REST service (e.g., "http://localhost:8080")
+     * @param baseUrl        Base URL of the REST service (e.g., "http://localhost:8080")
      * @param maxWaitSeconds Maximum time to wait in seconds
      * @return true if service is ready, false if timeout
      */
-    public static boolean waitForRestServiceReady(String baseUrl, int maxWaitSeconds) {
+    public static boolean waitForRestServiceReady(String baseUrl, int maxWaitSeconds)
+    {
         log.info("Waiting for REST service at {} to be ready (max {} seconds)...", baseUrl, maxWaitSeconds);
 
         WebClient webClient = WebClient.builder()
-                .baseUrl(baseUrl)
-                .build();
+            .baseUrl(baseUrl)
+            .build();
 
         long startTime = System.currentTimeMillis();
         long maxWaitMillis = maxWaitSeconds * 1000L;
@@ -113,20 +116,20 @@ public class DockerTestUtils {
             attempt++;
             try {
                 Boolean isHealthy = webClient.get()
-                        .uri("/actuator/health")
-                        .retrieve()
-                        .onStatus(
-                                status -> status != HttpStatus.OK,
-                                response -> Mono.empty()
-                        )
-                        .bodyToMono(Map.class)
-                        .map(body -> "UP".equals(body.get("status")))
-                        .timeout(Duration.ofSeconds(3))
-                        .block();
+                    .uri("/actuator/health")
+                    .retrieve()
+                    .onStatus(
+                        status -> status != HttpStatus.OK,
+                        response -> Mono.empty()
+                    )
+                    .bodyToMono(Map.class)
+                    .map(body -> "UP".equals(body.get("status")))
+                    .timeout(Duration.ofSeconds(3))
+                    .block();
 
                 if (Boolean.TRUE.equals(isHealthy)) {
                     log.info("REST service at {} is ready after {} seconds",
-                            baseUrl, (System.currentTimeMillis() - startTime) / 1000);
+                        baseUrl, (System.currentTimeMillis() - startTime) / 1000);
                     return true;
                 }
 
@@ -154,12 +157,13 @@ public class DockerTestUtils {
     /**
      * Get the dynamically mapped host port for a container's exposed port.
      *
-     * @param dockerClient Docker client instance
-     * @param containerId Container ID or name
+     * @param dockerClient  Docker client instance
+     * @param containerId   Container ID or name
      * @param containerPort Port number exposed by the container
      * @return Host port number, or -1 if not found
      */
-    public static int getDynamicPort(DockerClient dockerClient, String containerId, int containerPort) {
+    public static int getDynamicPort(DockerClient dockerClient, String containerId, int containerPort)
+    {
         try {
             InspectContainerResponse inspection = dockerClient.inspectContainerCmd(containerId).exec();
 
@@ -185,7 +189,8 @@ public class DockerTestUtils {
                         Integer hostPort = binding[0].getHostPortSpec() != null ?
                             Integer.parseInt(binding[0].getHostPortSpec()) : null;
                         if (hostPort != null) {
-                            log.debug("Container {} port {} is mapped to host port {}", containerId, containerPort, hostPort);
+                            log.debug("Container {} port {} is mapped to host port {}", containerId, containerPort,
+                                hostPort);
                             return hostPort;
                         }
                     }
@@ -206,38 +211,36 @@ public class DockerTestUtils {
      * This is primarily for debugging purposes.
      *
      * @param dockerClient Docker client instance
-     * @param containerId Container ID or name
-     * @param command Command to execute (e.g., ["sh", "-c", "ls -la"])
+     * @param containerId  Container ID or name
+     * @param command      Command to execute (e.g., ["sh", "-c", "ls -la"])
      * @return Command output, or null if execution failed
      */
-    public static String execInContainer(DockerClient dockerClient, String containerId, String... command) {
+    @SuppressWarnings("unused")
+    public static String execInContainer(DockerClient dockerClient, String containerId, String... command) throws InterruptedException
+    {
         log.debug("Executing command in container {}: {}", containerId, Arrays.toString(command));
 
-        try {
-            String execId = dockerClient.execCreateCmd(containerId)
-                    .withCmd(command)
-                    .withAttachStdout(true)
-                    .withAttachStderr(true)
-                    .exec()
-                    .getId();
+        String execId = dockerClient.execCreateCmd(containerId)
+            .withCmd(command)
+            .withAttachStdout(true)
+            .withAttachStderr(true)
+            .exec()
+            .getId();
 
-            StringBuilder output = new StringBuilder();
-            dockerClient.execStartCmd(execId)
-                    .exec(new com.github.dockerjava.api.async.ResultCallback.Adapter<>() {
-                        @Override
-                        public void onNext(com.github.dockerjava.api.model.Frame frame) {
-                            output.append(new String(frame.getPayload()));
-                        }
-                    })
-                    .awaitCompletion();
+        StringBuilder output = new StringBuilder();
+        dockerClient.execStartCmd(execId)
+            .exec(new com.github.dockerjava.api.async.ResultCallback.Adapter<>()
+            {
+                @Override
+                public void onNext(com.github.dockerjava.api.model.Frame frame)
+                {
+                    output.append(new String(frame.getPayload()));
+                }
+            })
+            .awaitCompletion();
 
-            String result = output.toString();
-            log.debug("Command output: {}", result);
-            return result;
-
-        } catch (Exception e) {
-            log.error("Error executing command in container {}", containerId, e);
-            return null;
-        }
+        String result = output.toString();
+        log.debug("Command output: {}", result);
+        return result;
     }
 }
