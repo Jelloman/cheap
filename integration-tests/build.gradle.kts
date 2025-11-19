@@ -74,15 +74,17 @@ java {
     }
 }
 
-// Create integration test task
+// Create integration test task (embedded tests only, excludes Docker)
 val integrationTest = tasks.register<Test>("integrationTest") {
-    description = "Runs integration tests"
+    description = "Runs embedded integration tests (excludes Docker)"
     group = "verification"
 
     testClassesDirs = sourceSets["integration"].output.classesDirs
     classpath = sourceSets["integration"].runtimeClasspath
 
-    useJUnitPlatform()
+    useJUnitPlatform {
+        excludeTags("docker")
+    }
 
     shouldRunAfter(tasks.test)
 
