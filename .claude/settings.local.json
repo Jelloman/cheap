@@ -12,7 +12,12 @@
       "Bash(/dev/null)",
       "Bash(git add:*)",
       "Bash(git reset:*)",
-      "Bash(timeout 120 ./gradlew:*)"
+      "Bash(timeout 120 ./gradlew:*)",
+      "Bash(../gradlew integrationTest:*)",
+      "Bash(git stash pop:*)",
+      "Bash(git checkout:*)",
+      "Bash(git stash drop:*)",
+      "Bash(docker build:*)"
     ],
     "deny": [],
     "ask": []

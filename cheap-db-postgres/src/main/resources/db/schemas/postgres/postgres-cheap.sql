@@ -15,7 +15,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 --);
 
 -- AspectDef: First-class entity defining aspect structure and metadata
-CREATE TABLE aspect_def (
+CREATE TABLE IF NOT EXISTS aspect_def (
     aspect_def_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     name TEXT NOT NULL UNIQUE,
     hash_version BIGINT, -- Hash-based version (implicit, based on content)
@@ -27,7 +27,7 @@ CREATE TABLE aspect_def (
 
 -- PropertyDef: Defines property structure within AspectDefs
 -- No global ID - identified by name within AspectDef
-CREATE TABLE property_def (
+CREATE TABLE IF NOT EXISTS property_def (
     aspect_def_id UUID NOT NULL REFERENCES aspect_def(aspect_def_id) ON DELETE CASCADE,
     name TEXT NOT NULL,
     property_index INTEGER NOT NULL,
@@ -45,7 +45,7 @@ CREATE TABLE property_def (
 );
 
 -- Catalog: Extends Entity, represents catalog instances
-CREATE TABLE catalog (
+CREATE TABLE IF NOT EXISTS catalog (
     catalog_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     species TEXT NOT NULL CHECK (species IN ('SOURCE', 'SINK', 'MIRROR', 'CACHE', 'CLONE', 'FORK')),
     uri TEXT,
@@ -54,7 +54,7 @@ CREATE TABLE catalog (
 );
 
 -- Link table: Catalog to AspectDef (many-to-many)
-CREATE TABLE catalog_aspect_def (
+CREATE TABLE IF NOT EXISTS catalog_aspect_def (
     catalog_id UUID NOT NULL REFERENCES catalog(catalog_id) ON DELETE CASCADE,
     aspect_def_id UUID NOT NULL REFERENCES aspect_def(aspect_def_id) ON DELETE CASCADE,
     PRIMARY KEY (catalog_id, aspect_def_id)
@@ -63,7 +63,7 @@ CREATE TABLE catalog_aspect_def (
 -- Hierarchy: Hierarchy instances within catalogs
 -- No global ID - identified by name within catalog
 -- Hierarchy type and name are stored directly in the hierarchy
-CREATE TABLE hierarchy (
+CREATE TABLE IF NOT EXISTS hierarchy (
     catalog_id UUID NOT NULL REFERENCES catalog(catalog_id) ON DELETE CASCADE,
     name TEXT NOT NULL,
     hierarchy_type TEXT NOT NULL CHECK (hierarchy_type IN ('EL', 'ES', 'ED', 'ET', 'AM')),
@@ -73,7 +73,7 @@ CREATE TABLE hierarchy (
 
 -- Aspect: Aspect instances attached to entities
 -- No global ID - identified by entity_id + aspect_def + catalog combination
-CREATE TABLE aspect (
+CREATE TABLE IF NOT EXISTS aspect (
 --    entity_id UUID NOT NULL REFERENCES entity(entity_id) ON DELETE CASCADE,
     entity_id UUID NOT NULL,
     aspect_def_id UUID NOT NULL REFERENCES aspect_def(aspect_def_id) ON DELETE CASCADE,
@@ -91,7 +91,7 @@ CREATE TABLE aspect (
 -- For single-valued properties, value_index is always 0
 -- Note that this table is insanely inefficient; it's expected aspects will
 -- mainly be stored in dedicated tables.
-CREATE TABLE property_value (
+CREATE TABLE IF NOT EXISTS property_value (
     entity_id UUID NOT NULL,
     aspect_def_id UUID NOT NULL,
     catalog_id UUID NOT NULL,
@@ -111,7 +111,7 @@ CREATE TABLE property_value (
 -- ========== HIERARCHY CONTENT TABLES ==========
 
 -- Entity List Hierarchy: Ordered list with possible duplicates
-CREATE TABLE hierarchy_entity_list (
+CREATE TABLE IF NOT EXISTS hierarchy_entity_list (
     catalog_id UUID NOT NULL REFERENCES catalog(catalog_id) ON DELETE CASCADE,
     hierarchy_name TEXT NOT NULL,
 --    entity_id UUID NOT NULL REFERENCES entity(entity_id) ON DELETE CASCADE,
@@ -122,7 +122,7 @@ CREATE TABLE hierarchy_entity_list (
 );
 
 -- Entity Set Hierarchy: Unique entities (possibly ordered)
-CREATE TABLE hierarchy_entity_set (
+CREATE TABLE IF NOT EXISTS hierarchy_entity_set (
     catalog_id UUID NOT NULL REFERENCES catalog(catalog_id) ON DELETE CASCADE,
     hierarchy_name TEXT NOT NULL,
 --    entity_id UUID NOT NULL REFERENCES entity(entity_id) ON DELETE CASCADE,
@@ -133,7 +133,7 @@ CREATE TABLE hierarchy_entity_set (
 );
 
 -- Entity Directory Hierarchy: String-to-entity mapping
-CREATE TABLE hierarchy_entity_directory (
+CREATE TABLE IF NOT EXISTS hierarchy_entity_directory (
     catalog_id UUID NOT NULL REFERENCES catalog(catalog_id) ON DELETE CASCADE,
     hierarchy_name TEXT NOT NULL,
     entity_key TEXT NOT NULL,
@@ -145,7 +145,7 @@ CREATE TABLE hierarchy_entity_directory (
 );
 
 -- Entity Tree Hierarchy: Tree structure with named nodes
-CREATE TABLE hierarchy_entity_tree_node (
+CREATE TABLE IF NOT EXISTS hierarchy_entity_tree_node (
     node_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     catalog_id UUID NOT NULL REFERENCES catalog(catalog_id) ON DELETE CASCADE,
     hierarchy_name TEXT NOT NULL,
@@ -160,7 +160,7 @@ CREATE TABLE hierarchy_entity_tree_node (
 );
 
 -- Aspect Map Hierarchy: Entity-to-aspect mapping for single aspect type
-CREATE TABLE hierarchy_aspect_map (
+CREATE TABLE IF NOT EXISTS hierarchy_aspect_map (
     catalog_id UUID NOT NULL REFERENCES catalog(catalog_id) ON DELETE CASCADE,
     hierarchy_name TEXT NOT NULL,
 --    entity_id UUID NOT NULL REFERENCES entity(entity_id) ON DELETE CASCADE,
@@ -175,58 +175,58 @@ CREATE TABLE hierarchy_aspect_map (
 -- ========== INDEXES FOR PERFORMANCE ==========
 
 -- AspectDef indexes
-CREATE INDEX idx_aspect_def_name ON aspect_def(name);
+CREATE INDEX IF NOT EXISTS idx_aspect_def_name ON aspect_def(name);
 
 -- PropertyDef indexes
-CREATE INDEX idx_property_def_aspect_def_id ON property_def(aspect_def_id);
-CREATE INDEX idx_property_def_name ON property_def(name);
+CREATE INDEX IF NOT EXISTS idx_property_def_aspect_def_id ON property_def(aspect_def_id);
+CREATE INDEX IF NOT EXISTS idx_property_def_name ON property_def(name);
 
 -- Catalog indexes
-CREATE INDEX idx_catalog_species ON catalog(species);
-CREATE INDEX idx_catalog_upstream ON catalog(upstream_catalog_id);
+CREATE INDEX IF NOT EXISTS idx_catalog_species ON catalog(species);
+CREATE INDEX IF NOT EXISTS idx_catalog_upstream ON catalog(upstream_catalog_id);
 
 -- Hierarchy indexes
-CREATE INDEX idx_hierarchy_catalog_id ON hierarchy(catalog_id);
-CREATE INDEX idx_hierarchy_name ON hierarchy(name);
-CREATE INDEX idx_hierarchy_type ON hierarchy(hierarchy_type);
+CREATE INDEX IF NOT EXISTS idx_hierarchy_catalog_id ON hierarchy(catalog_id);
+CREATE INDEX IF NOT EXISTS idx_hierarchy_name ON hierarchy(name);
+CREATE INDEX IF NOT EXISTS idx_hierarchy_type ON hierarchy(hierarchy_type);
 
 -- Aspect indexes
-CREATE INDEX idx_aspect_entity_id ON aspect(entity_id);
-CREATE INDEX idx_aspect_def_id ON aspect(aspect_def_id);
-CREATE INDEX idx_aspect_catalog_id ON aspect(catalog_id);
-CREATE INDEX idx_aspect_hierarchy_name ON aspect(hierarchy_name);
+CREATE INDEX IF NOT EXISTS idx_aspect_entity_id ON aspect(entity_id);
+CREATE INDEX IF NOT EXISTS idx_aspect_def_id ON aspect(aspect_def_id);
+CREATE INDEX IF NOT EXISTS idx_aspect_catalog_id ON aspect(catalog_id);
+CREATE INDEX IF NOT EXISTS idx_aspect_hierarchy_name ON aspect(hierarchy_name);
 
 -- Property value indexes
-CREATE INDEX idx_property_value_entity_id ON property_value(entity_id);
-CREATE INDEX idx_property_value_aspect_def_id ON property_value(aspect_def_id);
-CREATE INDEX idx_property_value_catalog_id ON property_value(catalog_id);
-CREATE INDEX idx_property_value_name ON property_value(property_name);
+CREATE INDEX IF NOT EXISTS idx_property_value_entity_id ON property_value(entity_id);
+CREATE INDEX IF NOT EXISTS idx_property_value_aspect_def_id ON property_value(aspect_def_id);
+CREATE INDEX IF NOT EXISTS idx_property_value_catalog_id ON property_value(catalog_id);
+CREATE INDEX IF NOT EXISTS idx_property_value_name ON property_value(property_name);
 
 -- Hierarchy content indexes
-CREATE INDEX idx_hierarchy_entity_list_catalog_id ON hierarchy_entity_list(catalog_id);
-CREATE INDEX idx_hierarchy_entity_list_name ON hierarchy_entity_list(hierarchy_name);
-CREATE INDEX idx_hierarchy_entity_list_entity_id ON hierarchy_entity_list(entity_id);
-CREATE INDEX idx_hierarchy_entity_list_order ON hierarchy_entity_list(list_order);
+CREATE INDEX IF NOT EXISTS idx_hierarchy_entity_list_catalog_id ON hierarchy_entity_list(catalog_id);
+CREATE INDEX IF NOT EXISTS idx_hierarchy_entity_list_name ON hierarchy_entity_list(hierarchy_name);
+CREATE INDEX IF NOT EXISTS idx_hierarchy_entity_list_entity_id ON hierarchy_entity_list(entity_id);
+CREATE INDEX IF NOT EXISTS idx_hierarchy_entity_list_order ON hierarchy_entity_list(list_order);
 
-CREATE INDEX idx_hierarchy_entity_set_catalog_id ON hierarchy_entity_set(catalog_id);
-CREATE INDEX idx_hierarchy_entity_set_name ON hierarchy_entity_set(hierarchy_name);
-CREATE INDEX idx_hierarchy_entity_set_entity_id ON hierarchy_entity_set(entity_id);
+CREATE INDEX IF NOT EXISTS idx_hierarchy_entity_set_catalog_id ON hierarchy_entity_set(catalog_id);
+CREATE INDEX IF NOT EXISTS idx_hierarchy_entity_set_name ON hierarchy_entity_set(hierarchy_name);
+CREATE INDEX IF NOT EXISTS idx_hierarchy_entity_set_entity_id ON hierarchy_entity_set(entity_id);
 
-CREATE INDEX idx_hierarchy_entity_directory_catalog_id ON hierarchy_entity_directory(catalog_id);
-CREATE INDEX idx_hierarchy_entity_directory_name ON hierarchy_entity_directory(hierarchy_name);
-CREATE INDEX idx_hierarchy_entity_directory_entity_id ON hierarchy_entity_directory(entity_id);
-CREATE INDEX idx_hierarchy_entity_directory_key ON hierarchy_entity_directory(entity_key);
+CREATE INDEX IF NOT EXISTS idx_hierarchy_entity_directory_catalog_id ON hierarchy_entity_directory(catalog_id);
+CREATE INDEX IF NOT EXISTS idx_hierarchy_entity_directory_name ON hierarchy_entity_directory(hierarchy_name);
+CREATE INDEX IF NOT EXISTS idx_hierarchy_entity_directory_entity_id ON hierarchy_entity_directory(entity_id);
+CREATE INDEX IF NOT EXISTS idx_hierarchy_entity_directory_key ON hierarchy_entity_directory(entity_key);
 
-CREATE INDEX idx_hierarchy_entity_tree_catalog_id ON hierarchy_entity_tree_node(catalog_id);
-CREATE INDEX idx_hierarchy_entity_tree_name ON hierarchy_entity_tree_node(hierarchy_name);
-CREATE INDEX idx_hierarchy_entity_tree_parent_id ON hierarchy_entity_tree_node(parent_node_id);
-CREATE INDEX idx_hierarchy_entity_tree_entity_id ON hierarchy_entity_tree_node(entity_id);
-CREATE INDEX idx_hierarchy_entity_tree_path ON hierarchy_entity_tree_node(node_path);
+CREATE INDEX IF NOT EXISTS idx_hierarchy_entity_tree_catalog_id ON hierarchy_entity_tree_node(catalog_id);
+CREATE INDEX IF NOT EXISTS idx_hierarchy_entity_tree_name ON hierarchy_entity_tree_node(hierarchy_name);
+CREATE INDEX IF NOT EXISTS idx_hierarchy_entity_tree_parent_id ON hierarchy_entity_tree_node(parent_node_id);
+CREATE INDEX IF NOT EXISTS idx_hierarchy_entity_tree_entity_id ON hierarchy_entity_tree_node(entity_id);
+CREATE INDEX IF NOT EXISTS idx_hierarchy_entity_tree_path ON hierarchy_entity_tree_node(node_path);
 
-CREATE INDEX idx_hierarchy_aspect_map_catalog_id ON hierarchy_aspect_map(catalog_id);
-CREATE INDEX idx_hierarchy_aspect_map_name ON hierarchy_aspect_map(hierarchy_name);
-CREATE INDEX idx_hierarchy_aspect_map_entity_id ON hierarchy_aspect_map(entity_id);
-CREATE INDEX idx_hierarchy_aspect_map_aspect_def_id ON hierarchy_aspect_map(aspect_def_id);
+CREATE INDEX IF NOT EXISTS idx_hierarchy_aspect_map_catalog_id ON hierarchy_aspect_map(catalog_id);
+CREATE INDEX IF NOT EXISTS idx_hierarchy_aspect_map_name ON hierarchy_aspect_map(hierarchy_name);
+CREATE INDEX IF NOT EXISTS idx_hierarchy_aspect_map_entity_id ON hierarchy_aspect_map(entity_id);
+CREATE INDEX IF NOT EXISTS idx_hierarchy_aspect_map_aspect_def_id ON hierarchy_aspect_map(aspect_def_id);
 
 -- ========== COMMENTS FOR DOCUMENTATION ==========
 

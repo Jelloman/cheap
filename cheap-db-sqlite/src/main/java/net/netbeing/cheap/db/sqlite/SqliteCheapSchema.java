@@ -17,6 +17,8 @@
 package net.netbeing.cheap.db.sqlite;
 
 import org.jetbrains.annotations.NotNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.sql.DataSource;
 import java.nio.charset.StandardCharsets;
@@ -44,6 +46,8 @@ import java.util.List;
  */
 public class SqliteCheapSchema
 {
+    private static final Logger logger = LoggerFactory.getLogger(SqliteCheapSchema.class);
+
     /**
      * Loads a DDL resource file from the classpath.
      *
@@ -72,6 +76,10 @@ public class SqliteCheapSchema
      */
     private static void executeDdl(@NotNull DataSource dataSource, String ddlContent) throws SQLException
     {
+        if (logger.isDebugEnabled()) {
+            logger.debug("executeDdl()", new RuntimeException());
+        }
+
         try (Connection conn = dataSource.getConnection()) {
             executeDdl(conn, ddlContent);
         }

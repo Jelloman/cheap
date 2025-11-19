@@ -17,6 +17,8 @@
 package net.netbeing.cheap.db.mariadb;
 
 import org.jetbrains.annotations.NotNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.sql.DataSource;
 import java.nio.charset.StandardCharsets;
@@ -48,6 +50,8 @@ import java.sql.Statement;
  */
 public class MariaDbCheapSchema
 {
+    private static final Logger logger = LoggerFactory.getLogger(MariaDbCheapSchema.class);
+
     /**
      * Loads a DDL resource file from the classpath.
      *
@@ -77,6 +81,10 @@ public class MariaDbCheapSchema
      */
     private static void executeDdl(@NotNull DataSource dataSource, String ddlContent) throws SQLException
     {
+        if (logger.isDebugEnabled()) {
+            logger.debug("executeDdl()", new RuntimeException());
+        }
+
         try (Connection conn = dataSource.getConnection(); Statement stmt = conn.createStatement()) {
             stmt.execute(ddlContent);
         }
