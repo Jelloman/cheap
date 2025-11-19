@@ -33,9 +33,12 @@ COPY cheap-rest/src cheap-rest/src
 RUN gradle :cheap-rest:bootJar --no-daemon
 
 # Stage 2: Create runtime image
-FROM eclipse-temurin:24-jre
+FROM eclipse-temurin:24-jre-alpine
 
 WORKDIR /app
+
+# Install wget for health checks (alpine includes wget by default)
+# Note: Alpine base images are smaller and more secure
 
 # Copy the built JAR from build stage
 COPY --from=build /app/cheap-rest/build/libs/cheap-rest-0.1.jar app.jar
@@ -50,10 +53,11 @@ EXPOSE 8080
 ENV SPRING_PROFILES_ACTIVE=postgres
 ENV DB_PASSWORD=changeme
 ENV CHEAP_DB_PATH=/data/cheap.db
+ENV JAVA_OPTS=""
 
-# Health check
+# Health check using wget (available in alpine)
 HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
-  CMD curl -f http://localhost:8080/actuator/health || exit 1
+  CMD wget --quiet --tries=1 --spider http://localhost:8080/actuator/health || exit 1
 
-# Run the application
-ENTRYPOINT ["java", "-jar", "app.jar"]
+# Run the application with JAVA_OPTS support
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
