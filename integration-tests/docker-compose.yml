@@ -1,0 +1,131 @@
+version: '3.8'
+
+services:
+  # PostgreSQL database for cheap-rest
+  postgres:
+    image: postgres:17
+    container_name: cheap-postgres-test
+    environment:
+      POSTGRES_DB: cheap
+      POSTGRES_USER: cheap_user
+      POSTGRES_PASSWORD: test_password
+    ports:
+      - "5432:5432"
+    networks:
+      - cheap-test-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cheap_user -d cheap"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+  # MariaDB database for cheap-rest
+  mariadb:
+    image: mariadb:11
+    container_name: cheap-mariadb-test
+    environment:
+      MARIADB_DATABASE: cheap
+      MARIADB_USER: cheap_user
+      MARIADB_PASSWORD: test_password
+      MARIADB_ROOT_PASSWORD: root_password
+    ports:
+      - "3306:3306"
+    networks:
+      - cheap-test-network
+    healthcheck:
+      test: ["CMD-SHELL", "healthcheck.sh --connect --innodb_initialized"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+    volumes:
+      - mariadb-data:/var/lib/mysql
+
+  # cheap-rest connected to PostgreSQL
+  cheap-rest-postgres:
+    image: cheap-rest:latest
+    container_name: cheap-rest-postgres-test
+    build:
+      context: ..
+      dockerfile: cheap-rest/Dockerfile
+    environment:
+      SPRING_PROFILES_ACTIVE: postgres
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/cheap
+      SPRING_DATASOURCE_USERNAME: cheap_user
+      SPRING_DATASOURCE_PASSWORD: test_password
+      DB_PASSWORD: test_password
+    ports:
+      - "8080:8080"
+    networks:
+      - cheap-test-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget --quiet --tries=1 --spider http://localhost:8080/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 40s
+
+  # cheap-rest connected to MariaDB
+  cheap-rest-mariadb:
+    image: cheap-rest:latest
+    container_name: cheap-rest-mariadb-test
+    build:
+      context: ..
+      dockerfile: cheap-rest/Dockerfile
+    environment:
+      SPRING_PROFILES_ACTIVE: mariadb
+      SPRING_DATASOURCE_URL: jdbc:mariadb://mariadb:3306/cheap
+      SPRING_DATASOURCE_USERNAME: cheap_user
+      SPRING_DATASOURCE_PASSWORD: test_password
+      DB_PASSWORD: test_password
+    ports:
+      - "8081:8080"
+    networks:
+      - cheap-test-network
+    depends_on:
+      mariadb:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget --quiet --tries=1 --spider http://localhost:8080/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 40s
+
+  # cheap-rest with embedded SQLite
+  cheap-rest-sqlite:
+    image: cheap-rest:latest
+    container_name: cheap-rest-sqlite-test
+    build:
+      context: ..
+      dockerfile: cheap-rest/Dockerfile
+    environment:
+      SPRING_PROFILES_ACTIVE: sqlite
+      CHEAP_DB_PATH: /data/cheap.db
+    ports:
+      - "8082:8080"
+    networks:
+      - cheap-test-network
+    volumes:
+      - sqlite-data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "wget --quiet --tries=1 --spider http://localhost:8080/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 40s
+
+networks:
+  cheap-test-network:
+    driver: bridge
+
+volumes:
+  postgres-data:
+  mariadb-data:
+  sqlite-data:
