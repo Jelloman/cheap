@@ -16,7 +16,7 @@ tasks.register("integration-tests") {
 // Only run integration-tests tasks when explicitly requested
 gradle.taskGraph.whenReady {
     val hasIntegrationTestsInRequest = gradle.startParameter.taskNames.any { taskName ->
-        taskName.contains("integration-tests") || taskName.contains(":integration-tests:")
+        taskName.contains("integration", ignoreCase = true)
     }
 
     if (!hasIntegrationTestsInRequest) {

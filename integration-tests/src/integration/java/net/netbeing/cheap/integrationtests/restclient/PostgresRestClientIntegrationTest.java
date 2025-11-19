@@ -17,6 +17,7 @@ import net.netbeing.cheap.model.PropertyDef;
 import net.netbeing.cheap.model.PropertyType;
 import net.netbeing.cheap.rest.CheapRestApplication;
 import net.netbeing.cheap.rest.client.CheapRestClient;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.parallel.ResourceLock;
@@ -58,6 +59,8 @@ import static org.junit.jupiter.api.Assertions.*;
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 @ResourceLock("port-8081")
 @ExtendWith(TestStartEndLogger.class)
+@Tag("embedded")
+@Tag("postgres")
 class PostgresRestClientIntegrationTest extends AbstractRestClientIntegrationTest
 {
     /**

@@ -7,7 +7,8 @@ spring:
     driver-class-name: org.mariadb.jdbc.Driver
   sql:
     init:
-      mode: never
+      mode: always
+      schema-locations: classpath:db/schemas/mariadb/mariadb-cheap.sql
 
 cheap:
   database:

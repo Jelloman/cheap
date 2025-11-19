@@ -26,6 +26,7 @@ import net.netbeing.cheap.rest.client.CheapRestClient;
 import net.netbeing.cheap.rest.client.CheapRestClientImpl;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.parallel.ResourceLock;
@@ -56,6 +57,8 @@ import static org.junit.jupiter.api.Assertions.*;
 @ResourceLock("port-8081")
 @ResourceLock("port-8082")
 @ResourceLock("port-8083")
+@Tag("embedded")
+@Tag("consistency")
 class CrossDatabaseConsistencyTest extends BaseClientIntegrationTest
 {
     private static final Logger logger = LoggerFactory.getLogger(CrossDatabaseConsistencyTest.class);
