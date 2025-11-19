@@ -18,6 +18,8 @@ package net.netbeing.cheap.rest.client;
 
 import net.netbeing.cheap.model.*;
 import net.netbeing.cheap.json.dto.*;
+import net.netbeing.cheap.rest.client.exception.CheapRestBadRequestException;
+import net.netbeing.cheap.rest.client.exception.CheapRestNotFoundException;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
@@ -143,6 +145,20 @@ public interface CheapRestClient
     // ========== Hierarchy Operations ==========
 
     /**
+     * Creates a new hierarchy in a catalog.
+     *
+     * @param catalogId the catalog ID
+     * @param hierarchyDef the hierarchy definition
+     * @return the created hierarchy response
+     * @throws CheapRestNotFoundException if catalog not found
+     * @throws CheapRestBadRequestException if invalid hierarchy definition
+     */
+    CreateHierarchyResponse createHierarchy(
+        @NotNull UUID catalogId,
+        @NotNull HierarchyDef hierarchyDef
+    );
+
+    /**
      * Gets the contents of an EntityList or EntitySet hierarchy.
      *
      * @param catalogId the catalog ID
@@ -196,5 +212,121 @@ public interface CheapRestClient
         @NotNull String hierarchyName,
         int page,
         int size
+    );
+
+    // ========== Hierarchy Mutation Operations ==========
+
+    /**
+     * Adds entity IDs to an EntityList or EntitySet hierarchy.
+     *
+     * @param catalogId the catalog ID
+     * @param hierarchyName the hierarchy name
+     * @param entityIds the list of entity IDs to add
+     * @return the operation response with success status and count
+     * @throws CheapRestNotFoundException if catalog or hierarchy not found
+     * @throws CheapRestBadRequestException if wrong hierarchy type or invalid request
+     */
+    EntityIdsOperationResponse addEntityIds(
+        @NotNull UUID catalogId,
+        @NotNull String hierarchyName,
+        @NotNull List<UUID> entityIds
+    );
+
+    /**
+     * Removes entity IDs from an EntityList or EntitySet hierarchy.
+     *
+     * @param catalogId the catalog ID
+     * @param hierarchyName the hierarchy name
+     * @param entityIds the list of entity IDs to remove
+     * @return the operation response with success status and count
+     * @throws CheapRestNotFoundException if catalog or hierarchy not found
+     * @throws CheapRestBadRequestException if wrong hierarchy type or invalid request
+     */
+    EntityIdsOperationResponse removeEntityIds(
+        @NotNull UUID catalogId,
+        @NotNull String hierarchyName,
+        @NotNull List<UUID> entityIds
+    );
+
+    /**
+     * Adds entries to an EntityDirectory hierarchy.
+     *
+     * @param catalogId the catalog ID
+     * @param hierarchyName the hierarchy name
+     * @param entries map of entry names to entity IDs
+     * @return the operation response with success status and count
+     * @throws CheapRestNotFoundException if catalog or hierarchy not found
+     * @throws CheapRestBadRequestException if wrong hierarchy type or invalid request
+     */
+    DirectoryOperationResponse addDirectoryEntries(
+        @NotNull UUID catalogId,
+        @NotNull String hierarchyName,
+        @NotNull Map<String, UUID> entries
+    );
+
+    /**
+     * Removes directory entries by their names.
+     *
+     * @param catalogId the catalog ID
+     * @param hierarchyName the hierarchy name
+     * @param names the list of entry names to remove
+     * @return the operation response with success status and count
+     * @throws CheapRestNotFoundException if catalog or hierarchy not found
+     * @throws CheapRestBadRequestException if wrong hierarchy type or invalid request
+     */
+    DirectoryOperationResponse removeDirectoryEntriesByNames(
+        @NotNull UUID catalogId,
+        @NotNull String hierarchyName,
+        @NotNull List<String> names
+    );
+
+    /**
+     * Removes directory entries by their entity IDs (removes all entries pointing to these IDs).
+     *
+     * @param catalogId the catalog ID
+     * @param hierarchyName the hierarchy name
+     * @param entityIds the list of entity IDs to remove
+     * @return the operation response with success status and count
+     * @throws CheapRestNotFoundException if catalog or hierarchy not found
+     * @throws CheapRestBadRequestException if wrong hierarchy type or invalid request
+     */
+    DirectoryOperationResponse removeDirectoryEntriesByEntityIds(
+        @NotNull UUID catalogId,
+        @NotNull String hierarchyName,
+        @NotNull List<UUID> entityIds
+    );
+
+    /**
+     * Adds nodes to an EntityTree hierarchy under a specified parent path.
+     *
+     * @param catalogId the catalog ID
+     * @param hierarchyName the hierarchy name
+     * @param parentPath the parent node path (null or empty for root-level nodes, e.g., "/root/folder1")
+     * @param nodes map of child names to entity IDs
+     * @return the operation response with success status and count
+     * @throws CheapRestNotFoundException if catalog, hierarchy, or parent node not found
+     * @throws CheapRestBadRequestException if wrong hierarchy type or invalid request
+     */
+    TreeOperationResponse addTreeNodes(
+        @NotNull UUID catalogId,
+        @NotNull String hierarchyName,
+        String parentPath,
+        @NotNull Map<String, UUID> nodes
+    );
+
+    /**
+     * Removes nodes from an EntityTree hierarchy by their paths (cascade deletes all descendants).
+     *
+     * @param catalogId the catalog ID
+     * @param hierarchyName the hierarchy name
+     * @param paths the list of node paths to remove (e.g., ["/root/folder1", "/root/folder2"])
+     * @return the operation response with success status and count
+     * @throws CheapRestNotFoundException if catalog or hierarchy not found
+     * @throws CheapRestBadRequestException if wrong hierarchy type or invalid request
+     */
+    TreeOperationResponse removeTreeNodes(
+        @NotNull UUID catalogId,
+        @NotNull String hierarchyName,
+        @NotNull List<String> paths
     );
 }

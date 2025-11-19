@@ -9,9 +9,10 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 -- ========== CORE CHEAP ELEMENT TABLES ==========
 
 -- Entity: Represents entities with only global ID (conceptual objects)
-CREATE TABLE entity (
-    entity_id UUID PRIMARY KEY DEFAULT uuid_generate_v4()
-);
+-- Temporarily retired; planning to restore as an optional feature
+--CREATE TABLE entity (
+--    entity_id UUID PRIMARY KEY DEFAULT uuid_generate_v4()
+--);
 
 -- AspectDef: First-class entity defining aspect structure and metadata
 CREATE TABLE aspect_def (
@@ -73,7 +74,8 @@ CREATE TABLE hierarchy (
 -- Aspect: Aspect instances attached to entities
 -- No global ID - identified by entity_id + aspect_def + catalog combination
 CREATE TABLE aspect (
-    entity_id UUID NOT NULL REFERENCES entity(entity_id) ON DELETE CASCADE,
+--    entity_id UUID NOT NULL REFERENCES entity(entity_id) ON DELETE CASCADE,
+    entity_id UUID NOT NULL,
     aspect_def_id UUID NOT NULL REFERENCES aspect_def(aspect_def_id) ON DELETE CASCADE,
     catalog_id UUID NOT NULL REFERENCES catalog(catalog_id) ON DELETE CASCADE,
     hierarchy_name TEXT NOT NULL,
@@ -112,7 +114,8 @@ CREATE TABLE property_value (
 CREATE TABLE hierarchy_entity_list (
     catalog_id UUID NOT NULL REFERENCES catalog(catalog_id) ON DELETE CASCADE,
     hierarchy_name TEXT NOT NULL,
-    entity_id UUID NOT NULL REFERENCES entity(entity_id) ON DELETE CASCADE,
+--    entity_id UUID NOT NULL REFERENCES entity(entity_id) ON DELETE CASCADE,
+    entity_id UUID NOT NULL,
     list_order INTEGER NOT NULL,
     PRIMARY KEY (catalog_id, hierarchy_name, list_order),
     FOREIGN KEY (catalog_id, hierarchy_name) REFERENCES hierarchy(catalog_id, name) ON DELETE CASCADE
@@ -122,7 +125,8 @@ CREATE TABLE hierarchy_entity_list (
 CREATE TABLE hierarchy_entity_set (
     catalog_id UUID NOT NULL REFERENCES catalog(catalog_id) ON DELETE CASCADE,
     hierarchy_name TEXT NOT NULL,
-    entity_id UUID NOT NULL REFERENCES entity(entity_id) ON DELETE CASCADE,
+--    entity_id UUID NOT NULL REFERENCES entity(entity_id) ON DELETE CASCADE,
+    entity_id UUID NOT NULL,
     set_order INTEGER,
     PRIMARY KEY (catalog_id, hierarchy_name, entity_id),
     FOREIGN KEY (catalog_id, hierarchy_name) REFERENCES hierarchy(catalog_id, name) ON DELETE CASCADE
@@ -133,7 +137,8 @@ CREATE TABLE hierarchy_entity_directory (
     catalog_id UUID NOT NULL REFERENCES catalog(catalog_id) ON DELETE CASCADE,
     hierarchy_name TEXT NOT NULL,
     entity_key TEXT NOT NULL,
-    entity_id UUID NOT NULL REFERENCES entity(entity_id) ON DELETE CASCADE,
+--    entity_id UUID NOT NULL REFERENCES entity(entity_id) ON DELETE CASCADE,
+    entity_id UUID NOT NULL,
     dir_order INTEGER NOT NULL,
     PRIMARY KEY (catalog_id, hierarchy_name, entity_key),
     FOREIGN KEY (catalog_id, hierarchy_name) REFERENCES hierarchy(catalog_id, name) ON DELETE CASCADE
@@ -146,7 +151,8 @@ CREATE TABLE hierarchy_entity_tree_node (
     hierarchy_name TEXT NOT NULL,
     parent_node_id UUID REFERENCES hierarchy_entity_tree_node(node_id) ON DELETE CASCADE,
     node_key TEXT,
-    entity_id UUID REFERENCES entity(entity_id) ON DELETE CASCADE,
+--    entity_id UUID REFERENCES entity(entity_id) ON DELETE CASCADE,
+    entity_id UUID,
     node_path TEXT, -- Computed path for efficient queries
     tree_order INTEGER NOT NULL,
     FOREIGN KEY (catalog_id, hierarchy_name) REFERENCES hierarchy(catalog_id, name) ON DELETE CASCADE,
@@ -157,7 +163,8 @@ CREATE TABLE hierarchy_entity_tree_node (
 CREATE TABLE hierarchy_aspect_map (
     catalog_id UUID NOT NULL REFERENCES catalog(catalog_id) ON DELETE CASCADE,
     hierarchy_name TEXT NOT NULL,
-    entity_id UUID NOT NULL REFERENCES entity(entity_id) ON DELETE CASCADE,
+--    entity_id UUID NOT NULL REFERENCES entity(entity_id) ON DELETE CASCADE,
+    entity_id UUID NOT NULL,
     aspect_def_id UUID NOT NULL REFERENCES aspect_def(aspect_def_id),
     map_order INTEGER NOT NULL,
     PRIMARY KEY (catalog_id, hierarchy_name, entity_id),
@@ -225,7 +232,7 @@ CREATE INDEX idx_hierarchy_aspect_map_aspect_def_id ON hierarchy_aspect_map(aspe
 
 COMMENT ON TABLE aspect_def IS 'Defines aspect structure and metadata - first-class entities';
 COMMENT ON TABLE property_def IS 'Defines property structure within AspectDefs';
-COMMENT ON TABLE entity IS 'Conceptual entities with only global ID';
+--COMMENT ON TABLE entity IS 'Conceptual entities with only global ID';
 COMMENT ON TABLE catalog IS 'Catalog instances extending Entity';
 COMMENT ON TABLE hierarchy IS 'Hierarchy instances within catalogs - type and name stored directly';
 COMMENT ON TABLE aspect IS 'Aspect instances attached to entities';

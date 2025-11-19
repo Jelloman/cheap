@@ -153,15 +153,15 @@ public interface CheapDao extends AutoCloseable
      */
     void saveAspectDef(@NotNull Connection conn, @NotNull AspectDef aspectDef) throws SQLException;
 
-    /**
+    /*
      * Persists an Entity to the database. If the entity already exists
      * (based on global ID), this operation is a no-op.
      *
      * @param conn the database connection to use
      * @param entity the Entity to save
      * @throws SQLException if database operation fails
+     * void saveEntity(@NotNull Connection conn, @NotNull Entity entity) throws SQLException;
      */
-    void saveEntity(@NotNull Connection conn, @NotNull Entity entity) throws SQLException;
 
     /**
      * Persists a Hierarchy metadata record to the database.

@@ -24,8 +24,10 @@ import net.netbeing.cheap.model.CatalogSpecies;
 import net.netbeing.cheap.model.Entity;
 import net.netbeing.cheap.model.MutableAspectDef;
 import net.netbeing.cheap.model.PropertyType;
+import net.netbeing.cheap.rest.TestStartEndLogger;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.net.URI;
 import java.util.Arrays;
@@ -42,6 +44,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Unit tests for AspectService.
  */
+@ExtendWith(TestStartEndLogger.class)
 class AspectServiceTest extends BaseServiceTest
 {
     private UUID catalogId;

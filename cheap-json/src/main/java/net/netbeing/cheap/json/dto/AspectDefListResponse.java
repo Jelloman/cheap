@@ -27,7 +27,7 @@ import java.util.UUID;
  */
 public record AspectDefListResponse(
     @JsonProperty("catalogId") UUID catalogId,
-    @JsonProperty("content") List<AspectDef> content,
+    @JsonProperty("aspectDefs") List<AspectDef> aspectDefs,
     @JsonProperty("page") int page,
     @JsonProperty("size") int size,
     @JsonProperty("totalElements") long totalElements,

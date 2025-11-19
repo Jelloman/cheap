@@ -21,8 +21,12 @@ import net.netbeing.cheap.db.sqlite.SqliteAdapter;
 import net.netbeing.cheap.db.sqlite.SqliteCheapSchema;
 import net.netbeing.cheap.db.sqlite.SqliteDao;
 import net.netbeing.cheap.impl.basic.CheapFactory;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.sqlite.SQLiteDataSource;
 
 import javax.sql.DataSource;
@@ -38,31 +42,34 @@ import java.sql.SQLException;
  */
 public abstract class BaseServiceTest
 {
-    protected DataSource dataSource;
-    protected Connection connection;
-    protected CheapDao dao;
-    protected CheapFactory factory;
-    protected Path tempDbFile;
+    private static final Logger logger = LoggerFactory.getLogger(BaseServiceTest.class);
+
+    protected static DataSource dataSource;
+    protected static Connection connection;
+    protected static CheapDao dao;
+    protected static CheapFactory factory;
+    protected static Path tempDbFile;
 
     // Services - to be initialized by subclasses
-    protected CatalogService catalogService;
-    protected AspectDefService aspectDefService;
-    protected AspectService aspectService;
-    protected HierarchyService hierarchyService;
+    protected static CatalogService catalogService;
+    protected static AspectDefService aspectDefService;
+    protected static AspectService aspectService;
+    protected static HierarchyService hierarchyService;
 
-    @BeforeEach
-    void setUpBase() throws SQLException, IOException
+    @BeforeAll
+    static void setUpAll() throws SQLException, IOException
     {
+        logger.info("start setUpAll()");
+
         // Create a temporary file-based SQLite database
-        // This avoids shared cache issues while ensuring all connections see the same database
         tempDbFile = Files.createTempFile("cheap-test-", ".db");
 
         SQLiteDataSource ds = new SQLiteDataSource();
         ds.setUrl("jdbc:sqlite:" + tempDbFile.toAbsolutePath());
-        this.dataSource = ds;
+        dataSource = ds;
 
         // Get a connection for schema initialization
-        this.connection = ds.getConnection();
+        connection = ds.getConnection();
 
         // Initialize factory and DAO
         factory = new CheapFactory();
@@ -75,37 +82,65 @@ public abstract class BaseServiceTest
         // Initialize services
         catalogService = new CatalogService(dao, factory, dataSource);
         catalogService.setService(catalogService); // Inject self-reference for transactional methods
-        aspectDefService = new AspectDefService(dao);
-        aspectService = new AspectService(dao, factory);
-        hierarchyService = new HierarchyService(dao);
+        aspectDefService = new AspectDefService(catalogService, dao);
+        aspectService = new AspectService(dao, catalogService, factory);
+        hierarchyService = new HierarchyService(dao, catalogService, factory);
+        hierarchyService.setService(hierarchyService);
+
+        // Close the connection
+        if (connection != null && !connection.isClosed()) {
+            connection.close();
+            connection = null;
+        }
+
+        logger.info("end setUpAll()");
+    }
+
+    @BeforeEach
+    void setUpBase() throws SQLException
+    {
+        connection = dataSource.getConnection();
     }
 
     @AfterEach
-    void tearDownBase() throws SQLException, IOException
+    void tearDownBase() throws SQLException
     {
+        SqliteCheapSchema schema = new SqliteCheapSchema();
+        schema.executeTruncateSchemaDdl(connection);
+
         // Close the connection
-        if (this.connection != null && !this.connection.isClosed()) {
-            this.connection.close();
+        if (connection != null && !connection.isClosed()) {
+            connection.close();
+            connection = null;
+        }
+    }
+
+    @AfterAll
+    static void tearDownAll() throws SQLException, IOException
+    {
+        // Double-check closing the connection
+        if (connection != null && !connection.isClosed()) {
+            connection.close();
         }
 
         // Clean up references
-        this.connection = null;
-        this.dataSource = null;
-        this.dao = null;
-        this.factory = null;
-        this.catalogService = null;
-        this.aspectDefService = null;
-        this.aspectService = null;
-        this.hierarchyService = null;
+        connection = null;
+        dataSource = null;
+        dao = null;
+        factory = null;
+        catalogService = null;
+        aspectDefService = null;
+        aspectService = null;
+        hierarchyService = null;
 
         // Delete the temporary database file
         if (tempDbFile != null && Files.exists(tempDbFile)) {
             Files.delete(tempDbFile);
         }
-        this.tempDbFile = null;
+        tempDbFile = null;
     }
 
-    private void initializeSchema() throws SQLException
+    private static void initializeSchema() throws SQLException
     {
         // Use SqliteCheapSchema to execute DDL
         SqliteCheapSchema schema = new SqliteCheapSchema();

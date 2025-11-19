@@ -11,9 +11,10 @@ PRAGMA foreign_keys = ON;
 -- ========== CORE CHEAP ELEMENT TABLES ==========
 
 -- Entity: Represents entities with only global ID (conceptual objects)
-CREATE TABLE entity (
-    entity_id TEXT PRIMARY KEY
-);
+-- Temporarily retired; planning to restore as an optional feature
+--CREATE TABLE entity (
+--    entity_id TEXT PRIMARY KEY
+--);
 
 -- AspectDef: First-class entity defining aspect structure and metadata
 CREATE TABLE aspect_def (
@@ -75,7 +76,8 @@ CREATE TABLE hierarchy (
 -- Aspect: Aspect instances attached to entities
 -- No global ID - identified by entity_id + aspect_def + catalog combination
 CREATE TABLE aspect (
-    entity_id TEXT NOT NULL REFERENCES entity(entity_id) ON DELETE CASCADE,
+--    entity_id TEXT NOT NULL REFERENCES entity(entity_id) ON DELETE CASCADE,
+    entity_id TEXT NOT NULL,
     aspect_def_id TEXT NOT NULL REFERENCES aspect_def(aspect_def_id) ON DELETE CASCADE,
     catalog_id TEXT NOT NULL REFERENCES catalog(catalog_id) ON DELETE CASCADE,
     hierarchy_name TEXT NOT NULL,
@@ -116,7 +118,8 @@ CREATE TABLE property_value (
 CREATE TABLE hierarchy_entity_list (
     catalog_id TEXT NOT NULL REFERENCES catalog(catalog_id) ON DELETE CASCADE,
     hierarchy_name TEXT NOT NULL,
-    entity_id TEXT NOT NULL REFERENCES entity(entity_id) ON DELETE CASCADE,
+--    entity_id TEXT NOT NULL REFERENCES entity(entity_id) ON DELETE CASCADE,
+    entity_id TEXT NOT NULL,
     list_order INTEGER NOT NULL,
     PRIMARY KEY (catalog_id, hierarchy_name, list_order),
     FOREIGN KEY (catalog_id, hierarchy_name) REFERENCES hierarchy(catalog_id, name) ON DELETE CASCADE
@@ -126,7 +129,8 @@ CREATE TABLE hierarchy_entity_list (
 CREATE TABLE hierarchy_entity_set (
     catalog_id TEXT NOT NULL REFERENCES catalog(catalog_id) ON DELETE CASCADE,
     hierarchy_name TEXT NOT NULL,
-    entity_id TEXT NOT NULL REFERENCES entity(entity_id) ON DELETE CASCADE,
+--    entity_id TEXT NOT NULL REFERENCES entity(entity_id) ON DELETE CASCADE,
+    entity_id TEXT NOT NULL,
     set_order INTEGER,
     PRIMARY KEY (catalog_id, hierarchy_name, entity_id),
     FOREIGN KEY (catalog_id, hierarchy_name) REFERENCES hierarchy(catalog_id, name) ON DELETE CASCADE
@@ -137,7 +141,8 @@ CREATE TABLE hierarchy_entity_directory (
     catalog_id TEXT NOT NULL REFERENCES catalog(catalog_id) ON DELETE CASCADE,
     hierarchy_name TEXT NOT NULL,
     entity_key TEXT NOT NULL,
-    entity_id TEXT NOT NULL REFERENCES entity(entity_id) ON DELETE CASCADE,
+--    entity_id TEXT NOT NULL REFERENCES entity(entity_id) ON DELETE CASCADE,
+    entity_id TEXT NOT NULL,
     dir_order INTEGER NOT NULL,
     PRIMARY KEY (catalog_id, hierarchy_name, entity_key),
     FOREIGN KEY (catalog_id, hierarchy_name) REFERENCES hierarchy(catalog_id, name) ON DELETE CASCADE
@@ -150,7 +155,8 @@ CREATE TABLE hierarchy_entity_tree_node (
     hierarchy_name TEXT NOT NULL,
     parent_node_id TEXT REFERENCES hierarchy_entity_tree_node(node_id) ON DELETE CASCADE,
     node_key TEXT,
-    entity_id TEXT REFERENCES entity(entity_id) ON DELETE CASCADE,
+--    entity_id TEXT REFERENCES entity(entity_id) ON DELETE CASCADE,
+    entity_id TEXT,
     node_path TEXT, -- Computed path for efficient queries
     tree_order INTEGER NOT NULL,
     FOREIGN KEY (catalog_id, hierarchy_name) REFERENCES hierarchy(catalog_id, name) ON DELETE CASCADE,
@@ -161,7 +167,8 @@ CREATE TABLE hierarchy_entity_tree_node (
 CREATE TABLE hierarchy_aspect_map (
     catalog_id TEXT NOT NULL REFERENCES catalog(catalog_id) ON DELETE CASCADE,
     hierarchy_name TEXT NOT NULL,
-    entity_id TEXT NOT NULL REFERENCES entity(entity_id) ON DELETE CASCADE,
+--    entity_id TEXT NOT NULL REFERENCES entity(entity_id) ON DELETE CASCADE,
+    entity_id TEXT NOT NULL,
     aspect_def_id TEXT NOT NULL REFERENCES aspect_def(aspect_def_id),
     map_order INTEGER NOT NULL,
     PRIMARY KEY (catalog_id, hierarchy_name, entity_id),

@@ -40,6 +40,7 @@ public abstract class BaseRestIntegrationTest
      * Subclasses can override to add additional setup.
      */
     @BeforeEach
+    @SuppressWarnings("java:S1130") // Sonar gets it wrong here; this rule should not apply when subclasses throw the listed exceptions.
     public void setUp() throws SQLException, ManagedProcessException
     {
         client = createRestClient();

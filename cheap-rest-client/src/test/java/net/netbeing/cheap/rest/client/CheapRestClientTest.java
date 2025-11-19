@@ -31,6 +31,7 @@ import org.springframework.http.MediaType;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -116,7 +117,7 @@ class CheapRestClientTest
         // Arrange
         String responseJson = """
             {
-              "content": [
+              "catalogIds": [
                 "550e8400-e29b-41d4-a716-446655440000",
                 "550e8400-e29b-41d4-a716-446655440001"
               ],
@@ -137,7 +138,7 @@ class CheapRestClientTest
 
         // Assert
         assertNotNull(response);
-        assertEquals(2, response.content().size());
+        assertEquals(2, response.catalogIds().size());
         assertEquals(0, response.page());
         assertEquals(10, response.size());
         assertEquals(2, response.totalElements());
@@ -245,7 +246,7 @@ class CheapRestClientTest
         String responseJson = """
             {
               "catalogId": "550e8400-e29b-41d4-a716-446655440000",
-              "content": [],
+              "aspectDefs": [],
               "page": 0,
               "size": 10,
               "totalElements": 0,
@@ -265,7 +266,7 @@ class CheapRestClientTest
 
         // Assert
         assertNotNull(response);
-        assertEquals(0, response.content().size());
+        assertEquals(0, response.aspectDefs().size());
         assertEquals(0, response.page());
         assertEquals(10, response.size());
 
@@ -409,6 +410,78 @@ class CheapRestClientTest
     // ========== Hierarchy Operation Tests ==========
 
     @Test
+    @DisplayName("Should create hierarchy successfully")
+    void testCreateHierarchy() throws Exception
+    {
+        // Arrange
+        String responseJson = """
+            {
+              "hierarchyName": "test-hierarchy",
+              "success": true,
+              "message": "Hierarchy created successfully"
+            }
+            """;
+
+        mockWebServer.enqueue(new MockResponse()
+            .setResponseCode(201)
+            .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+            .setBody(responseJson));
+
+        UUID catalogId = UUID.fromString("550e8400-e29b-41d4-a716-446655440000");
+        HierarchyDef hierarchyDef = factory.createHierarchyDef("test-hierarchy", HierarchyType.ENTITY_LIST);
+
+        // Act
+        CreateHierarchyResponse response = client.createHierarchy(catalogId, hierarchyDef);
+
+        // Assert
+        assertNotNull(response);
+        assertEquals("test-hierarchy", response.hierarchyName());
+        assertTrue(response.success());
+        assertEquals("Hierarchy created successfully", response.message());
+
+        // Verify request
+        RecordedRequest recordedRequest = mockWebServer.takeRequest();
+        assertEquals("POST", recordedRequest.getMethod());
+        assertEquals("/api/catalog/" + catalogId + "/hierarchies", recordedRequest.getPath());
+    }
+
+    @Test
+    @DisplayName("Should throw NotFoundException when catalog not found for createHierarchy")
+    void testCreateHierarchy_CatalogNotFound()
+    {
+        // Arrange
+        mockWebServer.enqueue(new MockResponse()
+            .setResponseCode(404)
+            .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+            .setBody("{\"message\":\"Catalog not found\"}"));
+
+        UUID catalogId = UUID.randomUUID();
+        HierarchyDef hierarchyDef = factory.createHierarchyDef("test-hierarchy", HierarchyType.ENTITY_LIST);
+
+        // Act & Assert
+        assertThrows(CheapRestNotFoundException.class,
+            () -> client.createHierarchy(catalogId, hierarchyDef));
+    }
+
+    @Test
+    @DisplayName("Should throw BadRequestException for invalid hierarchy definition")
+    void testCreateHierarchy_InvalidDefinition()
+    {
+        // Arrange
+        mockWebServer.enqueue(new MockResponse()
+            .setResponseCode(400)
+            .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+            .setBody("{\"message\":\"Invalid hierarchy definition\"}"));
+
+        UUID catalogId = UUID.randomUUID();
+        HierarchyDef hierarchyDef = factory.createHierarchyDef("test-hierarchy", HierarchyType.ENTITY_LIST);
+
+        // Act & Assert
+        assertThrows(CheapRestBadRequestException.class,
+            () -> client.createHierarchy(catalogId, hierarchyDef));
+    }
+
+    @Test
     @DisplayName("Should get entity list successfully")
     void testGetEntityList() throws Exception
     {
@@ -417,7 +490,7 @@ class CheapRestClientTest
             {
               "catalogId": "550e8400-e29b-41d4-a716-446655440000",
               "hierarchyName": "people",
-              "content": [
+              "entityIds": [
                 "550e8400-e29b-41d4-a716-446655440000",
                 "550e8400-e29b-41d4-a716-446655440001"
               ],
@@ -441,7 +514,7 @@ class CheapRestClientTest
 
         // Assert
         assertNotNull(response);
-        assertEquals(2, response.content().size());
+        assertEquals(2, response.entityIds().size());
         assertEquals(0, response.page());
         assertEquals(10, response.size());
 
@@ -639,5 +712,452 @@ class CheapRestClientTest
         // Act & Assert
         assertThrows(CheapRestClientException.class,
             () -> client.getCatalogDef(catalogId));
+    }
+
+    // ========== Hierarchy Mutation Tests ==========
+
+    // Entity List/Set Operations
+
+    @Test
+    @DisplayName("Should add entity IDs to list successfully")
+    void testAddEntityIds() throws Exception
+    {
+        // Arrange
+        String responseJson = """
+            {
+              "catalogId": "550e8400-e29b-41d4-a716-446655440000",
+              "hierarchyName": "test-list",
+              "operation": "add",
+              "count": 3,
+              "message": "Successfully added 3 entity IDs"
+            }
+            """;
+
+        mockWebServer.enqueue(new MockResponse()
+            .setResponseCode(200)
+            .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+            .setBody(responseJson));
+
+        UUID catalogId = UUID.fromString("550e8400-e29b-41d4-a716-446655440000");
+        String hierarchyName = "test-list";
+        List<UUID> entityIds = List.of(
+            UUID.randomUUID(),
+            UUID.randomUUID(),
+            UUID.randomUUID()
+        );
+
+        // Act
+        EntityIdsOperationResponse response = client.addEntityIds(catalogId, hierarchyName, entityIds);
+
+        // Assert
+        assertNotNull(response);
+        assertEquals(catalogId, response.catalogId());
+        assertEquals(hierarchyName, response.hierarchyName());
+        assertEquals("add", response.operation());
+        assertEquals(3, response.count());
+
+        // Verify request
+        RecordedRequest recordedRequest = mockWebServer.takeRequest();
+        assertEquals("POST", recordedRequest.getMethod());
+        assertTrue(recordedRequest.getPath().contains("/entities"));
+        assertTrue(recordedRequest.getPath().contains(hierarchyName));
+    }
+
+    @Test
+    @DisplayName("Should remove entity IDs from list successfully")
+    void testRemoveEntityIds() throws Exception
+    {
+        // Arrange
+        String responseJson = """
+            {
+              "catalogId": "550e8400-e29b-41d4-a716-446655440000",
+              "hierarchyName": "test-list",
+              "operation": "remove",
+              "count": 2,
+              "message": "Successfully removed 2 entity IDs"
+            }
+            """;
+
+        mockWebServer.enqueue(new MockResponse()
+            .setResponseCode(200)
+            .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+            .setBody(responseJson));
+
+        UUID catalogId = UUID.fromString("550e8400-e29b-41d4-a716-446655440000");
+        String hierarchyName = "test-list";
+        List<UUID> entityIds = List.of(
+            UUID.randomUUID(),
+            UUID.randomUUID()
+        );
+
+        // Act
+        EntityIdsOperationResponse response = client.removeEntityIds(catalogId, hierarchyName, entityIds);
+
+        // Assert
+        assertNotNull(response);
+        assertEquals(catalogId, response.catalogId());
+        assertEquals("remove", response.operation());
+        assertEquals(2, response.count());
+
+        // Verify request
+        RecordedRequest recordedRequest = mockWebServer.takeRequest();
+        assertEquals("DELETE", recordedRequest.getMethod());
+        assertTrue(recordedRequest.getPath().contains("/entities"));
+    }
+
+    @Test
+    @DisplayName("Should throw NotFoundException when hierarchy not found for add entity IDs")
+    void testAddEntityIds_HierarchyNotFound()
+    {
+        // Arrange
+        mockWebServer.enqueue(new MockResponse()
+            .setResponseCode(404)
+            .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+            .setBody("{\"message\":\"Hierarchy not found\"}"));
+
+        UUID catalogId = UUID.randomUUID();
+        String hierarchyName = "nonexistent";
+        List<UUID> entityIds = List.of(UUID.randomUUID());
+
+        // Act & Assert
+        assertThrows(CheapRestNotFoundException.class,
+            () -> client.addEntityIds(catalogId, hierarchyName, entityIds));
+    }
+
+    @Test
+    @DisplayName("Should throw BadRequestException for wrong hierarchy type")
+    void testAddEntityIds_WrongHierarchyType()
+    {
+        // Arrange
+        mockWebServer.enqueue(new MockResponse()
+            .setResponseCode(400)
+            .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+            .setBody("{\"message\":\"Wrong hierarchy type\"}"));
+
+        UUID catalogId = UUID.randomUUID();
+        String hierarchyName = "directory-hierarchy";
+        List<UUID> entityIds = List.of(UUID.randomUUID());
+
+        // Act & Assert
+        assertThrows(CheapRestBadRequestException.class,
+            () -> client.addEntityIds(catalogId, hierarchyName, entityIds));
+    }
+
+    // Entity Directory Operations
+
+    @Test
+    @DisplayName("Should add directory entries successfully")
+    void testAddDirectoryEntries() throws Exception
+    {
+        // Arrange
+        String responseJson = """
+            {
+              "catalogId": "550e8400-e29b-41d4-a716-446655440000",
+              "hierarchyName": "test-directory",
+              "operation": "add",
+              "count": 2,
+              "message": "Successfully added 2 directory entries"
+            }
+            """;
+
+        mockWebServer.enqueue(new MockResponse()
+            .setResponseCode(200)
+            .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+            .setBody(responseJson));
+
+        UUID catalogId = UUID.fromString("550e8400-e29b-41d4-a716-446655440000");
+        String hierarchyName = "test-directory";
+        Map<String, UUID> entries = Map.of(
+            "alice", UUID.randomUUID(),
+            "bob", UUID.randomUUID()
+        );
+
+        // Act
+        DirectoryOperationResponse response = client.addDirectoryEntries(catalogId, hierarchyName, entries);
+
+        // Assert
+        assertNotNull(response);
+        assertEquals(catalogId, response.catalogId());
+        assertEquals(hierarchyName, response.hierarchyName());
+        assertEquals("add", response.operation());
+        assertEquals(2, response.count());
+
+        // Verify request
+        RecordedRequest recordedRequest = mockWebServer.takeRequest();
+        assertEquals("POST", recordedRequest.getMethod());
+        assertTrue(recordedRequest.getPath().contains("/entries"));
+    }
+
+    @Test
+    @DisplayName("Should remove directory entries by names successfully")
+    void testRemoveDirectoryEntriesByNames() throws Exception
+    {
+        // Arrange
+        String responseJson = """
+            {
+              "catalogId": "550e8400-e29b-41d4-a716-446655440000",
+              "hierarchyName": "test-directory",
+              "operation": "remove",
+              "count": 2,
+              "message": "Successfully removed 2 directory entries by names"
+            }
+            """;
+
+        mockWebServer.enqueue(new MockResponse()
+            .setResponseCode(200)
+            .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+            .setBody(responseJson));
+
+        UUID catalogId = UUID.fromString("550e8400-e29b-41d4-a716-446655440000");
+        String hierarchyName = "test-directory";
+        List<String> names = List.of("alice", "bob");
+
+        // Act
+        DirectoryOperationResponse response = client.removeDirectoryEntriesByNames(
+            catalogId, hierarchyName, names);
+
+        // Assert
+        assertNotNull(response);
+        assertEquals(catalogId, response.catalogId());
+        assertEquals("remove", response.operation());
+        assertEquals(2, response.count());
+
+        // Verify request
+        RecordedRequest recordedRequest = mockWebServer.takeRequest();
+        assertEquals("DELETE", recordedRequest.getMethod());
+        assertTrue(recordedRequest.getPath().contains("/entries"));
+    }
+
+    @Test
+    @DisplayName("Should remove directory entries by entity IDs successfully")
+    void testRemoveDirectoryEntriesByEntityIds() throws Exception
+    {
+        // Arrange
+        String responseJson = """
+            {
+              "catalogId": "550e8400-e29b-41d4-a716-446655440000",
+              "hierarchyName": "test-directory",
+              "operation": "remove",
+              "count": 3,
+              "message": "Successfully removed 3 directory entries by entity IDs"
+            }
+            """;
+
+        mockWebServer.enqueue(new MockResponse()
+            .setResponseCode(200)
+            .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+            .setBody(responseJson));
+
+        UUID catalogId = UUID.fromString("550e8400-e29b-41d4-a716-446655440000");
+        String hierarchyName = "test-directory";
+        List<UUID> entityIds = List.of(
+            UUID.randomUUID(),
+            UUID.randomUUID(),
+            UUID.randomUUID()
+        );
+
+        // Act
+        DirectoryOperationResponse response = client.removeDirectoryEntriesByEntityIds(
+            catalogId, hierarchyName, entityIds);
+
+        // Assert
+        assertNotNull(response);
+        assertEquals(catalogId, response.catalogId());
+        assertEquals(3, response.count());
+
+        // Verify request
+        RecordedRequest recordedRequest = mockWebServer.takeRequest();
+        assertEquals("DELETE", recordedRequest.getMethod());
+        assertTrue(recordedRequest.getPath().contains("/entries"));
+    }
+
+    @Test
+    @DisplayName("Should throw BadRequestException when removing directory entries with both names and IDs")
+    void testRemoveDirectoryEntries_BothNamesAndIds()
+    {
+        // Arrange
+        mockWebServer.enqueue(new MockResponse()
+            .setResponseCode(400)
+            .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+            .setBody("{\"message\":\"Cannot specify both names and entity IDs\"}"));
+
+        UUID catalogId = UUID.randomUUID();
+        String hierarchyName = "test-directory";
+        List<String> names = List.of("alice");
+
+        // Act & Assert
+        assertThrows(CheapRestBadRequestException.class,
+            () -> client.removeDirectoryEntriesByNames(catalogId, hierarchyName, names));
+    }
+
+    // Entity Tree Operations
+
+    @Test
+    @DisplayName("Should add tree nodes at root level successfully")
+    void testAddTreeNodes_RootLevel() throws Exception
+    {
+        // Arrange
+        String responseJson = """
+            {
+              "catalogId": "550e8400-e29b-41d4-a716-446655440000",
+              "hierarchyName": "test-tree",
+              "operation": "add",
+              "nodesAffected": 2,
+              "message": "Successfully added 2 nodes"
+            }
+            """;
+
+        mockWebServer.enqueue(new MockResponse()
+            .setResponseCode(200)
+            .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+            .setBody(responseJson));
+
+        UUID catalogId = UUID.fromString("550e8400-e29b-41d4-a716-446655440000");
+        String hierarchyName = "test-tree";
+        Map<String, UUID> nodes = Map.of(
+            "root1", UUID.randomUUID(),
+            "root2", UUID.randomUUID()
+        );
+
+        // Act
+        TreeOperationResponse response = client.addTreeNodes(
+            catalogId, hierarchyName, null, nodes);
+
+        // Assert
+        assertNotNull(response);
+        assertEquals(catalogId, response.catalogId());
+        assertEquals(hierarchyName, response.hierarchyName());
+        assertEquals("add", response.operation());
+        assertEquals(2, response.nodesAffected());
+
+        // Verify request
+        RecordedRequest recordedRequest = mockWebServer.takeRequest();
+        assertEquals("POST", recordedRequest.getMethod());
+        assertTrue(recordedRequest.getPath().contains("/nodes"));
+    }
+
+    @Test
+    @DisplayName("Should add tree nodes under parent path successfully")
+    void testAddTreeNodes_WithParent() throws Exception
+    {
+        // Arrange
+        String responseJson = """
+            {
+              "catalogId": "550e8400-e29b-41d4-a716-446655440000",
+              "hierarchyName": "test-tree",
+              "operation": "add",
+              "nodesAffected": 3,
+              "message": "Successfully added 3 nodes under /root/folder1"
+            }
+            """;
+
+        mockWebServer.enqueue(new MockResponse()
+            .setResponseCode(200)
+            .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+            .setBody(responseJson));
+
+        UUID catalogId = UUID.fromString("550e8400-e29b-41d4-a716-446655440000");
+        String hierarchyName = "test-tree";
+        String parentPath = "/root/folder1";
+        Map<String, UUID> nodes = Map.of(
+            "child1", UUID.randomUUID(),
+            "child2", UUID.randomUUID(),
+            "child3", UUID.randomUUID()
+        );
+
+        // Act
+        TreeOperationResponse response = client.addTreeNodes(
+            catalogId, hierarchyName, parentPath, nodes);
+
+        // Assert
+        assertNotNull(response);
+        assertEquals(3, response.nodesAffected());
+        assertTrue(response.message().contains(parentPath));
+
+        // Verify request
+        RecordedRequest recordedRequest = mockWebServer.takeRequest();
+        assertEquals("POST", recordedRequest.getMethod());
+    }
+
+    @Test
+    @DisplayName("Should remove tree nodes successfully")
+    void testRemoveTreeNodes() throws Exception
+    {
+        // Arrange
+        String responseJson = """
+            {
+              "catalogId": "550e8400-e29b-41d4-a716-446655440000",
+              "hierarchyName": "test-tree",
+              "operation": "remove",
+              "nodesAffected": 5,
+              "message": "Successfully removed 2 nodes and 3 descendants"
+            }
+            """;
+
+        mockWebServer.enqueue(new MockResponse()
+            .setResponseCode(200)
+            .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+            .setBody(responseJson));
+
+        UUID catalogId = UUID.fromString("550e8400-e29b-41d4-a716-446655440000");
+        String hierarchyName = "test-tree";
+        List<String> paths = List.of(
+            "/root/folder1",
+            "/root/folder2"
+        );
+
+        // Act
+        TreeOperationResponse response = client.removeTreeNodes(
+            catalogId, hierarchyName, paths);
+
+        // Assert
+        assertNotNull(response);
+        assertEquals(catalogId, response.catalogId());
+        assertEquals("remove", response.operation());
+        assertEquals(5, response.nodesAffected());
+
+        // Verify request
+        RecordedRequest recordedRequest = mockWebServer.takeRequest();
+        assertEquals("DELETE", recordedRequest.getMethod());
+        assertTrue(recordedRequest.getPath().contains("/nodes"));
+    }
+
+    @Test
+    @DisplayName("Should throw NotFoundException when parent node not found")
+    void testAddTreeNodes_ParentNotFound()
+    {
+        // Arrange
+        mockWebServer.enqueue(new MockResponse()
+            .setResponseCode(404)
+            .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+            .setBody("{\"message\":\"Parent node not found\"}"));
+
+        UUID catalogId = UUID.randomUUID();
+        String hierarchyName = "test-tree";
+        String parentPath = "/nonexistent/path";
+        Map<String, UUID> nodes = Map.of("child", UUID.randomUUID());
+
+        // Act & Assert
+        assertThrows(CheapRestNotFoundException.class,
+            () -> client.addTreeNodes(catalogId, hierarchyName, parentPath, nodes));
+    }
+
+    @Test
+    @DisplayName("Should throw ServerException for 500 errors on mutation operations")
+    void testMutationOperation_ServerError()
+    {
+        // Arrange
+        mockWebServer.enqueue(new MockResponse()
+            .setResponseCode(500)
+            .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+            .setBody("{\"message\":\"Internal server error\"}"));
+
+        UUID catalogId = UUID.randomUUID();
+        String hierarchyName = "test-list";
+        List<UUID> entityIds = List.of(UUID.randomUUID());
+
+        // Act & Assert
+        assertThrows(CheapRestServerException.class,
+            () -> client.addEntityIds(catalogId, hierarchyName, entityIds));
     }
 }

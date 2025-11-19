@@ -57,11 +57,13 @@ public class AspectService
     private final CheapDao dao;
     private final CheapFactory factory;
     private final PropertyValueAdapter propertyAdapter;
+    private final CatalogService catalogService;
 
-    public AspectService(CheapDao dao, CheapFactory factory)
+    public AspectService(CheapDao dao, CatalogService catalogService, CheapFactory factory)
     {
         this.dao = dao;
         this.factory = factory;
+        this.catalogService = catalogService;
         this.propertyAdapter = new PropertyValueAdapter();
     }
 
@@ -83,17 +85,7 @@ public class AspectService
         logger.info("Upserting {} aspects of type {} in catalog {}",
             aspectsByEntity.size(), aspectDefName, catalogId);
 
-        // Load the catalog
-        Catalog catalog;
-        try {
-            catalog = dao.loadCatalog(catalogId);
-            if (catalog == null) {
-                throw new ResourceNotFoundException("Catalog not found: " + catalogId);
-            }
-        } catch (SQLException e) {
-            logger.error("Failed to load catalog in upsertAspects");
-            throw new CheapException("Failed to load catalog: " + e.getMessage(), e);
-        }
+        Catalog catalog = catalogService.getCatalog(catalogId);
 
         // Find the AspectDef
         AspectDef aspectDef = null;
@@ -244,17 +236,7 @@ public class AspectService
     {
         logger.info("Querying aspects for {} entities in catalog {}", entityIds.size(), catalogId);
 
-        // Load the catalog
-        Catalog catalog;
-        try {
-            catalog = dao.loadCatalog(catalogId);
-            if (catalog == null) {
-                throw new ResourceNotFoundException("Catalog not found: " + catalogId);
-            }
-        } catch (SQLException e) {
-            logger.error("Failed to load catalog");
-            throw new CheapException("Failed to load catalog: " + e.getMessage(), e);
-        }
+        Catalog catalog = catalogService.getCatalog(catalogId);
 
         // lookup AspectDefs to query
         List<AspectDef> aspectDefsToQuery = new ArrayList<>(aspectDefNames.size());

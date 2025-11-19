@@ -29,8 +29,8 @@ ADD COLUMN created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP;
 -- ========== ADD AUDIT COLUMNS TO CORE ENTITY TABLES ==========
 
 -- Add audit columns to entity
-ALTER TABLE entity
-ADD COLUMN created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP;
+--ALTER TABLE entity
+--ADD COLUMN created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP;
 
 -- Add audit columns to catalog
 ALTER TABLE catalog
@@ -87,7 +87,7 @@ ADD COLUMN created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP;
 -- ========== CREATE AUDIT INDEXES ==========
 
 -- Entity index on created_at
-CREATE INDEX idx_entity_created_at ON entity(created_at);
+--CREATE INDEX idx_entity_created_at ON entity(created_at);
 
 -- ========== TRIGGERS FOR AUTOMATIC UPDATES ==========
 

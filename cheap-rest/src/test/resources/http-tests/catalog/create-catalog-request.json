@@ -14,29 +14,16 @@
           {
             "name": "firstName",
             "type": "String",
-            "isNullable": false,
-            "isReadable": true,
-            "isWritable": true,
-            "isRemovable": false,
-            "isMultivalued": false
+            "isNullable": false
           },
           {
             "name": "lastName",
             "type": "String",
-            "isNullable": false,
-            "isReadable": true,
-            "isWritable": true,
-            "isRemovable": false,
-            "isMultivalued": false
+            "isNullable": false
           },
           {
             "name": "age",
-            "type": "Integer",
-            "isNullable": true,
-            "isReadable": true,
-            "isWritable": true,
-            "isRemovable": false,
-            "isMultivalued": false
+            "type": "Integer"
           }
         ]
       }

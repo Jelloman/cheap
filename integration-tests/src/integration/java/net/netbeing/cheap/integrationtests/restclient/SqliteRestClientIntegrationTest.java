@@ -1,11 +1,10 @@
 package net.netbeing.cheap.integrationtests.restclient;
 
-import net.netbeing.cheap.impl.basic.CheapFactory;
-import net.netbeing.cheap.integrationtests.base.SqliteClientIntegrationTest;
-import net.netbeing.cheap.json.dto.AspectDefListResponse;
+import net.netbeing.cheap.integrationtests.base.AbstractRestClientIntegrationTest;
+import net.netbeing.cheap.integrationtests.config.ClientTestConfig;
+import net.netbeing.cheap.integrationtests.config.SqliteServerTestConfig;
+import net.netbeing.cheap.integrationtests.util.TestStartEndLogger;
 import net.netbeing.cheap.json.dto.AspectQueryResponse;
-import net.netbeing.cheap.json.dto.CatalogListResponse;
-import net.netbeing.cheap.json.dto.CreateAspectDefResponse;
 import net.netbeing.cheap.json.dto.CreateCatalogResponse;
 import net.netbeing.cheap.json.dto.UpsertAspectsResponse;
 import net.netbeing.cheap.model.Aspect;
@@ -16,7 +15,17 @@ import net.netbeing.cheap.model.CatalogSpecies;
 import net.netbeing.cheap.model.Entity;
 import net.netbeing.cheap.model.PropertyDef;
 import net.netbeing.cheap.model.PropertyType;
+import net.netbeing.cheap.rest.CheapRestApplication;
+import net.netbeing.cheap.rest.client.CheapRestClient;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.parallel.ResourceLock;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.ContextConfiguration;
 
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -31,14 +40,40 @@ import static org.junit.jupiter.api.Assertions.*;
  * End-to-end REST integration tests for SQLite backend.
  * Tests the complete flow: REST client -> REST API -> Service -> DAO -> SQLite.
  * ALL tests interact ONLY through the REST client - NO direct database access.
+ *
+ * Common tests are inherited from BaseClientIntegrationTest.
+ * This class only contains SQLite-specific tests.
  */
-@SuppressWarnings("unused")
-class SqliteRestClientIntegrationTest extends SqliteClientIntegrationTest
+@SpringBootTest(
+    classes = CheapRestApplication.class,
+    webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT,
+    properties = {
+        "spring.main.allow-bean-definition-overriding=true",
+        "server.port=8082",
+        "cheap.database.type=sqlite"
+    }
+)
+@ContextConfiguration
+@Import({SqliteServerTestConfig.class, ClientTestConfig.class})
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
+@ResourceLock("port-8082")
+@ExtendWith(TestStartEndLogger.class)
+class SqliteRestClientIntegrationTest extends AbstractRestClientIntegrationTest
 {
-    private final CheapFactory factory = new CheapFactory();
+    /**
+     * Inject the SQLite-specific REST client.
+     * This client is configured to connect to the server on port 8082.
+     */
+    @Autowired
+    @Qualifier("sqliteClient")
+    @Override
+    protected void setClient(CheapRestClient client)
+    {
+        super.setClient(client);
+    }
 
     /**
-     * Helper method to create the "order_item" AspectDef used by multiple tests.
+     * Helper method to create the "order_item" AspectDef used by SQLite-specific tests.
      * The AspectTableMapping for this is registered on the server at startup.
      */
     private AspectDef createOrderItemAspectDef()
@@ -48,79 +83,6 @@ class SqliteRestClientIntegrationTest extends SqliteClientIntegrationTest
         orderItemProps.put("quantity", factory.createPropertyDef("quantity", PropertyType.Integer));
         orderItemProps.put("price", factory.createPropertyDef("price", PropertyType.Float));
         return factory.createImmutableAspectDef("order_item", orderItemProps);
-    }
-
-    @Test
-    void catalogLifecycle()
-    {
-        // Create catalog
-        CatalogDef catalogDef = factory.createCatalogDef();
-
-        CreateCatalogResponse createResponse = client.createCatalog(
-            catalogDef,
-            CatalogSpecies.SINK,
-            null
-        );
-
-        assertNotNull(createResponse);
-        assertNotNull(createResponse.catalogId());
-
-        // Retrieve catalog
-        CatalogDef retrieved = client.getCatalogDef(createResponse.catalogId());
-
-        assertNotNull(retrieved);
-
-        // List catalogs
-        CatalogListResponse listResponse = client.listCatalogs(0, 10);
-
-        assertNotNull(listResponse);
-        assertTrue(listResponse.totalElements() >= 1);
-        assertTrue(listResponse.content().contains(createResponse.catalogId()));
-    }
-
-    @Test
-    void aspectDefCRUD()
-    {
-        // Create catalog first
-        CatalogDef catalogDef = factory.createCatalogDef();
-        CreateCatalogResponse catalogResponse = client.createCatalog(catalogDef, CatalogSpecies.SINK, null);
-        UUID catalogId = catalogResponse.catalogId();
-
-        // Create multiple aspect defs
-        Map<String, PropertyDef> personProps = new LinkedHashMap<>();
-        personProps.put("name", factory.createPropertyDef("name", PropertyType.String));
-        personProps.put("age", factory.createPropertyDef("age", PropertyType.Integer));
-        AspectDef personAspectDef = factory.createImmutableAspectDef("person", personProps);
-
-        CreateAspectDefResponse personResponse = client.createAspectDef(catalogId, personAspectDef);
-        assertNotNull(personResponse);
-        assertNotNull(personResponse.aspectDefId());
-
-        // Create contact aspect def
-        Map<String, PropertyDef> contactProps = new LinkedHashMap<>();
-        contactProps.put("email", factory.createPropertyDef("email", PropertyType.String));
-        contactProps.put("phone", factory.createPropertyDef("phone", PropertyType.String));
-        AspectDef contactAspectDef = factory.createImmutableAspectDef("contact", contactProps);
-
-        CreateAspectDefResponse contactResponse = client.createAspectDef(catalogId, contactAspectDef);
-        assertNotNull(contactResponse);
-        assertNotNull(contactResponse.aspectDefId());
-
-        // List aspect defs
-        AspectDefListResponse listResponse = client.listAspectDefs(catalogId, 0, 10);
-        assertNotNull(listResponse);
-        assertEquals(2, listResponse.totalElements());
-
-        // Get aspect def by ID
-        AspectDef retrievedPerson = client.getAspectDef(catalogId, personResponse.aspectDefId());
-        assertNotNull(retrievedPerson);
-        assertEquals("person", retrievedPerson.name());
-
-        // Get aspect def by name
-        AspectDef retrievedContact = client.getAspectDefByName(catalogId, "contact");
-        assertNotNull(retrievedContact);
-        assertEquals("contact", retrievedContact.name());
-        assertEquals(contactResponse.aspectDefId(), retrievedContact.globalId());
     }
 
     @Test
@@ -180,139 +142,5 @@ class SqliteRestClientIntegrationTest extends SqliteClientIntegrationTest
         assertEquals("Gadget Pro", orderItem2.get("product_name").read());
         assertEquals(3L, orderItem2.get("quantity").read());
         assertEquals(89.99, ((Number) orderItem2.get("price").read()).doubleValue(), 0.001);
-    }
-
-    @Test
-    void aspectUpsert()
-    {
-        // Create catalog and aspect def
-        CatalogDef catalogDef = factory.createCatalogDef();
-        CreateCatalogResponse catalogResponse = client.createCatalog(catalogDef, CatalogSpecies.SINK, null);
-        UUID catalogId = catalogResponse.catalogId();
-
-        Map<String, PropertyDef> productProps = new LinkedHashMap<>();
-        productProps.put("sku", factory.createPropertyDef("sku", PropertyType.String));
-        productProps.put("name", factory.createPropertyDef("name", PropertyType.String));
-        productProps.put("price", factory.createPropertyDef("price", PropertyType.Float));
-        AspectDef productAspectDef = factory.createImmutableAspectDef("product", productProps);
-
-        client.createAspectDef(catalogId, productAspectDef);
-
-        // Register AspectDef so Aspects can be deserialized
-        client.registerAspectDef(productAspectDef);
-
-        // Upsert aspects
-        UUID productId1 = testUuid(2001);
-        UUID productId2 = testUuid(2002);
-        Entity entity1 = factory.createEntity(productId1);
-        Entity entity2 = factory.createEntity(productId2);
-
-        Map<UUID, Map<String, Object>> aspects = new LinkedHashMap<>();
-        aspects.put(productId1, Map.of(
-            "sku", "PROD-001",
-            "name", "Widget",
-            "price", 19.99
-        ));
-        aspects.put(productId2, Map.of(
-            "sku", "PROD-002",
-            "name", "Gadget",
-            "price", 29.99
-        ));
-
-        UpsertAspectsResponse upsertResponse = client.upsertAspects(catalogId, "product", aspects);
-        assertEquals(2, upsertResponse.successCount());
-
-        // Query aspects back
-        Set<UUID> entityIds = Set.of(productId1, productId2);
-        Set<String> aspectDefNames = Set.of("product");
-
-        AspectQueryResponse queryResponse = client.queryAspects(catalogId, entityIds, aspectDefNames);
-        assertNotNull(queryResponse);
-        assertEquals(1, queryResponse.results().size());
-
-        AspectMap aspectMap = queryResponse.results().getFirst();
-        assertEquals("product", aspectMap.aspectDef().name());
-
-        Aspect product1 = aspectMap.get(entity1);
-        Aspect product2 = aspectMap.get(entity2);
-        assertNotNull(product1);
-        assertEquals("PROD-001", product1.get("sku").read());
-        assertEquals("Widget", product1.get("name").read());
-
-        assertNotNull(product2);
-        assertEquals("PROD-002", product2.get("sku").read());
-        assertEquals("Gadget", product2.get("name").read());
-    }
-
-    // TODO: Re-enable once REST API endpoints for hierarchy creation are implemented
-    // @Test
-    // @Disabled("Requires REST API endpoints to create and populate EntityList hierarchies")
-    // void entityListHierarchy()
-    // {
-    //     // This test needs:
-    //     // 1. POST /catalogs/{id}/hierarchies/entity-list/{name} - create EntityList hierarchy
-    //     // 2. POST /catalogs/{id}/hierarchies/entity-list/{name}/entities - add entities
-    //     // OR: Pre-populated test data on server startup
-    // }
-
-    // TODO: Re-enable once REST API endpoints for hierarchy creation are implemented
-    // @Test
-    // @Disabled("Requires REST API endpoints to create and populate EntityDirectory hierarchies")
-    // void entityDirectoryHierarchy()
-    // {
-    //     // This test needs:
-    //     // 1. POST /catalogs/{id}/hierarchies/entity-directory/{name} - create EntityDirectory hierarchy
-    //     // 2. POST /catalogs/{id}/hierarchies/entity-directory/{name}/entries - add directory entries
-    //     // OR: Pre-populated test data on server startup
-    // }
-
-    // TODO: Re-enable once REST API endpoints for hierarchy creation are implemented
-    // @Test
-    // @Disabled("Requires REST API endpoints to create and populate AspectMap hierarchies")
-    // void aspectMapHierarchy()
-    // {
-    //     // This test needs:
-    //     // 1. POST /catalogs/{id}/hierarchies/aspect-map/{aspectDefName} - create AspectMap hierarchy
-    //     // 2. PUT /catalogs/{id}/hierarchies/aspect-map/{aspectDefName}/aspects - upsert aspects into map
-    //     // OR: Pre-populated test data on server startup
-    // }
-
-    @Test
-    void errorHandling()
-    {
-        // Test 404 - catalog not found
-        UUID nonExistentCatalogId = UUID.randomUUID();
-        assertThrows(
-            Exception.class,
-            () -> client.getCatalogDef(nonExistentCatalogId),
-            "Should throw exception for non-existent catalog"
-        );
-
-        // Create catalog for other error tests
-        CatalogDef catalogDef = factory.createCatalogDef();
-        CreateCatalogResponse catalogResponse = client.createCatalog(catalogDef, CatalogSpecies.SINK, null);
-        UUID catalogId = catalogResponse.catalogId();
-
-        // Test 404 - aspect def not found
-        UUID nonExistentAspectDefId = UUID.randomUUID();
-        assertThrows(
-            Exception.class,
-            () -> client.getAspectDef(catalogId, nonExistentAspectDefId),
-            "Should throw exception for non-existent aspect def"
-        );
-
-        // Test 404 - aspect def by name not found
-        assertThrows(
-            Exception.class,
-            () -> client.getAspectDefByName(catalogId, "nonexistent"),
-            "Should throw exception for non-existent aspect def name"
-        );
-
-        // Test 404 - hierarchy not found
-        assertThrows(
-            Exception.class,
-            () -> client.getEntityList(catalogId, "nonexistent-list", 0, 10),
-            "Should throw exception for non-existent hierarchy"
-        );
     }
 }

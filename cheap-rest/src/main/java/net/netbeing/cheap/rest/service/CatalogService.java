@@ -48,6 +48,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 /**
  * Service layer for Catalog operations.
@@ -61,6 +63,8 @@ public class CatalogService
     private final CheapDao dao;
     private final CheapFactory factory;
     private final DataSource dataSource;
+
+    private final ConcurrentMap<UUID, Catalog> catalogStore = new ConcurrentHashMap<>();
 
     @Resource
     @Lazy
@@ -124,8 +128,12 @@ public class CatalogService
 
         // Save the catalog
         try {
+            logger.info("Creating catalog with ID: {}", catalogId);
             dao.saveCatalog(catalog);
             logger.info("Successfully created catalog with ID: {}", catalogId);
+
+            catalogStore.put(catalogId, catalog);
+
             return catalogId;
         } catch (SQLException e) {
             logger.error("Failed to save catalog");
@@ -148,13 +156,14 @@ public class CatalogService
         try (Connection conn = dataSource.getConnection()) {
             // Query all catalog IDs from the database
             List<UUID> allCatalogIds = new ArrayList<>();
-            String sql = "SELECT catalog_id FROM catalog ORDER BY catalog_id";
+            String sql = "SELECT catalog_id FROM catalog ORDER BY catalog_id"; // FIXME!!
 
             try (PreparedStatement stmt = conn.prepareStatement(sql);
                 ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
                     String catalogIdStr = rs.getString("catalog_id");
-                    allCatalogIds.add(UUID.fromString(catalogIdStr));                }
+                    allCatalogIds.add(UUID.fromString(catalogIdStr));
+                }
             }
 
             // Calculate pagination
@@ -207,11 +216,17 @@ public class CatalogService
     {
         logger.debug("Getting catalog: {}", catalogId);
 
+        Catalog catalog = catalogStore.get(catalogId);
+        if (catalog != null) {
+            return catalog;
+        }
+
         try {
-            Catalog catalog = dao.loadCatalog(catalogId);
+            catalog = dao.loadCatalog(catalogId);
             if (catalog == null) {
                 throw new ResourceNotFoundException("Catalog not found: " + catalogId);
             }
+            catalogStore.put(catalogId, catalog);
             return catalog;
         } catch (SQLException e) {
             logger.error("Failed to load catalog");
@@ -397,7 +412,7 @@ public class CatalogService
                         species + " catalogs must have an upstream catalog"
                     ));
                 }
-                // TODO: Validate that upstream catalog exists
+                // Validating that the upstream catalog exists is not in scope here.
             }
         }
 
@@ -412,7 +427,7 @@ public class CatalogService
      * @param catalog the catalog to add the hierarchy to
      * @param hierarchyDef the hierarchy definition
      */
-    private void createAndAddHierarchy(@NotNull Catalog catalog, @NotNull HierarchyDef hierarchyDef)
+    protected void createAndAddHierarchy(@NotNull Catalog catalog, @NotNull HierarchyDef hierarchyDef)
     {
         switch (hierarchyDef.type()) {
             case ENTITY_LIST -> catalog.createEntityList(hierarchyDef.name(), 0L);

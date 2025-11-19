@@ -346,7 +346,7 @@ public class PostgresDao extends AbstractCheapDao
         }
     }
 
-
+/*
     @Override
     public void saveEntity(@NotNull Connection conn, @NotNull Entity entity) throws SQLException
     {
@@ -356,6 +356,7 @@ public class PostgresDao extends AbstractCheapDao
             stmt.executeUpdate();
         }
     }
+*/
 
     @Override
     protected void saveCatalogRecord(@NotNull Connection conn, @NotNull Catalog catalog) throws SQLException
@@ -406,7 +407,7 @@ public class PostgresDao extends AbstractCheapDao
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             int order = 0;
             for (Entity entity : hierarchy) {
-                saveEntity(conn, entity);
+                //saveEntity(conn, entity);
                 stmt.setObject(1, hierarchy.catalog().globalId());
                 stmt.setString(2, hierarchy.name());
                 stmt.setObject(3, entity.globalId());
@@ -427,7 +428,7 @@ public class PostgresDao extends AbstractCheapDao
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             int order = 0;
             for (Entity entity : hierarchy) {
-                saveEntity(conn, entity);
+                //saveEntity(conn, entity);
                 stmt.setObject(1, hierarchy.catalog().globalId());
                 stmt.setString(2, hierarchy.name());
                 stmt.setObject(3, entity.globalId());
@@ -451,7 +452,7 @@ public class PostgresDao extends AbstractCheapDao
             for (Map.Entry<String,Entity> entry : hierarchy.entrySet()) {
                 Entity entity = entry.getValue();
                 if (entity != null) {
-                    saveEntity(conn, entity);
+                    //saveEntity(conn, entity);
                     stmt.setObject(1, hierarchy.catalog().globalId());
                     stmt.setString(2, hierarchy.name());
                     stmt.setString(3, entry.getKey());
@@ -547,7 +548,7 @@ public class PostgresDao extends AbstractCheapDao
 
             for (Map.Entry<Entity,Aspect> entry : hierarchy.entrySet()) {
                 Entity entity = entry.getKey();
-                saveEntity(conn, entity);
+                //saveEntity(conn, entity);
 
                 Aspect aspect = entry.getValue();
                 if (aspect != null) {

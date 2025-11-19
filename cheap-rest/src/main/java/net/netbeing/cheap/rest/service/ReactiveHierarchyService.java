@@ -23,6 +23,7 @@ import net.netbeing.cheap.model.EntityListHierarchy;
 import net.netbeing.cheap.model.EntitySetHierarchy;
 import net.netbeing.cheap.model.EntityTreeHierarchy;
 import net.netbeing.cheap.model.Hierarchy;
+import net.netbeing.cheap.model.HierarchyDef;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
@@ -142,6 +143,131 @@ public class ReactiveHierarchyService
     public Mono<Long> countHierarchyItems(Hierarchy hierarchy)
     {
         return Mono.fromCallable(() -> hierarchyService.countHierarchyItems(hierarchy))
+            .subscribeOn(jdbcScheduler);
+    }
+
+    /**
+     * Creates a new hierarchy from a HierarchyDef and adds it to the catalog reactively.
+     *
+     * @param catalogId the catalog ID
+     * @param hierarchyDef the hierarchy definition
+     * @return Mono emitting the name of the created hierarchy
+     */
+    public Mono<String> createHierarchy(@NotNull UUID catalogId, @NotNull HierarchyDef hierarchyDef)
+    {
+        return Mono.fromCallable(() -> hierarchyService.createHierarchy(catalogId, hierarchyDef))
+            .subscribeOn(jdbcScheduler);
+    }
+
+    // ========================================
+    // Entity List/Set Mutation Operations
+    // ========================================
+
+    /**
+     * Adds entity IDs to an EntityList or EntitySet hierarchy reactively.
+     *
+     * @param catalogId the catalog ID
+     * @param hierarchyName the hierarchy name
+     * @param entityIds the list of entity IDs to add
+     * @return Mono emitting the number of entity IDs added
+     */
+    public Mono<Integer> addEntityIds(@NotNull UUID catalogId, @NotNull String hierarchyName, @NotNull List<UUID> entityIds)
+    {
+        return Mono.fromCallable(() -> hierarchyService.addEntityIds(catalogId, hierarchyName, entityIds))
+            .subscribeOn(jdbcScheduler);
+    }
+
+    /**
+     * Removes entity IDs from an EntityList or EntitySet hierarchy reactively.
+     *
+     * @param catalogId the catalog ID
+     * @param hierarchyName the hierarchy name
+     * @param entityIds the list of entity IDs to remove
+     * @return Mono emitting the number of entity IDs removed
+     */
+    public Mono<Integer> removeEntityIds(@NotNull UUID catalogId, @NotNull String hierarchyName, @NotNull List<UUID> entityIds)
+    {
+        return Mono.fromCallable(() -> hierarchyService.removeEntityIds(catalogId, hierarchyName, entityIds))
+            .subscribeOn(jdbcScheduler);
+    }
+
+    // ========================================
+    // Entity Directory Mutation Operations
+    // ========================================
+
+    /**
+     * Adds entries to an EntityDirectory hierarchy reactively.
+     *
+     * @param catalogId the catalog ID
+     * @param hierarchyName the hierarchy name
+     * @param entries the map of name -> entity ID pairs to add
+     * @return Mono emitting the number of entries added
+     */
+    public Mono<Integer> addDirectoryEntries(@NotNull UUID catalogId, @NotNull String hierarchyName, @NotNull Map<String, UUID> entries)
+    {
+        return Mono.fromCallable(() -> hierarchyService.addDirectoryEntries(catalogId, hierarchyName, entries))
+            .subscribeOn(jdbcScheduler);
+    }
+
+    /**
+     * Removes entries from an EntityDirectory hierarchy by names reactively.
+     *
+     * @param catalogId the catalog ID
+     * @param hierarchyName the hierarchy name
+     * @param names the list of names to remove
+     * @return Mono emitting the number of entries removed
+     */
+    public Mono<Integer> removeDirectoryEntriesByNames(@NotNull UUID catalogId, @NotNull String hierarchyName, @NotNull List<String> names)
+    {
+        return Mono.fromCallable(() -> hierarchyService.removeDirectoryEntriesByNames(catalogId, hierarchyName, names))
+            .subscribeOn(jdbcScheduler);
+    }
+
+    /**
+     * Removes entries from an EntityDirectory hierarchy by entity IDs reactively.
+     *
+     * @param catalogId the catalog ID
+     * @param hierarchyName the hierarchy name
+     * @param entityIds the list of entity IDs to remove
+     * @return Mono emitting the number of entries removed
+     */
+    public Mono<Integer> removeDirectoryEntriesByIds(@NotNull UUID catalogId, @NotNull String hierarchyName, @NotNull List<UUID> entityIds)
+    {
+        return Mono.fromCallable(() -> hierarchyService.removeDirectoryEntriesByIds(catalogId, hierarchyName, entityIds))
+            .subscribeOn(jdbcScheduler);
+    }
+
+    // ========================================
+    // Entity Tree Mutation Operations
+    // ========================================
+
+    /**
+     * Adds child nodes to an EntityTree hierarchy reactively.
+     *
+     * @param catalogId the catalog ID
+     * @param hierarchyName the hierarchy name
+     * @param parentPath the path to the parent node
+     * @param nodes the map of child name -> entity ID pairs to add
+     * @return Mono emitting the number of nodes added
+     */
+    public Mono<Integer> addTreeNodes(@NotNull UUID catalogId, @NotNull String hierarchyName, @NotNull String parentPath, @NotNull Map<String, UUID> nodes)
+    {
+        return Mono.fromCallable(() -> hierarchyService.addTreeNodes(catalogId, hierarchyName, parentPath, nodes))
+            .subscribeOn(jdbcScheduler);
+    }
+
+    /**
+     * Removes nodes from an EntityTree hierarchy reactively.
+     * Removal cascades to remove all descendants.
+     *
+     * @param catalogId the catalog ID
+     * @param hierarchyName the hierarchy name
+     * @param paths the list of node paths to remove
+     * @return Mono emitting the number of nodes removed (including descendants)
+     */
+    public Mono<Integer> removeTreeNodes(@NotNull UUID catalogId, @NotNull String hierarchyName, @NotNull List<String> paths)
+    {
+        return Mono.fromCallable(() -> hierarchyService.removeTreeNodes(catalogId, hierarchyName, paths))
             .subscribeOn(jdbcScheduler);
     }
 }

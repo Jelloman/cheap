@@ -259,7 +259,7 @@ public class SqliteDao extends AbstractCheapDao
         }
     }
 
-
+/*
     @Override
     public void saveEntity(@NotNull Connection conn, @NotNull Entity entity) throws SQLException
     {
@@ -269,6 +269,7 @@ public class SqliteDao extends AbstractCheapDao
             stmt.executeUpdate();
         }
     }
+*/
 
     @Override
     protected void saveCatalogRecord(@NotNull Connection conn, @NotNull Catalog catalog) throws SQLException
@@ -319,7 +320,7 @@ public class SqliteDao extends AbstractCheapDao
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             int order = 0;
             for (Entity entity : hierarchy) {
-                saveEntity(conn, entity);
+                //saveEntity(conn, entity);
                 stmt.setString(1, hierarchy.catalog().globalId().toString());
                 stmt.setString(2, hierarchy.name());
                 stmt.setString(3, entity.globalId().toString());
@@ -340,7 +341,7 @@ public class SqliteDao extends AbstractCheapDao
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             int order = 0;
             for (Entity entity : hierarchy) {
-                saveEntity(conn, entity);
+                //saveEntity(conn, entity);
                 stmt.setString(1, hierarchy.catalog().globalId().toString());
                 stmt.setString(2, hierarchy.name());
                 stmt.setString(3, entity.globalId().toString());
@@ -364,7 +365,7 @@ public class SqliteDao extends AbstractCheapDao
             for (Map.Entry<String,Entity> entry : hierarchy.entrySet()) {
                 Entity entity = entry.getValue();
                 if (entity != null) {
-                    saveEntity(conn, entity);
+                    //saveEntity(conn, entity);
                     stmt.setString(1, hierarchy.catalog().globalId().toString());
                     stmt.setString(2, hierarchy.name());
                     stmt.setString(3, entry.getKey());
@@ -463,7 +464,7 @@ public class SqliteDao extends AbstractCheapDao
             int order = 0;
             for (Map.Entry<Entity,Aspect> entry : hierarchy.entrySet()) {
                 Entity entity = entry.getKey();
-                saveEntity(conn, entity);
+                //saveEntity(conn, entity);
 
                 Aspect aspect = entry.getValue();
                 if (aspect != null) {
@@ -495,7 +496,7 @@ public class SqliteDao extends AbstractCheapDao
         try (PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
             for (Map.Entry<Entity,Aspect> entry : hierarchy.entrySet()) {
                 Entity entity = entry.getKey();
-                saveEntity(conn, entity);
+                //saveEntity(conn, entity);
 
                 Aspect aspect = hierarchy.get(entity);
                 if (aspect != null) {

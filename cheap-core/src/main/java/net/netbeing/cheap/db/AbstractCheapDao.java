@@ -135,7 +135,7 @@ public abstract class AbstractCheapDao implements CheapDao
     public void saveCatalog(@NotNull Connection conn, @NotNull Catalog catalog) throws SQLException
     {
         // Save the Catalog entity itself first and foremost
-        saveEntity(conn, catalog);
+        //saveEntity(conn, catalog);
 
         // Save the Catalog table record (must be before linking aspect defs due to FK constraint)
         saveCatalogRecord(conn, catalog);
@@ -286,7 +286,7 @@ public abstract class AbstractCheapDao implements CheapDao
 
         try (PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
             for (Map.Entry<Entity, Aspect> entry : hierarchy.entrySet()) {
-                saveEntity(conn, entry.getKey());
+                //saveEntity(conn, entry.getKey());
                 if (entry.getValue() != null) {
                     saveAspectToMappedTable(mapping, entry.getKey(), entry.getValue(), stmt, catalogId);
                 }

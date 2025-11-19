@@ -158,7 +158,7 @@ public class CheapTestFactory
      */
     public void insertEntity(Connection conn, Object entityId) throws SQLException
     {
-        executeUpdate(conn, "INSERT INTO entity (entity_id) VALUES (?)", entityId);
+        //executeUpdate(conn, "INSERT INTO entity (entity_id) VALUES (?)", entityId);
     }
 
     /**

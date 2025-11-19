@@ -7,8 +7,9 @@ A Java client library for interacting with the Cheap REST API. This module provi
 - Type-safe API using Cheap core model objects
 - Automatic JSON serialization/deserialization using Jackson
 - Comprehensive exception handling with specific exception types
-- Support for all Cheap REST API endpoints
+- Support for all Cheap REST API endpoints including hierarchy mutations
 - Non-blocking HTTP client using Spring WebClient
+- Hierarchy mutation operations: add/remove entity IDs, directory entries, and tree nodes
 
 ## Dependencies
 
@@ -164,6 +165,139 @@ AspectMapResponse mapResponse = client.getAspectMap(
     0,   // page
     20   // size
 );
+```
+
+### Mutating Hierarchies
+
+The client provides methods to add and remove elements from hierarchies:
+
+#### Entity List/Set Mutations
+
+```java
+import net.netbeing.cheap.json.dto.EntityIdsOperationResponse;
+import java.util.List;
+
+// Add entity IDs to an EntityList or EntitySet
+List<UUID> entitiesToAdd = List.of(
+    UUID.randomUUID(),
+    UUID.randomUUID(),
+    UUID.randomUUID()
+);
+
+EntityIdsOperationResponse addResponse = client.addEntityIds(
+    catalogId,
+    "myEntityList",
+    entitiesToAdd
+);
+
+System.out.println("Added " + addResponse.count() + " entities");
+
+// Remove entity IDs from an EntityList or EntitySet
+List<UUID> entitiesToRemove = List.of(entitiesToAdd.get(0), entitiesToAdd.get(1));
+
+EntityIdsOperationResponse removeResponse = client.removeEntityIds(
+    catalogId,
+    "myEntityList",
+    entitiesToRemove
+);
+
+System.out.println("Removed " + removeResponse.count() + " entities");
+```
+
+#### Entity Directory Mutations
+
+```java
+import net.netbeing.cheap.json.dto.DirectoryOperationResponse;
+import java.util.Map;
+import java.util.List;
+
+// Add entries to an EntityDirectory
+Map<String, UUID> entriesToAdd = Map.of(
+    "alice", UUID.randomUUID(),
+    "bob", UUID.randomUUID(),
+    "charlie", UUID.randomUUID()
+);
+
+DirectoryOperationResponse addDirResponse = client.addDirectoryEntries(
+    catalogId,
+    "myEntityDirectory",
+    entriesToAdd
+);
+
+System.out.println("Added " + addDirResponse.count() + " directory entries");
+
+// Remove entries by names
+List<String> namesToRemove = List.of("alice", "bob");
+
+DirectoryOperationResponse removeByNamesResponse = client.removeDirectoryEntriesByNames(
+    catalogId,
+    "myEntityDirectory",
+    namesToRemove
+);
+
+System.out.println("Removed " + removeByNamesResponse.count() + " entries by names");
+
+// Remove entries by entity IDs (removes all entries pointing to these IDs)
+List<UUID> entityIdsToRemove = List.of(entriesToAdd.get("charlie"));
+
+DirectoryOperationResponse removeByIdsResponse = client.removeDirectoryEntriesByEntityIds(
+    catalogId,
+    "myEntityDirectory",
+    entityIdsToRemove
+);
+
+System.out.println("Removed " + removeByIdsResponse.count() + " entries by entity IDs");
+```
+
+#### Entity Tree Mutations
+
+```java
+import net.netbeing.cheap.json.dto.TreeOperationResponse;
+
+// Add nodes at root level
+Map<String, UUID> rootNodes = Map.of(
+    "Engineering", UUID.randomUUID(),
+    "Marketing", UUID.randomUUID()
+);
+
+TreeOperationResponse addRootResponse = client.addTreeNodes(
+    catalogId,
+    "myEntityTree",
+    null,  // null for root level
+    rootNodes
+);
+
+System.out.println("Added " + addRootResponse.nodesAffected() + " root nodes");
+
+// Add child nodes under a parent path
+Map<String, UUID> childNodes = Map.of(
+    "Backend Team", UUID.randomUUID(),
+    "Frontend Team", UUID.randomUUID(),
+    "DevOps Team", UUID.randomUUID()
+);
+
+TreeOperationResponse addChildResponse = client.addTreeNodes(
+    catalogId,
+    "myEntityTree",
+    "/Engineering",  // parent path
+    childNodes
+);
+
+System.out.println("Added " + addChildResponse.nodesAffected() + " child nodes");
+
+// Remove tree nodes (cascade deletes all descendants)
+List<String> pathsToRemove = List.of(
+    "/Engineering/DevOps Team",
+    "/Marketing"
+);
+
+TreeOperationResponse removeTreeResponse = client.removeTreeNodes(
+    catalogId,
+    "myEntityTree",
+    pathsToRemove
+);
+
+System.out.println("Removed " + removeTreeResponse.nodesAffected() + " nodes (including descendants)");
 ```
 
 ### Error Handling

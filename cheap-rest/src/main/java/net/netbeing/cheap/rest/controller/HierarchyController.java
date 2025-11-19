@@ -22,10 +22,16 @@ import net.netbeing.cheap.rest.service.ReactiveHierarchyService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import net.netbeing.cheap.rest.exception.ValidationException;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Mono;
 
@@ -55,6 +61,30 @@ public class HierarchyController
     }
 
     /**
+     * Creates a new hierarchy in a catalog.
+     *
+     * @param catalogId the catalog ID
+     * @param request the hierarchy creation request
+     * @return Mono emitting the created hierarchy response
+     */
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    public Mono<CreateHierarchyResponse> createHierarchy(
+        @PathVariable UUID catalogId,
+        @RequestBody CreateHierarchyRequest request)
+    {
+        logger.info("Received request to create hierarchy {} in catalog {}",
+            request.hierarchyDef().name(), catalogId);
+
+        return hierarchyService.createHierarchy(catalogId, request.hierarchyDef())
+            .map(hierarchyName -> new CreateHierarchyResponse(
+                hierarchyName,
+                true,
+                "Hierarchy created successfully"
+            ));
+    }
+
+    /**
      * Gets hierarchy contents by name reactively.
      * Returns different response types based on hierarchy type.
      *
@@ -65,6 +95,7 @@ public class HierarchyController
      * @return Mono emitting hierarchy contents with appropriate structure
      */
     @GetMapping("/{hierarchyName}")
+    @SuppressWarnings("java:S1452")
     public Mono<?> getHierarchy(
         @PathVariable UUID catalogId,
         @PathVariable String hierarchyName,
@@ -225,5 +256,196 @@ public class HierarchyController
                     totalPages
                 );
             });
+    }
+
+    // ========================================
+    // Entity List/Set Mutation Operations
+    // ========================================
+
+    /**
+     * Adds entity IDs to an EntityList or EntitySet hierarchy.
+     *
+     * @param catalogId the catalog ID
+     * @param hierarchyName the hierarchy name
+     * @param request the request containing entity IDs to add
+     * @return Mono emitting the operation response
+     */
+    @PostMapping("/{hierarchyName}/entities")
+    public Mono<EntityIdsOperationResponse> addEntityIds(
+        @PathVariable UUID catalogId,
+        @PathVariable String hierarchyName,
+        @RequestBody AddEntityIdsRequest request)
+    {
+        logger.info("Received request to add {} entity IDs to hierarchy {} in catalog {}",
+            request.entityIds().size(), hierarchyName, catalogId);
+
+        return hierarchyService.addEntityIds(catalogId, hierarchyName, request.entityIds())
+            .map(count -> new EntityIdsOperationResponse(
+                catalogId,
+                hierarchyName,
+                "add",
+                count,
+                String.format("Added %d entity ID(s) to hierarchy '%s'", count, hierarchyName)
+            ));
+    }
+
+    /**
+     * Removes entity IDs from an EntityList or EntitySet hierarchy.
+     *
+     * @param catalogId the catalog ID
+     * @param hierarchyName the hierarchy name
+     * @param request the request containing entity IDs to remove
+     * @return Mono emitting the operation response
+     */
+    @DeleteMapping("/{hierarchyName}/entities")
+    public Mono<EntityIdsOperationResponse> removeEntityIds(
+        @PathVariable UUID catalogId,
+        @PathVariable String hierarchyName,
+        @RequestBody RemoveEntityIdsRequest request)
+    {
+        logger.info("Received request to remove {} entity IDs from hierarchy {} in catalog {}",
+            request.entityIds().size(), hierarchyName, catalogId);
+
+        return hierarchyService.removeEntityIds(catalogId, hierarchyName, request.entityIds())
+            .map(count -> new EntityIdsOperationResponse(
+                catalogId,
+                hierarchyName,
+                "remove",
+                count,
+                String.format("Removed %d entity ID(s) from hierarchy '%s'", count, hierarchyName)
+            ));
+    }
+
+    // ========================================
+    // Entity Directory Mutation Operations
+    // ========================================
+
+    /**
+     * Adds entries to an EntityDirectory hierarchy.
+     *
+     * @param catalogId the catalog ID
+     * @param hierarchyName the hierarchy name
+     * @param request the request containing entries to add
+     * @return Mono emitting the operation response
+     */
+    @PostMapping("/{hierarchyName}/entries")
+    public Mono<DirectoryOperationResponse> addDirectoryEntries(
+        @PathVariable UUID catalogId,
+        @PathVariable String hierarchyName,
+        @RequestBody AddDirectoryEntriesRequest request)
+    {
+        logger.info("Received request to add {} entries to directory {} in catalog {}",
+            request.entries().size(), hierarchyName, catalogId);
+
+        return hierarchyService.addDirectoryEntries(catalogId, hierarchyName, request.entries())
+            .map(count -> new DirectoryOperationResponse(
+                catalogId,
+                hierarchyName,
+                "add",
+                count,
+                String.format("Added %d entry/entries to directory '%s'", count, hierarchyName)
+            ));
+    }
+
+    /**
+     * Removes entries from an EntityDirectory hierarchy.
+     * Must specify either names OR entityIds, but not both.
+     *
+     * @param catalogId the catalog ID
+     * @param hierarchyName the hierarchy name
+     * @param request the request containing entries to remove (by name or ID)
+     * @return Mono emitting the operation response
+     */
+    @DeleteMapping("/{hierarchyName}/entries")
+    public Mono<DirectoryOperationResponse> removeDirectoryEntries(
+        @PathVariable UUID catalogId,
+        @PathVariable String hierarchyName,
+        @RequestBody RemoveDirectoryEntriesRequest request)
+    {
+        logger.info("Received request to remove entries from directory {} in catalog {}",
+            hierarchyName, catalogId);
+
+        // Validate that exactly one of names or entityIds is provided
+        boolean hasNames = request.names() != null && !request.names().isEmpty();
+        boolean hasIds = request.entityIds() != null && !request.entityIds().isEmpty();
+
+        if (hasNames == hasIds) {
+            return Mono.error(new ValidationException(
+                "Must specify either 'names' or 'entityIds', but not both or neither"
+            ));
+        }
+
+        Mono<Integer> operation = hasNames
+            ? hierarchyService.removeDirectoryEntriesByNames(catalogId, hierarchyName, request.names())
+            : hierarchyService.removeDirectoryEntriesByIds(catalogId, hierarchyName, request.entityIds());
+
+        return operation.map(count -> new DirectoryOperationResponse(
+            catalogId,
+            hierarchyName,
+            "remove",
+            count,
+            String.format("Removed %d entry/entries from directory '%s'", count, hierarchyName)
+        ));
+    }
+
+    // ========================================
+    // Entity Tree Mutation Operations
+    // ========================================
+
+    /**
+     * Adds child nodes to an EntityTree hierarchy under a specific parent.
+     *
+     * @param catalogId the catalog ID
+     * @param hierarchyName the hierarchy name
+     * @param request the request containing parent path and nodes to add
+     * @return Mono emitting the operation response
+     */
+    @PostMapping("/{hierarchyName}/nodes")
+    public Mono<TreeOperationResponse> addTreeNodes(
+        @PathVariable UUID catalogId,
+        @PathVariable String hierarchyName,
+        @RequestBody AddTreeNodesRequest request)
+    {
+        logger.info("Received request to add {} nodes to tree {} under path {} in catalog {}",
+            request.nodes().size(), hierarchyName, request.parentPath(), catalogId);
+
+        return hierarchyService.addTreeNodes(catalogId, hierarchyName, request.parentPath(), request.nodes())
+            .map(count -> new TreeOperationResponse(
+                catalogId,
+                hierarchyName,
+                "add",
+                count,
+                String.format("Added %d node(s) to tree '%s' under path '%s'",
+                    count, hierarchyName, request.parentPath())
+            ));
+    }
+
+    /**
+     * Removes nodes from an EntityTree hierarchy by paths.
+     * Removal cascades to remove all descendants.
+     *
+     * @param catalogId the catalog ID
+     * @param hierarchyName the hierarchy name
+     * @param request the request containing paths to remove
+     * @return Mono emitting the operation response
+     */
+    @DeleteMapping("/{hierarchyName}/nodes")
+    public Mono<TreeOperationResponse> removeTreeNodes(
+        @PathVariable UUID catalogId,
+        @PathVariable String hierarchyName,
+        @RequestBody RemoveTreeNodesRequest request)
+    {
+        logger.info("Received request to remove {} nodes from tree {} in catalog {}",
+            request.paths().size(), hierarchyName, catalogId);
+
+        return hierarchyService.removeTreeNodes(catalogId, hierarchyName, request.paths())
+            .map(count -> new TreeOperationResponse(
+                catalogId,
+                hierarchyName,
+                "remove",
+                count,
+                String.format("Removed %d node(s) from tree '%s' (including descendants)",
+                    count, hierarchyName)
+            ));
     }
 }

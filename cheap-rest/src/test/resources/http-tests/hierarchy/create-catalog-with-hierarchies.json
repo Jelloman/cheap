@@ -26,20 +26,12 @@
           {
             "name": "firstName",
             "type": "String",
-            "isNullable": false,
-            "isReadable": true,
-            "isWritable": true,
-            "isRemovable": false,
-            "isMultivalued": false
+            "isNullable": false
           },
           {
             "name": "lastName",
             "type": "String",
-            "isNullable": false,
-            "isReadable": true,
-            "isWritable": true,
-            "isRemovable": false,
-            "isMultivalued": false
+            "isNullable": false
           }
         ]
       }
