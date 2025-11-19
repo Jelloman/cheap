@@ -169,15 +169,27 @@ public class DockerTestUtils {
                 return -1;
             }
 
-            ContainerPort[] ports = inspection.getNetworkSettings().getPorts().getBindings().entrySet().stream()
-                    .filter(entry -> entry.getKey().getPort() == containerPort)
-                    .flatMap(entry -> Arrays.stream(entry.getValue()))
-                    .toArray(ContainerPort[]::new);
+            var ports = inspection.getNetworkSettings().getPorts();
+            var bindings = ports.getBindings();
 
-            if (ports.length > 0 && ports[0].getPublicPort() != null) {
-                int hostPort = ports[0].getPublicPort();
-                log.debug("Container {} port {} is mapped to host port {}", containerId, containerPort, hostPort);
-                return hostPort;
+            if (bindings == null || bindings.isEmpty()) {
+                log.error("No port bindings found for container {}", containerId);
+                return -1;
+            }
+
+            // Find the binding for the container port
+            for (var entry : bindings.entrySet()) {
+                if (entry.getKey().getPort() == containerPort) {
+                    var binding = entry.getValue();
+                    if (binding != null && binding.length > 0 && binding[0] != null) {
+                        Integer hostPort = binding[0].getHostPortSpec() != null ?
+                            Integer.parseInt(binding[0].getHostPortSpec()) : null;
+                        if (hostPort != null) {
+                            log.debug("Container {} port {} is mapped to host port {}", containerId, containerPort, hostPort);
+                            return hostPort;
+                        }
+                    }
+                }
             }
 
             log.error("No port mapping found for container {} port {}", containerId, containerPort);
