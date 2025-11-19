@@ -21,8 +21,7 @@ sourceSets {
     create("integration") {
         java.srcDir("src/integration/java")
         resources.srcDir("src/integration/resources")
-        compileClasspath += sourceSets["main"].output
-        runtimeClasspath += sourceSets["main"].output
+        // This module has no main source set - it's pure integration tests
     }
 }
 
@@ -32,8 +31,11 @@ val integrationImplementation by configurations.getting {
 }
 
 val integrationRuntimeOnly by configurations.getting
+val integrationAnnotationProcessor by configurations.getting
+val integrationCompileOnly by configurations.getting
 
 dependencies {
+
     // Depend on all other modules for integration tests
     integrationImplementation(project(":cheap-core"))
     integrationImplementation(project(":cheap-json"))
@@ -68,7 +70,6 @@ dependencies {
 }
 
 java {
-    modularity.inferModulePath = true
     toolchain {
         languageVersion = JavaLanguageVersion.of(24)
     }
