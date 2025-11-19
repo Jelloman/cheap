@@ -26,6 +26,8 @@ json-smart = "2.5.2"
 tomcat-embed-core = "11.0.13"
 awaitility = "4.2.2"
 okhttp3-mockwebserver = "4.12.0"
+httpclient5 = "5.5.1"
+docker-java = "3.6.0"
 
 [libraries]
 slf4j = { module = "org.slf4j:slf4j-api", version.ref = "slf4j" }
@@ -63,5 +65,8 @@ json-smart = { module = "net.minidev:json-smart", version.ref = "json-smart" }
 tomcat-embed-core = { module = "org.apache.tomcat.embed:tomcat-embed-core", version.ref = "tomcat-embed-core" }
 awaitility = { module = "org.awaitility:awaitility", version.ref = "awaitility" }
 okhttp3-mockwebserver = { module = "com.squareup.okhttp3:mockwebserver", version.ref = "okhttp3-mockwebserver" }
+httpclient5 = { module = "org.apache.httpcomponents.client5:httpclient5", version.ref = "httpclient5" }
+docker-java-core = { module = "com.github.docker-java:docker-java-core", version.ref = "docker-java" }
+docker-java-transport-httpclient5 = { module = "com.github.docker-java:docker-java-transport-httpclient5", version.ref = "docker-java" }
 
 
