@@ -4,10 +4,6 @@
 name: Cheap Integration Tests
 on:
   workflow_dispatch:
-    inputs:
-      environment:
-        description: 'Environment to run tests against'
-        required: true
 
 jobs:
   integration-tests:

@@ -1,79 +1,8 @@
-# Docker Integration Tests Implementation - Complete
+# Docker Integration Tests
 
-This document summarizes the implementation of Docker-based integration tests for the cheap-rest application.
+This document summarizes the Docker-based integration tests for the Cheap libraries.
 
-## Implementation Summary
-
-All components specified in `DOCKER_TEST_PLAN.md` have been successfully implemented:
-
-### 1. Gradle Configuration (✅ Complete)
-- **File**: `integration-tests/build.gradle.kts`
-- Added `com.bmuschko.docker-remote-api` plugin (v9.4.0)
-- Added docker-java dependencies for test utilities
-- Configured Docker tasks for image building and container management
-- Created separate test tasks: `integrationTest` (embedded), `dockerIntegrationTest` (Docker), `allIntegrationTests` (both)
-
-### 2. Dockerfile (✅ Complete)
-- **File**: `cheap-rest/Dockerfile`
-- Multi-stage build with Java 24
-- Alpine-based runtime image for smaller size
-- Health check using wget (built into Alpine)
-- Supports environment variables for database configuration
-- Configurable via `SPRING_PROFILES_ACTIVE`
-
-### 3. Docker Compose Configuration (✅ Complete)
-- **File**: `integration-tests/docker-compose.yml`
-- Services for PostgreSQL, MariaDB databases
-- Three cheap-rest services (one per database backend)
-- Network configuration for inter-container communication
-- Volume mounts for SQLite persistence
-- Health checks for all services
-
-### 4. Test Utility Classes (✅ Complete)
-- **DockerTestUtils** (`integration-tests/src/integration/java/.../util/DockerTestUtils.java`)
-  - `waitForDatabaseReady()`: Wait for database container health check
-  - `waitForRestServiceReady()`: Wait for REST service via HTTP health endpoint
-  - `getDynamicPort()`: Get dynamically mapped ports from Docker API
-  - `execInContainer()`: Execute commands in containers (debugging)
-  - Exponential backoff retry logic for reliability
-
-- **DockerContainerManager** (`integration-tests/src/integration/java/.../util/DockerContainerManager.java`)
-  - Container lifecycle management (create, start, stop, remove)
-  - Fluent API for container configuration
-  - Automatic cleanup via AutoCloseable
-  - Container output logging for debugging
-  - Network management
-
-### 5. Docker Integration Test Classes (✅ Complete)
-
-#### PostgresDockerIntegrationTest
-- **File**: `integration-tests/src/integration/java/.../docker/PostgresDockerIntegrationTest.java`
-- **Tags**: `@Tag("docker")`, `@Tag("postgres")`
-- Tests: catalog lifecycle, AspectDef CRUD, aspect upsert/query, custom table mapping, persistence across restart
-
-#### MariaDbDockerIntegrationTest
-- **File**: `integration-tests/src/integration/java/.../docker/MariaDbDockerIntegrationTest.java`
-- **Tags**: `@Tag("docker")`, `@Tag("mariadb")`
-- Tests: catalog lifecycle, AspectDef CRUD, aspect upsert/query, custom table mapping, persistence across restart, foreign key constraints
-
-#### SqliteDockerIntegrationTest
-- **File**: `integration-tests/src/integration/java/.../docker/SqliteDockerIntegrationTest.java`
-- **Tags**: `@Tag("docker")`, `@Tag("sqlite")`
-- Tests: catalog lifecycle, AspectDef CRUD, aspect upsert/query, custom table mapping, database file persistence across restart, concurrent operations
-
-#### MultiDatabaseDockerOrchestrationTest
-- **File**: `integration-tests/src/integration/java/.../docker/MultiDatabaseDockerOrchestrationTest.java`
-- **Tags**: `@Tag("docker")`, `@Tag("orchestration")`
-- Tests: parallel catalog creation, consistent behavior across backends, network isolation, independent operations
-
-### 6. Test Organization (✅ Complete)
-- Embedded tests tagged with `@Tag("embedded")` and database-specific tags
-- Docker tests tagged with `@Tag("docker")` and database-specific tags
-- Tests properly separated for selective execution
-
-### 7. Gradle Docker Tasks (✅ Complete)
-
-All tasks defined in the plan have been implemented:
+## Gradle Docker Tasks
 
 ```bash
 # Docker image tasks
@@ -289,22 +218,6 @@ stages:
     # Runs all tests (embedded + Docker)
 ```
 
-## Implementation Commits
-
-All implementation work has been committed incrementally:
-
-1. Add Docker plugin and Gradle tasks
-2. Improve cheap-rest Dockerfile
-3. Add docker-compose.yml
-4. Add DockerTestUtils utility class
-5. Add DockerContainerManager utility class
-6. Add PostgresDockerIntegrationTest
-7. Add MariaDbDockerIntegrationTest
-8. Add SqliteDockerIntegrationTest
-9. Add MultiDatabaseDockerOrchestrationTest
-10. Add @Tag annotations to embedded tests
-11. Configure integrationTest task to exclude Docker tests
-
 ## Notes
 
 - Docker tests require Docker daemon to be running
@@ -342,7 +255,3 @@ Potential improvements for future consideration:
 5. **Resource Limits**: Configure CPU/memory limits for containers
 6. **Test Data Fixtures**: Pre-populate containers with test data
 7. **Log Aggregation**: Centralized logging for all containers
-
-## Conclusion
-
-The Docker-based integration test infrastructure is **fully implemented** and ready for use. All components from the `DOCKER_TEST_PLAN.md` have been created and are functional. The tests can be executed once Docker is available on the system.
