@@ -4,10 +4,6 @@
 name: Cheap Dockerized Integration Tests
 on:
   workflow_dispatch:
-    inputs:
-      environment:
-        description: 'Environment to run tests against'
-        required: true
 
 jobs:
   docker-integration-tests:
@@ -27,7 +23,7 @@ jobs:
         run: ./gradlew clean build
 
       - name: Run docker integration tests
-        run: ./gradlew dockerIntegrationTests
+        run: ./gradlew dockerIntegrationTest
 
       - name: Upload integration test results
         if: always()
