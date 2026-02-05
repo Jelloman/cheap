@@ -25,6 +25,8 @@ import net.netbeing.cheap.tags.model.ElementType;
 import net.netbeing.cheap.tags.model.TagApplication;
 import net.netbeing.cheap.tags.model.TagDefinition;
 import net.netbeing.cheap.tags.model.TagSource;
+import net.netbeing.cheap.tags.validation.TagConflictDetector;
+import net.netbeing.cheap.tags.validation.TagValidator;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -51,6 +53,9 @@ public class TagRegistryImpl implements TagRegistry
     private final ImmutablePojoAspectDef tagDefinitionAspectDef;
     private final ImmutablePojoAspectDef tagApplicationAspectDef;
 
+    private final TagValidator validator;
+    private final TagConflictDetector conflictDetector;
+
     public TagRegistryImpl(@NotNull Catalog catalog, @NotNull CheapFactory factory)
     {
         this.catalog = Objects.requireNonNull(catalog, "catalog cannot be null");
@@ -64,6 +69,9 @@ public class TagRegistryImpl implements TagRegistry
         this.tagApplicationsHierarchy = getOrCreateAspectMapHierarchy(tagApplicationAspectDef);
 
         this.tagIndexByName = getOrCreateEntityDirectoryHierarchy(TAG_INDEX_BY_NAME_HIERARCHY);
+
+        this.validator = new TagValidator(this);
+        this.conflictDetector = new TagConflictDetector(this);
     }
 
     private AspectMapHierarchy getOrCreateAspectMapHierarchy(AspectDef aspectDef)
@@ -192,35 +200,10 @@ public class TagRegistryImpl implements TagRegistry
 
     private void validateTagDefinition(TagDefinition definition)
     {
-        if (!isValidNamespace(definition.getNamespace())) {
-            throw new IllegalArgumentException("Invalid namespace format: " + definition.getNamespace());
+        List<String> errors = validator.validateTagDefinition(definition);
+        if (!errors.isEmpty()) {
+            throw new IllegalArgumentException("Tag definition validation failed: " + String.join("; ", errors));
         }
-
-        if (!isValidName(definition.getName())) {
-            throw new IllegalArgumentException("Invalid name format: " + definition.getName());
-        }
-
-        for (UUID parentTagId : definition.getParentTagIds()) {
-            if (getTagDefinition(parentTagId) == null) {
-                throw new IllegalArgumentException("Parent tag not found: " + parentTagId);
-            }
-        }
-    }
-
-    private boolean isValidNamespace(String namespace)
-    {
-        if (namespace == null || namespace.isEmpty()) {
-            return false;
-        }
-        return namespace.matches("^[a-z0-9]+([.-][a-z0-9]+)+$");
-    }
-
-    private boolean isValidName(String name)
-    {
-        if (name == null || name.isEmpty()) {
-            return false;
-        }
-        return name.matches("^[a-z0-9]+(-[a-z0-9]+)*$");
     }
 
     // ==================== Tag Application ====================
@@ -434,14 +417,12 @@ public class TagRegistryImpl implements TagRegistry
 
         List<String> errors = new ArrayList<>();
 
-        TagDefinition tagDef = getTagDefinition(tagDefinitionId);
-        if (tagDef == null) {
-            errors.add("Tag definition not found: " + tagDefinitionId);
-            return errors;
-        }
+        // Basic validation
+        errors.addAll(validator.validateTagApplication(tagDefinitionId, targetElementId, targetType));
 
-        if (!tagDef.isApplicableTo(targetType)) {
-            errors.add("Tag " + tagDef.getFullName() + " cannot be applied to " + targetType);
+        // Conflict detection
+        if (errors.isEmpty()) {
+            errors.addAll(conflictDetector.detectConflictsForNewTag(targetElementId, targetType, tagDefinitionId));
         }
 
         return errors;
