@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025. David Noha
+ * Copyright (c) 2025-2026. David Noha
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -39,7 +39,8 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * Utility class providing reflection-based operations and type mapping functionality for the Cheap reflection package.
+ * Utility class providing reflection-based operations and type mapping functionality for the
+ * Cheap reflection package.
  * 
  * <p>This class serves as the core utility for all reflection-based implementations in the Cheap system.
  * It provides essential functionality for:</p>
