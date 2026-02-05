@@ -25,6 +25,7 @@ import net.netbeing.cheap.tags.model.ElementType;
 import net.netbeing.cheap.tags.model.TagApplication;
 import net.netbeing.cheap.tags.model.TagDefinition;
 import net.netbeing.cheap.tags.model.TagSource;
+import net.netbeing.cheap.tags.standard.StandardTags;
 import net.netbeing.cheap.tags.validation.TagConflictDetector;
 import net.netbeing.cheap.tags.validation.TagValidator;
 import org.jetbrains.annotations.NotNull;
@@ -503,7 +504,18 @@ public class TagRegistryImpl implements TagRegistry
     @Override
     public void initializeStandardTags()
     {
-        // Will be implemented in Phase 5
+        // Define all standard tags from StandardTags class
+        // This operation is idempotent - duplicate definitions are ignored
+        for (TagDefinition tagDef : StandardTags.allStandardTags()) {
+            try {
+                defineTag(tagDef);
+            } catch (IllegalArgumentException e) {
+                // Tag already exists - this is expected and safe to ignore
+                if (!e.getMessage().contains("Tag already exists")) {
+                    throw e;  // Re-throw if it's a different error
+                }
+            }
+        }
     }
 
     @Override
