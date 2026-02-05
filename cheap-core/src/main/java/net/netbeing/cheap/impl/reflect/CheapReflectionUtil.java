@@ -47,7 +47,7 @@ import java.util.UUID;
  *   <li>Java type to {@link PropertyType} mapping</li>
  *   <li>Getter and setter method validation</li>
  *   <li>Nullability inference from annotations</li>
- *   <li>Multi-valued property detection (arrays and collections)</li>
+ *   <li>Multivalued property detection (arrays and collections)</li>
  *   <li>Type analysis for generic types and parameterized types</li>
  * </ul>
  * 
@@ -74,7 +74,7 @@ import java.util.UUID;
  * </ul>
  * 
  * <p><strong>Multi-valued Detection:</strong></p>
- * <p>Properties are considered multi-valued if their type is:</p>
+ * <p>Properties are considered multivalued if their type is:</p>
  * <ul>
  *   <li>An array type ({@code T[]})</li>
  *   <li>A parameterized Collection type ({@code Collection<T>})</li>
@@ -115,6 +115,7 @@ import java.util.UUID;
  * @see RecordPropertyDef
  * @see PojoPropertyDef
  */
+@SuppressWarnings("unused")
 final class CheapReflectionUtil
 {
     /**
@@ -344,9 +345,9 @@ final class CheapReflectionUtil
     }
 
     /**
-     * Determines whether a type represents a multi-valued property (array or collection).
+     * Determines whether a type represents a multivalued property (array or collection).
      * 
-     * <p>A type is considered multi-valued if it is:</p>
+     * <p>A type is considered multivalued if it is:</p>
      * <ul>
      *   <li>An array type ({@code T[]})</li>
      *   <li>A generic array type ({@code GenericArrayType})</li>
@@ -354,7 +355,7 @@ final class CheapReflectionUtil
      * </ul>
      * 
      * <p>This method handles both raw classes and their generic type information to make
-     * accurate determinations about multi-valued properties.</p>
+     * accurate determinations about multivalued properties.</p>
      * 
      * @param klass the raw class type to check
      * @param genericType the generic type information, which may be more specific than the raw class
@@ -368,7 +369,7 @@ final class CheapReflectionUtil
     }
 
     /**
-     * Determines whether a record component represents a multi-valued property.
+     * Determines whether a record component represents a multivalued property.
      * 
      * <p>This method delegates to {@link #isMultivalued(Class, Type)} using the component's
      * declared type and generic type information.</p>
@@ -384,7 +385,7 @@ final class CheapReflectionUtil
     }
 
     /**
-     * Determines whether a getter method returns a multi-valued property.
+     * Determines whether a getter method returns a multivalued property.
      * 
      * <p>This method analyzes the getter's return type and generic return type to determine
      * if it represents multiple values.</p>
@@ -454,6 +455,7 @@ final class CheapReflectionUtil
      * @throws NullPointerException if field is null
      * @see #getCollectionComponentType(Class, Type)
      */
+    @SuppressWarnings("unused")
     public static Class<?> getCollectionComponentType(RecordComponent field)
     {
         return getCollectionComponentType(field.getType(), field.getGenericType());
@@ -467,6 +469,7 @@ final class CheapReflectionUtil
      * @throws NullPointerException if getter is null
      * @see #getCollectionComponentType(Class, Type)
      */
+    @SuppressWarnings("unused")
     public static Class<?> getCollectionComponentTypeGetter(Method getter)
     {
         return getCollectionComponentType(getter.getReturnType(), getter.getGenericReturnType());
@@ -542,7 +545,7 @@ final class CheapReflectionUtil
      * to Cheap's property type system. The mapping process follows these steps:</p>
      * 
      * <ol>
-     *   <li><strong>Multi-valued type unwrapping:</strong> For arrays and Collections, extracts the component type</li>
+     *   <li><strong>Multivalued type unwrapping:</strong> For arrays and Collections, extracts the component type</li>
      *   <li><strong>Direct mapping lookup:</strong> Checks {@link #CLASS_PROPERTY_TYPE_MAP} for exact matches</li>
      *   <li><strong>Date/time type detection:</strong> Handles Date, Calendar, and TemporalAccessor types</li>
      *   <li><strong>Fallback:</strong> Defaults to PropertyType.String for unrecognized types</li>
