@@ -105,7 +105,7 @@ Modules
 
 DESIGN
 ======
-See [design document](DESIGN.md) for more detail.
+See [design document](doc/DESIGN.md) for more detail.
 
 CATALOGS
 --------
@@ -165,5 +165,3 @@ Identity in Cheap
 | Aspect       | No      | Hierarchy | Entity ID | -                 |
 | PropertyDef  | No      | AspectDef | Name      | -                 |
 | Property     | No      | Aspect    | Name      | -                 |
-
-

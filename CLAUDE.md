@@ -125,7 +125,7 @@ Always consult the relevant module's CLAUDE.md when working in that module.
 ## Project Documentation
 
 - [README.md](README.md) - Project overview and module descriptions
-- [DESIGN.md](DESIGN.md) - Detailed design notes on the Cheap data model
+- [DESIGN.md](doc/DESIGN.md) - Detailed design notes on the Cheap data model
 - [.claude/docs/core-concepts.md](.claude/docs/core-concepts.md) - Core concepts explained
 
 ## Working with Modules
