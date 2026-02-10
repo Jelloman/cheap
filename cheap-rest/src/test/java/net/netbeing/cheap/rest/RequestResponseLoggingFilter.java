@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025. David Noha
+ * Copyright (c) 2025-2026. David Noha
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -93,7 +93,6 @@ public class RequestResponseLoggingFilter implements WebFilter
         private final Flux<DataBuffer> cachedBody;
         private final Mono<String> bodyString;
 
-        @SuppressWarnings("deprecated")
         public CachedBodyServerHttpRequestDecorator(ServerHttpRequest delegate) {
             super(delegate);
 
@@ -101,9 +100,8 @@ public class RequestResponseLoggingFilter implements WebFilter
 
             this.cachedBody = super.getBody()
                 .doOnNext(dataBuffer -> {
-                    try {
-                        //noinspection deprecation
-                        Channels.newChannel(bodyOutputStream).write(dataBuffer.toByteBuffer().asReadOnlyBuffer());
+                    try (DataBuffer.ByteBufferIterator bbi = dataBuffer.readableByteBuffers()) {
+                        Channels.newChannel(bodyOutputStream).write(bbi.next());
                     } catch (Exception e) {
                         logger.error("Error caching request body", e);
                     }
@@ -139,12 +137,11 @@ public class RequestResponseLoggingFilter implements WebFilter
 
         @Override
         @NonNull
-        @SuppressWarnings("deprecation")
         public Mono<Void> writeWith(@NonNull Publisher<? extends DataBuffer> body) {
             var flux = Flux.from(body)
                 .doOnNext(dataBuffer -> {
-                    try {
-                        Channels.newChannel(cachedBody).write(dataBuffer.toByteBuffer().asReadOnlyBuffer());
+                    try (DataBuffer.ByteBufferIterator bbi = dataBuffer.readableByteBuffers()) {
+                        Channels.newChannel(cachedBody).write(bbi.next());
                     } catch (Exception e) {
                         logger.error("Error caching response body", e);
                     }
