@@ -14,7 +14,7 @@
  *  limitations under the License.
  */
 
-package net.netbeing.cheap.tags;
+package net.netbeing.cheap.integrationtests.tags;
 
 import net.netbeing.cheap.impl.basic.CheapFactory;
 import net.netbeing.cheap.model.Catalog;
