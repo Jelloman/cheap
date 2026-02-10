@@ -32,6 +32,7 @@ cheap-rest-client/   # REST client library (depends on cheap-core, cheap-json)
 settings.gradle.kts  # Multi-module build configuration
 gradle/
 └── libs.versions.toml # Version catalog for dependencies
+integration-tests    # Standalone integration tests project for heavyweight tests
 ```
 
 Each module has its own `CLAUDE.md` and `README.md` with module-specific guidance:
@@ -78,6 +79,7 @@ Each module contains:
 | **cheap-json**     | JSON serialization/deserialization     | [CLAUDE.md](cheap-json/CLAUDE.md)          |
 | **cheap-rest**     | REST API service                       | [CLAUDE.md](cheap-rest/CLAUDE.md)          |
 | **cheap-rest-client** | REST client library                 | [CLAUDE.md](cheap-rest-client/CLAUDE.md)   |
+| **integration-tests** | Integration tests                   | [CLAUDE.md](integration-tests/CLAUDE.md)   |
 
 Always consult the relevant module's CLAUDE.md when working in that module.
 
