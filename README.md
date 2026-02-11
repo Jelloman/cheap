@@ -1,25 +1,49 @@
-UNDER CONSTRUCTION
-==================
-This is a work in progress, not yet ready for prime time. 
-
 Cheap
 =====
 
-Cheap is a data caching system and metadata model. Its design is focused on flexible and performant modeling and
-usage of a wide variety of data sources and sinks, and also automated schema translation and mapping.
+Cheap is a metadata model and a data caching system. Its design is focused on flexible and performant modeling and
+usage of a wide variety of data sources and sinks, and also automated schema translation and mapping. It's intended
+to help developers and AI agents with porting, replatforming, database migrations, and similar types of projects.
 
-Cheap is NOT a database. All Cheap data is held in catalogs, and all Cheap Catalogs are caches or working copies
-of external data (or other Catalogs).
+Cheap is NOT a database. All Cheap data is held in Catalogs, and all Cheap Catalogs are caches or working copies
+of external data or other Catalogs.
 
-The best analogy for understanding Cheap is **git**. Cheap is a git-like mechanism for structured data and objects.
+An analogy for understanding Cheap is **git**. Cheap is a git-like mechanism for structured data and objects.
 
 | Tier          | RDBMS equivalent | Filesystem equivalent                 |
 |---------------|------------------|---------------------------------------|
-| C - Catalog   | Database         | Volume                                |
+| C - Catalog   | Database         | Volume, Archive file                  |
 | H - Hierarchy | Table or Index   | Directory structure, File manifest    |
-| E - Entity    | Primary Key      | File, file element                    |
-| A - Aspect    | Row              | File or element attributes or content |
+| E - Entity    | Unique ID, PK    | File                                  |
+| A - Aspect    | Row              | File attributes or content            |
 | P - Property  | Column           | Single attribute or content atom      |
+
+Multi-Language Ports
+--------------------
+
+Cheap is implemented in Java (primary) and has been ported to TypeScript, Python, and Rust with
+consistent semantics. These ports are works in progress, and are currently behind Cheap-Java
+features.
+
+| Language   | Repository |
+|------------|------------|
+| Java       | [cheap](https://github.com/Jelloman/cheap) (this repo) |
+| TypeScript | [cheap-ts](https://github.com/Jelloman/cheap-ts) |
+| Python     | [cheap-py](https://github.com/Jelloman/cheap-py) |
+| Rust       | [cheap-rust](https://github.com/Jelloman/cheap-rust) |
+
+AI Enhancement (2026)
+---------------------
+
+Cheap is being extended with an LLM-powered metadata explorer and code assistant that provides semantic search
+over metadata definitions across all four languages. The AI layer uses RAG (retrieval-augmented generation) to
+enable natural-language queries about schemas with grounded, citation-backed answers.
+
+Key capabilities in progress in [cheap-rag](https://github.com/Jelloman/cheap-rag):
+- **Database schema extraction** from PostgreSQL and SQLite (via SQLAlchemy)
+- **Code metadata extraction** from Java source (via javalang parser)
+- **Semantic search** using embeddings (sentence-transformers) and vector search (ChromaDB)
+- **LLM-powered Q&A** with citations, using local models (Qwen2.5-Coder via Ollama) or Claude API
 
 Quick Start
 -----------
@@ -68,25 +92,9 @@ Choose a database backend:
 
 Purpose
 -------
-I'm building Cheap primarily to serve as the data layer for a featureful desktop/web application for
-interacting with and managing disparate data sources. I expect it will be useful for many other purposes.
-
-
-**WORK IN PROGRESS**
---------------------
-Cheap is a work in progress. I'll add a roadmap soon, for now here are the broad strokes:
-* Standard AspectDefs provided by Cheap, including CatalogDef and HierarchyDef
-* Better testing for large properties such as Text, CLOB, BLOB, BigDecimal, BigInteger
-* Streaming/chunking methods for reading and writing multivalued properties, and Text/CLOB/BLOB
-  * Decide whether Text and CLOB are both needed; probably not
-* Convenience Hierarchy types, such as an AspectTree that marries an EntityTree and AspectMap to
-  provide tree-based access to a specific Aspect type.
-* TypeScript port
-* Python port
-* Maybe C++ and/or Rust ports
-* protobuf, capnproto and flatbuffers support (read, write, schema translation) 
-* Catalog-based task management and logging for current AND past read and write jobs to the upstream/source.
-
+Cheap serves as a data layer for applications that interact with and manage disparate data sources.
+The metadata model is designed to be language-portable, developer-centric, and LLM-friendly -
+making it useful both as a runtime library and as a semantic schema layer for AI-powered tools.
 
 Modules
 -------
@@ -102,6 +110,15 @@ Modules
 
 ### Planned Modules
 - **cheap-net** - Networking library with support for protobuf, flatbuffers, and Cap'n Proto
+
+Roadmap
+-------
+- Standard AspectDefs provided by Cheap, including CatalogDef and HierarchyDef
+- Better testing for large properties such as Text, CLOB, BLOB, BigDecimal, BigInteger
+- Streaming/chunking methods for reading and writing multivalued properties, and Text/CLOB/BLOB
+- Convenience Hierarchy types, such as an AspectTree that marries an EntityTree and AspectMap
+- protobuf, capnproto and flatbuffers support (read, write, schema translation)
+- Catalog-based task management and logging for read and write jobs
 
 DESIGN
 ======
