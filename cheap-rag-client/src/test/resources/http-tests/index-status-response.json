@@ -1,0 +1,16 @@
+{
+  "collection_name": "cheap_metadata",
+  "total_artifacts": 150,
+  "indexed": true,
+  "last_updated": "2025-01-15T10:00:00Z",
+  "artifact_counts_by_type": {
+    "class": 50,
+    "interface": 30,
+    "method": 70
+  },
+  "artifact_counts_by_language": {
+    "java": 100,
+    "python": 30,
+    "typescript": 20
+  }
+}
