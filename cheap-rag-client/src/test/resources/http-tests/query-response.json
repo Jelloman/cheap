@@ -1,0 +1,43 @@
+{
+  "answer": "CheapFactory is the main factory class for creating Cheap objects.",
+  "query": "What is CheapFactory?",
+  "citations": [
+    {
+      "artifact_id": "java_class_abc123",
+      "artifact_name": "CheapFactory",
+      "artifact_type": "class",
+      "source_location": "cheap-core/src/main/java/CheapFactory.java:25"
+    }
+  ],
+  "sources": [
+    {
+      "id": "java_class_abc123",
+      "type": "class",
+      "name": "CheapFactory",
+      "language": "java",
+      "module": "cheap-core",
+      "source_file": "cheap-core/src/main/java/CheapFactory.java",
+      "source_line": 25
+    }
+  ],
+  "search_metadata": {
+    "total_results": 5,
+    "avg_similarity": 0.85,
+    "retrieval_time_ms": 123.45
+  },
+  "generation_metadata": {
+    "model": "gpt-4",
+    "provider": "openai",
+    "tokens_used": 150,
+    "generation_time_ms": 456.78
+  },
+  "citation_metrics": {
+    "total_citations": 1,
+    "verified_citations": 1,
+    "coverage_percentage": 100.0
+  },
+  "timestamp": "2025-01-15T10:30:00Z",
+  "total_time_ms": 580.23,
+  "confidence": 0.92,
+  "warnings": []
+}
