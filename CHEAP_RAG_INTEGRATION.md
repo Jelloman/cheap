@@ -33,8 +33,8 @@ The CHEAP RAG integration consists of two complementary Java modules that bridge
                                            ↓
                                  ┌──────────────────────┐
                                  │  RAG System          │
-                                 │  - Qdrant (vectors)  │
-                                 │  - OpenAI (LLM)      │
+                                 │  - ChromaDB (vectors)│
+                                 │  - Ollama/Claude LLM │
                                  └──────────────────────┘
 ```
 
