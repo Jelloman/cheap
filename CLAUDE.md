@@ -102,8 +102,9 @@ Always consult the relevant module's CLAUDE.md when working in that module.
 #### Java Code Style
 - Put left brackets at the end of the line, except for class and function bodies where they should go on the next line
 - When using Cheap interfaces, prefer not to use methods named "unsafe*", except in unit tests that are specifically testing those unsafe* methods
-- Always import used classes instead of using fully-qualified class names, except where conflicts require it
-- Never mark methods as deprecated unless explicitly directed to do so
+- Always import used classes instead of using fully-qualified class names, except where conflicts require it.
+- Never mark methods as deprecated unless explicitly directed to do so.
+- Never nest ternary expressions.
 
 #### Java Unit Testing
 - Comprehensive test coverage with JUnit Jupiter
