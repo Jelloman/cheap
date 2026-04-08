@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025. David Noha
+ * Copyright (c) 2025-2026. David Noha
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -17,8 +17,10 @@
 package net.netbeing.cheap.rag.extractor.visitor;
 
 import com.github.javaparser.ast.body.FieldDeclaration;
+import com.github.javaparser.ast.body.TypeDeclaration;
 import com.github.javaparser.ast.body.VariableDeclarator;
 import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
+import com.github.javaparser.javadoc.Javadoc;
 import net.netbeing.cheap.rag.extractor.JavaExtractorConfig;
 import net.netbeing.cheap.rag.extractor.model.ArtifactType;
 import net.netbeing.cheap.rag.extractor.model.MetadataArtifact;
@@ -59,13 +61,13 @@ public class FieldExtractorVisitor extends VoidVisitorAdapter<List<MetadataArtif
         // Try to get containing class/interface
         @SuppressWarnings("unchecked")
         String parentName = declaration.findAncestor(
-                (Class<com.github.javaparser.ast.body.TypeDeclaration<?>>) (Class<?>) com.github.javaparser.ast.body.TypeDeclaration.class)
-                .flatMap(type -> type.getFullyQualifiedName())
+                (Class<TypeDeclaration<?>>) (Class<?>) TypeDeclaration.class)
+                .flatMap(TypeDeclaration::getFullyQualifiedName)
                 .orElse("Unknown");
 
         // Extract documentation
         String documentation = declaration.getJavadoc()
-                .map(javadoc -> javadoc.toText())
+                .map(Javadoc::toText)
                 .orElse(null);
 
         // A field declaration can declare multiple variables (e.g., int x, y, z)
