@@ -18,6 +18,7 @@ package net.netbeing.cheap.rag.extractor;
 
 import com.github.javaparser.JavaParser;
 import com.github.javaparser.ParseResult;
+import com.github.javaparser.ParserConfiguration;
 import com.github.javaparser.ast.CompilationUnit;
 import net.netbeing.cheap.rag.extractor.model.MetadataArtifact;
 import net.netbeing.cheap.rag.extractor.visitor.*;
@@ -50,7 +51,8 @@ public class JavaExtractor
     public JavaExtractor(@NotNull JavaExtractorConfig config)
     {
         this.config = config;
-        this.parser = new JavaParser();
+        this.parser = new JavaParser(
+                new ParserConfiguration().setLanguageLevel(ParserConfiguration.LanguageLevel.JAVA_25));
     }
 
     /**

@@ -35,10 +35,10 @@ repositories {
 
 dependencies {
     // JavaParser for Java code parsing
-    implementation("com.github.javaparser:javaparser-core:3.26.2")
+    implementation(libs.javaparser.core)
 
     // Picocli for CLI
-    implementation("info.picocli:picocli:4.7.6")
+    implementation(libs.picocli)
 
     // Jackson for JSON output
     implementation(libs.jackson.core)
